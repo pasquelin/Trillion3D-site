@@ -262,7 +262,7 @@
     }
   },
   "BatchRead": {
-    "summary": "Wie `request` einen Stapel liest: das Signal seines Besitzers, seine Priorität und was beim Eintreffen jeder Seite läuft.",
+    "summary": "Wie `request` einen Stapel liest: das Signal seines Eigners, seine Priorität und was läuft, wenn jede Seite eintrifft, mit ihren Bytes in der Hand.",
     "members": {
       "signal": "Lässt die Lesevorgänge des Stapels los: Ein Lesevorgang, auf den niemand mehr wartet, wird fallen gelassen, solange er wartet.",
       "priority": "Priorität in der Warteschlange, standardmäßig 1.",
@@ -586,13 +586,13 @@
     }
   },
   "BufferAttribute": {
-    "summary": "Ein typisiertes Array von Werten pro Scheitelpunkt, `itemSize` Zahlen pro Scheitelpunkt: das `PageAttribute` des Seiten-Codecs (`page-codec/pageAttributes.ts`), mit dem, was eine Seite hineinschreibt.",
+    "summary": "Ein typisiertes Array von Werten je Vertex, `itemSize` Zahlen je Vertex: das `PageAttribute` des Seitencodecs (`page/pageInput.ts`), mit dem, was eine Seite hineinschreibt.",
     "members": {
       "isBufferAttribute": "Immer `true`: unterscheidet ein Pufferattribut von allem anderen.",
       "type": "Wie die Werte deklariert wurden; ein Attribut in Halbfließkommazahlen wird in Fließkommagenauigkeit gehalten.",
       "version": "Bei jedem deklarierten Schreibvorgang erhöht: das, was die Welt vergleicht, um zu sehen, dass sich der Inhalt geändert hat.",
-      "array": "Die Zahlen selbst.",
-      "count": "Wie viele Scheitelpunkte die Zahlen beschreiben.",
+      "array": "Die Zahlen selbst; ein Lesen, bevor sie geladen sind, wird beim Namen abgelehnt.",
+      "count": "Wie viele Vertices die Zahlen beschreiben, bekannt, bevor sie geladen sind.",
       "needsUpdate": "`needsUpdate = true` nach dem Schreiben von `array`: ein Leser lädt es erneut hoch.",
       "clone": "Ein neues Attribut mit einer Kopie der Zahlen, ihres Typs, ihrer Normalisierung und des Namens.",
       "kind": "Das Attribut besitzt seinen Puffer.",
@@ -1097,7 +1097,7 @@
   },
   "CpuStepSummary": {
     "summary": "CPU-Profil pro Phase einer Renderschleife: ein begrenzter Ring der letzten Bilder plus die schlimmsten Bilder nach Gesamtdauer, auf Anfrage zusammengefasst.",
-    "description": "Er existiert, damit eine Engine sagen kann, wohin ihre eigene CPU-Zeit im Modus `summary` geht — die Ablaufverfolgung pro Bild einzuschalten, um es herauszufinden, würde die gemessene Zeit verändern. Nichts wird pro Bild zugewiesen: der Aufrufer füllt die Arbeitszeile und gibt sie ab. Zwei Fenster auf denselben Bildern — eines im Veröffentlichungsrhythmus, eines das ein Host abruft — teilen sich diese Zeile (`row`).",
+    "description": "Es existiert, damit eine Engine melden kann, wohin ihre eigene CPU-Zeit im `summary`-Modus geht — die Spur je Bild einzuschalten, um das herauszufinden, verändert die gemessene Zeit. Nichts wird je Bild allokiert: der Aufrufer füllt die Arbeitszeile und übergibt sie.",
     "members": {
       "frames": "Gemessene Bilder.",
       "steps": "Zeit jeder Phase: Median, 95. Perzentil und schlimmster Wert.",
@@ -1152,13 +1152,14 @@
   },
   "createGpuPageCache": {
     "summary": "Grenze für WebGPU-Zuweisung und Warteschlange.",
-    "description": "Die Bytes der Seiten und die Regel werden vom Host bereitgestellt. Warteschlangenschreibvorgänge sind geordnet; die Freigabe wartet auf laufende Sendungen, bevor sie zerstört. `pin(key, 'held')` behält eine Seite bei `resize(slots)` vor gewöhnlich angehefteten Seiten; resize akzeptiert keine held-Menge mehr. Erneutes gewöhnliches Anheften erhält diese Stufe; `unpin(key)` entfernt sie.",
+    "description": "Seitenbytes und Politik liefert der Host: jedes Laden liest seine Seite aus `source` (`reader.ts`), die sich den Lesevorgängen einer Seite im Flug anschließt und sagt, wann eine fehlgeschlagene erneut angefragt wird. Warteschlangen-Schreibvorgänge sind geordnet; dispose wartet vor dem Zerstören auf laufende Übermittlungen. Eine Größenänderung behält die Seiten von `cover` vor jeder angehefteten Seite.",
     "parameters": {
       "options.homes": "Der eigene Platz jeder Seite, genommen, solange `slots` den ganzen Katalog halten (`homes.ts`).",
       "options": "Wie ein GPU-Seitencache bemessen ist und wohin er berichtet (`createGpuPageCache`).",
       "options.pageBytes": "Die Bytes eines Slots: ein Vielfaches von vier.",
       "options.slots": "Wie viele Slots der Pool fasst.",
-      "options.onDiagnostic": "Hört, was der Cache meldet: sein Layout, abgebrochene Ladevorgänge und Ablehnungen."
+      "options.onDiagnostic": "Hört, was der Cache meldet: sein Layout, abgebrochene Ladevorgänge und Ablehnungen.",
+      "options.cover": "Die Adressen der Wurzelabdeckung: eine Größenänderung behält sie vor jeder anderen Seite."
     }
   },
   "GpuPageCacheOptions": {
@@ -1167,11 +1168,9 @@
       "pageBytes": "Die Bytes eines Platzes: ein Vielfaches von vier.",
       "slots": "Wie viele Plätze der Pool hält.",
       "homes": "Der eigene Platz jeder Seite, genommen, solange `slots` den ganzen Katalog halten (`homes.ts`).",
-      "onDiagnostic": "Hört, was der Cache berichtet: seine Anordnung, abgebrochene Ladevorgänge und Ablehnungen."
+      "onDiagnostic": "Hört, was der Cache berichtet: seine Anordnung, abgebrochene Ladevorgänge und Ablehnungen.",
+      "cover": "Die Adressen der Wurzelabdeckung: eine Größenänderung behält sie vor jeder anderen Seite."
     }
-  },
-  "PagePinTier": {
-    "summary": "Wie eine geladene Seite angeheftet wird: `'held'` vor gewöhnlichen Anheftungen bei einer Größenänderung, sonst `'pinned'`."
   },
   "createJob": {
     "summary": "Kein Timer, kein DOM, keine Dateien, keine Oberfläche."
@@ -1180,18 +1179,17 @@
     "summary": "Puffer eines Plans, dimensioniert für die größte Anfrage des Katalogs."
   },
   "createPageStreamer": {
-    "summary": "Begrenzte Lesevorgänge, nach Priorität und ohne Duplikat.",
-    "description": "Eine Anfrage, die noch in der Warteschlange wartet, wird verworfen, wenn ihr letzter Konsument geht; eine bereits im Transfer befindliche Anfrage kann im Cache ankommen. Der Cache ist eine „am längsten nicht genutzt“-Menge, begrenzt sowohl in Einträgen als auch in Bytes; angeheftete Einträge überleben die Verdrängung, sodass ein Aufrufer seine angezeigte Abdeckung durch Festhalten behält.",
+    "summary": "Begrenzte, priorisierte und entdoppelte Lesevorgänge über `options.cache`, den Seiten-Cache, den sein Eigner hält (`pageCache.ts`).",
+    "description": "Eine Anforderung, die noch in der Warteschlange wartet, wird verworfen, sobald ihr letzter Verbraucher geht; eine schon übertragende darf im Cache ankommen. Der Cache ist eine Menge nach am längsten nicht benutzt, nach Bytes begrenzt; eine Seite mit Eigner (`pin`, `retainRanks`) überlebt die Verdrängung, sodass ein Aufrufer seine angezeigte Abdeckung durch Anheften behält.",
     "parameters": {
-      "options": "Wie ein Seiten-Streamer liest (`createPageStreamer`). Neben seinen Seiten reserviert sein Cache seine Manifest-Tabellen und seine Übertragungswarteschlange; jedes Mitglied hat einen Standardwert.",
+      "options": "Wie ein Seiten-Streamer liest (`createPageStreamer`): über `cache`, den seines Eigners, der seine Manifesttabellen und seine Transferwarteschlange neben seinen Seiten reserviert; jedes andere Mitglied hat einen Standardwert.",
       "options.signal": "Bricht jeden Lesevorgang ab, sobald es abgebrochen wird.",
       "options.workerCount": "Gleichzeitig laufende Lesevorgänge; standardmäßig 8.",
-      "options.maxPages": "Höchstzahl gleichzeitig gehaltener Seiten; ohne Angabe nur durch Bytes begrenzt.",
       "options.onEvict": "Hört jede Seite, die den Cache verlässt.",
       "options.maxTransferBytes": "Bytes, die die Übertragungswarteschlange halten darf; standardmäßig 8 MiB.",
       "options.onDiagnostic": "Hört jeden Schritt jedes Lesevorgangs.",
-      "options.maxCachedBytes": "Bytes CPU-Speicher, die die Seiten des Caches halten dürfen; Manifest-Tabellen und Übertragungswarteschlange werden zusätzlich reserviert; standardmäßig 256 MiB.",
-      "options.onStalled": "Hört einmal einen Lesevorgang, der endgültig scheitert oder zuerst am längsten wartet: erneut erst, nachdem er angekommen ist."
+      "options.onStalled": "Hört einmal einen Lesevorgang, der endgültig scheitert oder zuerst am längsten wartet: erneut erst, nachdem er angekommen ist.",
+      "options.cache": "Der Seiten-Cache, über den er liest, der seines Eigners: er überdauert den Streamer."
     }
   },
   "createPathGovernor": {
@@ -2166,7 +2164,7 @@
   },
   "gpuPassStageOf": {
     "summary": "Phase eines Durchgangs, nach seinem Namen.",
-    "description": "Unbekannt ergibt `geometry`."
+    "description": "Unbekannt ist `undefined`: ein Label, das die Engine nicht benennt, gehört zu keiner Stufe."
   },
   "GpuPassTiming": {
     "summary": "Ein gemessener GPU-Durchgang.",
@@ -2323,39 +2321,6 @@
       "size": "Radius der Kreise."
     }
   },
-  "HIERARCHY_ROOT": {
-    "summary": "VOLLSTÄNDIGE HIERARCHIE in einem Durchgang aktualisiert: `n` Knoten, angeordnet Eltern vor Kindern, jeder setzt seine lokale Matrix zusammen und multipliziert sie dann mit der Weltmatrix seines Elternteils.",
-    "description": "Die zwei Formeln laufen auf flachen Puffern, und der WebAssembly-Kernel reproduziert sie Term für Term. `parents[i]` MUSS der Index eines bereits aktualisierten Knotens sein, also streng kleiner als `i`; jeder andere Wert — die Sentinel `HIERARCHY_ROOT` eingeschlossen — macht den Knoten zu einer Wurzel, deren Weltmatrix ihre lokale Matrix ist. Die Regel ist auf beiden Seiten dieselbe: keine noch so feindselige Eingabe kann sie auseinanderlaufen lassen."
-  },
-  "hierarchyUpdateBatch": {
-    "summary": "Berechnet die Weltmatrizen einer ganzen Hierarchie in einem Durchgang, Eltern zuerst."
-  },
-  "HIZ_NOTHING": {
-    "summary": "Zurückgegebener Wert, wenn kein Texel gelesen wird: kann nichts verdecken.",
-    "description": "Die Tiefe der Engine ist UMGEKEHRT — nah ist 1, fern ist 0 (`../../../math/src/projection/camera.ts`). Eine umschließende Box ist nur verdeckt, wenn ihre nächste Tiefengrenze WEITER (kleinerer Wert) ist als die Tiefe des Hindernisses."
-  },
-  "hizBuildFlat": {
-    "summary": "Vollständige Pyramide aus der Tiefe des Sichtbarkeitspuffers.",
-    "description": "`into` wird neu geschrieben, nie neu zugewiesen."
-  },
-  "HizFlat": {
-    "summary": "Die Hi-Z-Pyramide pro Bild: ein einziges `Float32Array` für alle Stufen, ein Versatz und eine Größe pro Stufe.",
-    "description": "Die Werte sind die des Sichtbarkeitspuffers, bereits in einfacher Genauigkeit, und die Reduktion behält die WEITESTE eines 2×2-Quadrats — ein Minimum, da die Tiefe der Engine umgekehrt ist: nichts wird gerundet, die flache Anordnung gibt genau das zurück, was die verschachtelte Array-Pyramide zurückgab, ohne pro Zeile und Bild eine Zeile zuzuweisen. Produktionsspiegel von `hizReduceCeil` (oracles.fixture.ts), das das Orakel bleibt: zwei gewollte Implementierungen derselben Reduktion, gegeneinander in einem Äquivalenztest.",
-    "members": {
-      "data": "Die Tiefen jeder Stufe.",
-      "offsets": "Wo jede Stufe beginnt.",
-      "widths": "Die Breite jeder Stufe.",
-      "heights": "Die Höhe jeder Stufe.",
-      "count": "Wie viele Stufen."
-    }
-  },
-  "hizFlatLayout": {
-    "summary": "Platziert (oder ersetzt) die Versätze und Größen.",
-    "description": "`into` wird unverändert wiederverwendet, wenn es schon die richtige Größe hat."
-  },
-  "hizFlatLevels": {
-    "summary": "Anzahl der Stufen eines Bildes: die letzte ist 1×1."
-  },
   "holdCameraWorld": {
     "summary": "Kopiert eine Engine-Kamera in eine andere, die dann die Sicht bitgenau behält."
   },
@@ -2485,7 +2450,8 @@
     "summary": "Farbton, Sättigung und Helligkeit zu drei RGB-Komponenten, geschrieben in `out[o..o+2]`."
   },
   "httpPageSource": {
-    "summary": "Eine Seitenquelle, die Seiten per HTTP abruft, nach Schlüssel, von `baseUrl`."
+    "summary": "Eine Seitenquelle, die Seiten per HTTP, nach Schlüssel, von `baseUrl` holt: jeder gelesene Schlüssel ist ein Lesevorgang, dem sich jedes Laden davon anschließt, solange er läuft, sodass zwei Ladevorgänge einer Seite im Flug eine Anfrage senden, und der Lesevorgang endet, sobald kein Laden mehr auf ihn wartet.",
+    "description": "Ein fehlschlagendes Lesen wartet nach der einen Fehlerpolitik auf seinen Zug, seine Ladevorgänge warten darauf, dann fragt es erneut — oder wird endgültig abgelehnt, wenn eine weitere Anfrage wieder auf seinen Fehler träfe, jedes spätere Laden seines Schlüssels sofort abgelehnt (`streaming/failures.ts`). Es meldet nichts über eine Seite: seine Bytes werden genommen, wie der Server sie sendet, und nur von den Ladevorgängen behalten; ein Lesen wird vergessen, wenn es endet, der Fehler seines Schlüssels, wie die Politik ihn vergisst. Seine Anfragen werden gesendet, wie sie verlangt werden: es hat keine Warteschlange, und `priority` ordnet nichts. `dispose` stoppt seine Lesevorgänge."
   },
   "IDENTITY_MATRIX4": {
     "summary": "Spaltenweise Identität, gelesen und nie geschrieben: die Pose eines Knotens oder einer Wurzel ohne Pose."
@@ -2810,8 +2776,7 @@
       "shadowRequestCap": "Virtuelle Seiten, die die Schattierung pro Bild anfordern darf; der Rest fragt im nächsten Bild erneut.",
       "sunLevels": "Clipmap-Stufen eines gerichteten Lichts. Stufe `L` hat Texel von `2^L` Metern, und ein Pixel liest die Stufe, deren Texel höchstens seinem eigenen Fußabdruck entspricht: sechzehn Stufen decken ein Fern/Nah-Verhältnis von 2^15. Jenseits der letzten Stufe übernimmt der Fernschatten.",
       "sunLevelPages": "Seiten pro Seite des Ausschnitts einer Clipmap-Stufe um die Kamera. Eine Kapazität, keine Einstellung: jedes Pixel liest seine eigene Dichte, solange `height / tan(halfFovY)` höchstens `sunLevelPages · shadowPage / 2` = 4096 beträgt (eine 4K-Leinwand bei 55° vertikalem Feld); darüber lesen die äußeren Pixel die nächste Stufe mit halber Dichte.",
-      "sunAngularRadius": "Winkelradius der Sonnenscheibe in Radiant; null verlangt ausdrücklich harte Schatten.",
-      "translucentShadowFilter": "Wie eine durchscheinende Fläche und das Wasser die virtuelle Schattenkarte eines Lichts lesen: 0, eine Punktabfrage; 1, sechzehn gefilterte Abtastungen im Abstand eines Texels, jedes Texel mit eigenem Empfängerebenen-Bias und eigener Transmission der durchscheinenden Schattenwerfer; 2, Schattenkarten-Strahlen ab einem kurzen Bildschirmversatz, mit den Strahlzahlen der opaken Projektion und mit Dithering. Ein Wort des Uniform-Blocks der Schattenkarten, auf das die Shader verzweigen (`writeVsmUniforms`): Ein Wechsel kompiliert nichts neu, und ein ungenutzter Modus kostet nur seinen Code. Die opaken Flächen lesen ihre projizierte Maske in jedem Modus."
+      "sunAngularRadius": "Winkelradius der Sonnenscheibe in Radiant; null verlangt ausdrücklich harte Schatten."
     }
   },
   "LightingCapabilities": {
@@ -4382,7 +4347,7 @@
     "description": "`createCache` ist das GPU-Seiten-Reservoir (`createGpuPageCache`), `decode` der Decoder für Cluster-Seiten (`decodeGeometryPage`), ein eigener Chunk, den der erste Aufruf herunterlädt: Die Engine zeichnet Seiten auf der GPU und dekodiert nie eine auf der CPU."
   },
   "page.httpSource": {
-    "summary": "Eine Seitenquelle, die Seiten per HTTP von `baseUrl` liest.",
+    "summary": "Eine Seitenquelle, die Seiten per HTTP von `baseUrl` liest; `dispose` bricht ihre Lesevorgänge ab.",
     "parameters": {
       "baseUrl": "Die Adresse, relativ zu der die Seiten gelesen werden."
     }
@@ -4402,7 +4367,8 @@
       "options.homes": "Der eigene Platz jeder Seite, genommen, solange `slots` den ganzen Katalog halten (`homes.ts`).",
       "options.pageBytes": "Die Bytes eines Slots: ein Vielfaches von vier.",
       "options.slots": "Wie viele Slots der Pool fasst.",
-      "options.onDiagnostic": "Hört, was der Cache meldet: sein Layout, abgebrochene Ladevorgänge und Ablehnungen."
+      "options.onDiagnostic": "Hört, was der Cache meldet: sein Layout, abgebrochene Ladevorgänge und Ablehnungen.",
+      "options.cover": "Die Adressen der Wurzelabdeckung: eine Größenänderung behält sie vor jeder anderen Seite."
     }
   },
   "page.decode": {
@@ -4522,7 +4488,7 @@
   "PageSource": {
     "summary": "Woher die Seiten eines Modells gelesen werden, nach Schlüssel.",
     "members": {
-      "read": "Liest die Bytes einer Seite; `priority` ist, falls angegeben, die des Streamers (kleinste zuerst). Ein dringenderer Lesevorgang einer Seite, die schon geladen wird, wird erneut angefragt, um sie vorzuziehen: Eine Quelle, die `priority` annimmt, hängt ihn an den laufenden Lesevorgang an, statt die Seite zweimal zu übertragen."
+      "read": "Liest die Bytes einer Seite; `priority`, wenn angegeben, ist die des Streamers (die kleinste zuerst). Jedes Laden einer Seite fragt sie an: eine Quelle, die `priority` annimmt, schließt sich dem Lesen einer Seite im Flug an, auf das Dringendste angehoben, statt die Seite zweimal zu übertragen."
     }
   },
   "PageStreamer": {
@@ -4533,17 +4499,15 @@
     }
   },
   "PageStreamerOptions": {
-    "summary": "Wie ein Seiten-Streamer liest (`createPageStreamer`).",
-    "description": "Neben seinen Seiten reserviert sein Cache seine Manifest-Tabellen und seine Übertragungswarteschlange; jedes Mitglied hat einen Standardwert.",
+    "summary": "Wie ein Seiten-Streamer liest (`createPageStreamer`): über `cache`, den seines Eigners, der seine Manifesttabellen und seine Transferwarteschlange neben seinen Seiten reserviert; jedes andere Mitglied hat einen Standardwert.",
     "members": {
       "signal": "Bricht jeden Lesevorgang ab, sobald es abgebrochen wird.",
       "workerCount": "Gleichzeitig laufende Lesevorgänge; standardmäßig 8.",
-      "maxPages": "Höchstzahl gleichzeitig gehaltener Seiten; ohne Angabe nur durch Bytes begrenzt.",
       "onEvict": "Hört jede Seite, die den Cache verlässt.",
       "maxTransferBytes": "Bytes, die die Übertragungswarteschlange halten darf; standardmäßig 8 MiB.",
       "onDiagnostic": "Hört jeden Schritt jedes Lesevorgangs.",
-      "maxCachedBytes": "Bytes CPU-Speicher, die die Seiten des Caches halten dürfen; Manifest-Tabellen und Übertragungswarteschlange werden zusätzlich reserviert; standardmäßig 256 MiB.",
-      "onStalled": "Hört einmal einen Lesevorgang, der endgültig scheitert oder zuerst am längsten wartet: erneut erst, nachdem er angekommen ist."
+      "onStalled": "Hört einmal einen Lesevorgang, der endgültig scheitert oder zuerst am längsten wartet: erneut erst, nachdem er angekommen ist.",
+      "cache": "Der Seiten-Cache, über den er liest, der seines Eigners: er überdauert den Streamer."
     }
   },
   "PanZoomCameraControls": {
@@ -4784,7 +4748,8 @@
     "summary": "Das `{kind}`, das der Pfad einer gebackenen Stufe für jeden Atlas trägt, so wie `reduce.rs` sie benennt; eine bei Byte C geschnittene Coverage-Kette hängt `-C` an."
   },
   "PREVIEW_BASE": {
-    "summary": "Größte Seite, die eine von der Begleitdatei getragene Stufe haben kann."
+    "summary": "Größte Seite, die ein Sidecar-Level haben kann.",
+    "description": "Abschnitt der gewählten Grenzen: höchstens 21.844 Bytes je Textur gegenüber den Megabytes, die ein 256/512-Level hinzufügen würde."
   },
   "PREVIEW_BLOCK_BYTES": {
     "summary": "Bytes eines Blocks."
@@ -4978,10 +4943,6 @@
   "readCameraWorld": {
     "summary": "Kopiert die Host-Kamera in die Engine-Kamera, Vorfahren aufgelöst."
   },
-  "referenceScreenError": {
-    "summary": "Bildschirmfehler der Variante `reference`: `(error × stretch) × focal / w`, unendlich, wenn der Mittelpunkt die Nahebene nicht erreicht; `w` ist das Clip-Gewicht der Tiefe des Mittelpunkts, die Tiefe selbst unter einer perspektivischen Projektion (`perspective` = 1) und 1 unter einer orthografischen (0, `screenErrorBound.ts`).",
-    "description": "WGSL-Spiegel in `packages/sdk-browser/src/gpu/dag/shader/error.ts`, dieselben Operanden und dieselbe Reihenfolge, in f32. Der Aufrufer hat einen Fehler von null oder unendlich bereits behandelt."
-  },
   "removeTransformNode": {
     "summary": "Entfernt `node` und alle seine Nachkommen; ihre Indizes werden wiederverwendet.",
     "description": "Um einen Teilbaum abzuhängen und dabei zu behalten: `reparentTransformNode(tree, node, -1)`."
@@ -5058,14 +5019,14 @@
     "summary": "Die Wurzel der Szene einer Welt: man fügt ihr Objekte hinzu, lädt darin ein kompiliertes Modell, und das, was das Bild hinter ihnen füllt, ist `background`.",
     "members": {
       "isScene": "Immer `true`: unterscheidet die Szenenwurzel von jedem anderen Objekt.",
-      "environment": "Ein Umgebungsbild, das glänzende Oberflächen spiegeln; `null` für keines.",
+      "environment": "Ein Bild der Umgebung; `null` für keines.",
       "background": "Was das Bild hinter jedem Objekt füllt: eine Farbe oder `null` für den Standard. Eine Änderung erscheint im nächsten Bild, die Sitzung bleibt: eine hier gesetzte neue Farbe oder die gehaltene, über ihre Methoden geschrieben (`set`, `setRGB`, `setHex`, `setHSL`...). Ein direktes Schreiben von `.r`, `.g` oder `.b` wird nicht gehört: danach `background` erneut setzen. Ein Bild oder jeder Wert ohne `getHex` wird abgelehnt (`UNSUPPORTED_SCENE_UPDATE`): kein Pfad zeichnet es.",
       "fog": "Nebel auf jeder Fläche, deckend oder transparent; `null`, der Standard, für keinen, ohne Kosten. `{ color, near, far }` lässt Objekte von `near` bis `far` in `color` übergehen, Entfernungen von der Kamera; `{ color, density }` wird um `density` pro Entfernungseinheit dichter; mit `heightFalloff` (und `baseHeight`, standardmäßig 0) liegt er am Boden und wird über `baseHeight` dünner — alle `1 / heightFalloff` Einheiten nach oben durch e geteilt. Eine Änderung zeigt sich im nächsten Bild: ein hier neu gesetzter Nebel oder seine über ihre Methoden geschriebene Farbe. Ein direktes Schreiben von `near`, `far`, `density`... wird nicht bemerkt: danach `fog` erneut setzen. Ein Nebel außerhalb des Bereichs — `far` nicht hinter `near`, eine negative Dichte — wird abgelehnt (`INVALID_SCENE_ENVIRONMENT`).",
       "onBeforeRender": "Wird aufgerufen, bevor die Szene gezeichnet wird; standardmäßig keiner.",
       "onAfterRender": "Wird aufgerufen, sobald die Szene gezeichnet ist; standardmäßig keiner.",
       "load": "Lädt ein kompiliertes Modell — die URL seines Manifests — und fügt es dieser Szene hinzu.",
       "toJSON": "Die Szene als einfaches, versioniertes JSON: ihre Objekte, Formen über den Aufruf, der sie gebaut hat, Materialien, Lichter, der Körper jedes Meshs, wie er deklariert wurde, und geladene Modelle über ihre Adresse; dazu die Pose von `camera`, wenn eine übergeben wird.",
-      "fromJSON": "Ersetzt den Inhalt der Szene durch eine mit `toJSON` gespeicherte Szene, wobei ihre `helper`-Markierungen erhalten bleiben; wird aufgelöst, sobald ihre Modelle geladen sind. Ein anderes Format oder eine andere Version wird abgelehnt (`UNSUPPORTED_SCENE_FORMAT`). Aufrufe während eines Lesevorgangs laufen nacheinander, der Reihe nach, jeder auf dem, was der vorherige hinterlassen hat: Zwei gespeicherte Szenen werden nie vermischt."
+      "fromJSON": "Ersetzt, was die Szene hält, durch eine von `toJSON` gespeicherte Szene, ihre `helper`-Markierungen bleiben; löst sich auf, sobald ihre Modelle geladen sind. Ein anderes Format oder eine andere Version wird abgelehnt (`UNSUPPORTED_SCENE_FORMAT`). Aufrufe, die während eines Lesens erfolgen, laufen nacheinander, der Reihe nach, jeder auf dem, was der vorige hinterlassen hat: zwei gespeicherte Szenen verschmelzen nie."
     }
   },
   "SCENE_ENVIRONMENT_FLOATS": {
@@ -5158,7 +5119,7 @@
       "ids": "Der Name des Lichts an jedem Platz.",
       "count": "Wie viele Lichter.",
       "epoch": "Erhöht, wenn sich die Lichtmenge ändert.",
-      "transportEpoch": "Wird mit der Epoche erhöht, außer durch eine Änderung allein des Nebels oder allein einer Schattenkachel: Nebel ist ein Term des Sichtstrahls und eine Kachel der Ort, an dem die Karten eines Lichts adressiert werden, beides kein Lichttransport, daher behält, was transportiertes Licht zwischenspeichert (die Bounce-Sonden, der Verlauf der Reflexionen), es bei.",
+      "transportEpoch": "Mit der Epoche erhöht, außer durch eine Änderung allein des Nebels oder allein einer Schattenscheibe: Nebel ist ein Term des Sichtstrahls und eine Scheibe der Ort, an dem die Karten eines Lichts adressiert werden, keines von beiden Lichttransport, sodass das, was transportiertes Licht zwischenspeichert (die Bounce-Sonden), es behält.",
       "environment": "Die Umgebung der Szene.",
       "lightingView": "Vom Host angeforderte Ansicht, unverändert: `auto`, solange er nichts angefordert hat.",
       "unlit": "Wahr, wenn das Bild in rohem Albedo ausgegeben werden muss, ohne Licht. Das ist das Standardverhalten, solange kein Licht deklariert ist: eine Szene ohne Quelle hat nichts zu beleuchten, und ein schwarzes Bild würde keinem Geometrie-Prüfstand helfen. Sobald ein Licht existiert, übernimmt die echte Beleuchtung — außer der Host hat explizit die Diagnoseansicht angefordert.",
@@ -5289,12 +5250,6 @@
     "summary": "Zertifizierter Bildschirmfehler eines Clusters (C4): eine Obergrenze, in Pixeln, der Bildschirmverschiebung jedes Punktes einer Kugel, der um höchstens ε bewegt wird, unter perspektivischer Projektion, außeraxial eingeschlossen.",
     "description": "Sichtbezugssystem: das Auge am Ursprung, das zu −z schaut, Tiefe d = −z; Pixel (f_x·x/d, f_y·y/d), f = max(f_x, f_y). Die Primitive geht durch eine affine Abbildung maximaler Streckung s in die Sicht über: die Objektkugel (c, r) liegt in der Sichtkugel (C, ρ = r·s), eine Objektverschiebung von höchstens ε wird zu einer Verschiebung Δ von höchstens δ = ε·s. 1. Ein Punkt P = (x, y, d) der Kugel geht in P' = P + Δ über, mit Tiefe d' = d + Δd. Mit q = (x, y)/d: π(P') − π(P) = f·(Δxy − q·Δd)/d'. Die Abbildung Δ ↦ Δxy − q·Δd hat die Norm √(1 + |q|²) (Eigenwerte von I + q·qᵀ: 1 und 1 + |q|²); also gilt, unabhängig von der Richtung von Δ — senkrecht zur Achse, in der Tiefe zur Kamera oder von ihr weg, schräg —, |π(P') − π(P)| ≤ f·δ·√(1 + |q|²) / d'. 2. Auf der Kugel: d ≥ m = −C_z − ρ, die Mindesttiefe; |(x, y)| ≤ ℓ + ρ, wobei ℓ = |(C_x, C_y)| die Entfernung des Zentrums zur Sichtachse ist; also |q| ≤ (ℓ + ρ)/m, und d' ≥ m − δ. 3. Wenn m − δ > near (also > 0): E = f·δ·√(m² + (ℓ + ρ)²) / (m·(m − δ)). Sonst erreicht die Kugel, oder einer ihrer verschobenen Punkte, die Nahebene: unendlich, was verfeinert. Monotonie des Schnitts: m ist das Infimum der Tiefe auf der Kugel und ℓ + ρ das Supremum der Entfernung zur Achse; eine in einer anderen enthaltene Kugel meldet also weniger, ein größerer Fehler mehr. Entlang des Strahls (C → k·C, k > 1, Tiefe des Zentrums C_d > 0) nehmen (kℓ + ρ)/(k·C_d − ρ) und 1/(k·C_d − ρ − δ) ab: der gemeldete Fehler nimmt mit der Entfernung ab. Die beiden Grenzen von Schritt 2 kommen von zwei verschiedenen Punkten der Kugel: E ist eng für eine kleine Kugel, locker, wenn die Kugel die Nahebene fern der Achse streift (`screenErrorDisplacement.test.ts`). EINE KAMERA, EINE FORMEL. `perspective` ist das Clip-w-Gewicht der Kamera: ein Punkt bei Sichttiefe d hat w = perspective·d + (1 − perspective) — 1 für eine perspektivische Projektion (w = d, alles Obige), 0 für eine orthografische Projektion (w = 1: q = 0, und eine Verschiebung bewegt das Pixel um f·δ unabhängig von der Tiefe). Die Grenze wird über w geschrieben: E = f·δ·√(w_m² + (p·(ℓ + ρ))²) / (w_m·w_{m−δ}), wobei die Nahebene erreicht ist, wenn w_{m−δ} ≤ p·near. Bei p = 1 ist jede Operation die von oben, bitgenau (ein Produkt mit 1 und eine Summe mit 0 sind exakt). Keine Absicherung hier: der Aufrufer hat einen null, unendlichen oder ungültigen Fehler bereits behandelt. Eine nicht endliche Tiefe oder Achsenentfernung ergibt unendlich. Die Reihenfolge der Operationen, (δ·f)/m dann ein Faktor √/(m − δ) ≥ 1, hält das Ergebnis über dem Mindestwert `errorFloorAt` von sdk-browser gerundet. WGSL-Spiegelung: `projected` von `packages/sdk-browser/src/gpu/dag/shader/shader.ts`, dieselben Operanden, dieselbe Reihenfolge."
   },
-  "screenErrorVariant": {
-    "summary": "Die geltende Variante."
-  },
-  "ScreenErrorVariant": {
-    "summary": "Wie der Bildschirmfehler eines Clusters gemessen wird: die bewiesene Schranke oder die einfache Formel."
-  },
   "SDK_VERSION": {
     "summary": "Die Version des Pakets dieser Engine."
   },
@@ -5315,10 +5270,6 @@
   "setNodeScale": {
     "summary": "Streckt einen Knoten eines Transformationsbaums um `(x, y, z)`."
   },
-  "setScreenErrorVariant": {
-    "summary": "Legt die Variante für die ganze Seite fest.",
-    "description": "`null`/`undefined` setzt unsere zurück: keine Sitzung erbt sie."
-  },
   "SHADOW_PAGE": {
     "summary": "Seitenlänge einer Schattenseite in Texeln: die Einheit des Pools, der virtuellen Karten und der Invalidierung."
   },
@@ -5334,8 +5285,6 @@
       "tileLightPoolOverflowed": "Ob eine Kachel in diesem abgetasteten Bild keinen Platz im Pool fand und jedes Licht durchlief.",
       "tileLightPoolGrowths": "Wie oft der Pool auf das wuchs, was ein überlaufendes Bild verlangte, seit der Explorer geöffnet wurde.",
       "gpuShadowsMs": "GPU-Zeit der Schatten-Stufe, genau die Schattenpässe der Pass-Tabelle der Engine: der Schattenatlas, seine statische Ebene, das Löschen und der Pass der Transmissionsebene, das Aussortieren pro Seite, die Seitenpyramiden und der Verdeckungstest. Der Licht-Schnitt ist eine eigene Stufe (`shadowCasters`); kein Pass außerhalb der Schattenarbeit wird darin gezählt.",
-      "gpuShadowCullMs": "GPU-Zeit für die Auswahl der Schattenwerfer der Schattenseiten, die ein Bild zeichnet: der Lichtschnitt, das Aussortieren pro Seite und der Verdeckungstest bewegter Werfer mit den Pyramiden, die er liest.",
-      "gpuShadowRasterMs": "GPU-Zeit für das Zeichnen dieser Werfer in die Seiten: die statische Ebene, dann der Pool.",
       "gpuLightingMs": "GPU-Zeit der Beleuchtung.",
       "shadowPoolBytes": "GPU-Bytes des Schattenpools: seine Tiefenseiten, ihre statische und Transmissionsschicht, sobald angelegt, und die Puffer daneben. Null, bis das erste Bild den Pool dimensioniert.",
       "shadowResolutionBias": "Wie viel gröber die Schatten gezeichnet werden als verlangt, wegen ihres Seitenpools: die Halbierungen, die das GPU-Budget dem vollen Pool abgenommen hat, plus die Stufen, um die seine Füllung den Auflösungs-Bias jeder Karte angehoben hat (`shadowVsmLodBias`). Normalerweise 0; über 0 verweigert der Referenzmodus seine Aufnahme (`REFERENCE_SHADOWS_REDUCED`). Null, solange keine Schattenkarte läuft.",
@@ -5636,7 +5585,7 @@
     "members": {
       "url": "Wo sie gelesen wird, oder ihr Name im Katalog, wenn sie ein `range` einer anderen Datei ist.",
       "bytes": "Ihre Größe.",
-      "sha256": "Fingerabdruck ihrer Bytes.",
+      "sha256": "Fingerabdruck seiner Bytes, den sein Lesen zusammen mit seiner Größe prüft.",
       "range": "Eine Seite, die die `bytes` der Datei `file` ab `offset` ist und per HTTP Range gelesen wird: Die Warteschlange liest die Bereiche, die in einer Datei lückenlos hintereinander eingereiht sind, mit einer einzigen Anfrage (`queueRanges.ts`).",
       "kept": "False für eine Seite, bei der jeder Anfragende behält, was er dekodiert: gelesen für alle, die sich ihrem Lesevorgang anschließen, nie im Seitencache behalten, ihre Bytes nur einmal gehalten."
     }
@@ -5915,8 +5864,8 @@
     }
   },
   "TEXTURE_PREVIEW_VERSION": {
-    "summary": "Progressive Texturstufen, gespiegelt von `packages/asset-compiler-rust/src/texture_preview.rs`: das Ende der Mip-Kette einer Quelle in der Begleitdatei, in RGBA8 in der atlaseigenen Kodierung, von der feinsten Stufe, deren keine Seite `PREVIEW_BASE` überschreitet, bis 1×1 — und darüber, ein verlustfreies PNG pro Stufe im Cache, `bakedLevels` davon ab Stufe 0.",
-    "description": "Jede Stufe folgt der Mip-Regel, die die Grafikkarte anwendete, als sie die Kette selbst neu erstellte (`packages/sdk-browser/src/texture/mips.ts`): lineare Farbmittelung, Median-Alpha, Stufe `k` aus der quantisierten Stufe `k - 1`. Ihre Größen werden nicht geschrieben: sie ergeben sich aus den Abmessungen der Quelle, die `previewLevels.ts` neu berechnet. Version 4 backt jede Stufe über dem Ende, und das Ende selbst, in den von der Kochung angeforderten Blockfamilien neben den verlustfreien Dateien — die BC-Familie für Desktop-Karten, ASTC 4×4 für Mobilgeräte, ein Byte pro Texel — für Ketten, die eine Qualitätsprüfung behalten hat; eine Kette unter der Schwelle bleibt in dieser Familie verlustfrei, und das Anordnungswort ihres Eintrags sagt es. Version 6 legt eine Block-Stufendatei in Kachel-Datensätzen ab, je einer pro HTTP-Range-Anfrage (#962, `sdk-browser/src/texture/tileRecords.ts`)."
+    "summary": "Abschnittsvertrag: Eine Änderung von Levelmaßstab, Reihenfolge, Reduktionsregel, Farbraum, Blockcodec oder der Schwelle des Tors erfordert, diese Version und die Version der Binär-Sidecar-Datei, die sie trägt, zu erhöhen.",
+    "description": "Version 3 ist die GPU-Regel und die volle Kette, beide Atlanten eingeschlossen; Version 4 fügt die geprüften blockkomprimierten Level und Enden hinzu. Eine neue Kette unter eigenem Namen verschiebt keine vorhandene Datei und braucht keine Erhöhung: die Kette `Coverage` (#42) ist eine, ebenso die abdeckungserhaltende Kette jeder Schwelle (#44), `srgb-coverage-<C>`. Version 5 zählt die Abdeckung dieser Kette auf dem gefilterten Schnitt (#43): ihre Bytes ändern sich unter denselben Namen, und Leveldateien werden nur geschrieben, wenn sie fehlen. Version 6 legt eine Block-Leveldatei in Kachel-Einträgen an, je eine HTTP-Range-Anfrage (#962, `tile_records`); das `textures.version` des Manifests nennt sie der Engine. Version 7 fügt die ETC2-Familie hinzu (ETC2 RGBA8, EAC RG11): eine dritte Blockspalte und ein Layoutwort, und jede Familie wird standardmäßig gekocht."
   },
   "TextureBlockFormat": {
     "summary": "Eine Blockfamilie, in der eine Textur gebacken werden kann."
@@ -5971,17 +5920,17 @@
     "summary": "Was eine Stufendatei enthält: das verlustfreie PNG, oder die Blöcke einer Familie in einer Anordnung."
   },
   "TextureLevelReader": {
-    "summary": "Eine Funktion, die eine gebackene Texturstufe abruft."
+    "summary": "Eine Funktion, die ein gebackenes Texturlevel holt, der Speicher, in dem seine Level gehalten werden, und das Kochen, für das sie gemacht wurde (`heldLevels.ts`)."
   },
   "TextureLevelRequest": {
-    "summary": "Eine zu lesende Stufe: ihre Adresse, und das Format, das die Sitzung abtastet.",
+    "summary": "Ein zu lesendes Level: ein verlustfreies Level ganz oder, mit seinem `range`, der Eintrag einer Kachel eines Blocklevels (`tileRecords.ts`) per HTTP Range — ein Blocklevel wird nur über die Einträge seiner Kacheln gelesen.",
     "members": {
       "sha256": "Fingerabdruck des Quellbildes.",
       "atlas": "Welcher Atlas.",
       "level": "Welche Stufe.",
       "format": "Welches Format.",
-      "url": "Die eigene Adresse der Stufe, wenn der Cache eine auflistet — eine Impostor-Atlas-Stufe (`maps.<name>.levels[k].url`, #1239). Wird durch denselben Leser gelesen, gegen `base` aufgelöst, anstelle der Vorlage `textures.url`: ein Lader, ein Budget.",
-      "range": "Die Bytes einer Block-Stufe, allein zu lesen — der Datensatz einer Kachel (`tileRecords.ts`) —, per HTTP Range; ein Server, der sie ignoriert, antwortet mit der ganzen Datei."
+      "url": "Die eigene Adresse des Levels, wenn der Cache eine aufführt — ein Level eines Impostor-Atlas (`maps.<name>.levels[k].url`). Über denselben Leser gelesen, gegen `base` aufgelöst, anstelle der Vorlage `textures.url`: ein Lader, ein Budget.",
+      "range": "Der Eintrag der Kachel in der Leveldatei, nach seinem ersten Byte und seiner Länge; fehlt er, wird das Level ganz gelesen."
     }
   },
   "textureLevelUrl": {
@@ -6328,8 +6277,6 @@
       "enabled": "Ob der Controller auf Maus und Tastatur hört und die Kamera bewegt. `false` pausiert ihn — keine Eingabe, kein `update` —, ohne ihn neu zu erzeugen: Geschwindigkeit, Bodenkontakt, Schritt, Ausrichtung und Drehung bleiben erhalten, und `true` setzt genau dort fort, wo er stand.",
       "target": "Der Punkt, um den sich ein Drehpunkt-Controller dreht.",
       "autoUpdate": "Ob die Schleife der Welt `update` vor jedem Bild aufruft, vor den `world.beforeFrame`-Hooks. `false` überlässt den Schritt der Seite, die `update` aus einem solchen Hook aufruft, so oft und über so viele Teilschritte, wie sie integriert; die Welt macht ihn dann nie mehr.",
-      "colliders": "Nur Charakter: die Meshes, mit denen der Körper kollidiert — ein Objekt oder eine Liste, Nachkommen eingeschlossen — oder `null`. Sie zu setzen baut einen statischen Dreiecksbaum aus ihren Dreiecken im Weltraum, so wie sie jetzt stehen: ein Durchlauf über die Dreiecke und ein `O(T log T)`-Aufbau, etwa 52 Bytes pro Dreieck. Kompilierte Modelle werden noch nicht gelesen: gib ihnen ein einfaches Mesh als Platzhalter. Eine `CharacterCollision` — die Welt einer Physik-Engine, alles, was `resolveCapsule` und `groundBelow` beantwortet — wird unverändert verwendet.",
-      "rebuildColliders": "Nur Charakter: baut den Kollisionsbaum erneut, nachdem sich die Kollidierer bewegt oder geändert haben. Eine `CharacterCollision` ist ihre eigene Welt und wird unverändert weitergegeben.",
       "velocity": "Nur Charakter: die Geschwindigkeit des Körpers in Metern pro Sekunde, eine Kopie; sonst null.",
       "onGround": "Nur Charakter: ob die Füße auf einem Boden stehen; `false` für jeden anderen Controller.",
       "update": "Integriert einen gesteuerten Controller über `delta` Sekunden; ein Pivot-Controller liest seine Pose neu, und ein Orbit dreht um `autoRotate`. Ein pausierter Controller tut nichts.",
@@ -6511,7 +6458,7 @@
   },
   "WorldControls": {
     "summary": "Die Arten, wie eine Seite die Kamera mit Maus und Tastatur lenken kann, oder `'none'`.",
-    "description": "`'firstPerson'` bewegt eine Kamera; `'character'` bewegt einen Körper — Masse, Schwerkraft, Sprünge, Kollisionen mit `world.controls.colliders` — und blickt durch seine Augen. `'fly'` und `'firstPerson'` bewegen sich mit `world.controls.movementSpeed` und drehen sich mit `world.controls.lookSpeed`."
+    "description": "`'firstPerson'` bewegt eine Kamera; `'character'` bewegt einen Körper — Masse, Schwerkraft, Sprünge, Kollisionen mit der Physik der Welt — und schaut durch dessen Augen. `'fly'` und `'firstPerson'` bewegen sich mit `world.controls.movementSpeed` und drehen mit `world.controls.lookSpeed`."
   },
   "WorldFrameMetrics": {
     "summary": "Die Messwerte eines Bildes, wie der Host sie von der Engine kopiert hat, und zwei daraus zusammengesetzte, die eine Seite liest; `null`, wo der Pfad nicht zählt.",
@@ -6565,8 +6512,6 @@
       "tileLightPoolOverflowed": "Ob eine Kachel in diesem abgetasteten Bild keinen Platz im Pool fand und jedes Licht durchlief.",
       "tileLightPoolGrowths": "Wie oft der Pool auf das wuchs, was ein überlaufendes Bild verlangte, seit der Explorer geöffnet wurde.",
       "gpuShadowsMs": "GPU-Zeit der Schatten-Stufe, genau die Schattenpässe der Pass-Tabelle der Engine: der Schattenatlas, seine statische Ebene, das Löschen und der Pass der Transmissionsebene, das Aussortieren pro Seite, die Seitenpyramiden und der Verdeckungstest. Der Licht-Schnitt ist eine eigene Stufe (`shadowCasters`); kein Pass außerhalb der Schattenarbeit wird darin gezählt.",
-      "gpuShadowCullMs": "GPU-Zeit für die Auswahl der Schattenwerfer der Schattenseiten, die ein Bild zeichnet: der Lichtschnitt, das Aussortieren pro Seite und der Verdeckungstest bewegter Werfer mit den Pyramiden, die er liest.",
-      "gpuShadowRasterMs": "GPU-Zeit für das Zeichnen dieser Werfer in die Seiten: die statische Ebene, dann der Pool.",
       "gpuLightingMs": "GPU-Zeit der Beleuchtung.",
       "hizTestedClusters": "Was der Verdeckungstest bei einem Bild getan hat: die ihm gegebenen Cluster, die er eliminiert hat, und die, deren Bildschirmfußabdruck auf Stufe 0 den Sechzehn-Texel-Kernel überschreitet und daher aus einem gröberen Mip antworten. `hiz*Triangles` sind die Dreiecke derselben Cluster. Auf dem GPU-Pfad beschreiben sie ein ÄLTERES Bild als das, das sie rendert — `hizCountedFrame` sagt welches —, wie `gpuPassMs`, und zwei benachbarte Bilder tragen oft denselben Messwert. Keiner wird geschätzt: `null` für eine Engine, die keine Verdeckung testet, auf einem Gerät, dessen Urteile nicht zurückgelesen werden können, und solange kein Bild gezählt wurde.",
       "hizRejectedClusters": "Versteckte Cluster.",
@@ -6655,7 +6600,7 @@
   "WorldPageSource": {
     "summary": "Woher die Seiten gelesen werden, und die Adresse, relativ zu der sie gelesen werden.",
     "members": {
-      "read": "Liest die Bytes einer Seite; `priority` ist, falls angegeben, die des Streamers (kleinste zuerst). Ein dringenderer Lesevorgang einer Seite, die schon geladen wird, wird erneut angefragt, um sie vorzuziehen: Eine Quelle, die `priority` annimmt, hängt ihn an den laufenden Lesevorgang an, statt die Seite zweimal zu übertragen.",
+      "read": "Liest die Bytes einer Seite; `priority`, wenn angegeben, ist die des Streamers (die kleinste zuerst). Jedes Laden einer Seite fragt sie an: eine Quelle, die `priority` annimmt, schließt sich dem Lesen einer Seite im Flug an, auf das Dringendste angehoben, statt die Seite zweimal zu übertragen.",
       "baseUrl": "Die Adresse, relativ zu der jede Seite gelesen wird."
     }
   },
@@ -6737,47 +6682,16 @@
       "time": "Sekunden seit dem Beginn der Welt, zur Zeit des Bildes (`worldFrameGrid.ts`)."
     }
   },
-  "Capsule": {
-    "summary": "EINE AUFRECHTE KAPSEL gegen einen Dreiecksbaum: die enge Phase des Charakterkörpers.",
-    "description": "Die Kapsel steht auf `feet` — dem tiefsten Punkt ihrer unteren Kugel — und ist jeder Punkt innerhalb von `radius` des senkrechten Segments von `feet + radius` bis `feet + height - radius`. Ein Durchlauf findet jedes Dreieck, das näher als `radius` an diesem Segment liegt, und übergibt jede Überschneidung sofort an `push` (`CapsuleContact`). Der Aufrufer bewegt `feet`; das nächste Dreieck des Durchlaufs wird von der bewegten Kapsel aus gemessen, sodass zwei Wände, die sich in einer Ecke treffen, in einem Durchlauf beide verlassen werden.",
-    "members": {
-      "feet": "Der tiefste Punkt, im Weltraum; `push` bewegt ihn.",
-      "radius": "Radius des Körpers, in Metern.",
-      "height": "Höhe von den Füßen bis zur Kopfoberseite, in Metern; mindestens zwei Radien."
-    }
-  },
-  "CapsuleContact": {
-    "summary": "Eine Überschneidung zwischen einer Kapsel und einer Oberfläche.",
-    "description": "Die Arrays werden wiederverwendet: ein Push liest sie nur während des Aufrufs.",
-    "members": {
-      "normal": "Einheitsrichtung aus der Oberfläche in die Kapsel hinein: der Weg hinaus.",
-      "surface": "Einheitsnormale der Oberfläche selbst, auf der Seite der Kapsel. Sie unterscheidet sich von `normal`, wenn die Kapsel eine Kante oder eine Ecke berührt: sie sagt, zu welcher Fläche diese Kante gehört.",
-      "point": "Der berührte Punkt der Oberfläche, im Weltraum.",
-      "depth": "Wie weit die Kapsel entlang `normal` in der Oberfläche steckt, > 0."
-    }
-  },
-  "CapsulePush": {
-    "summary": "Beantwortet einen Kontakt, üblicherweise indem sie die `feet` der Kapsel daraus herausbewegt."
-  },
   "CharacterCameraControls": {
-    "summary": "EIN CHARAKTER, gesehen durch seine Augen: ein Körper mit Masse, der geht, läuft, springt und fällt, und mit den Dreiecken der Welt als aufrechte Kapsel kollidiert.",
-    "description": "Der Zeiger dreht den Kopf wie in der Ich-Perspektive (`look.ts`). Die Tasten, nach `KeyboardEvent.code`, damit jede Tastaturbelegung dieselben Tasten spielt: W/S oder die Pfeiltasten hoch und runter gehen vor und zurück, A/D oder die seitlichen Pfeiltasten schieben seitwärts, Umschalttaste sprintet, Leertaste springt. Der Körper startet und stoppt nicht sofort: er nimmt Fahrt auf über `responseTime` und bremst über `stopTime`, nie schneller, als die Reibung seines Bodens eine Sohle schieben lässt, sodass ein Halt auf Stein ein wenig und auf Eis weit gleitet, behält seinen Schwung in der Luft, steigt unter `gravity` und fällt unter `fallGravity`, klettert Kanten bis zu `stepHeight` hoch, gleitet an Wänden entlang und steht auf Hängen bis zu `maxSlope` (`sdk-core/src/collision/characterBody.ts`). Die Kamera ist das Auge, `eyeHeight` über den Füßen, wippt mit dem Schritt um `headBob` und taucht bei der Landung ab um `landingDip` (`sdk-core/src/collision/characterEye.ts`); beide wirken auf das Auge nach dem Schritt des Körpers und bewegen nie den Körper selbst. Ein Host, der die Kamera selbst bewegt, teleportiert den Körper dorthin, in Ruhe. Ein ruhender Charakter — am Boden, ohne Geschwindigkeit, ohne Taste, kein Abtauchen übrig — sendet nichts, sodass die Szene ruhig bleibt.",
+    "summary": "EINE FIGUR, durch ihre Augen gesehen: ein Körper mit Masse, der geht, rennt, springt und fällt und als aufrechte Kapsel mit den Körpern der Physik der Welt kollidiert.",
+    "description": "Der Zeiger dreht den Kopf wie in der Ego-Perspektive (`look.ts`). Die Tasten, nach `KeyboardEvent.code`, damit jedes Tastaturlayout dieselben Tasten spielt: W/S oder die Pfeile hoch und runter gehen vor und zurück, A/D oder die Seitenpfeile weichen seitlich aus, Umschalt sprintet, Leertaste springt. Der Körper startet und stoppt nicht sofort: er gewinnt Geschwindigkeit über `responseTime` und bremst über `stopTime`, nie schneller, als die Reibung seines Bodens eine Sohle schieben lässt, sodass ein Stopp auf Stein ein wenig und auf Eis weit gleitet; er behält seinen Schwung in der Luft, steigt unter `gravity` und fällt unter `fallGravity`, erklimmt Kanten bis `stepHeight`, gleitet an Wänden entlang und steht auf Hängen bis `maxSlope` (`sdk-browser/src/physics/characterDriver.ts`, `sdk-core/src/collision/characterDrive.ts`). Die Kamera ist das Auge, `eyeHeight` über den Füßen, mit dem Schritt um `headBob` wippend und bei einer Landung um `landingDip` einsinkend (`sdk-core/src/collision/characterEye.ts`); beides wirkt nach dem Schritt des Körpers auf das Auge und bewegt den Körper nie. Ein Host, der die Kamera selbst bewegt, teleportiert den Körper dorthin, in Ruhe. Eine ruhende Figur — am Boden, ohne Geschwindigkeit, ohne Taste, ohne verbleibendes Einsinken — sendet nichts, sodass die Szene still bleibt.",
     "members": {
       "velocity": "Die Geschwindigkeit des Körpers in Metern pro Sekunde, live: `[x, y, z]`, y nach oben.",
       "onGround": "Ob die Füße auf einem Boden stehen.",
       "onLand": "Wird bei der Landung mit der Sinkgeschwindigkeit in Metern pro Sekunde aufgerufen: ein Ton, ein Rütteln.",
       "onJump": "Wird aufgerufen, wenn der Körper bei einem Sprung den Boden verlässt.",
-      "collision": "Womit der Körper kollidiert — den Kollidierern der Welt, oder der Welt eines Physik-Backends über dieselbe Schnittstelle (`CharacterCollision`). `null` geht eben dort, wo der Körper steht, und fällt nie.",
       "update": "Lebt `delta` Sekunden; gibt zurück, ob sich die Kamera bewegt hat, und sendet `change`, wenn das der Fall war.",
       "stride": "Die Phase des Schritts in Radiant, in [0, 2π): ein Fuß trifft bei 0 auf den Boden, der andere bei π."
-    }
-  },
-  "CharacterCollision": {
-    "summary": "DIE NAHTSTELLE ZWISCHEN EINEM CHARAKTER UND DER WELT, MIT DER ER KOLLIDIERT.",
-    "description": "Der Charakterkörper (`characterBody.ts`) liest nie Dreiecke: er bewegt seine Kapsel in Abschnitten, die kürzer sind als ihr Radius, und fragt nach jedem, was die Kapsel überschneidet und in welche Richtung hinaus; und ein Läufer fragt, wo der Boden unter seinen Füßen ist. Alles andere — Geschwindigkeit, Schwerkraft, Stufen, Hänge, Sprünge — gehört dem Körper selbst. Ein Physik-Backend implementiert diese Schnittstelle, um einen Charakter in seine Welt zu setzen: es beantwortet die Überschneidung aus seinen eigenen Formen und seiner eigenen Breitphase, und der Körper geht darauf unverändert. Die Standardimplementierung ist der statische Dreiecksbaum von `triangleCollision`.",
-    "members": {
-      "resolveCapsule": "Findet, was `capsule` überschneidet, und ruft für jede Überschneidung sofort `push(contact)` auf (`CapsuleContact`: der Weg hinaus, die Oberfläche, der berührte Punkt, die Tiefe). `push` bewegt `capsule.feet`; eine Implementierung misst jede nächste Überschneidung von der bewegten Kapsel aus, sodass eine Ecke in einem Aufruf verlassen wird. Gibt zurück, ob sich etwas überschnitten hat.",
-      "groundBelow": "Senkt die untere Kugel der Kapsel senkrecht nach unten, um höchstens `depth`, und gibt zurück, wie weit sie geht, bevor sie zum ersten Mal auf einer Oberfläche ruht, die `accepts` annimmt — die höchste solche Stütze; negativ, wenn die Kapsel bereits darin versinkt und aufsteigen muss. `null`, wenn es keine gibt. `capsule.feet` bleibt, wo es war. `accepts` sieht jede Kandidatenberührung als Kontakt: `point`, `normal` vom Punkt zum Mittelpunkt der Kugel, `surface` die nach oben gewandte Fläche."
     }
   },
   "HeadSettings": {
@@ -6795,24 +6709,6 @@
       "locked": "Ob der Zeiger an die Ansicht gesperrt ist.",
       "lock": "Sperrt den Zeiger an die Ansicht.",
       "unlock": "Gibt den Zeiger frei."
-    }
-  },
-  "TriangleCollision": {
-    "summary": "Die Standard-Kollisionswelt: ein statischer Dreiecksbaum.",
-    "members": {
-      "tree": "Der Baum, aus dem geantwortet wird: sein `triangleCount` und seine `bytes` sind die Kosten der Welt."
-    }
-  },
-  "TriangleTree": {
-    "summary": "Eine Bounding-Volume-Hierarchie über die Dreiecke der Welt, abgefragt per Box: die Broad Phase hinter `triangleCollision` und `capsulePass`.",
-    "description": "Einmal von `buildTriangleTree` gebaut, danach nur lesbar.",
-    "members": {
-      "triangles": "Neun Zahlen pro Dreieck — drei Ecken — in Blattreihenfolge.",
-      "bounds": "Pro Knoten: min xyz, max xyz.",
-      "links": "Pro Knoten: das erste Dreieck eines Blatts, oder das rechte Kind eines inneren Knotens (das linke folgt seinem Elternknoten).",
-      "counts": "Pro Knoten: Dreieckszahl eines Blatts, 0 für einen inneren Knoten.",
-      "bytes": "Bytes, die der Baum belegt.",
-      "triangleCount": "Dreiecke, die der Baum hält."
     }
   },
   "CanvasPoint": {
@@ -7629,7 +7525,10 @@
     "summary": "Wiederholender Clip, der Baumknochen neigt und schwingen lässt.",
     "parameters": {
       "bones": "Knochen vom Stamm bis zu den Spitzen.",
-      "options": "Richtung, maximaler Biegewinkel und Frequenz."
+      "options": "Richtung, maximaler Biegewinkel und Frequenz.",
+      "options.direction": "Richtung in der Bodenebene `[x, z]`; Standard `[1, 0]`.",
+      "options.angle": "Maximale Biegung in Radiant; Standard 0,1.",
+      "options.frequency": "Schwingungen pro Sekunde; Standard 0,5."
     },
     "parameters.options.direction": "Richtung in der Bodenebene `[x, z]`; Standard: `[1, 0]`.",
     "parameters.options.angle": "Maximale Biegung in Radiant; Standard: 0,1.",
@@ -7662,13 +7561,34 @@
     "members.dirZ": "Normalisierte z-Komponente jeder Wellenrichtung.",
     "members.k": "Wellenzahl jeder Welle in Radiant pro Meter.",
     "members.amplitude": "Vertikale Amplitude jeder Welle in Metern.",
-    "members.lateral": "Normalisierte seitliche Amplitude jeder Welle in Metern."
+    "members.lateral": "Normalisierte seitliche Amplitude jeder Welle in Metern.",
+    "members": {
+      "count": "Anzahl der Wellen in der Summe.",
+      "dirX": "Normalisierte x-Komponente der Richtung jeder Welle.",
+      "dirZ": "Normalisierte z-Komponente der Richtung jeder Welle.",
+      "k": "Wellenzahl jeder Welle, in Radiant pro Meter.",
+      "amplitude": "Vertikale Amplitude jeder Welle, in Metern.",
+      "lateral": "Normalisierte laterale Amplitude jeder Welle, in Metern.",
+      "phase": "Phase jeder Welle zur gesetzten Zeit, in [0, 2π): der einzige zeitabhängige Zustand.",
+      "crest": "Höchster Punkt, den die Summe über der Ruhelage erreichen kann: `Σ Aᵢ`.",
+      "steepness": "`Σ Qᵢ·Aᵢ·kᵢ` nach der Normalisierung: höchstens 1.",
+      "phasesAt": "Phase jeder Welle bei `t` Sekunden, in doppelter Genauigkeit auf [0, 2π) reduziert.",
+      "setTime": "Taktet die Wellen auf `t` Sekunden; die Oberfläche des vorigen Bildes ist `setTime(t - dt)`.",
+      "offset": "Verschiebung `[x, y, z]` des Ruhepunkts `(x, 0, z)`, in `out`.",
+      "displacementBox": "Die Box, in der jede Verschiebung eines Ruhepunkts des Rechtecks `[x0, x1] × [z0, z1]` liegt, ihre kleinste Ecke dann ihre größte, in `out`: je Welle überspannt ihre Phase die Reichweite des Rechtecks entlang ihrer Richtung, über die ihr Sinus und Kosinus zwischen dem Kleinsten und Größten ihrer Enden und der Wellenberge und -täler der Spanne bleiben; die Summe der Wellenboxen enthält die Summe. `count` Wellen werden summiert, die ersten: was ein für weniger bemessener Eintrag zeichnet.",
+      "normal": "Einheitsnormale `[x, y, z]` der Oberfläche am Ruhepunkt `(x, z)`, in `out`."
+    }
   },
   "WindOptions": {
     "summary": "Windrichtung (`x`, `z` am Boden), maximale Knochenbiegung in Radiant und Schwingungen pro Sekunde.",
     "members.direction": "Richtung in der Bodenebene `[x, z]`; Standard: `[1, 0]`.",
     "members.angle": "Maximale Biegung in Radiant; Standard: 0,1.",
-    "members.frequency": "Schwingungen pro Sekunde; Standard: 0,5."
+    "members.frequency": "Schwingungen pro Sekunde; Standard: 0,5.",
+    "members": {
+      "direction": "Richtung in der Bodenebene `[x, z]`; Standard `[1, 0]`.",
+      "angle": "Maximale Biegung in Radiant; Standard 0,1.",
+      "frequency": "Schwingungen pro Sekunde; Standard 0,5."
+    }
   },
   "world.setTransform": {
     "summary": "Bewegt den Knoten `nodeName` so, dass seine Weltpose `matrix` ist: Ein Knoten, für den die Seite keine Referenz behält, wird über seinen Namen (`object.name`) erreicht, in der Szene gesucht.",
@@ -7839,5 +7759,114 @@
   },
   "TRANSPARENT_DEPTH_LAYER": {
     "summary": "Die Ebene, auf der die transparenten Durchgänge zeichnen: Ein Glas, ein Decal oder eine Wasserfläche, die genau auf einer opaken Fläche liegt, wird darüber gezeichnet — eine transparente Oberfläche gelangt nie in die Stufe des Compilers, ihre Seiten tragen also Ebene 0 —, eine Ebenenstufe über der Gleitkomma-Rundung zwischen dem opaken Raster und ihrem eigenen, nie genug, um eine darüberliegende Oberfläche zu erreichen."
+  },
+  "ByteMeter": {
+    "summary": "Zählt die Bytes, die ein Laden liest, gegen die Längen, die sein Manifest angibt.",
+    "members": {
+      "plan": "Die Dateien, die das Laden liest, Adresse zu angegebener Länge: ihre Summe geht sofort in die Gesamtzahl ein, außer bei einer schon gelesenen Datei, die beim Eintreffen gezählt wurde. Ein leerer Plan ist keiner: das Laden wird dann nur einmal gemeldet, ganz, wenn es endet.",
+      "read": "Gibt `response` (von `url` gelesen) zurück, ihr Körper beim Eintreffen gezählt.",
+      "settle": "Verwirft die geplanten Dateien, die nie gelesen wurden, damit das letzte Ereignis `loaded === total` hat."
+    }
+  },
+  "CacheSession": {
+    "summary": "Eine Sitzung, die über den Cache liest: wer hört, dass eine Seite verdrängt wird, oder eine Verdrängung, die nichts fand, was sie nehmen konnte.",
+    "description": "Was sie von der Gesamtmenge reserviert, teilt sie dem Platz mit, den sie öffnet (`open`), bei jeder Änderung.",
+    "members": {
+      "evicted": "Wird mit der URL einer Seite aufgerufen, wenn der Cache sie verdrängt.",
+      "blocked": "Wird aufgerufen, wenn eine Verdrängung über dem Budget nichts fand, was sie nehmen konnte."
+    }
+  },
+  "EvictionOrder": {
+    "summary": "Eine Verdrängungsreihenfolge, die ein GPU-Schnitt veröffentlicht (`../dag/evict.ts`), ihre Schlüssel einzeln gelesen, wie Opfer genommen werden.",
+    "members": {
+      "count": "Wie viele Schlüssel die Reihenfolge aufführt.",
+      "keyAt": "Der Schlüssel am Rang `at`, das erste Opfer bei 0."
+    }
+  },
+  "FAR_PLANE_SLOT": {
+    "summary": "Rang der FAR-Ebene unter den sechs, der Platz, den die Floats von `planes` zu vier je Ebene adressieren."
+  },
+  "ModelScene": {
+    "summary": "Die Szene eines Modells, wie sein Eintrag sie zeigt: der Graph, den sein Lader gebaut hat, ohne die Weltwurzeln, die er geöffnet hat und die das Modell für die Sitzungen seiner Welt für sich behält.",
+    "members": {
+      "source": "Die Wurzel der Szenenknoten, repliziert, wie die Optionen es verlangen.",
+      "associations": "Die Meshes und Primitive, für die jeder Knoten der Szene steht, nach Knoten.",
+      "nodes": "Der Host-Knoten jedes glTF-Knotens, nach seinem Index; keiner, wenn die Szene partitioniert oder repliziert ist: eine Partition nummeriert die Tabelle neu, Replikate kopieren sie.",
+      "clips": "Die Clips, die die Datei abspielt (#357).",
+      "textureIndices": "Der Rang jeder Textur der Szene in der Tabelle, die die Shader indizieren.",
+      "partitions": "Die Zellen, nach denen eine partitionierte Szene gelesen wird, keine, wenn die Szene nicht partitioniert ist.",
+      "sceneLightingSource": "Der Knoten, dessen Lichter und Umgebung die Szene beleuchten: `options.sceneLighting`, sonst die eigene Wurzel der Szene vor jeder Replikation.",
+      "framingLot": "Das Los, in dem die Kamera-Einrahmung die Grenzen der Szene nimmt, `null`, wenn kein Knoten Grenzen hat; der Aufrufer gibt es zurück."
+    }
+  },
+  "PageCache": {
+    "summary": "Der Cache dekodierter Seiten, über den eine Sitzung liest (`createPageCache`).",
+    "members": {
+      "bytes": "Bytes, die jeder Eintrag hält.",
+      "heldBytes": "Bytes der Einträge, die jemand hält: keine Verdrängung nimmt sie.",
+      "pageCount": "Wie viele Seiten er hält.",
+      "levelBytes": "Bytes, die die Texturlevel und Kachel-Einträge halten.",
+      "cpuBytes": "Die CPU-Gesamtmenge: Einträge, Manifesttabellen, Transferwarteschlangen und Engine-Tabellen zusammen.",
+      "reservedBytes": "Bytes, die die über ihn lesenden Sitzungen von der Gesamtmenge reservieren.",
+      "budgetBytes": "Bytes, die die Einträge halten dürfen: die Gesamtmenge abzüglich des Reservierten (`reservedBytes`).",
+      "roomBytes": "Bytes, die ein ankommender Eintrag belegen darf: das Budget abzüglich dessen, was keine Verdrängung nehmen darf.",
+      "weight": "Bytes, die der Eintrag bei `key` hält; 0, wenn keiner da ist.",
+      "weigh": "Der Eintrag bei `key` wiegt jetzt `bytes` — die dekodierten Zuweisungen eines behaltenen Lesevorgangs —, solange der Cache ihn behält.",
+      "page": "Die Seite bei `url`, ohne etwas zu markieren.",
+      "touch": "Die Seite bei `url`, als zuletzt benutzt markiert.",
+      "put": "Legt `array` als zuletzt benutzte Seite bei `url` ab; `sha256`, wenn sie gerade gelesen und geprüft wurde. Ihre Haltungen bleiben: eine angeheftete oder unterwegs befindliche Seite kommt gehalten an.",
+      "drop": "Der Eintrag bei `url` geht, seine Haltungen mit ihm.",
+      "foreign": "Ob die bei `url` gehaltene Seite eine andere Datei ist als die, die `announced` nennt: ein anderer Fingerabdruck oder eine andere Größe, oder Bytes, die nie gegen einen Fingerabdruck geprüft wurden. Ein Name allein ist keine Datei: eine andere Szene, eine andere Basis oder derselbe neu gekochte Ordner kann ihn bei gleicher Größe wiederverwenden. Derselbe Fingerabdruck sind dieselben Bytes, beim Lesen geprüft, unter jeder Basis.",
+      "acquire": "Eine Haltung mehr auf den Eintrag bei `url`, noch bevor er ankommt.",
+      "release": "Eine Haltung auf den Eintrag bei `url` endet; der Aufrufer wiegt den Cache, wenn er fertig ist (`fit`).",
+      "fit": "Verdrängt, was nicht mehr passt (`fit`): nachdem eine Seite angekommen oder eine Haltung beendet ist.",
+      "file": "Die Datei bei `url`, die ein Server ganz beantwortet hat, als zuletzt benutzt markiert, solange der Cache sie behält.",
+      "keepFile": "Behält die Datei bei `url`, die ein Server ganz beantwortet hat, als zuletzt benutzten Eintrag, wenn sie in das passt, was die Verdrängung freigeben kann (`roomBytes`): eine darüber nähme jeden Eintrag, dann sich selbst, und wird losgelassen.",
+      "level": "Das unter `id` gehaltene Texturlevel oder der Kachel-Eintrag, als zuletzt benutzt markiert.",
+      "keepLevel": "Hält `level` unter `id`, der Cache ist von hier an sein Eigner: er schließt es, wenn es geht. Ein schon gehaltenes Level — inzwischen von der Sitzung gelesen, die ein Geräteverlust ersetzt hat — bleibt, als zuletzt benutzt markiert, und die Kopie schließt sich: seine Bytes werden einmal gezählt.",
+      "keep": "Das Lesen der Datei, die `key` nennt, von `bytes` Bytes — der residente Proxy der Szene —, ganz behalten anstelle jedes anderen: `start` beginnt es mit der eigenen Abbrechung des Caches, wenn es nicht behalten wird, und eine inzwischen wieder geöffnete Sitzung schließt sich dem laufenden an. Seine Bytes zählen ab dem Moment, da es verlangt wird; unterwegs gehalten, geht es erst, wenn es angekommen ist, und dann erst, wenn keine Seite, Datei oder Level es kann (`SCENE_TIER`). Es bleibt über Sitzungen, bis `keepOnly` es nicht mehr nennt. Ein fehlschlagendes Lesen geht sofort.",
+      "keepOnly": "Lässt den Proxy der Szene gehen, sein Lesen abgebrochen, es sei denn `key` nennt ihn: eine Szene ist fort.",
+      "resize": "Setzt die Gesamtmenge und verdrängt sofort, was nicht mehr passt.",
+      "open": "`session` liest ab jetzt über den Cache, `reserving` Bytes von der Gesamtmenge reserviert, bis sie geht: der Platz, den sie erhält, meldet jede neue Reservierung (`reserve`) und ihr Gehen (`leave`).",
+      "clear": "Leert den Cache: sein Eigner ist fort.",
+      "readRange": "Die Bytes `[offset, offset + length)` der Datei bei `url`, per HTTP Range, für jedes Laden und jede Sitzung, die über diesen Cache liest: eine Datei, die ihr Server ganz beantwortet, wird einmal gelesen und hier behalten (`createRangedReads`)."
+    }
+  },
+  "RangeAsk": {
+    "summary": "Wie ein Bereich gelesen wird: der Zähler für das Eintreffende, die Anfragen, die `checked` höchstens stellt, und das Signal, das seinen Anforderer gehen lässt.",
+    "members": {
+      "meter": "Zählt die Bytes, die eintreffen.",
+      "attempts": "Die meisten Anfragen, die `checked` für den Bereich stellt.",
+      "signal": "Lässt seinen Anforderer gehen: das Lesen endet, sobald keiner mehr darauf wartet."
+    }
+  },
+  "ReadRange": {
+    "summary": "Ein Lesen von `length` Bytes ab `offset` der Datei bei `url` (`createRangedReads`)."
+  },
+  "TextureLevelAddress": {
+    "summary": "Wo ein Level liegt: seine Adresse und das Format, das die Sitzung abtastet.",
+    "members": {
+      "sha256": "Fingerabdruck des Quellbilds.",
+      "atlas": "Welcher Atlas.",
+      "level": "Welches Level.",
+      "format": "Welches Format.",
+      "url": "Die eigene Adresse des Levels, wenn der Cache eine aufführt — ein Level eines Impostor-Atlas (`maps.<name>.levels[k].url`). Über denselben Leser gelesen, gegen `base` aufgelöst, anstelle der Vorlage `textures.url`: ein Lader, ein Budget."
+    }
+  },
+  "TextureLevelStore": {
+    "summary": "Wo die gelesenen Level gehalten werden: der Seiten-Cache, unter seinen Einträgen (`PageCache.level`), jedes dort von seinem Anforderer gehalten, solange es nicht gehen darf (`acquire`, `release`, dann `fit`).",
+    "members": {
+      "level": "Das unter `id` gehaltene Texturlevel oder der Kachel-Eintrag, als zuletzt benutzt markiert.",
+      "keepLevel": "Hält `level` unter `id`, der Cache ist von hier an sein Eigner: er schließt es, wenn es geht. Ein schon gehaltenes Level — inzwischen von der Sitzung gelesen, die ein Geräteverlust ersetzt hat — bleibt, als zuletzt benutzt markiert, und die Kopie schließt sich: seine Bytes werden einmal gezählt.",
+      "roomBytes": "Bytes, die ein ankommender Eintrag belegen darf: das Budget abzüglich dessen, was keine Verdrängung nehmen darf.",
+      "levelBytes": "Bytes, die die Texturlevel und Kachel-Einträge halten.",
+      "acquire": "Eine Haltung mehr auf den Eintrag bei `url`, noch bevor er ankommt.",
+      "release": "Eine Haltung auf den Eintrag bei `url` endet; der Aufrufer wiegt den Cache, wenn er fertig ist (`fit`).",
+      "fit": "Verdrängt, was nicht mehr passt (`fit`): nachdem eine Seite angekommen oder eine Haltung beendet ist."
+    }
+  },
+  "createPageCache": {
+    "summary": "DER EINE HOST-CACHE: die Bytes jeder gelesenen Seite und jedes Bündels, jeder Datei, die ein Server ganz statt eines Bereichs beantwortet hat (`readRange`), jedes dekodierten Texturlevels und Block-Kachel-Eintrags (`level`) und des residenten Proxys der Szene (`keep`), als eine Menge von Einträgen, EIN Budget und EINE Verdrängung (`cacheEntries.ts`), gegen die CPU-Gesamtmenge (`cpuBytes`, `world.budget.cpu`).",
+    "description": "Sein Eigner behält ihn über Sitzungen: eine Welt gibt jeder Sitzung, die sie öffnet, denselben, sodass eine wieder geöffnete Sitzung — auf einem nach einem Verlust erneut gewährten Gerät oder auf einer geänderten Szene — hier liest, was die letzte geholt hat, und nichts holt, was er hält. Jede über ihn lesende Sitzung reserviert ihre Manifesttabellen, ihre Transferwarteschlange und die Tabellen der Engine (`manifestTableBytes`, `maxTransferBytes`, das `reserve` des Streamers), beim Ändern gemeldet (`open`), der Cache behält deren Summe, und nimmt Haltungen auf die Seiten, die sie anheftet oder liest; die Einträge halten den Rest (`budgetBytes`). Der Cache allein verdrängt, sobald seine Einträge das Budget überschreiten: nie einen Eintrag, den jemand hält, dann die am längsten nicht benutzten Seiten, Dateien und Level, den Proxy zuletzt. Ein Level braucht keinen eigenen Platz: es nimmt, was die Verdrängung freigeben kann (`roomBytes`), wie eine Seite."
   }
 }

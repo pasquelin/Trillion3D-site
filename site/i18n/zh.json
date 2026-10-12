@@ -1174,10 +1174,6 @@
         "自适应 — `pixelError: 2`,通过 `adaptivePixelError(base, speed, radius)` 随摄像机速度提高;静止视角保持基准值。"
       ]
     },
-    "ScreenErrorVariant": {
-      "description": "裁切时用来和阈值比较的,是簇误差的哪一种投影方式。这是整个页面共享的模块级状态,由 CPU 侧的指标读取,并在着色器编译时内联进选择着色器;基准测试的两侧各自运行在自己的页面上。公式的公开出处:Karis、Stubbe 与 Wihlidal,SIGGRAPH 2021,《Advances in Real-Time Rendering in Games》。",
-      "values": ["我们这边(默认):一个绝不会低估误差的上界。", "公开发表的公式,用于对比基准测试。"]
-    },
     "MathPathMode": {
       "description": "一个批处理运行在哪条路径上。`auto` 通过实测来裁定:调度器在每一侧都维护一个“每元素耗费纳秒数”的滑动中位数,并在连续多次执行都保持领先后才切换路径,JS 始终是基准,也是后备方案。`MATH_PATH_CONTRACT` 管理公开报告的版本号。",
       "values": [
@@ -1374,9 +1370,6 @@
     },
     "boxTransformBatch": {
       "description": "被 `n` 个矩阵变换的 `n` 个包围盒:`out[i] = boxTransform(boxes[i], mats[i])`。`out` 和 `boxes` 每个元素占六个数字,`mats` 是十六数字的子视图。"
-    },
-    "hierarchyUpdateBatch": {
-      "description": "一次遍历更新整个层级结构:`n` 个节点按父节点先于子节点排序,每个节点先合成自己的局部矩阵,再与父节点的世界矩阵相乘——这和 `packages/sdk-core/src/world/transform-tree/update.ts` 里的遍历完全一致,是在平铺缓冲区上执行的同样两个公式、同样的顺序。`parents[i]` **必须**指向一个已经更新过的节点,也就是严格小于 `i`;其他任何值(包括 `HIERARCHY_ROOT` 这个哨兵值)都会让该节点成为根节点,其世界矩阵就等于局部矩阵。这条规则在两条路径上完全一致:无论输入多么刁钻,都不可能让两者产生分歧。`local` 是一个所有元素共用的临时矩阵。"
     },
     "createPathGovernor": {
       "description": "针对每个具名运算,决定在 JS 和 WebAssembly 之间如何裁定:每元素耗费纳秒数的滑动中位数、只有在连续五次执行都保持领先之后才会切换的规则,以及每五十次执行里有一次会重新跑一遍另一条路径来刷新它的中位数。样本数不足五个时不会做出任何决定——否则单个数值就会被当成中位数。`metrics()` 会按运算分别公开 `path`、`jsNsPerElement`、`wasmNsPerElement`、切换次数,以及测量所依赖的时钟分辨率。"

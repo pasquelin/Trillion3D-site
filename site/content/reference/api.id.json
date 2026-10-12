@@ -131,7 +131,7 @@
     }
   },
   "BatchRead": {
-    "summary": "Cara `request` membaca satu kelompok: sinyal pemiliknya, prioritasnya, dan apa yang berjalan saat setiap halaman tiba.",
+    "summary": "Bagaimana `request` membaca sebuah kelompok: sinyal pemiliknya, prioritasnya, dan apa yang berjalan saat setiap halaman tiba, dengan byte-nya di tangan.",
     "members": {
       "signal": "Melepaskan pembacaan kelompok: pembacaan yang tidak lagi ditunggu siapa pun dibuang selagi menunggu.",
       "priority": "Prioritas antrean, bawaan 1.",
@@ -282,13 +282,13 @@
     }
   },
   "BufferAttribute": {
-    "summary": "Larik bertipe berisi nilai per-vertex, `itemSize` angka per vertex: `PageAttribute` milik codec halaman (`page-codec/pageAttributes.ts`), dengan apa yang ditulis sebuah halaman ke dalamnya.",
+    "summary": "Array bertipe berisi nilai per verteks, `itemSize` angka per verteks: `PageAttribute` codec halaman (`page/pageInput.ts`), dengan apa yang ditulis sebuah halaman ke dalamnya.",
     "members": {
       "isBufferAttribute": "Selalu `true`: membedakan sebuah atribut buffer dari yang lain.",
       "type": "Bagaimana nilainya dideklarasikan; sebuah atribut half-float disimpan pada presisi float.",
       "version": "Dinaikkan setiap penulisan yang dideklarasikan: apa yang dibandingkan dunia untuk melihat konten berubah.",
-      "array": "Angka-angkanya sendiri.",
-      "count": "Berapa banyak vertex yang dijelaskan angka-angkanya.",
+      "array": "Angka-angkanya sendiri; pembacaan sebelum angka dimuat ditolak berdasarkan namanya.",
+      "count": "Berapa banyak verteks yang dijelaskan angka-angka itu, diketahui sebelum dimuat.",
       "needsUpdate": "`needsUpdate = true` setelah menulis `array`: pembaca mengunggahnya lagi.",
       "clone": "Atribut baru dengan salinan angka, tipenya, normalisasinya, dan namanya.",
       "kind": "Atribut ini memiliki buffernya sendiri.",
@@ -684,7 +684,7 @@
   },
   "CpuStepSummary": {
     "summary": "Profil tahap CPU sebuah loop render: cincin terbatas gambar-gambar terbaru ditambah gambar terburuk menurut durasi total, dirangkum sesuai permintaan.",
-    "description": "Ini ada supaya sebuah mesin bisa melaporkan ke mana waktu CPU-nya pergi dalam mode `summary` — menyalakan jejak per-bingkai untuk mengetahuinya justru mengubah pewaktuan yang diukur. Tidak ada yang dialokasikan per gambar: pemanggil mengisi baris coretan dan menyerahkannya. Dua jendela atas gambar yang sama — satu pada laju publikasi, satu yang ditarik sebuah host — berbagi baris itu (`row`).",
+    "description": "Ada agar mesin dapat melaporkan ke mana waktu CPU-nya sendiri pergi dalam mode `summary` — menyalakan jejak per bingkai untuk mengetahuinya mengubah waktu yang diukur. Tidak ada yang dialokasikan per gambar: pemanggil mengisi baris kerja dan menyerahkannya.",
     "members": {
       "frames": "Bingkai yang diukur.",
       "steps": "Waktu setiap langkah: median, ke-95 dan terburuk.",
@@ -1054,8 +1054,7 @@
   },
   "FirstPersonCameraControls": {
     "summary": "ORANG PERTAMA, pointer terkunci: pointer memutar kepala, tombol berjalan.",
-    "description": "Cakrawala tetap datar — yaw mengelilingi arah atas dunia, pitch dijepit ke `[minPitch, maxPitch]`, tidak pernah ada roll — dan jalannya mengikuti yaw saja, jadi melihat ke atas tidak mengangkat pejalan dari lantai. KUNCI ITU HAK HOST UNTUK MEMINTANYA. Sebuah peramban hanya memberi kunci pointer di dalam sebuah gesture, jadi controller memintanya pada `pointerdown` dan menerbitkan `lock()`, `unlock()` dan `locked()` untuk host yang lebih suka memilih momennya sendiri; sebuah kunci yang dilepaskan pengguna hanya menghentikan pandangan.  Tombol, menurut `KeyboardEvent.code`: W/S maju dan mundur, A/D geser samping, Space dan shift kiri naik dan turun.",
-    "members": {}
+    "description": "Cakrawala tetap datar — yaw mengelilingi arah atas dunia, pitch dijepit ke `[minPitch, maxPitch]`, tidak pernah ada roll — dan jalannya mengikuti yaw saja, jadi melihat ke atas tidak mengangkat pejalan dari lantai. KUNCI ITU HAK HOST UNTUK MEMINTANYA. Sebuah peramban hanya memberi kunci pointer di dalam sebuah gesture, jadi controller memintanya pada `pointerdown` dan menerbitkan `lock()`, `unlock()` dan `locked()` untuk host yang lebih suka memilih momennya sendiri; sebuah kunci yang dilepaskan pengguna hanya menghentikan pandangan.  Tombol, menurut `KeyboardEvent.code`: W/S maju dan mundur, A/D geser samping, Space dan shift kiri naik dan turun."
   },
   "FloatBatch": {
     "summary": "Larik float yang dibaca dan ditulis sebuah batch."
@@ -1345,25 +1344,6 @@
   "HALF_PI": {
     "summary": "Seperempat putaran, dalam radian."
   },
-  "HIERARCHY_ROOT": {
-    "summary": "HIERARKI PENUH diperbarui dalam satu tahap: `n` node diurutkan induk sebelum anak, masing-masing menyusun matriks lokalnya lalu mengalikannya dengan matriks dunia induknya.",
-    "description": "Kedua rumus berjalan pada buffer datar, dan kernel WebAssembly mereplikasinya suku demi suku. `parents[i]` HARUS berupa indeks sebuah node yang sudah diperbarui, karena itu harus lebih kecil ketat dari `i`; nilai lain apa pun — termasuk sentinel `HIERARCHY_ROOT` — menjadikan node itu sebuah root yang matriks dunianya adalah matriks lokalnya. Aturannya identik di kedua sisi: tidak ada masukan, sekeras apa pun, yang bisa membuat keduanya berbeda."
-  },
-  "HIZ_NOTHING": {
-    "summary": "Nilai yang dikembalikan saat tidak ada texel yang dibaca: tidak bisa mengoklusi apa pun.",
-    "description": "Kedalaman mesin TERBALIK — dekat adalah 1, jauh adalah 0 (`../../../math/src/projection/camera.ts`). Sebuah kotak pembatas teroklusi hanya jika batas kedalaman terdekatnya LEBIH JAUH (nilai lebih kecil) dari kedalaman pengoklusi."
-  },
-  "HizFlat": {
-    "summary": "Piramida Hi-Z per-bingkai: satu `Float32Array` untuk semua tingkat, satu offset dan ukuran per tingkat.",
-    "description": "Nilainya berasal dari visbuffer, sudah dalam presisi tunggal, dan reduksi menyimpan yang PALING JAUH dari sebuah kuad 2x2 — sebuah minimum, karena kedalaman mesin terbalik: tidak ada yang dibulatkan, tata letak datar mengembalikan persis apa yang dikembalikan piramida larik bersarang, tanpa mengalokasikan satu baris per baris dan bingkai. Cerminan produksi dari `hizReduceCeil` (oracles.fixture.ts), yang tetap jadi acuan: dua implementasi sengaja dari reduksi yang sama, diadu satu sama lain dalam uji kesetaraan.",
-    "members": {
-      "data": "Kedalaman setiap tingkat.",
-      "offsets": "Tempat setiap tingkat dimulai.",
-      "widths": "Lebar setiap tingkat.",
-      "heights": "Tinggi setiap tingkat.",
-      "count": "Berapa banyak tingkat."
-    }
-  },
   "HostAttribute": {
     "summary": "Satu atribut vertex geometri host, saling diselang-seling atau tidak: tata letak dan penyimpanannya."
   },
@@ -1607,8 +1587,7 @@
       "shadowRequestCap": "Halaman virtual yang boleh diminta shading per bingkai; sisanya meminta lagi pada bingkai berikutnya.",
       "sunLevels": "Tingkat clipmap cahaya terarah. Tingkat `L` memiliki texel `2^L` meter, dan sebuah piksel membaca tingkat yang texelnya tidak melebihi jejaknya sendiri: enam belas tingkat mencakup rasio jauh/dekat 2^15. Di luar tingkat terakhir, bayangan jauh mengambil alih.",
       "sunLevelPages": "Halaman per sisi dari cakupan satu tingkat clipmap di sekitar kamera. Ini kapasitas, bukan penyetelan: setiap piksel membaca kerapatannya sendiri selama `height / tan(halfFovY)` tidak melebihi `sunLevelPages · shadowPage / 2` = 4096 (kanvas 4K dengan bidang vertikal 55°); di luar itu, piksel luar membaca tingkat berikutnya dengan setengah kerapatan.",
-      "sunAngularRadius": "Radius sudut cakram matahari dalam radian; nol secara eksplisit meminta bayangan keras.",
-      "translucentShadowFilter": "Cara permukaan yang di-blend dan air membaca peta bayangan virtual sebuah cahaya: 0, satu pencarian titik; 1, enam belas sampel terfilter berjarak satu texel, setiap texel dengan bias bidang penerimanya sendiri dan transmisi caster tembus pandangnya sendiri; 2, sinar peta bayangan dari offset layar pendek, dengan jumlah sinar proyeksi opak, dengan dither. Sebuah kata pada blok uniform peta bayangan yang menjadi cabang shader (`writeVsmUniforms`): mengubahnya tidak mengompilasi ulang apa pun, dan mode yang tidak dipakai hanya memakan biaya kodenya. Permukaan opak membaca mask proyeksinya di setiap mode."
+      "sunAngularRadius": "Radius sudut cakram matahari dalam radian; nol secara eksplisit meminta bayangan keras."
     }
   },
   "LOD_QUALITY": {
@@ -2281,7 +2260,8 @@
     "summary": "`{kind}` yang dibawa jalur level terpanggang untuk setiap atlas, sebagaimana `reduce.rs` menamainya; rantai cakupan yang dipotong pada byte C menambahkan `-C`."
   },
   "PREVIEW_BASE": {
-    "summary": "Sisi terbesar yang boleh dimiliki sebuah tingkat yang dibawa sidecar."
+    "summary": "Sisi terbesar yang dapat dimiliki level berkas pendamping.",
+    "description": "Bagian batas pilihan: paling banyak 21.844 byte per tekstur dibanding megabyte yang akan ditambahkan level 256/512."
   },
   "PREVIEW_BLOCK_BYTES": {
     "summary": "Byte satu blok."
@@ -2411,7 +2391,7 @@
   "PageSource": {
     "summary": "Tempat halaman sebuah model dibaca, menurut kunci.",
     "members": {
-      "read": "Membaca byte satu halaman; `priority`, bila diberikan, adalah milik streamer (terkecil lebih dulu). Pembacaan yang lebih mendesak atas halaman yang sedang dibaca diminta lagi untuk menaikkannya: sumber yang menerima `priority` menggabungkannya ke pembacaan yang sedang berjalan, bukan mengirim halaman dua kali."
+      "read": "Membaca byte satu halaman; `priority`, bila diberikan, adalah milik streamer (terkecil lebih dulu). Setiap pemuatan sebuah halaman memintanya: sumber yang menerima `priority` bergabung dengan pembacaan halaman yang sedang berjalan, dinaikkan ke yang paling mendesak, alih-alih memindahkan halaman dua kali."
     }
   },
   "PageStreamer": {
@@ -2422,17 +2402,15 @@
     }
   },
   "PageStreamerOptions": {
-    "summary": "Cara pembaca halaman membaca (`createPageStreamer`).",
-    "description": "Di samping halamannya, cache-nya mencadangkan tabel manifes dan antrean transfernya; setiap anggota punya nilai bawaan.",
+    "summary": "Bagaimana streamer halaman membaca (`createPageStreamer`): lewat `cache`, milik pemiliknya, yang mencadangkan tabel manifes dan antrean transfernya di samping halamannya; setiap anggota lain punya nilai bawaan.",
     "members": {
       "signal": "Membatalkan setiap pembacaan setelah dihentikan.",
       "workerCount": "Pembacaan yang berjalan bersamaan; bawaan 8.",
-      "maxPages": "Halaman terbanyak yang disimpan sekaligus; jika tidak ada, dibatasi oleh byte saja.",
       "onEvict": "Mendengar setiap halaman yang keluar dari cache.",
       "maxTransferBytes": "Byte yang boleh ditampung antrean transfer; bawaan 8 MiB.",
       "onDiagnostic": "Mendengar setiap langkah dari setiap pembacaan.",
-      "maxCachedBytes": "Byte memori CPU yang boleh ditempati halaman cache, dengan tabel manifes dan antrean transfernya dicadangkan di atasnya; bawaan 256 MiB.",
-      "onStalled": "Mendengar, sekali saja, pembacaan yang gagal selamanya atau yang pertama menunggu paling lama: lagi hanya setelah ia tiba."
+      "onStalled": "Mendengar, sekali saja, pembacaan yang gagal selamanya atau yang pertama menunggu paling lama: lagi hanya setelah ia tiba.",
+      "cache": "Cache halaman tempat ia membaca, milik pemiliknya: ia hidup lebih lama daripada streamer."
     }
   },
   "PanZoomCameraControls": {
@@ -2873,14 +2851,14 @@
     "summary": "Root scene sebuah dunia: objek ditambahkan ke sana, sebuah model terkompilasi dimuat ke sana, dan yang mengisi gambar di belakangnya adalah `background`.",
     "members": {
       "isScene": "Selalu `true`: membedakan root scene dari objek lain.",
-      "environment": "Sebuah gambar lingkungan yang dipantulkan permukaan mengkilap; `null` untuk tidak ada.",
+      "environment": "Gambar lingkungan sekitar; `null` bila tidak ada.",
       "background": "Yang mengisi gambar di belakang setiap objek: sebuah warna, atau `null` untuk bawaan. Perubahan tampil pada bingkai berikutnya, sesi tetap dipertahankan: warna baru yang diatur di sini, atau warna yang ada ditulis lewat metodenya (`set`, `setRGB`, `setHex`, `setHSL`...). Penulisan langsung ke `.r`, `.g`, atau `.b` tidak terdengar: atur ulang `background` sesudahnya. Gambar, atau nilai apa pun tanpa `getHex`, ditolak (`UNSUPPORTED_SCENE_UPDATE`): tidak ada jalur yang menggambarnya.",
       "fog": "Kabut di atas setiap permukaan, buram maupun transparan; `null`, bawaannya, berarti tanpa kabut, tanpa biaya. `{ color, near, far }` memudarkan objek ke `color` dari `near` hingga `far`, jarak dari kamera; `{ color, density }` menebal `density` per satuan jarak; tambahkan `heightFalloff` (dan `baseHeight`, bawaannya 0) dan kabut menempel di tanah, menipis di atas `baseHeight` — dibagi e setiap `1 / heightFalloff` satuan ke atas. Perubahan tampak di bingkai berikutnya: kabut baru yang diberikan di sini, atau warnanya yang ditulis lewat metodenya. Penulisan langsung `near`, `far`, `density`... tidak terdengar: berikan `fog` lagi sesudahnya. Kabut di luar rentang — `far` tidak melewati `near`, kerapatan negatif — ditolak (`INVALID_SCENE_ENVIRONMENT`).",
       "onBeforeRender": "Dipanggil sebelum adegan digambar; tidak ada secara bawaan.",
       "onAfterRender": "Dipanggil setelah adegan digambar; tidak ada secara bawaan.",
       "load": "Memuat sebuah model terkompilasi — URL manifestnya — dan menambahkannya ke scene ini.",
       "toJSON": "Scene sebagai JSON sederhana berversi: objeknya, bentuk lewat panggilan yang membangunnya, material, cahaya, bodi fisika tiap mesh seperti yang dideklarasikan, dan model yang dimuat lewat alamatnya; pose `camera` juga jika diberikan.",
-      "fromJSON": "Mengganti isi scene dengan scene yang disimpan `toJSON`, penanda `helper`-nya tetap dipertahankan; selesai setelah model-modelnya dimuat. Format atau versi lain ditolak (`UNSUPPORTED_SCENE_FORMAT`). Panggilan yang dilakukan selama pembacaan berjalan satu per satu, berurutan, masing-masing pada hasil yang ditinggalkan panggilan sebelumnya: dua scene tersimpan tidak pernah bercampur."
+      "fromJSON": "Mengganti apa yang dimuat adegan dengan adegan yang disimpan `toJSON`, tanda `helper`-nya dipertahankan; selesai begitu modelnya dimuat. Format atau versi lain ditolak (`UNSUPPORTED_SCENE_FORMAT`). Panggilan yang dibuat saat satu pembacaan berlangsung berjalan satu demi satu, berurutan, masing-masing atas apa yang ditinggalkan sebelumnya: dua adegan tersimpan tidak pernah bergabung."
     }
   },
   "SceneEnvironment": {
@@ -2936,7 +2914,7 @@
       "ids": "Nama cahaya tiap slot.",
       "count": "Berapa banyak cahaya.",
       "epoch": "Dinaikkan saat set cahaya berubah.",
-      "transportEpoch": "Dinaikkan bersama epoch, kecuali oleh perubahan kabut saja atau irisan bayangan saja: kabut adalah suku sinar pandang dan irisan adalah tempat peta cahaya dialamatkan, keduanya bukan transpor cahaya, sehingga yang menyimpan cahaya terangkut di cache (probe pantulan, riwayat refleksi) mempertahankannya.",
+      "transportEpoch": "Dinaikkan bersama epoch, kecuali oleh perubahan kabut saja atau irisan bayangan saja: kabut adalah suku sinar pandang dan irisan adalah tempat peta cahaya dialamatkan, keduanya bukan transpor cahaya, sehingga apa yang menyimpan cache cahaya terangkut (probe pantulan) tetap menyimpannya.",
       "environment": "Lingkungan scene itu.",
       "lightingView": "View yang diminta host, apa adanya: `auto` selama tidak meminta apa pun.",
       "unlit": "Benar saat gambar harus keluar sebagai albedo mentah, tanpa cahaya. Ini perilaku bawaan selama tidak ada cahaya yang dideklarasikan: sebuah scene tanpa sumber tidak punya apa pun untuk disinari, dan sebuah gambar hitam tidak akan membantu benchmark geometri apa pun. Begitu ada sebuah cahaya, pencahayaan sungguhan mengambil alih — kecuali host secara eksplisit meminta tampilan diagnostik.",
@@ -3075,9 +3053,6 @@
   "SceneToneMapping": {
     "summary": "Nama sebuah kurva tampilan yang dikenal mesin."
   },
-  "ScreenErrorVariant": {
-    "summary": "Cara galat layar sebuah klaster diukur: batas yang terbukti, atau rumus biasa."
-  },
   "ShadowFrameMetrics": {
     "summary": "Penghitung pencahayaan dan bayangan sebuah bingkai, dipisah dari `FrameMetrics` menurut tanggung jawab.",
     "description": "`FrameMetrics` mewarisinya lewat `extends`: kontrak publik yang dilihat konsumen (`sdk-core/index.ts`) tidak berubah, bidang-bidang ini tetap properti langsung `FrameMetrics`.",
@@ -3090,8 +3065,6 @@
       "tileLightPoolOverflowed": "Apakah sebuah tile tidak mendapat ruang di pool pada frame sampel itu dan menelusuri setiap lampu.",
       "tileLightPoolGrowths": "Berapa kali pool tumbuh hingga yang diminta frame yang meluap, sejak penjelajah dibuka.",
       "gpuShadowsMs": "Waktu GPU tahap Bayangan, tepat pass bayangan dari tabel pass mesin: atlas bayangan, lapisan statisnya, pembersihan dan pass lapisan transmitans, penyaringan per halaman, piramida halaman, dan uji oklusi. Potongan dari cahaya adalah tahap tersendiri (`shadowCasters`); tidak ada pass di luar kerja bayangan yang dihitung di dalamnya.",
-      "gpuShadowCullMs": "Waktu GPU untuk memilih pembentuk bayangan dari halaman bayangan yang digambar bingkai: potongan cahaya, penyaringan per halaman, dan uji oklusi pembentuk yang bergerak beserta piramida yang dibacanya.",
-      "gpuShadowRasterMs": "Waktu GPU untuk menggambar pembentuk itu ke dalam halaman: lapisan statis, lalu pool.",
       "gpuLightingMs": "Waktu GPU pencahayaan.",
       "shadowPoolBytes": "Byte GPU pool bayangan: halaman kedalamannya, lapisan statis dan transmitansnya setelah dibuat, serta buffer di sampingnya. Null sampai frame pertama menentukan ukuran pool.",
       "shadowResolutionBias": "Seberapa kasar bayangan digambar dibanding yang diminta karena pool halamannya: berapa kali anggaran GPU membagi dua pool penuh, ditambah tingkat yang dinaikkan oleh keterisian pool pada bias resolusi setiap peta (`shadowVsmLodBias`). Biasanya 0; di atas 0, mode referensi menolak tangkapannya (`REFERENCE_SHADOWS_REDUCED`). Null selama tidak ada peta bayangan yang berjalan.",
@@ -3326,7 +3299,7 @@
     "members": {
       "url": "Tempat ia dibaca, atau namanya dalam katalog bila ia berupa `range` dari berkas lain.",
       "bytes": "Ukurannya.",
-      "sha256": "Sidik jari byte-nya.",
+      "sha256": "Sidik jari byte-nya, yang diperiksa pembacaannya bersama ukurannya.",
       "range": "Halaman yang berupa `bytes` dari berkas `file` mulai `offset`, dibaca dengan HTTP Range: antrean membaca rentang yang diantre berurutan ujung ke ujung dalam satu berkas dengan satu permintaan (`queueRanges.ts`).",
       "kept": "False untuk halaman yang setiap peminta menyimpan hasil dekodenya sendiri: dibaca untuk mereka yang bergabung ke pembacaannya, tidak pernah disimpan di cache halaman, byte-nya ditahan sekali saja."
     }
@@ -3375,8 +3348,8 @@
     "summary": "Bidang warna sebuah material dalam tabel, masing-masing tiga angka."
   },
   "TEXTURE_PREVIEW_VERSION": {
-    "summary": "Tingkat tekstur progresif, dicerminkan `packages/asset-compiler-rust/src/texture_preview.rs`: ekor rantai mip sebuah sumber dalam sidecar, RGBA8 dalam pengkodean atlas sendiri, dari tingkat terhalus yang sisinya tidak melebihi `PREVIEW_BASE` turun sampai 1×1 — dan, di atasnya, satu PNG lossless per tingkat dalam cache, sebanyak `bakedLevels` dari tingkat 0 ke atas.",
-    "description": "Setiap tingkat mengikuti aturan mip yang diterapkan kartu saat meregenerasi rantainya sendiri (`packages/sdk-browser/src/texture/mips.ts`): rata-rata linear warna, alpha median, tingkat `k` dari tingkat terkuantisasi `k - 1`. Ukurannya tidak dituliskan: mengikuti dari dimensi sumber, yang dihitung ulang `previewLevels.ts`. Versi 4 memanggang setiap tingkat di atas ekor, dan ekornya sendiri, dalam keluarga blok yang diminta proses masak di samping berkas lossless — keluarga BC untuk kartu desktop, ASTC 4×4 untuk yang mobile, satu byte per texel — untuk rantai yang disimpan gerbang kualitas; sebuah rantai di bawah palang tetap lossless dalam keluarga itu, dan kata tata letak entrinya mengatakan begitu. Versi 6 menata berkas level blok dalam rekaman ubin, satu permintaan HTTP Range per rekaman (#962, `sdk-browser/src/texture/tileRecords.ts`)."
+    "summary": "Kontrak bagian: mengubah skala level, urutan, aturan reduksi, ruang warna, codec blok, atau ambang gerbang mengharuskan menaikkan versi ini dan versi berkas pendamping biner yang membawanya.",
+    "description": "Versi 3 adalah aturan GPU dan rantai penuh, kedua atlas termasuk; versi 4 menambahkan level terkompresi blok dan ekor yang dijaga. Rantai baru dengan nama sendiri tidak memindahkan berkas yang ada dan tidak perlu kenaikan: rantai `Coverage` (#42) adalah salah satunya, begitu pula rantai pelestari cakupan setiap ambang (#44), `srgb-coverage-<C>`. Versi 5 menghitung cakupan rantai itu pada potongan yang disaring (#43): byte-nya berubah di bawah nama yang sama, dan berkas level hanya ditulis bila hilang. Versi 6 menata berkas level blok dalam catatan ubin, satu HTTP Range masing-masing (#962, `tile_records`); `textures.version` pada manifes menamainya untuk mesin. Versi 7 menambahkan keluarga ETC2 (ETC2 RGBA8, EAC RG11): kolom blok ketiga dan satu kata tata letak, dan setiap keluarga dimasak secara bawaan."
   },
   "TONE_MAPPING_RANK": {
     "summary": "Kurva yang membawa radiansi scene ke rentang tampilan, menurut peringkat yang dibaca shader.",
@@ -3603,17 +3576,17 @@
     "summary": "Apa yang dipegang sebuah berkas tingkat: PNG lossless, atau blok satu keluarga dalam satu tata letak."
   },
   "TextureLevelReader": {
-    "summary": "Sebuah fungsi yang mengambil satu tingkat tekstur yang dipanggang."
+    "summary": "Fungsi yang mengambil satu level tekstur yang sudah dibakar, penyimpanan tempat levelnya ditahan, dan pembakaran yang untuknya ia dibuat (`heldLevels.ts`)."
   },
   "TextureLevelRequest": {
-    "summary": "Sebuah tingkat untuk dibaca: alamatnya, dan format yang disampel sesi itu.",
+    "summary": "Level yang akan dibaca: level tanpa kehilangan secara utuh, atau, dengan `range`-nya, catatan satu ubin dari level blok (`tileRecords.ts`) lewat HTTP Range — level blok dibaca hanya lewat catatan ubinnya.",
     "members": {
       "sha256": "Sidik jari gambar sumbernya.",
       "atlas": "Atlas mana.",
       "level": "Tingkat mana.",
       "format": "Format mana.",
-      "url": "Alamat level itu sendiri, saat cache mencantumkannya — sebuah level atlas impostor (`maps.<name>.levels[k].url`, #1239). Dibaca melalui pembaca yang sama ini, diselesaikan terhadap `base`, menggantikan templat `textures.url`: satu pemuat, satu anggaran.",
-      "range": "Byte level blok yang dibaca sendiri — rekaman satu ubin (`tileRecords.ts`) —, lewat permintaan HTTP Range; server yang mengabaikannya menjawab dengan seluruh berkas."
+      "url": "Alamat level itu sendiri, bila cache mendaftar satu — level atlas impostor (`maps.<name>.levels[k].url`). Dibaca melalui pembaca yang sama, diselesaikan terhadap `base`, menggantikan templat `textures.url`: satu pemuat, satu anggaran.",
+      "range": "Catatan ubin dalam berkas level, menurut byte pertama dan panjangnya; bila tidak ada, level dibaca utuh."
     }
   },
   "TexturePool": {
@@ -3904,7 +3877,7 @@
   },
   "WorldControls": {
     "summary": "Cara-cara sebuah halaman bisa mengarahkan kamera dengan mouse dan papan ketik, atau `'none'`.",
-    "description": "`'firstPerson'` menggerakkan sebuah kamera; `'character'` menggerakkan sebuah tubuh — massa, gravitasi, lompatan, tabrakan dengan `world.controls.colliders` — dan melihat lewat matanya. `'fly'` dan `'firstPerson'` bergerak pada `world.controls.movementSpeed` dan berputar pada `world.controls.lookSpeed`."
+    "description": "`'firstPerson'` menggerakkan kamera; `'character'` menggerakkan tubuh — massa, gravitasi, lompatan, tabrakan dengan fisika dunia — dan melihat lewat matanya. `'fly'` dan `'firstPerson'` bergerak pada `world.controls.movementSpeed` dan berputar pada `world.controls.lookSpeed`."
   },
   "WorldFrameMetrics": {
     "summary": "Metrik sebuah gambar sebagaimana host menyalinnya dari mesin, dan dua yang dibaca halaman yang disusun darinya; `null` di mana jalur tidak menghitung.",
@@ -3958,8 +3931,6 @@
       "tileLightPoolOverflowed": "Apakah sebuah tile tidak mendapat ruang di pool pada frame sampel itu dan menelusuri setiap lampu.",
       "tileLightPoolGrowths": "Berapa kali pool tumbuh hingga yang diminta frame yang meluap, sejak penjelajah dibuka.",
       "gpuShadowsMs": "Waktu GPU tahap Bayangan, tepat pass bayangan dari tabel pass mesin: atlas bayangan, lapisan statisnya, pembersihan dan pass lapisan transmitans, penyaringan per halaman, piramida halaman, dan uji oklusi. Potongan dari cahaya adalah tahap tersendiri (`shadowCasters`); tidak ada pass di luar kerja bayangan yang dihitung di dalamnya.",
-      "gpuShadowCullMs": "Waktu GPU untuk memilih pembentuk bayangan dari halaman bayangan yang digambar bingkai: potongan cahaya, penyaringan per halaman, dan uji oklusi pembentuk yang bergerak beserta piramida yang dibacanya.",
-      "gpuShadowRasterMs": "Waktu GPU untuk menggambar pembentuk itu ke dalam halaman: lapisan statis, lalu pool.",
       "gpuLightingMs": "Waktu GPU pencahayaan.",
       "hizTestedClusters": "Yang dilakukan uji oklusi pada sebuah bingkai: cluster yang diserahkan padanya, yang dieliminasinya, dan yang jejak layar level-0-nya melebihi kernel enam belas-texel dan karenanya menjawab dari sebuah mip lebih kasar. `hiz*Triangles` adalah segitiga cluster yang sama itu. Pada jalur GPU mereka menjelaskan sebuah bingkai LEBIH AWAL dari yang merendernya — `hizCountedFrame` menyebut yang mana — seperti `gpuPassMs`, dan dua bingkai bersebelahan sering membawa sampel yang sama. Tidak ada yang diperkirakan: `null` pada mesin yang tidak menguji oklusi, pada perangkat yang putusannya tidak bisa dibaca ulang, dan selama belum ada bingkai yang dihitung.",
       "hizRejectedClusters": "Cluster yang disembunyikan.",
@@ -4048,7 +4019,7 @@
   "WorldPageSource": {
     "summary": "Tempat halaman dibaca, dan alamat yang menjadi acuannya.",
     "members": {
-      "read": "Membaca byte satu halaman; `priority`, bila diberikan, adalah milik streamer (terkecil lebih dulu). Pembacaan yang lebih mendesak atas halaman yang sedang dibaca diminta lagi untuk menaikkannya: sumber yang menerima `priority` menggabungkannya ke pembacaan yang sedang berjalan, bukan mengirim halaman dua kali.",
+      "read": "Membaca byte satu halaman; `priority`, bila diberikan, adalah milik streamer (terkecil lebih dulu). Setiap pemuatan sebuah halaman memintanya: sumber yang menerima `priority` bergabung dengan pembacaan halaman yang sedang berjalan, dinaikkan ke yang paling mendesak, alih-alih memindahkan halaman dua kali.",
       "baseUrl": "Alamat yang menjadi acuan setiap halaman."
     }
   },
@@ -4593,13 +4564,14 @@
   },
   "createGpuPageCache": {
     "summary": "Batas alokasi/antrean WebGPU.",
-    "description": "Byte halaman dan kebijakannya disediakan host. Penulisan antrean berurutan; dispose menunggu submit yang masih berjalan sebelum destroy. `pin(key, 'held')` mempertahankan halaman sebelum halaman yang disematkan biasa saat `resize(slots)`, yang tidak lagi menerima set held. Penyematan ulang biasa mempertahankan tingkat ini; `unpin(key)` menghapusnya.",
+    "description": "Byte halaman dan kebijakan disediakan host: setiap pemuatan membaca halamannya dari `source` (`reader.ts`), yang bergabung dengan pembacaan halaman yang sedang berjalan dan menyatakan kapan yang gagal diminta lagi. Penulisan antrean berurutan; dispose menunggu pengiriman yang sedang berjalan sebelum menghancurkan. Perubahan ukuran mempertahankan halaman `cover` sebelum halaman tersemat mana pun.",
     "parameters": {
       "options.homes": "Tempat sendiri setiap halaman, diambil selama `slots` memuat seluruh katalog (`homes.ts`).",
       "options": "Bagaimana cache halaman GPU diberi ukuran dan ke mana ia melapor (`createGpuPageCache`).",
       "options.pageBytes": "Byte satu slot: kelipatan empat.",
       "options.slots": "Berapa banyak slot yang dimuat pool.",
-      "options.onDiagnostic": "Mendengar apa yang dilaporkan cache: tata letaknya, pemuatan yang dibatalkan, dan penolakan."
+      "options.onDiagnostic": "Mendengar apa yang dilaporkan cache: tata letaknya, pemuatan yang dibatalkan, dan penolakan.",
+      "options.cover": "Alamat cakupan akar: perubahan ukuran menjaganya sebelum halaman lain mana pun."
     }
   },
   "GpuPageCacheOptions": {
@@ -4608,11 +4580,9 @@
       "pageBytes": "Byte satu slot: kelipatan empat.",
       "slots": "Berapa banyak slot yang dimuat pool.",
       "homes": "Tempat sendiri setiap halaman, diambil selama `slots` memuat seluruh katalog (`homes.ts`).",
-      "onDiagnostic": "Mendengar apa yang dilaporkan cache: tata letaknya, pemuatan yang dibatalkan, dan penolakan."
+      "onDiagnostic": "Mendengar apa yang dilaporkan cache: tata letaknya, pemuatan yang dibatalkan, dan penolakan.",
+      "cover": "Alamat cakupan akar: perubahan ukuran menjaganya sebelum halaman lain mana pun."
     }
-  },
-  "PagePinTier": {
-    "summary": "Bagaimana halaman yang dimuat disematkan: `'held'` di depan sematan biasa saat ukuran diubah, selain itu `'pinned'`."
   },
   "createJob": {
     "summary": "Tanpa timer, DOM, sistem berkas atau UI."
@@ -4621,18 +4591,17 @@
     "summary": "Buffer sebuah rencana, berukuran untuk permintaan katalog terpenuh."
   },
   "createPageStreamer": {
-    "summary": "Pembacaan terbatas, terprioritaskan dan tanpa duplikat.",
-    "description": "Sebuah permintaan yang masih menunggu di antrean dijatuhkan begitu konsumen terakhirnya pergi; yang sudah dalam proses transfer diizinkan mendarat di cache. Cache-nya adalah sebuah set least-recently-used yang dibatasi baik oleh entri maupun byte; entri yang di-pin bertahan dari eviction, jadi sebuah pemanggil mempertahankan sampul yang ditampilkannya dengan menahannya.",
+    "summary": "Pembacaan terbatas, berprioritas, dan tanpa duplikat lewat `options.cache`, cache halaman yang disimpan pemiliknya (`pageCache.ts`).",
+    "description": "Permintaan yang masih menunggu di antrean dibuang begitu konsumen terakhirnya pergi; yang sudah ditransfer dibiarkan mendarat di cache. Cache adalah himpunan paling lama tidak dipakai yang dibatasi byte; halaman yang punya pemilik (`pin`, `retainRanks`) bertahan dari pengeluaran, sehingga pemanggil mempertahankan cakupan yang ditampilkannya dengan menyematkannya.",
     "parameters": {
-      "options": "Cara pembaca halaman membaca (`createPageStreamer`). Di samping halamannya, cache-nya mencadangkan tabel manifes dan antrean transfernya; setiap anggota punya nilai bawaan.",
+      "options": "Bagaimana streamer halaman membaca (`createPageStreamer`): lewat `cache`, milik pemiliknya, yang mencadangkan tabel manifes dan antrean transfernya di samping halamannya; setiap anggota lain punya nilai bawaan.",
       "options.signal": "Membatalkan setiap pembacaan setelah dihentikan.",
       "options.workerCount": "Pembacaan yang berjalan bersamaan; bawaan 8.",
-      "options.maxPages": "Halaman terbanyak yang disimpan sekaligus; jika tidak ada, dibatasi oleh byte saja.",
       "options.onEvict": "Mendengar setiap halaman yang keluar dari cache.",
       "options.maxTransferBytes": "Byte yang boleh ditampung antrean transfer; bawaan 8 MiB.",
       "options.onDiagnostic": "Mendengar setiap langkah dari setiap pembacaan.",
-      "options.maxCachedBytes": "Byte memori CPU yang boleh ditempati halaman cache, dengan tabel manifes dan antrean transfernya dicadangkan di atasnya; bawaan 256 MiB.",
-      "options.onStalled": "Mendengar, sekali saja, pembacaan yang gagal selamanya atau yang pertama menunggu paling lama: lagi hanya setelah ia tiba."
+      "options.onStalled": "Mendengar, sekali saja, pembacaan yang gagal selamanya atau yang pertama menunggu paling lama: lagi hanya setelah ia tiba.",
+      "options.cache": "Cache halaman tempat ia membaca, milik pemiliknya: ia hidup lebih lama daripada streamer."
     }
   },
   "createPathGovernor": {
@@ -5017,7 +4986,7 @@
   },
   "gpuPassStageOf": {
     "summary": "Tahap sebuah pass, menurut labelnya.",
-    "description": "Tidak diketahui adalah `geometry`."
+    "description": "Tidak dikenal adalah `undefined`: label yang tidak dinamai mesin tidak bergabung dengan tahap mana pun."
   },
   "helper": {
     "summary": "Keluarga `helper`: tanda-tanda yang dipakai untuk mengerjakan sebuah scene, dibangun dari garis dan mesh.",
@@ -5104,20 +5073,6 @@
       "l": "Lampu yang ditampilkan."
     }
   },
-  "hierarchyUpdateBatch": {
-    "summary": "Menghitung matriks dunia dari seluruh hierarki dalam satu pass, induk lebih dulu."
-  },
-  "hizBuildFlat": {
-    "summary": "Piramida lengkap dari kedalaman visbuffer.",
-    "description": "`into` ditulis ulang, tidak pernah dialokasikan ulang."
-  },
-  "hizFlatLayout": {
-    "summary": "Menata (atau menata ulang) offset dan ukuran.",
-    "description": "`into` dipakai ulang apa adanya jika sudah cocok."
-  },
-  "hizFlatLevels": {
-    "summary": "Hitungan level sebuah gambar: level terakhir adalah 1x1."
-  },
   "holdCameraWorld": {
     "summary": "Menyalin sebuah kamera mesin ke kamera lain, yang kemudian mempertahankan tampilan bit demi bit."
   },
@@ -5125,7 +5080,8 @@
     "summary": "Hue, saturasi, dan kecerahan menjadi tiga komponen RGB ditulis ke `out[o..o+2]`."
   },
   "httpPageSource": {
-    "summary": "Sebuah sumber halaman yang mengambil halaman lewat HTTP, menurut kunci, dari `baseUrl`."
+    "summary": "Sumber halaman yang mengambil halaman lewat HTTP, menurut kunci, dari `baseUrl`: setiap kunci yang dibaca adalah satu pembacaan yang diikuti setiap pemuatannya selama berjalan, sehingga dua pemuatan satu halaman yang sedang berjalan mengirim satu permintaan, dan pembacaan berhenti begitu tak ada pemuatan yang menunggunya.",
+    "description": "Pembacaan yang gagal menunggu gilirannya menurut satu kebijakan kegagalan, pemuatannya menunggunya, lalu bertanya lagi — atau ditolak untuk selamanya bila permintaan lain akan bertemu kegagalannya lagi, setiap pemuatan berikutnya atas kuncinya ditolak seketika (`streaming/failures.ts`). Ia tidak mengumumkan apa pun tentang halaman: byte-nya diambil sebagaimana dikirim server, dan disimpan oleh pemuatan saja; pembacaan dilupakan saat berakhir, kegagalan kuncinya sebagaimana kebijakan melupakannya. Permintaannya dikirim saat diminta: ia tidak punya antrean, dan `priority` tidak mengurutkan apa pun. `dispose` menghentikan pembacaannya."
   },
   "invertMatrix4": {
     "summary": "`out = m⁻¹` dengan kofaktor."
@@ -6288,7 +6244,8 @@
       "options.homes": "Tempat sendiri setiap halaman, diambil selama `slots` memuat seluruh katalog (`homes.ts`).",
       "options.pageBytes": "Byte satu slot: kelipatan empat.",
       "options.slots": "Berapa banyak slot yang dimuat pool.",
-      "options.onDiagnostic": "Mendengar apa yang dilaporkan cache: tata letaknya, pemuatan yang dibatalkan, dan penolakan."
+      "options.onDiagnostic": "Mendengar apa yang dilaporkan cache: tata letaknya, pemuatan yang dibatalkan, dan penolakan.",
+      "options.cover": "Alamat cakupan akar: perubahan ukuran menjaganya sebelum halaman lain mana pun."
     }
   },
   "page.createStreamer": {
@@ -6304,7 +6261,7 @@
     }
   },
   "page.httpSource": {
-    "summary": "Sebuah sumber halaman yang membaca halaman lewat HTTP dari `baseUrl`.",
+    "summary": "Sumber halaman yang membaca halaman lewat HTTP dari `baseUrl`; `dispose` membatalkan pembacaannya.",
     "parameters": {
       "baseUrl": "Alamat tempat halaman dibaca."
     }
@@ -6421,10 +6378,6 @@
   "readCameraWorld": {
     "summary": "Menyalin kamera host ke kamera mesin, leluhur terselesaikan."
   },
-  "referenceScreenError": {
-    "summary": "Galat layar varian `reference`: `(error × stretch) × focal / w`, tak terhingga bila pusat tidak mencapai bidang dekat; `w` adalah bobot klip kedalaman pusat, kedalaman itu sendiri di bawah proyeksi perspektif (`perspective` = 1) dan 1 di bawah proyeksi ortografik (0, `screenErrorBound.ts`).",
-    "description": "Cermin WGSL di `packages/sdk-browser/src/gpu/dag/shader/error.ts`, operand dan urutan yang sama, ke f32. Pemanggil sudah menangani galat nol atau tak terhingga."
-  },
   "removeTransformNode": {
     "summary": "Menghapus `node` dan semua keturunannya; indeks mereka akan dipakai ulang.",
     "description": "Untuk melepaskan sebuah subpohon sambil mempertahankannya, `reparentTransformNode(tree, node, -1)`."
@@ -6454,9 +6407,6 @@
     "summary": "Galat layar tersertifikasi sebuah cluster (C4): sebuah majoran, dalam piksel, dari perpindahan di layar titik mana pun sebuah bola yang dipindahkan paling banyak ε, di bawah proyeksi perspektif, termasuk di luar sumbu.",
     "description": "Bingkai pandang: mata di titik asal, melihat ke arah −z, kedalaman d = −z; piksel (f_x·x/d, f_y·y/d), f = max(f_x, f_y). Primitif berpindah ke pandang lewat sebuah peta afine dengan regangan maksimum s: bola objek (c, r) berada dalam bola pandang (C, ρ = r·s), sebuah perpindahan objek paling banyak ε menjadi sebuah perpindahan Δ paling banyak δ = ε·s. 1. Sebuah titik P = (x, y, d) dari bola berpindah ke P' = P + Δ, dengan kedalaman d' = d + Δd. Dengan q = (x, y)/d: π(P') − π(P) = f·(Δxy − q·Δd)/d'. Peta Δ ↦ Δxy − q·Δd punya norma √(1 + |q|²) (eigenvalue dari I + q·qᵀ: 1 dan 1 + |q|²); jadi, apa pun arah Δ — tegak lurus sumbu, dalam kedalaman menuju kamera atau menjauh, miring —, |π(P') − π(P)| ≤ f·δ·√(1 + |q|²) / d'. 2. Pada bola: d ≥ m = −C_z − ρ, kedalaman minimum; |(x, y)| ≤ ℓ + ρ, di mana ℓ = |(C_x, C_y)| adalah jarak pusat ke sumbu pandang; sehingga |q| ≤ (ℓ + ρ)/m, dan d' ≥ m − δ. 3. Jika m − δ > near (sehingga > 0): E = f·δ·√(m² + (ℓ + ρ)²) / (m·(m − δ)). Jika tidak, bola, atau salah satu titiknya yang berpindah, mencapai bidang dekat: tak terhingga, yang menghaluskan. Monotonisitas potongan: m adalah infimum kedalaman pada bola dan ℓ + ρ supremum jarak ke sumbu; sebuah bola yang dicakup bola lain karenanya mengumumkan lebih sedikit, sebuah galat lebih besar lebih banyak. Sepanjang sinar (C → k·C, k > 1, kedalaman pusat C_d > 0), (kℓ + ρ)/(k·C_d − ρ) dan 1/(k·C_d − ρ − δ) menurun: galat yang diumumkan menurun dengan jarak. Kedua batas langkah 2 berasal dari dua titik berbeda pada bola: E ketat untuk sebuah bola kecil, longgar saat bola menyerempet bidang dekat jauh dari sumbu (`screenErrorDisplacement.test.ts`). SATU KAMERA, SATU RUMUS. `perspective` adalah bobot clip-w kamera: sebuah titik pada kedalaman pandang d punya w = perspective·d + (1 − perspective) — 1 untuk sebuah proyeksi perspektif (w = d, semua di atas), 0 untuk sebuah proyeksi ortografik (w = 1: q = 0, dan sebuah perpindahan menggerakkan piksel sebesar f·δ apa pun kedalamannya). Batasnya ditulis pada w: E = f·δ·√(w_m² + (p·(ℓ + ρ))²) / (w_m·w_{m−δ}), dengan bidang dekat tercapai saat w_{m−δ} ≤ p·near. Pada p = 1 setiap operasi adalah yang di atas, bit demi bit (sebuah hasil kali dengan 1 dan sebuah jumlah dengan 0 adalah eksak). Tidak ada penjaga di sini: pemanggil sudah menangani sebuah galat null, tak terhingga atau tidak valid. Sebuah kedalaman atau jarak ke sumbu yang tidak berhingga menghasilkan tak terhingga. Urutan operasi, (δ·f)/m lalu sebuah faktor √/(m − δ) ≥ 1, menjaga hasil yang dibulatkan di atas lantai `errorFloorAt` sdk-browser. Cerminan WGSL: `projected` dari `packages/sdk-browser/src/gpu/dag/shader/shader.ts`, operand sama, urutan sama."
   },
-  "screenErrorVariant": {
-    "summary": "Varian yang berlaku."
-  },
   "setNodeAutoUpdate": {
     "summary": "`matrixAutoUpdate`.",
     "description": "Tidak ada lagi yang perlu ditandai saat mengaktifkannya kembali: matriks lokal yang berbeda dari susunannya sudah membawa `NODE_TRS_DIRTY`, ditetapkan oleh `setNodeLocalMatrix` atau oleh setter pose. Bagaimanapun node didaftarkan: cara matriks lokalnya dibuat berubah."
@@ -6473,10 +6423,6 @@
   },
   "setNodeScale": {
     "summary": "Meregangkan satu node sebuah pohon transformasi sebesar `(x, y, z)`."
-  },
-  "setScreenErrorVariant": {
-    "summary": "Mengatur varian untuk seluruh halaman.",
-    "description": "`null`/`undefined` memulihkan milik kita: tidak ada sesi yang mewarisi."
   },
   "side": {
     "summary": "Wajah mana yang digambar sebuah permukaan: kata `Side` milik mesin sendiri (`contracts/material.ts`)."
@@ -6746,7 +6692,6 @@
       "autoUpdate": "Apakah loop dunia memanggil `update` sebelum setiap bingkai, sebelum hook `world.beforeFrame`. `false` menyerahkan langkah ke halaman, yang memanggil `update` dari hook semacam itu, sesering dan lewat sub-langkah apa pun yang diintegrasikannya; dunia kemudian tidak pernah melangkahkannya.",
       "capsuleHeight": "Hanya character: tinggi tubuh, meter; 1,75 secara default.",
       "capsuleRadius": "Hanya character: jari-jari tubuh, meter; setengah lebar bahu (0,23 m) secara default.",
-      "colliders": "Hanya character: apa yang ditabrakkan tubuh, atau `null`. Mesh — satu objek atau sebuah daftar, keturunannya disertakan — membangun sebuah pohon segitiga statis dari segitiga ruang-dunianya sebagaimana berdiri sekarang: satu pass melewati segitiga dan sebuah build `O(T log T)`, sekitar 52 byte disimpan per segitiga. Model terkompilasi belum dibaca: berikan sebuah mesh sederhana sebagai pengganti untuk mereka. Sebuah `CharacterCollision` — dunia sebuah backend fisika, apa pun yang menjawab `resolveCapsule` dan `groundBelow` — dipakai apa adanya.",
       "coyoteTime": "Hanya character: detik setelah berjalan turun dari sebuah tepi sebuah lompatan masih diberikan; 0,1 secara default.",
       "eyeHeight": "Hanya character: tinggi kamera di atas kaki, meter; 1,64 secara default.",
       "fallGravity": "Hanya character: percepatan ke bawah saat jatuh, m/s²; 1,6 g secara default, jadi sebuah lompatan tidak melayang.",
@@ -6760,7 +6705,6 @@
       "onJump": "Hanya character: dipanggil saat tubuh meninggalkan tanah karena melompat; `null` secara default.",
       "onLand": "Hanya character: dipanggil saat mendarat dengan kecepatan ke bawah dalam m/s; `null` secara default.",
       "pitchInput": "Hanya flight: stick pitch dalam [-1, 1] (hidung ke atas), ditambahkan ke tombol panah; 0 secara default.",
-      "rebuildColliders": "Hanya character: membangun ulang pohon tabrakan, setelah collider bergerak atau berubah; sebuah `CharacterCollision` adalah dunianya sendiri dan diserahkan tanpa perubahan.",
       "responseTime": "Hanya character: detik yang dibutuhkan kaki untuk mencapai 95% kecepatan yang diinginkan, di tanah; 0,12 secara default. Gesekan lantai membatasi awal gerak lebih dulu: sol mendorong paling banyak `μ g`, `μ` cengkeraman sol karet pada `material.physics` lantai (batu tanpa fisika), sehingga lari santai tercapai dalam 0,45 s di batu dan 2,2 s di es.",
       "rollInput": "Hanya flight: stick roll dalam [-1, 1] (kiri), ditambahkan ke Q dan E; 0 secara default.",
       "sprintSpeed": "Hanya character: meter per detik dengan Shift ditahan; 6,5 secara default, kecepatan puncak orang dewasa tak terlatih.",
@@ -6902,47 +6846,16 @@
   "world.resetCpuSteps": {
     "summary": "Membuka sebuah jendela `cpuSteps()` baru."
   },
-  "Capsule": {
-    "summary": "SEBUAH KAPSUL TEGAK terhadap sebuah pohon segitiga: fase sempit tubuh karakter.",
-    "description": "Kapsul berdiri di `feet` — titik terendah bola bawahnya — dan adalah setiap titik dalam `radius` dari segmen vertikal dari `feet + radius` sampai `feet + height - radius`. Sebuah pass menemukan setiap segitiga lebih dekat dari `radius` ke segmen itu dan menyerahkan setiap tumpang tindih ke `push` sekaligus (`CapsuleContact`). Pemanggil memindahkan `feet`; segitiga berikutnya dari pass diukur dari kapsul yang dipindahkan, jadi dua dinding yang bertemu di sebuah sudut keduanya ditangani dalam satu pass.",
-    "members": {
-      "feet": "Titik terendah, ruang dunia; `push` memindahkannya.",
-      "radius": "Jari-jari tubuh, meter.",
-      "height": "Tinggi dari kaki ke atas kepala, meter; setidaknya dua jari-jari."
-    }
-  },
-  "CapsuleContact": {
-    "summary": "Satu tumpang tindih sebuah kapsul dan sebuah permukaan.",
-    "description": "Array-nya dipakai ulang: sebuah push membacanya hanya selama panggilan.",
-    "members": {
-      "normal": "Arah satuan keluar dari permukaan ke dalam kapsul: jalan keluar.",
-      "surface": "Normal satuan permukaan itu sendiri, di sisi kapsul. Berbeda dari `normal` saat kapsul menyentuh sebuah tepi atau sudut: ia mengatakan wajah mana yang dimiliki tepi itu.",
-      "point": "Titik permukaan yang disentuh, ruang dunia.",
-      "depth": "Seberapa jauh kapsul berada di dalam permukaan sepanjang `normal`, > 0."
-    }
-  },
-  "CapsulePush": {
-    "summary": "Menjawab satu kontak, biasanya dengan memindahkan `feet` kapsul keluar darinya."
-  },
   "CharacterCameraControls": {
-    "summary": "SEBUAH KARAKTER, dilihat lewat matanya: sebuah tubuh bermassa yang berjalan, berlari, melompat dan jatuh, dan bertabrakan dengan segitiga dunia sebagai sebuah kapsul tegak.",
-    "description": "Pointer memutar kepala seperti pada first person (`look.ts`). Tombol-tombolnya, berdasarkan `KeyboardEvent.code` jadi setiap tata letak keyboard memainkan tombol yang sama: W/S atau panah atas dan bawah berjalan maju dan mundur, A/D atau panah samping strafe, Shift berlari, Space melompat. Tubuh tidak mulai atau berhenti seketika: ia mengumpulkan kecepatan selama `responseTime` dan mengerem selama `stopTime`, tidak pernah lebih cepat daripada yang diizinkan gesekan lantainya bagi sol untuk mendorong, sehingga berhenti meluncur sedikit di batu dan jauh di es, mempertahankan momentumnya di udara, naik di bawah `gravity` dan jatuh di bawah `fallGravity`, memanjat tepian sampai `stepHeight`, meluncur sepanjang dinding dan berdiri di lereng sampai `maxSlope` (`sdk-core/src/collision/characterBody.ts`). Kamera adalah mata, `eyeHeight` di atas kaki, mengangguk dengan langkah sebesar `headBob` dan menukik saat mendarat sebesar `landingDip` (`sdk-core/src/collision/characterEye.ts`); keduanya menumpang pada mata setelah langkah tubuh dan tidak pernah menggerakkan tubuh. Sebuah host yang menggerakkan kamera sendiri men-teleport tubuh ke sana, dalam keadaan diam. Sebuah karakter yang diam — di tanah, tanpa kecepatan, tanpa tombol, tanpa dip tersisa — tidak memancarkan apa pun, jadi scene tetap diam.",
+    "summary": "SEORANG KARAKTER, dilihat lewat matanya: tubuh bermassa yang berjalan, berlari, melompat, dan jatuh, dan bertabrakan dengan benda-benda fisika dunia sebagai kapsul tegak.",
+    "description": "Penunjuk memutar kepala seperti dalam orang pertama (`look.ts`). Tombolnya, menurut `KeyboardEvent.code` agar setiap tata letak keyboard memainkan tombol yang sama: W/S atau panah atas dan bawah berjalan maju dan mundur, A/D atau panah samping bergeser ke samping, Shift berlari, Spasi melompat. Tubuh tidak mulai atau berhenti seketika: ia mengumpulkan kecepatan selama `responseTime` dan mengerem selama `stopTime`, tidak pernah lebih cepat daripada yang diizinkan gesekan lantainya bagi sebuah sol untuk mendorong, sehingga berhenti meluncur sedikit di atas batu dan jauh di atas es; ia mempertahankan momentumnya di udara, naik di bawah `gravity` dan jatuh di bawah `fallGravity`, memanjat tepian hingga `stepHeight`, meluncur di sepanjang dinding dan berdiri di lereng hingga `maxSlope` (`sdk-browser/src/physics/characterDriver.ts`, `sdk-core/src/collision/characterDrive.ts`). Kamera adalah mata, setinggi `eyeHeight` di atas kaki, berayun mengikuti langkah sebesar `headBob` dan turun saat mendarat sebesar `landingDip` (`sdk-core/src/collision/characterEye.ts`); keduanya bekerja pada mata setelah langkah tubuh dan tidak pernah menggerakkan tubuh. Host yang menggerakkan kamera sendiri memindahkan tubuh ke sana, dalam keadaan diam. Karakter yang diam — di tanah, tanpa kecepatan, tanpa tombol, tanpa sisa penurunan — tidak memancarkan apa pun, sehingga adegan tetap diam.",
     "members": {
       "velocity": "Kecepatan tubuh dalam meter per detik, langsung: `[x, y, z]`, y ke atas.",
       "onGround": "Apakah kaki berada di lantai.",
       "stride": "Fase langkah dalam radian, dalam [0, 2π): satu kaki melangkah pada 0, yang lain pada π.",
       "onLand": "Dipanggil saat mendarat dengan kecepatan ke bawah, dalam meter per detik: sebuah suara, sebuah goncangan.",
       "onJump": "Dipanggil saat tubuh meninggalkan tanah karena melompat.",
-      "collision": "Apa yang ditabrakkan tubuh — collider dunia, atau dunia backend fisika lewat celah yang sama (`CharacterCollision`). `null` berjalan rata di tempat tubuh berdiri, tidak pernah jatuh.",
       "update": "Menjalani `delta` detik; mengembalikan apakah kamera bergerak, dan memancarkan `change` saat ia bergerak."
-    }
-  },
-  "CharacterCollision": {
-    "summary": "CELAH ANTARA SEBUAH KARAKTER DAN DUNIA YANG DITABRAKKANNYA.",
-    "description": "Tubuh karakter (`characterBody.ts`) tidak pernah membaca segitiga: ia menggerakkan kapsulnya dalam bagian lebih pendek dari jari-jarinya dan, setelah masing-masing, menanyakan apa yang ditumpangi kapsul dan jalan keluarnya; dan seorang pejalan menanyakan di mana lantai di bawah kakinya. Segala sesuatu yang lain — kecepatan, gravitasi, langkah, lereng, lompatan — adalah milik tubuh itu sendiri. Sebuah backend fisika mengimplementasikan antarmuka ini untuk menempatkan sebuah karakter dalam dunianya: ia menjawab tumpang tindih dari bentuk dan fase luasnya sendiri, dan tubuh berjalan di atasnya tanpa perubahan. Implementasi default adalah pohon segitiga statis dari `triangleCollision`.",
-    "members": {
-      "resolveCapsule": "Menemukan apa yang ditumpangi `capsule` dan memanggil `push(contact)` untuk setiap tumpang tindih, sekaligus (`CapsuleContact`: jalan keluar, permukaan, titik yang disentuh, kedalaman). `push` memindahkan `capsule.feet`; sebuah implementasi mengukur setiap tumpang tindih berikutnya dari kapsul yang dipindahkan, jadi sebuah sudut ditangani dalam satu panggilan. Mengembalikan apakah ada yang tumpang tindih.",
-      "groundBelow": "Menurunkan bola bawah kapsul lurus ke bawah, paling banyak `depth`, dan mengembalikan seberapa jauh ia pergi sebelum pertama kali bertumpu pada sebuah permukaan yang diterima `accepts` — dukungan tertinggi semacam itu; negatif saat kapsul sudah tenggelam ke dalamnya dan harus naik. `null` saat tidak ada. `capsule.feet` dibiarkan di tempatnya. `accepts` melihat setiap sentuhan kandidat sebagai sebuah kontak: `point`, `normal` dari titik ke pusat bola, `surface` wajah yang menghadap ke atas."
     }
   },
   "HeadSettings": {
@@ -6960,24 +6873,6 @@
       "locked": "Apakah pointer terkunci ke tampilan.",
       "lock": "Mengunci pointer ke tampilan.",
       "unlock": "Membebaskan pointer."
-    }
-  },
-  "TriangleCollision": {
-    "summary": "Dunia tabrakan default: sebuah pohon segitiga statis.",
-    "members": {
-      "tree": "Pohon yang dijawab darinya: `triangleCount` dan `bytes`-nya adalah biaya dunia."
-    }
-  },
-  "TriangleTree": {
-    "summary": "Sebuah hierarki volume pembatas atas segitiga-segitiga dunia, dikueri dengan kotak: fase luas di balik `triangleCollision` dan `capsulePass`.",
-    "description": "Dibangun sekali oleh `buildTriangleTree`, hanya-baca setelahnya.",
-    "members": {
-      "triangles": "Sembilan angka per segitiga — tiga sudut — dalam urutan daun.",
-      "bounds": "Untuk setiap node: xyz minimum, xyz maksimum.",
-      "links": "Untuk setiap node: segitiga pertama dari sebuah daun, atau anak kanan dari node internal (yang kiri mengikuti induknya).",
-      "counts": "Untuk setiap node: jumlah segitiga sebuah daun, 0 untuk node internal.",
-      "bytes": "Byte yang disimpan pohon.",
-      "triangleCount": "Segitiga yang disimpan pohon."
     }
   },
   "world.physics": {
@@ -7630,7 +7525,10 @@
     "summary": "Klip berulang yang memiringkan dan mengayunkan tulang pohon.",
     "parameters": {
       "bones": "Tulang dari batang hingga ujung.",
-      "options": "Arah, sudut tekukan maksimum, dan frekuensi."
+      "options": "Arah, sudut tekukan maksimum, dan frekuensi.",
+      "options.direction": "Arah pada bidang tanah `[x, z]`; bawaannya `[1, 0]`.",
+      "options.angle": "Lengkungan maksimum dalam radian; bawaannya 0,1.",
+      "options.frequency": "Ayunan per detik; bawaannya 0,5."
     },
     "parameters.options.direction": "Arah di bidang tanah `[x, z]`; bawaan `[1, 0]`.",
     "parameters.options.angle": "Tekukan maksimum dalam radian; bawaan 0,1.",
@@ -7663,13 +7561,34 @@
     "members.dirZ": "Komponen z ternormalisasi dari arah setiap gelombang.",
     "members.k": "Bilangan gelombang setiap gelombang, dalam radian per meter.",
     "members.amplitude": "Amplitudo vertikal setiap gelombang, dalam meter.",
-    "members.lateral": "Amplitudo lateral ternormalisasi setiap gelombang, dalam meter."
+    "members.lateral": "Amplitudo lateral ternormalisasi setiap gelombang, dalam meter.",
+    "members": {
+      "count": "Jumlah gelombang dalam penjumlahan.",
+      "dirX": "Komponen x ternormalisasi dari arah setiap gelombang.",
+      "dirZ": "Komponen z ternormalisasi dari arah setiap gelombang.",
+      "k": "Bilangan gelombang setiap gelombang, dalam radian per meter.",
+      "amplitude": "Amplitudo vertikal setiap gelombang, dalam meter.",
+      "lateral": "Amplitudo lateral ternormalisasi setiap gelombang, dalam meter.",
+      "phase": "Fase setiap gelombang pada waktu yang ditetapkan, dalam [0, 2π): satu-satunya keadaan per waktu.",
+      "crest": "Titik tertinggi yang dapat dicapai jumlah itu di atas keadaan diam: `Σ Aᵢ`.",
+      "steepness": "`Σ Qᵢ·Aᵢ·kᵢ` setelah normalisasi: paling besar 1.",
+      "phasesAt": "Fase setiap gelombang pada `t` detik, direduksi ke [0, 2π) dalam presisi ganda.",
+      "setTime": "Menyetel jam gelombang pada `t` detik; permukaan frame sebelumnya adalah `setTime(t - dt)`.",
+      "offset": "Perpindahan `[x, y, z]` titik diam `(x, 0, z)`, ke dalam `out`.",
+      "displacementBox": "Kotak tempat setiap perpindahan titik diam pada persegi panjang `[x0, x1] × [z0, z1]` berada, sudut terkecilnya lalu terbesarnya, ke dalam `out`: per gelombang, fasenya mencakup jangkauan persegi panjang sepanjang arahnya, yang di atasnya sinus dan kosinusnya tetap di antara yang terkecil dan terbesar dari ujung-ujungnya serta puncak dan lembah yang dimuat rentang itu; jumlah kotak gelombang memuat jumlahnya. `count` gelombang dijumlahkan, yang pertama: apa yang digambar catatan yang berukuran lebih sedikit.",
+      "normal": "Normal satuan `[x, y, z]` permukaan pada titik diam `(x, z)`, ke dalam `out`."
+    }
   },
   "WindOptions": {
     "summary": "Arah angin (`x`, `z` di tanah), tekukan maksimum tulang dalam radian, dan ayunan per detik.",
     "members.direction": "Arah di bidang tanah `[x, z]`; bawaan `[1, 0]`.",
     "members.angle": "Tekukan maksimum dalam radian; bawaan 0,1.",
-    "members.frequency": "Ayunan per detik; bawaan 0,5."
+    "members.frequency": "Ayunan per detik; bawaan 0,5.",
+    "members": {
+      "direction": "Arah pada bidang tanah `[x, z]`; bawaannya `[1, 0]`.",
+      "angle": "Lengkungan maksimum dalam radian; bawaannya 0,1.",
+      "frequency": "Ayunan per detik; bawaannya 0,5."
+    }
   },
   "world.setTransform": {
     "summary": "Memindahkan simpul `nodeName` sehingga pose dunianya `matrix`: simpul yang tidak dipegang rujukannya oleh halaman dijangkau lewat namanya (`object.name`), dicari di adegan.",
@@ -7840,5 +7759,114 @@
   },
   "TRANSPARENT_DEPTH_LAYER": {
     "summary": "Lapisan tempat pass transparan menggambar: kaca, decal, atau lembar air yang tepat berada di atas permukaan buram digambar di atasnya — permukaan transparan tidak pernah masuk ke tahap kompilator, jadi halamannya membawa lapisan 0 —, satu langkah lapisan di atas pembulatan float antara raster buram dan miliknya, tidak pernah cukup untuk menjangkau permukaan yang berada di atasnya."
+  },
+  "ByteMeter": {
+    "summary": "Menghitung byte yang dibaca sebuah pemuatan, terhadap panjang yang dinyatakan manifesnya.",
+    "members": {
+      "plan": "Berkas yang dibaca pemuatan, dari alamat ke panjang yang dinyatakan: jumlahnya langsung masuk ke total, kecuali untuk berkas yang sudah dibaca, yang dihitung saat tiba. Rencana kosong bukan rencana: pemuatan lalu terdengar sekali saja, utuh, saat selesai.",
+      "read": "Mengembalikan `response` (dibaca dari `url`) dengan isinya dihitung saat tiba.",
+      "settle": "Membuang berkas terencana yang tidak pernah dibaca, sehingga peristiwa terakhir memiliki `loaded === total`."
+    }
+  },
+  "CacheSession": {
+    "summary": "Sesi yang membaca melalui cache: siapa yang mendengar sebuah halaman dikeluarkan, atau pengeluaran yang tidak menemukan apa pun untuk diambil.",
+    "description": "Apa yang dicadangkannya dari total disampaikannya kepada kursi yang dibukanya (`open`) setiap kali berubah.",
+    "members": {
+      "evicted": "Dipanggil dengan url sebuah halaman ketika cache mengeluarkannya.",
+      "blocked": "Dipanggil ketika pengeluaran di atas anggaran tidak menemukan apa pun untuk diambil."
+    }
+  },
+  "EvictionOrder": {
+    "summary": "Urutan pengeluaran yang diterbitkan potongan GPU (`../dag/evict.ts`), kuncinya dibaca satu per satu saat korban diambil.",
+    "members": {
+      "count": "Berapa banyak kunci yang didaftar urutan itu.",
+      "keyAt": "Kunci pada peringkat `at`, korban pertama pada 0."
+    }
+  },
+  "FAR_PLANE_SLOT": {
+    "summary": "Peringkat bidang FAR di antara keenamnya, slot yang dialamatkan float `planes` pada empat per bidang."
+  },
+  "ModelScene": {
+    "summary": "Adegan sebuah model sebagaimana ditunjukkan catatannya: graf yang dibangun pemuatnya, tanpa akar dunia yang dibukanya, yang disimpan model untuk sesi dunianya sendiri.",
+    "members": {
+      "source": "Akar simpul adegan, direplikasi sebagaimana diminta opsi.",
+      "associations": "Mesh dan primitif yang diwakili setiap simpul adegan, per simpul.",
+      "nodes": "Simpul induk setiap simpul glTF, menurut indeksnya; tidak ada bila adegan dipartisi atau direplikasi: partisi menomori ulang tabel, replika menyalinnya.",
+      "clips": "Klip yang dimainkan berkas (#357).",
+      "textureIndices": "Peringkat setiap tekstur adegan dalam tabel yang diindeks shader.",
+      "partitions": "Sel tempat adegan terpartisi dibaca, tidak ada bila adegan tidak dipartisi.",
+      "sceneLightingSource": "Simpul yang cahaya dan lingkungannya menerangi adegan: `options.sceneLighting`, jika tidak akar adegan itu sendiri sebelum replikasi apa pun.",
+      "framingLot": "Lot tempat pembingkaian kamera mengambil batas adegan, `null` bila tidak ada simpul yang berbatas; pemanggil mengembalikannya."
+    }
+  },
+  "PageCache": {
+    "summary": "Cache halaman terdekode tempat sebuah sesi membaca (`createPageCache`).",
+    "members": {
+      "bytes": "Byte yang dipegang setiap entri.",
+      "heldBytes": "Byte entri yang dipegang seseorang: tidak ada pengeluaran yang mengambilnya.",
+      "pageCount": "Berapa banyak halaman yang dipegangnya.",
+      "levelBytes": "Byte yang dipegang level tekstur dan catatan ubin.",
+      "cpuBytes": "Total CPU: entri, tabel manifes, antrean transfer, dan tabel mesin bersama-sama.",
+      "reservedBytes": "Byte yang dicadangkan dari total oleh sesi yang membaca melaluinya.",
+      "budgetBytes": "Byte yang boleh dipegang entri: total dikurangi yang dicadangkan (`reservedBytes`).",
+      "roomBytes": "Byte yang boleh diambil entri yang masuk: anggaran, dikurangi yang tidak boleh diambil pengeluaran mana pun.",
+      "weight": "Byte yang dipegang entri pada `key`; 0 bila tidak ada.",
+      "weigh": "Entri pada `key` kini berbobot `bytes` — alokasi terdekode dari pembacaan yang disimpan —, selama cache menyimpannya.",
+      "page": "Halaman pada `url`, tanpa menandai apa pun.",
+      "touch": "Halaman pada `url`, ditandai sebagai yang terakhir dipakai.",
+      "put": "Menaruh `array` sebagai halaman yang paling baru dipakai pada `url`; `sha256` bila baru saja dibaca dan diverifikasi. Penahanannya tetap: halaman yang disematkan atau dalam perjalanan tiba dalam keadaan ditahan.",
+      "drop": "Entri pada `url` pergi, bersama penahanannya.",
+      "foreign": "Apakah halaman yang ditahan pada `url` adalah berkas lain daripada yang dinamai `announced`: sidik jari lain atau ukuran lain, atau byte yang tidak pernah diverifikasi terhadap sidik jari. Nama saja bukan berkas: adegan lain, basis lain, atau folder yang sama yang dimasak ulang dapat memakainya kembali pada ukuran yang sama. Sidik jari yang sama adalah byte yang sama, diverifikasi saat dibaca, di bawah basis mana pun.",
+      "acquire": "Satu penahanan lagi pada entri di `url`, bahkan sebelum ia tiba.",
+      "release": "Satu penahanan pada entri di `url` berakhir; pemanggil menimbang cache bila selesai (`fit`).",
+      "fit": "Mengeluarkan yang tidak lagi muat (`fit`): setelah halaman tiba atau penahanan berakhir.",
+      "file": "Berkas pada `url` yang dijawab utuh oleh server, ditandai sebagai yang terakhir dipakai, selama cache menyimpannya.",
+      "keepFile": "Menyimpan berkas pada `url` yang dijawab utuh oleh server sebagai entri yang paling baru dipakai, bila muat dalam yang dapat dibebaskan pengeluaran (`roomBytes`): yang melampauinya akan mengambil setiap entri, lalu dirinya sendiri, dan dilepaskan.",
+      "level": "Level tekstur atau catatan ubin yang ditahan di bawah `id`, ditandai sebagai yang terakhir dipakai.",
+      "keepLevel": "Menahan `level` di bawah `id`, cache memilikinya mulai dari sini: menutupnya saat ia pergi. Level yang sudah ditahan — dibaca sementara itu oleh sesi yang digantikan oleh kehilangan perangkat — tetap ada, ditandai sebagai yang terakhir dipakai, dan salinannya ditutup: byte-nya dihitung sekali.",
+      "keep": "Pembacaan berkas yang dinamai `key`, sebesar `bytes` byte — proksi residen adegan —, disimpan utuh menggantikan yang lain: `start` memulainya dengan pembatalan milik cache sendiri bila belum disimpan, dan sesi yang dibuka kembali sementara itu bergabung dengan yang sedang berjalan. Byte-nya dihitung sejak diminta; ditahan selama dalam perjalanan, ia baru pergi setelah mendarat, dan itu pun hanya bila tidak ada halaman, berkas, atau level yang bisa (`SCENE_TIER`). Ia bertahan lintas sesi hingga `keepOnly` tidak lagi menamainya. Pembacaan yang gagal langsung pergi.",
+      "keepOnly": "Melepaskan proksi adegan, pembacaannya dibatalkan, kecuali `key` menamainya: adegan yang sudah pergi.",
+      "resize": "Menetapkan total, dan langsung mengeluarkan yang tidak lagi muat.",
+      "open": "`session` membaca melalui cache mulai sekarang, dengan `reserving` byte dicadangkan dari total, hingga ia pergi: kursi yang diberikan kepadanya memberi tahu setiap cadangan baru (`reserve`) dan kepergiannya (`leave`).",
+      "clear": "Mengosongkan cache: pemiliknya sudah pergi.",
+      "readRange": "Byte `[offset, offset + length)` berkas pada `url`, dengan HTTP Range, untuk setiap pemuatan dan sesi yang membaca melalui cache ini: berkas yang dijawab utuh oleh servernya dibaca sekali dan disimpan di sini (`createRangedReads`)."
+    }
+  },
+  "RangeAsk": {
+    "summary": "Bagaimana satu rentang dibaca: pengukur yang menghitung yang tiba, permintaan paling banyak yang dibuat `checked`, dan sinyal yang melepaskan peminta.",
+    "members": {
+      "meter": "Menghitung byte yang tiba.",
+      "attempts": "Permintaan paling banyak yang dibuat `checked` untuk rentang itu.",
+      "signal": "Melepaskan pemintanya: pembacaan berhenti begitu tak ada yang menunggunya."
+    }
+  },
+  "ReadRange": {
+    "summary": "Pembacaan `length` byte dari `offset` berkas pada `url` (`createRangedReads`)."
+  },
+  "TextureLevelAddress": {
+    "summary": "Di mana sebuah level berada: alamatnya, dan format yang disampel sesi.",
+    "members": {
+      "sha256": "Sidik jari citra sumber.",
+      "atlas": "Atlas yang mana.",
+      "level": "Level yang mana.",
+      "format": "Format yang mana.",
+      "url": "Alamat level itu sendiri, bila cache mendaftar satu — level atlas impostor (`maps.<name>.levels[k].url`). Dibaca melalui pembaca yang sama, diselesaikan terhadap `base`, menggantikan templat `textures.url`: satu pemuat, satu anggaran."
+    }
+  },
+  "TextureLevelStore": {
+    "summary": "Tempat level yang dibaca disimpan: cache halaman, di antara entrinya (`PageCache.level`), masing-masing ditahan di sana oleh pemintanya selama tidak boleh pergi (`acquire`, `release`, lalu `fit`).",
+    "members": {
+      "level": "Level tekstur atau catatan ubin yang ditahan di bawah `id`, ditandai sebagai yang terakhir dipakai.",
+      "keepLevel": "Menahan `level` di bawah `id`, cache memilikinya mulai dari sini: menutupnya saat ia pergi. Level yang sudah ditahan — dibaca sementara itu oleh sesi yang digantikan oleh kehilangan perangkat — tetap ada, ditandai sebagai yang terakhir dipakai, dan salinannya ditutup: byte-nya dihitung sekali.",
+      "roomBytes": "Byte yang boleh diambil entri yang masuk: anggaran, dikurangi yang tidak boleh diambil pengeluaran mana pun.",
+      "levelBytes": "Byte yang dipegang level tekstur dan catatan ubin.",
+      "acquire": "Satu penahanan lagi pada entri di `url`, bahkan sebelum ia tiba.",
+      "release": "Satu penahanan pada entri di `url` berakhir; pemanggil menimbang cache bila selesai (`fit`).",
+      "fit": "Mengeluarkan yang tidak lagi muat (`fit`): setelah halaman tiba atau penahanan berakhir."
+    }
+  },
+  "createPageCache": {
+    "summary": "SATU-SATUNYA CACHE HOST: byte setiap halaman dan bundel yang dibaca, setiap berkas yang dijawab utuh oleh server menggantikan rentang (`readRange`), setiap level tekstur terdekode dan catatan ubin blok (`level`), dan proksi residen adegan (`keep`), sebagai satu himpunan entri, SATU anggaran dan SATU pengeluaran (`cacheEntries.ts`), terhadap total CPU (`cpuBytes`, `world.budget.cpu`).",
+    "description": "Pemiliknya menyimpannya lintas sesi: sebuah dunia menyerahkan cache yang sama ke setiap sesi yang dibukanya, sehingga sesi yang dibuka kembali — pada perangkat yang diberikan lagi setelah kehilangan, atau pada adegan yang berubah — membaca dari sini apa yang diambil sesi terakhir, dan tidak mengambil apa pun yang sudah dipegangnya. Setiap sesi yang membaca melaluinya mencadangkan tabel manifes, antrean transfer, dan tabel mesin (`manifestTableBytes`, `maxTransferBytes`, `reserve` streamer), disampaikan saat berubah (`open`), cache menyimpan jumlahnya, dan mengambil penahanan pada halaman yang disematkan atau dibacanya; entri memegang sisanya (`budgetBytes`). Hanya cache yang mengeluarkan, begitu entrinya melampaui anggaran: tidak pernah entri yang dipegang seseorang, lalu halaman, berkas, dan level yang paling lama tidak dipakai, proksi paling akhir. Sebuah level tidak butuh ruang sendiri: ia mengambil yang dapat dibebaskan pengeluaran (`roomBytes`), seperti halaman."
   }
 }

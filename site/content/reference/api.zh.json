@@ -131,7 +131,7 @@
     }
   },
   "BatchRead": {
-    "summary": "`request` 如何读取一批：其所有者的信号、优先级，以及每个页面到达时运行的内容。",
+    "summary": "`request` 如何读取一批：其所有者的信号、它的优先级，以及每页到达时（带着它的字节）运行的内容。",
     "members": {
       "signal": "放开该批次的读取：不再有人等待的读取，会在等待期间被丢弃。",
       "priority": "队列优先级，默认为 1。",
@@ -282,13 +282,13 @@
     }
   },
   "BufferAttribute": {
-    "summary": "一个按顶点存值的类型化数组,每个顶点占 `itemSize` 个数字:对应页面编解码器的 `PageAttribute`(`page-codec/pageAttributes.ts`),说明一个页面往里写入的是什么。",
+    "summary": "每顶点值的类型化数组，每顶点 `itemSize` 个数：页面编解码器的 `PageAttribute`（`page/pageInput.ts`），以及页面写入其中的内容。",
     "members": {
       "isBufferAttribute": "始终为 `true`:用来把缓冲属性和其他对象区分开来。",
       "type": "这些值最初是如何声明的;半精度浮点属性会以单精度保存。",
       "version": "每次声明式写入都会递增:世界靠比较它来判断内容是否发生了变化。",
-      "array": "数值本身。",
-      "count": "这些数字描述了多少个顶点。",
+      "array": "数字本身；在它们加载之前的读取会按名称被拒绝。",
+      "count": "这些数字描述多少个顶点，在加载之前就已知。",
       "needsUpdate": "写入 `array` 后设 `needsUpdate = true`：读取方会重新上传。",
       "clone": "一个新属性,带有这些数字、其类型、归一化和名称的副本。",
       "kind": "该属性拥有自己的缓冲区。",
@@ -677,7 +677,7 @@
   },
   "CpuStepSummary": {
     "summary": "渲染循环的 CPU 阶段性能剖析:一个有限大小的最近图像环形缓冲区,加上按总耗时排序的最差图像,按需汇总。",
-    "description": "它存在的意义,是让引擎能够以 `summary` 模式报告自己的 CPU 时间去向——而打开逐帧追踪来了解这一点,本身就会改变被测量的时序。这里不会为每张图像分配任何内存:调用者填好这一份暂存行数据后直接传递。对同一批图像的两个观察窗口——一个跟随发布节奏,一个由宿主主动拉取——共享这同一行数据(`row`)。",
+    "description": "它的存在是为了让引擎能在 `summary` 模式下报告自身 CPU 时间的去向——为了查明这一点而开启逐帧追踪，会改变被测量的时间。每张图像不分配任何东西：调用方填好工作行并交出。",
     "members": {
       "frames": "已测量的帧数。",
       "steps": "各阶段的耗时:中位数、第 95 百分位和最差值。",
@@ -1337,25 +1337,6 @@
   "HALF_PI": {
     "summary": "四分之一圈,单位为弧度。"
   },
-  "HIERARCHY_ROOT": {
-    "summary": "一次遍历更新的完整层级结构:`n` 个节点按父节点先于子节点排序,每个节点先合成自己的局部矩阵,再与父节点的世界矩阵相乘。",
-    "description": "这两个公式作用在扁平缓冲区上,WebAssembly 内核逐项复现了它们。`parents[i]` 必须是某个已经更新过的节点的索引,也就是说必须严格小于 `i`;其他任何值(包括哨兵值 `HIERARCHY_ROOT`)都会让该节点成为根节点,其世界矩阵就等于局部矩阵。这条规则在两边完全一致:无论输入多么刁钻,都不可能让二者产生分歧。"
-  },
-  "HIZ_NOTHING": {
-    "summary": "当没有任何纹素被读取时返回的值:无法遮挡任何东西。",
-    "description": "引擎的深度是反转的——近处为 1,远处为 0(`../../../math/src/projection/camera.ts`)。只有当一个包围盒最近的深度边界比遮挡物的深度**更远**(数值更小)时,它才被视为被遮挡。"
-  },
-  "HizFlat": {
-    "summary": "逐帧的 Hi-Z 金字塔:所有层级共用一个 `Float32Array`,每层各有一个偏移量和一个尺寸。",
-    "description": "其中的值来自可见性缓冲区,已经是单精度;缩减操作保留 2x2 方块中**最远**的那个值——由于引擎的深度是反转的,这其实是取最小值:没有任何舍入,这种扁平布局返回的结果与嵌套数组金字塔完全一致,只是不用为每一行、每一帧单独分配内存。它是 `hizReduceCeil`(oracles.fixture.ts)在生产环境中的镜像,而后者依然是权威实现:同一种缩减操作的两份刻意独立编写的实现,在等价性测试中相互对照。",
-    "members": {
-      "data": "每一层的深度值。",
-      "offsets": "每一层的起始位置。",
-      "widths": "每一层的宽度。",
-      "heights": "每一层的高度。",
-      "count": "层级数。"
-    }
-  },
   "HostAttribute": {
     "summary": "宿主几何体的一个顶点属性,无论是否交错存储:它的布局和存储方式。"
   },
@@ -1589,8 +1570,7 @@
       "shadowRequestCap": "着色每帧可请求的虚拟页数；其余的在下一帧再次请求。",
       "sunLevels": "平行光的 clipmap 级别。级别 `L` 的纹素为 `2^L` 米，像素读取纹素不超过自身足迹的级别：十六个级别覆盖 2^15 的远近比。最后一级之外由远处阴影接管。",
       "sunLevelPages": "相机周围一个 clipmap 级别范围每边的页数。这是容量而非调节：只要 `height / tan(halfFovY)` 不超过 `sunLevelPages · shadowPage / 2` = 4096（垂直视场 55° 的 4K 画布），每个像素都读取自己的密度；超出后外侧像素以一半密度读取下一级。",
-      "sunAngularRadius": "太阳圆盘的角半径,单位弧度;零表示明确要求硬阴影。",
-      "translucentShadowFilter": "混合表面和水如何读取光源的虚拟阴影贴图:0,一次点采样;1,相隔一个纹素的十六次过滤采样,每个纹素有自己的接收平面偏置和自己的半透明投射体透射;2,从一个很短的屏幕偏移出发的阴影贴图光线,光线数与不透明投影相同,并带抖动。这是着色器据以分支的阴影贴图 uniform 块中的一个字(`writeVsmUniforms`):更改它不会重新编译任何东西,未使用的模式只花费其代码的成本。不透明表面在每种模式下都读取其投影遮罩。"
+      "sunAngularRadius": "太阳圆盘的角半径,单位弧度;零表示明确要求硬阴影。"
     }
   },
   "LOD_QUALITY": {
@@ -2263,7 +2243,8 @@
     "summary": "烘焙层级的路径为每个图集携带的 `{kind}`，与 `reduce.rs` 的命名一致；在字节 C 处裁剪的覆盖链会追加 `-C`。"
   },
   "PREVIEW_BASE": {
-    "summary": "旁挂文件所携带的某个层级可能拥有的最大边长。"
+    "summary": "附属文件的级别可以具有的最大边长。",
+    "description": "选定边界一节：每张纹理至多 21,844 字节，对比 256/512 级别会增加的数兆字节。"
   },
   "PREVIEW_BLOCK_BYTES": {
     "summary": "一个数据块的字节数。"
@@ -2393,7 +2374,7 @@
   "PageSource": {
     "summary": "按键索引,一个模型的页面从何处读取。",
     "members": {
-      "read": "读取一页的字节；给出 `priority` 时，它是流送器的优先级（数值小者优先）。对已在读取中的页面发出的更紧急读取会被再次请求以提升其优先级：接受 `priority` 的来源应将其并入正在进行的读取，而不是把页面传输两次。"
+      "read": "读取一页的字节；给出时，`priority` 是流式器的（最小者优先）。页面的每次加载都会请求它：接受 `priority` 的源会加入在途页面的读取，并提升为最紧急的，而不是把页面传输两次。"
     }
   },
   "PageStreamer": {
@@ -2404,17 +2385,15 @@
     }
   },
   "PageStreamerOptions": {
-    "summary": "页面流读取器的读取方式（`createPageStreamer`）。",
-    "description": "除页面外，其缓存还为清单表和传输队列预留空间；每个成员都有默认值。",
+    "summary": "页面流式器如何读取（`createPageStreamer`）：通过其所有者的 `cache`，它在页面之外为其清单表和传输队列预留空间；其他每个成员都有默认值。",
     "members": {
       "signal": "中止后取消所有读取。",
       "workerCount": "同时进行的读取数；默认 8。",
-      "maxPages": "同时保留的最多页面数；缺省时只按字节限制。",
       "onEvict": "接收每个离开缓存的页面。",
       "maxTransferBytes": "传输队列可容纳的字节数；默认 8 MiB。",
       "onDiagnostic": "接收每次读取的每一步。",
-      "maxCachedBytes": "缓存页面可占用的 CPU 内存字节数，清单表和传输队列另行预留；默认 256 MiB。",
-      "onStalled": "只接收一次读取永久失败、或最先等待最久的读取：之后只有在它到达后才会再次接收。"
+      "onStalled": "只接收一次读取永久失败、或最先等待最久的读取：之后只有在它到达后才会再次接收。",
+      "cache": "它所读取的页缓存，属于其所有者：它比流式器更长寿。"
     }
   },
   "PanZoomCameraControls": {
@@ -2789,14 +2768,14 @@
     "summary": "一个世界场景的根节点:对象被添加到它上面,一个已编译模型被加载到它里面,而 `background` 决定了它们背后填充的内容。",
     "members": {
       "isScene": "始终为 `true`:用来把场景根节点和其他任何对象区分开来。",
-      "environment": "光滑表面所反射的周围环境图像;没有时为 `null`。",
+      "environment": "周围环境的图像；没有则为 `null`。",
       "background": "填充每个对象背后画面的内容：一种颜色，或表示默认值的 `null`。更改会在下一帧显示，会话保持不变：在这里设置的新颜色，或通过其方法（`set`、`setRGB`、`setHex`、`setHSL`...）写入的当前颜色。直接写入 `.r`、`.g` 或 `.b` 不会被察觉：之后请重新设置 `background`。图片或任何没有 `getHex` 的值都会被拒绝（`UNSUPPORTED_SCENE_UPDATE`）：没有路径会绘制它。",
       "fog": "覆盖每个表面的雾，不透明和透明表面都有；默认 `null` 表示无雾，没有任何开销。`{ color, near, far }` 让物体从 `near` 到 `far` 融入 `color`，距离从相机算起；`{ color, density }` 每单位距离变浓 `density`；加上 `heightFalloff`（以及默认为 0 的 `baseHeight`），雾就贴在地面上，在 `baseHeight` 之上变淡——每向上 `1 / heightFalloff` 个单位除以 e。修改在下一帧显示：在这里设置的新雾，或通过其方法写入的颜色。直接写 `near`、`far`、`density`... 不会被察觉：写完后请重新设置 `fog`。超出范围的雾——`far` 不在 `near` 之外、密度为负——会被拒绝（`INVALID_SCENE_ENVIRONMENT`）。",
       "onBeforeRender": "在场景绘制之前调用;默认没有。",
       "onAfterRender": "在场景绘制完成之后调用;默认没有。",
       "load": "加载一个已编译模型——通过它的清单 URL——并把它添加到这个场景中。",
       "toJSON": "场景的纯 JSON 表示，带版本号：它的物体、按构建它们的调用记录的形状、材质、光源、按声明记录的每个网格的物理物体，以及按地址记录的已加载模型；给出 `camera` 时，也包括它的位姿。",
-      "fromJSON": "用 `toJSON` 保存的场景替换场景当前的内容，保留其 `helper` 标记；模型加载完后完成。其他格式或版本会被拒绝（`UNSUPPORTED_SCENE_FORMAT`）。读取期间发起的调用会按顺序一个接一个执行，每个都基于前一个留下的结果：两个保存的场景绝不会混在一起。"
+      "fromJSON": "用 `toJSON` 保存的场景替换场景所持有的内容，其 `helper` 标记得以保留；其模型加载完成后才解析。其他格式或版本会被拒绝（`UNSUPPORTED_SCENE_FORMAT`）。在读取进行期间发出的调用依次运行，按顺序，每个都建立在前一个留下的结果上：两个已保存的场景永不合并。"
     }
   },
   "SceneEnvironment": {
@@ -2852,7 +2831,7 @@
       "ids": "每个槽位对应的光源名称。",
       "count": "光源的数量。",
       "epoch": "光源集合发生变化时递增。",
-      "transportEpoch": "随纪元一起递增,但仅雾的变化或仅阴影切片的变化除外:雾是视线光线的一项,切片是光源的贴图被寻址的地方,两者都不是光传输,因此缓存已传输光的东西(反弹探针、反射的历史)会保留它。",
+      "transportEpoch": "随纪元递增，除非只有雾或只有一个阴影切片变化：雾是视线射线的一项，切片是光源的贴图被寻址之处，二者都不是光传输，因此缓存所传输光的东西（反弹探针）会保留它。",
       "environment": "该场景的环境设置。",
       "lightingView": "宿主请求的视图模式,原样保留:只要宿主什么都没要求,就是 `auto`。",
       "unlit": "当图像必须以原始反照率、完全不受光照影响的形式呈现时为 true。只要没有声明任何光源,这就是默认行为:一个没有光源的场景没有什么可照亮的,而一张全黑的图像对任何几何基准测试都毫无帮助。一旦存在光源,真正的光照计算就会接管——除非宿主明确要求了诊断视图。",
@@ -2991,9 +2970,6 @@
   "SceneToneMapping": {
     "summary": "引擎所知道的一种显示曲线的名称。"
   },
-  "ScreenErrorVariant": {
-    "summary": "一个簇的屏幕误差是如何被度量的：采用经过证明的上界，还是采用朴素公式。"
-  },
   "ShadowFrameMetrics": {
     "summary": "一帧的光照与阴影计数器,按职责从 `FrameMetrics` 中拆分出来。",
     "description": "`FrameMetrics` 通过 `extends` 继承了它们:消费者看到的公开契约(`sdk-core/index.ts`)不受影响,这些字段依然是 `FrameMetrics` 的直接属性。",
@@ -3006,8 +2982,6 @@
       "tileLightPoolOverflowed": "该采样帧上是否有图块在池中找不到空间而遍历了每一盏灯。",
       "tileLightPoolGrowths": "自浏览器打开以来,池增长到溢出帧所需大小的次数。",
       "gpuShadowsMs": "阴影阶段的 GPU 时间，恰好是引擎通道表中的阴影通道：阴影图集、其静态层、透射层的清除与通道、按页剔除、页面金字塔和遮挡测试。来自光源的切割是单独的阶段（`shadowCasters`）；阴影工作之外的通道不计入其中。",
-      "gpuShadowCullMs": "选择本帧所绘阴影页的投影体的 GPU 时间：光源剪切、逐页剔除，以及运动投影体的遮挡测试及其读取的金字塔。",
-      "gpuShadowRasterMs": "把这些投影体绘入页面的 GPU 时间：先静态层，再池。",
       "gpuLightingMs": "光照的 GPU 耗时。",
       "shadowPoolBytes": "阴影池的 GPU 字节数：其深度页、创建后的静态层和透射层，以及旁边的缓冲区。在第一帧确定池大小之前为 null。",
       "shadowResolutionBias": "阴影因页面池而比请求的画得更粗的程度：GPU 预算从完整池中减半的次数，加上池的填充使每张贴图的分辨率偏置提高的级数（`shadowVsmLodBias`）。通常为 0；大于 0 时，参考模式拒绝其捕获（`REFERENCE_SHADOWS_REDUCED`）。没有阴影贴图运行时为 null。",
@@ -3242,7 +3216,7 @@
     "members": {
       "url": "读取它的位置；当它是另一个文件的 `range` 时，则为它在目录中的名称。",
       "bytes": "它的大小。",
-      "sha256": "其字节内容的指纹。",
+      "sha256": "其字节的指纹，其读取会连同大小一起检查。",
       "range": "该页面是文件 `file` 从 `offset` 开始的 `bytes`，通过 HTTP Range 读取：队列用一次请求读取同一文件中首尾相接排队的范围（`queueRanges.ts`）。",
       "kept": "对于每个请求者各自保留其解码结果的页面为 false：为加入其读取的请求者而读，绝不保留在页面缓存中，其字节只保存一份。"
     }
@@ -3291,8 +3265,8 @@
     "summary": "表中材质的颜色字段,每个各占三个数字。"
   },
   "TEXTURE_PREVIEW_VERSION": {
-    "summary": "渐进式纹理层级,与 `packages/asset-compiler-rust/src/texture_preview.rs` 相对应:旁挂文件中源纹理 mip 链的尾部,采用图集自身的 RGBA8 编码,从没有任何一边超过 `PREVIEW_BASE` 的最精细层级一直到 1×1——在其之上,缓存中每个层级各有一份无损 PNG,从第 0 级往上共 `bakedLevels` 张。",
-    "description": "每个层级都遵循显卡自己重新生成该链条时所用的 mip 规则(`packages/sdk-browser/src/texture/mips.ts`):颜色取线性平均值,alpha 取中位数,第 `k` 级由量化后的第 `k - 1` 级得到。它们的尺寸不会被写下来:而是由源图像的尺寸推导而来,由 `previewLevels.ts` 重新计算得出。第 4 版会把尾部之上的每个层级、以及尾部本身,都烘焙进制作时所要求的、与无损文件并列的数据块族中——桌面显卡用 BC 族,移动设备用 4×4 的 ASTC,每个纹素一个字节——针对通过质量门槛保留下来的那些链条;未达标的链条在该族中保持无损,其条目的布局字会说明这一点。第 6 版把块压缩层级文件按图块记录排列,每条记录一次 HTTP Range 请求(#962,`sdk-browser/src/texture/tileRecords.ts`)。"
+    "summary": "本节契约：更改级别比例、顺序、缩减规则、色彩空间、块编解码器或闸门的门槛，需要递增此版本以及承载它的二进制附属文件的版本。",
+    "description": "版本 3 是 GPU 规则和完整链，包括两个图集；版本 4 增加受闸门控制的块压缩级别和尾部。以自己名称命名的新链不移动任何已有文件，也无需递增：`Coverage` 链（#42）是其一，每个截止值的保覆盖率链（#44）`srgb-coverage-<C>` 也是。版本 5 在过滤后的切分上统计该链的覆盖率（#43）：其字节在相同名称下变化，级别文件仅在缺失时写入。版本 6 把块级别文件排布为图块记录，每个一次 HTTP Range（#962，`tile_records`）；清单的 `textures.version` 向引擎指明它。版本 7 增加 ETC2 家族（ETC2 RGBA8、EAC RG11）：第三个块列和一个布局字，且所有家族默认烹制。"
   },
   "TONE_MAPPING_RANK": {
     "summary": "把场景辐亮度带入显示范围的各条曲线,按着色器读取的编号排列。",
@@ -3519,17 +3493,17 @@
     "summary": "一个层级文件所保存的内容:无损 PNG,还是某一种族在某种布局下的数据块。"
   },
   "TextureLevelReader": {
-    "summary": "用于获取一个已烘焙纹理层级的函数。"
+    "summary": "获取一个烘焙纹理级别的函数、其级别所保存的存储，以及它为之制作的烹制（`heldLevels.ts`）。"
   },
   "TextureLevelRequest": {
-    "summary": "要读取的一个层级:它的地址,以及会话所采样的格式。",
+    "summary": "要读取的级别：整个无损级别，或者带 `range` 时，块级别中一个图块的记录（`tileRecords.ts`），通过 HTTP Range——块级别只通过其图块的记录读取。",
     "members": {
       "sha256": "源图像的指纹。",
       "atlas": "对应哪个图集。",
       "level": "对应哪个层级。",
       "format": "对应哪种格式。",
-      "url": "该层级自身的地址,当缓存列出地址时 — impostor 图集的一个层级(`maps.<name>.levels[k].url`,#1239)。通过这同一个读取器读取,相对 `base` 解析,取代 `textures.url` 模板:一个加载器,一份预算。",
-      "range": "单独读取的块压缩层级字节——一个图块的记录(`tileRecords.ts`)——通过 HTTP Range 读取;忽略它的服务器会返回整个文件。"
+      "url": "缓存列出一个时，级别自己的地址——一个替身图集级别（`maps.<name>.levels[k].url`）。由同一个读取器读取，相对 `base` 解析，取代 `textures.url` 模板：一个加载器，一个预算。",
+      "range": "图块在级别文件中的记录，以其第一个字节和长度表示；缺失时整个级别被读取。"
     }
   },
   "TexturePool": {
@@ -3800,8 +3774,6 @@
       "zoomSpeed": "枢轴类控制器:滚轮和捏合缩放的速度;默认为 1。",
       "autoForward": "仅限飞行模式:不按任何键时以 `movementSpeed` 向前飞行,按 W 加速,按 S 减速至停止。",
       "autoUpdate": "世界的循环是否在每一帧、在 `world.beforeFrame` 钩子之前调用 `update`。设为 `false` 后,这一步就交给页面负责,由页面从这样的钩子中调用 `update`,想以多高的频率、拆成多少子步骤积分都可以;此时世界自身绝不会推进它。",
-      "colliders": "仅角色模式:身体会与之碰撞的网格——单个对象或一个列表,包括它们的所有后代——或者为 `null`。设置它们时,会根据当前世界空间中的三角形构建一棵静态三角形树:对三角形进行一次遍历,构建复杂度为 `O(T log T)`,每个三角形约占用 52 字节。目前还不会读取已编译的模型:请改用普通网格。 `CharacterCollision`(物理引擎的世界,任何能回答 `resolveCapsule` 和 `groundBelow` 的对象)会被原样使用。",
-      "rebuildColliders": "仅角色模式:在碰撞体移动或改变之后,重建碰撞树。 `CharacterCollision` 本身就是一个世界,会原样传递。",
       "velocity": "仅角色模式:身体速度的一份拷贝,单位为米每秒;其他模式下为零。",
       "onGround": "仅角色模式:双脚是否在地面上;其他控制器中为 `false`。",
       "stride": "仅角色模式:步态相位,弧度,一只脚在 0 处落地,另一只在 π 处落地;其他模式下为 0。",
@@ -3947,7 +3919,7 @@
   },
   "WorldControls": {
     "summary": "页面用鼠标和键盘操纵摄像机的各种方式,或者 `'none'`。",
-    "description": "`'firstPerson'` 移动摄像机;`'character'` 移动身体——具有质量、重力、跳跃能力,并与 `world.controls.colliders` 碰撞——然后透过其双眼观看。`'fly'` 和 `'firstPerson'` 以 `world.controls.movementSpeed` 移动,以 `world.controls.lookSpeed` 旋转。"
+    "description": "`'firstPerson'` 移动相机；`'character'` 移动一个身体——质量、重力、跳跃、与世界物理的碰撞——并透过它的眼睛观看。`'fly'` 和 `'firstPerson'` 以 `world.controls.movementSpeed` 移动，并以 `world.controls.lookSpeed` 转动。"
   },
   "WorldFrameMetrics": {
     "summary": "主机从引擎复制的一帧图像的指标,以及页面由它们组合读取的两个值;路径不计数之处为 `null`。",
@@ -4001,8 +3973,6 @@
       "tileLightPoolOverflowed": "该采样帧上是否有图块在池中找不到空间而遍历了每一盏灯。",
       "tileLightPoolGrowths": "自浏览器打开以来,池增长到溢出帧所需大小的次数。",
       "gpuShadowsMs": "阴影阶段的 GPU 时间，恰好是引擎通道表中的阴影通道：阴影图集、其静态层、透射层的清除与通道、按页剔除、页面金字塔和遮挡测试。来自光源的切割是单独的阶段（`shadowCasters`）；阴影工作之外的通道不计入其中。",
-      "gpuShadowCullMs": "选择本帧所绘阴影页的投影体的 GPU 时间：光源剪切、逐页剔除，以及运动投影体的遮挡测试及其读取的金字塔。",
-      "gpuShadowRasterMs": "把这些投影体绘入页面的 GPU 时间：先静态层，再池。",
       "gpuLightingMs": "光照的 GPU 耗时。",
       "hizTestedClusters": "一帧中遮挡测试所做的事情:交给它测试的簇、被它剔除的簇,以及那些 0 级屏幕投影面积超过十六个纹素核大小、因而从更粗糙的 mip 得到答案的簇。`hiz*Triangles` 是同一批簇所对应的三角形数。在 GPU 路径上,这些数据描述的是比正在渲染的这一帧**更早**的一帧——`hizCountedFrame` 说明具体是哪一帧——就像 `gpuPassMs` 一样,相邻两帧经常携带相同的样本。这里没有任何估算值:在不进行遮挡测试的引擎上、在判定结果无法被重新读取的设备上,以及在还没有任何一帧被统计过之前,均为 `null`。",
       "hizRejectedClusters": "被判定为隐藏的簇。",
@@ -4091,7 +4061,7 @@
   "WorldPageSource": {
     "summary": "页面从何处读取,以及所有页面据以读取的地址。",
     "members": {
-      "read": "读取一页的字节；给出 `priority` 时，它是流送器的优先级（数值小者优先）。对已在读取中的页面发出的更紧急读取会被再次请求以提升其优先级：接受 `priority` 的来源应将其并入正在进行的读取，而不是把页面传输两次。",
+      "read": "读取一页的字节；给出时，`priority` 是流式器的（最小者优先）。页面的每次加载都会请求它：接受 `priority` 的源会加入在途页面的读取，并提升为最紧急的，而不是把页面传输两次。",
       "baseUrl": "所有页面据以读取的地址。"
     }
   },
@@ -4622,13 +4592,14 @@
   },
   "createGpuPageCache": {
     "summary": "WebGPU 分配/队列边界。",
-    "description": "页面字节数据和策略由宿主提供。队列写入是有序的;dispose 会等待正在进行中的提交完成后再执行销毁。 `pin(key, 'held')` 使页面在 `resize(slots)` 时优先于普通固定页面保留，resize 不再接受 held 集合。再次普通固定会保留此优先级；`unpin(key)` 会将其移除。",
+    "description": "页面字节和策略由宿主提供：每次加载从 `source`（`reader.ts`）读取其页面，它会加入在途页面的读取，并说明何时重新请求失败的那一个。队列写入是有序的；dispose 在销毁之前等待在途的提交。调整大小时，先于任何被固定的页面保留 `cover` 的页面。",
     "parameters": {
       "options.homes": "每个页面自己的位置，在 `slots` 容纳整个目录期间占用（`homes.ts`）。",
       "options": "GPU 页缓存如何确定大小，以及向何处报告（`createGpuPageCache`）。",
       "options.pageBytes": "一个槽位的字节数：四的倍数。",
       "options.slots": "池容纳多少个槽位。",
-      "options.onDiagnostic": "接收缓存的报告：它的布局、被取消的加载和拒绝。"
+      "options.onDiagnostic": "接收缓存的报告：它的布局、被取消的加载和拒绝。",
+      "options.cover": "根覆盖的地址：调整大小时先于任何其他页面保留它们。"
     }
   },
   "GpuPageCacheOptions": {
@@ -4637,11 +4608,9 @@
       "pageBytes": "一个槽位的字节数：四的倍数。",
       "slots": "池容纳的槽位数。",
       "homes": "每个页面自己的位置，在 `slots` 容纳整个目录期间占用（`homes.ts`）。",
-      "onDiagnostic": "接收缓存报告的内容：其布局、被取消的加载和拒绝。"
+      "onDiagnostic": "接收缓存报告的内容：其布局、被取消的加载和拒绝。",
+      "cover": "根覆盖的地址：调整大小时先于任何其他页面保留它们。"
     }
-  },
-  "PagePinTier": {
-    "summary": "已加载页面的固定方式：调整大小时排在普通固定之前的 `'held'`，否则为 `'pinned'`。"
   },
   "createJob": {
     "summary": "没有计时器、DOM、文件系统或 UI。"
@@ -4650,18 +4619,17 @@
     "summary": "一份计划所用的缓冲区,大小按目录中最大请求来设定。"
   },
   "createPageStreamer": {
-    "summary": "有上限、有优先级且已去重的读取。",
-    "description": "一个仍在队列中等待的请求,一旦它最后一个消费者离开就会被丢弃;一个已经在传输中的请求则被允许最终进入缓存。缓存是一个同时受条目数和字节数限制的最近最少使用(LRU)集合;被固定的条目不会被淘汰,因此调用者只要保留它,就能保住当前正在显示的覆盖范围。",
+    "summary": "通过 `options.cache` 进行的有界、有优先级且去重的读取，该缓存是其所有者保存的页面缓存（`pageCache.ts`）。",
+    "description": "仍在队列中等待的请求在其最后一个消费者离开时被丢弃；已在传输的请求允许落入缓存。缓存是按字节限定的最近最少使用集合；有所有者的页面（`pin`、`retainRanks`）能在逐出中幸存，因此调用方通过固定它来保留所显示的覆盖。",
     "parameters": {
-      "options": "页面流读取器的读取方式（`createPageStreamer`）。除页面外，其缓存还为清单表和传输队列预留空间；每个成员都有默认值。",
+      "options": "页面流式器如何读取（`createPageStreamer`）：通过其所有者的 `cache`，它在页面之外为其清单表和传输队列预留空间；其他每个成员都有默认值。",
       "options.signal": "中止后取消所有读取。",
       "options.workerCount": "同时进行的读取数；默认 8。",
-      "options.maxPages": "同时保留的最多页面数；缺省时只按字节限制。",
       "options.onEvict": "接收每个离开缓存的页面。",
       "options.maxTransferBytes": "传输队列可容纳的字节数；默认 8 MiB。",
       "options.onDiagnostic": "接收每次读取的每一步。",
-      "options.maxCachedBytes": "缓存页面可占用的 CPU 内存字节数，清单表和传输队列另行预留；默认 256 MiB。",
-      "options.onStalled": "只接收一次读取永久失败、或最先等待最久的读取：之后只有在它到达后才会再次接收。"
+      "options.onStalled": "只接收一次读取永久失败、或最先等待最久的读取：之后只有在它到达后才会再次接收。",
+      "options.cache": "它所读取的页缓存，属于其所有者：它比流式器更长寿。"
     }
   },
   "createPathGovernor": {
@@ -5046,7 +5014,7 @@
   },
   "gpuPassStageOf": {
     "summary": "根据某个通道的标签,判断它所属的阶段。",
-    "description": "未知的情况归为 `geometry`。"
+    "description": "未知为 `undefined`：引擎未命名的标签不属于任何阶段。"
   },
   "helper": {
     "summary": "`helper` 系列:用来标注场景的标记物,由线条和网格构建而成。",
@@ -5133,20 +5101,6 @@
       "size": "圆的半径。"
     }
   },
-  "hierarchyUpdateBatch": {
-    "summary": "一次遍历中,按父节点先于子节点的顺序,计算整个层级结构的世界矩阵。"
-  },
-  "hizBuildFlat": {
-    "summary": "由可见性缓冲区深度得到的完整金字塔。",
-    "description": "`into` 只会被重写,绝不会被重新分配。"
-  },
-  "hizFlatLayout": {
-    "summary": "布局(或重新布局)各个偏移量和尺寸。",
-    "description": "如果 `into` 已经够用,就直接原样复用。"
-  },
-  "hizFlatLevels": {
-    "summary": "一张图像的层级数:最后一级是 1x1。"
-  },
   "holdCameraWorld": {
     "summary": "把一台引擎摄像机复制到另一台,复制之后视图会逐位保持一致。"
   },
@@ -5154,7 +5108,8 @@
     "summary": "把色相、饱和度、明度转换为写入 `out[o..o+2]` 的三个RGB分量。"
   },
   "httpPageSource": {
-    "summary": "一个按键从 `baseUrl` 通过 HTTP 获取页面的数据源。"
+    "summary": "从 `baseUrl` 按键经 HTTP 获取页面的页面源：每个被读取的键是一次读取，其每次加载在其运行期间都会加入，所以同一页面在途的两次加载只发出一个请求，而没有加载再等待它时读取就会停止。",
+    "description": "失败的读取按唯一的失败策略等候轮到自己，它的加载在等它，然后再次询问——或者当另一个请求会再次遇到它的失败时被永久拒绝，其键之后的每次加载立即被拒绝（`streaming/failures.ts`）。它不宣告任何关于页面的事：其字节按服务器发送的原样取得，仅由加载保留；读取结束时被遗忘，其键的失败则按策略遗忘的方式遗忘。它的请求随被索要而发出：它没有队列，`priority` 不排序任何东西。`dispose` 停止其读取。"
   },
   "invertMatrix4": {
     "summary": "通过伴随矩阵计算 `out = m⁻¹`。"
@@ -6309,7 +6264,7 @@
     "description": "`createCache` 是 GPU 页面池(`createGpuPageCache`),`decode` 是簇页面解码器(`decodeGeometryPage`),是单独的一块代码,首次调用时才下载:引擎在 GPU 上绘制页面,从不在 CPU 上解码任何一页。"
   },
   "page.httpSource": {
-    "summary": "一个通过 HTTP 从 `baseUrl` 读取页面的数据源。",
+    "summary": "从 `baseUrl` 经 HTTP 读取页面的页面源；`dispose` 取消其读取。",
     "parameters": {
       "baseUrl": "页面据以读取的地址。"
     }
@@ -6329,7 +6284,8 @@
       "options.homes": "每个页面自己的位置，在 `slots` 容纳整个目录期间占用（`homes.ts`）。",
       "options.pageBytes": "一个槽位的字节数：四的倍数。",
       "options.slots": "池容纳多少个槽位。",
-      "options.onDiagnostic": "接收缓存的报告：它的布局、被取消的加载和拒绝。"
+      "options.onDiagnostic": "接收缓存的报告：它的布局、被取消的加载和拒绝。",
+      "options.cover": "根覆盖的地址：调整大小时先于任何其他页面保留它们。"
     }
   },
   "page.decode": {
@@ -6446,10 +6402,6 @@
   "readCameraWorld": {
     "summary": "把宿主摄像机复制到引擎摄像机中,祖先节点已解析完毕。"
   },
-  "referenceScreenError": {
-    "summary": "`reference` 变体的屏幕误差：`(error × stretch) × focal / w`，当中心到不了近平面时为无穷大；`w` 是中心深度对应的裁剪权重，在透视投影下就是该深度本身（`perspective` = 1），在正交投影下为 1（对应 0，见 `screenErrorBound.ts`）。",
-    "description": "在 `packages/sdk-browser/src/gpu/dag/shader/error.ts` 中有对应的 WGSL 镜像实现,操作数和顺序完全相同,只是精度为 f32。调用者已经处理过误差为零或无穷大的情况。"
-  },
   "removeTransformNode": {
     "summary": "移除 `node` 及其所有后代;它们的索引之后会被重新使用。",
     "description": "要在保留某个子树的同时将其分离,可使用 `reparentTransformNode(tree, node, -1)`。"
@@ -6479,9 +6431,6 @@
     "summary": "一个簇经过认证的屏幕误差(C4):在透视投影下(包括离轴情形),一个球上任意一点被最多移动 ε 之后,其在屏幕上位移量的一个像素单位上界。",
     "description": "视图坐标系:眼睛位于原点,朝向 −z 方向看,深度 d = −z;像素坐标为 (f_x·x/d, f_y·y/d),f = max(f_x, f_y)。该图元通过一个最大拉伸倍数为 s 的仿射映射进入视图空间:物体空间的球 (c, r) 对应视图空间中的球 (C, ρ = r·s),物体空间中最多为 ε 的位移,变为视图空间中最多为 δ = ε·s 的位移。1. 球上一点 P = (x, y, d) 变为 P' = P + Δ,深度为 d' = d + Δd。令 q = (x, y)/d,则:π(P') − π(P) = f·(Δxy − q·Δd)/d'。映射 Δ ↦ Δxy − q·Δd 的范数为 √(1 + |q|²)(这是 I + q·qᵀ 的特征值:1 和 1 + |q|²);因此,无论 Δ 的方向如何——垂直于视轴、沿深度方向朝向或远离摄像机、还是倾斜方向——都有 |π(P') − π(P)| ≤ f·δ·√(1 + |q|²) / d'。2. 在这个球上:d ≥ m = −C_z − ρ,即最小深度;|(x, y)| ≤ ℓ + ρ,其中 ℓ = |(C_x, C_y)| 是球心到视轴的距离;由此可得 |q| ≤ (ℓ + ρ)/m,以及 d' ≥ m − δ。3. 如果 m − δ > near(因而也 > 0):E = f·δ·√(m² + (ℓ + ρ)²) / (m·(m − δ))。否则,这个球(或其某个偏移后的点)已经到达近平面:结果为无穷大,这是一个更精确的结论。裁切的单调性:m 是该球上深度的下确界,ℓ + ρ 是到视轴距离的上确界;因此一个包含在另一个球内部的球,给出的误差不会更大,而一个更大的球给出的误差不会更小。沿着射线方向(C → k·C,k > 1,球心深度 C_d > 0),(kℓ + ρ)/(k·C_d − ρ) 和 1/(k·C_d − ρ − δ) 都在减小:因此给出的误差会随距离增大而减小。第 2 步中的两个界分别来自球上两个不同的点:对于一个很小的球,E 是紧的;而当这个球在远离视轴的地方擦过近平面时,E 就变得比较松。(参见 `screenErrorDisplacement.test.ts`)。**一台摄像机,一个公式。** `perspective` 是摄像机的裁剪 w 权重:处于视图深度 d 的一个点,其 w = perspective·d + (1 − perspective)——透视投影下为 1(此时 w = d,以上全部成立),正交投影下为 0(此时 w = 1:q = 0,一次位移无论深度如何都会让像素移动 f·δ)。这个上界是针对 w 写出的:E = f·δ·√(w_m² + (p·(ℓ + ρ))²) / (w_m·w_{m−δ}),当 w_{m−δ} ≤ p·near 时即到达近平面。当 p = 1 时,每一步运算都与上面完全一致,逐位相同(乘以 1 和加上 0 都是精确运算)。这里没有做任何保护性判断:调用者已经处理过误差为空、无穷大或无效的情况。深度或到视轴的距离若不是有限值,结果为无穷大。运算顺序——先算 (δ·f)/m,再乘以一个 √/(m − δ) ≥ 1 的因子——保证了舍入后的结果不会低于 sdk-browser 中 `errorFloorAt` 给出的下限。WGSL 镜像实现:见 `packages/sdk-browser/src/gpu/dag/shader/shader.ts` 中的 `projected`,操作数和顺序完全相同。"
   },
-  "screenErrorVariant": {
-    "summary": "当前生效的变体。"
-  },
   "setNodeAutoUpdate": {
     "summary": "`matrixAutoUpdate`。",
     "description": "重新启用它时无需再标记任何东西：与其合成结果不同的局部矩阵已经带有 `NODE_TRS_DIRTY`，由 `setNodeLocalMatrix` 或某个姿态设置器设置。无论哪种情况，该节点都会被列出：它的局部矩阵的生成方式变了。"
@@ -6498,10 +6447,6 @@
   },
   "setNodeScale": {
     "summary": "把变换树中的一个节点按 `(x, y, z)` 缩放。"
-  },
-  "setScreenErrorVariant": {
-    "summary": "为整个页面设置该变体。",
-    "description": "`null`/`undefined` 会恢复为我们自己的实现:任何会话都不会继承之前的设置。"
   },
   "side": {
     "summary": "一个表面绘制哪些面:采用引擎自有的 `Side` 术语(`contracts/material.ts`)。"
@@ -6723,47 +6668,16 @@
       "time": "自世界开始以来的秒数,取该帧的时间(`worldFrameGrid.ts`)。"
     }
   },
-  "Capsule": {
-    "summary": "针对三角形树的**直立胶囊体**:角色身体的窄相位判定形状。",
-    "description": "胶囊体立在 `feet`(其底部球体的最低点)之上,由从 `feet + radius` 到 `feet + height - radius` 的竖直线段周围 `radius` 距离以内的所有点组成。一次遍历会找到与该线段距离小于 `radius` 的所有三角形,并把每一个重叠一次性交给 `push`(`CapsuleContact`)。调用方会移动 `feet`;该遍历中的下一个三角形是相对于移动后的胶囊体测量的,因此在角落相遇的两面墙都能在一次遍历中处理完。",
-    "members": {
-      "feet": "最低点,世界空间;`push` 会移动它。",
-      "radius": "身体的半径,单位为米。",
-      "height": "从脚到头顶的高度,单位为米;至少是半径的两倍。"
-    }
-  },
-  "CapsuleContact": {
-    "summary": "胶囊体与某个表面的一次重叠。",
-    "description": "数组会被复用:push 只在调用期间读取它们。",
-    "members": {
-      "normal": "从表面指向胶囊体的单位方向:即出口方向。",
-      "surface": "表面自身的单位法线,从胶囊体一侧看到的。当胶囊体接触到一条棱或一个角时,它与 `normal` 不同:它表明该棱属于哪个面。",
-      "point": "表面上的接触点,世界空间。",
-      "depth": "沿 `normal` 方向,胶囊体嵌入表面内部的深度,> 0。"
-    }
-  },
-  "CapsulePush": {
-    "summary": "响应一次接触,通常是通过把胶囊体的 `feet` 从中移开。"
-  },
   "CharacterCameraControls": {
-    "summary": "**透过其双眼看到的角色**:一个具有质量的身体,会行走、奔跑、跳跃、下落,并以一个直立胶囊体的形式与世界的三角形碰撞。",
-    "description": "指针像第一人称视角那样转动头部(`look.ts`)。按键以 `KeyboardEvent.code` 为准,因此任何键盘布局下都是同一批按键:W/S 或上下方向键前后行走,A/D 或左右方向键横向移动,Shift 冲刺,空格跳跃。身体不会瞬间启动或停止:它会在 `responseTime` 内积累速度,在 `stopTime` 内刹车,但不会快过地面摩擦允许鞋底施加的推力,所以停下时在石头上会滑一小段,在冰上会滑很远,在空中保持动量,在 `gravity` 下上升、在 `fallGravity` 下下落,能爬上不超过 `stepHeight` 的台阶,沿墙滑动,并能站在坡度不超过 `maxSlope` 的地面上(`sdk-core/src/collision/characterBody.ts`)。摄像机就是眼睛,位于脚部之上 `eyeHeight` 处,会随脚步以 `headBob` 上下晃动,并在着地时以 `landingDip` 下沉(`sdk-core/src/collision/characterEye.ts`);这两者都只是叠加在身体每一步之后的眼睛位置上,绝不会去移动身体本身。若某个宿主自行移动摄像机,则应把身体静止地传送到那里。一个静止的角色——落地、没有速度、没有按键、也没有残留的下沉——不会发出任何事件,因此场景会保持静止。",
+    "summary": "透过其眼睛所见的角色：一个有质量的身体，会行走、奔跑、跳跃和坠落，并作为直立的胶囊与世界物理的物体碰撞。",
+    "description": "指针像第一人称那样转动头部（`look.ts`）。按键按 `KeyboardEvent.code` 识别，使每种键盘布局都使用相同的键：W/S 或上下方向键前进和后退，A/D 或左右方向键侧移，Shift 冲刺，空格跳跃。身体不会立刻起步或停下：它在 `responseTime` 内积累速度，在 `stopTime` 内刹车，绝不快于地面摩擦允许鞋底推动的速度，所以停下时在石头上滑一点、在冰上滑得远；它在空中保持动量，在 `gravity` 下上升、在 `fallGravity` 下坠落，攀上高达 `stepHeight` 的台阶，沿墙滑行，并站在高达 `maxSlope` 的斜坡上（`sdk-browser/src/physics/characterDriver.ts`、`sdk-core/src/collision/characterDrive.ts`）。相机就是眼睛，在脚上方 `eyeHeight` 处，随步幅以 `headBob` 起伏，落地时以 `landingDip` 下沉（`sdk-core/src/collision/characterEye.ts`）；二者都在身体的这一步之后作用于眼睛，从不移动身体。自己移动相机的宿主会把身体静止地传送到那里。静止的角色——在地上、无速度、无按键、没有剩余的下沉——不发出任何东西，所以场景保持静止。",
     "members": {
       "velocity": "身体的速度,单位为米每秒。实时值:`[x, y, z]`,y 朝上。",
       "onGround": "双脚是否在地面上。",
       "stride": "步态相位,弧度,范围 [0, 2π):一只脚在 0 处落地,另一只在 π 处落地。",
       "onLand": "落地时调用,参数是向下的速度(米每秒):用于音效、震动。",
       "onJump": "身体因跳跃离开地面时调用。",
-      "collision": "身体与之碰撞的对象——世界的碰撞体,或者通过相同接触点接入的物理后端世界(`CharacterCollision`)。为 `null` 时,身体会保持出发时的高度行走,永不下落。",
       "update": "推进 `delta` 秒的生命;返回摄像机是否发生了变化,变化时会发出 `change`。"
-    }
-  },
-  "CharacterCollision": {
-    "summary": "**角色与其所碰撞的世界之间的接触点。**",
-    "description": "角色身体(`characterBody.ts`)从不读取三角形:它把自己的胶囊体分成不超过其半径长度的若干段来移动,每移动一段之后就询问胶囊体与什么发生了重叠、哪个方向是出口;而行走者则会询问它脚下的地面在哪里。除此之外的一切——速度、重力、台阶、坡度、跳跃——都属于身体自身。物理后端通过实现这个接口,就可以把角色放进自己的世界:它根据自身的形状和粗筛结果来回答重叠查询,而身体则照常在其上行走。默认实现是 `triangleCollision`,即静态三角形树。",
-    "members": {
-      "resolveCapsule": "找出 `capsule` 与什么发生了重叠,并对每一次重叠依次调用 `push(contact)`(`CapsuleContact`:出口方向、表面、接触点、深度)。`push` 会移动 `capsule.feet`;某些实现会基于移动后的胶囊体来测量接下来的每一次重叠,因此角落可以在一次调用中处理完。返回是否发生过任何重叠。",
-      "groundBelow": "把胶囊体底部的球体沿正下方向下移动,最多移动 `depth` 的距离,返回到达 `accepts` 所接受的表面之前(取这类支撑中最高的那一个)所走过的距离;如果胶囊体已经陷入其中、必须向上移动,则返回负值。若什么都没有则返回 `null`。`capsule.feet` 保持原位不动。`accepts` 会把每个候选接触当作接触来看待:`point`,从该点指向球心的 `normal`,以及朝上一面的 `surface`。"
     }
   },
   "HeadSettings": {
@@ -6781,24 +6695,6 @@
       "locked": "指针是否被锁定在视角上。",
       "lock": "把指针锁定到视角上。",
       "unlock": "释放指针。"
-    }
-  },
-  "TriangleCollision": {
-    "summary": "默认的碰撞世界:一棵静态三角形树。",
-    "members": {
-      "tree": "可供查询的那棵树:它的 `triangleCount` 和 `bytes` 就是世界的开销。"
-    }
-  },
-  "TriangleTree": {
-    "summary": "世界三角形上的一个包围体层级结构,以盒子查询: `triangleCollision` 和 `capsulePass` 背后的粗筛阶段。",
-    "description": "由 `buildTriangleTree` 构建一次,此后只读。",
-    "members": {
-      "triangles": "每个三角形九个数——三个顶点——按叶子顺序排列。",
-      "bounds": "每个节点: 最小 xyz、最大 xyz。",
-      "links": "每个节点: 叶子的第一个三角形,或内部节点的右子节点(左子节点紧跟其父节点)。",
-      "counts": "每个节点: 叶子的三角形数,内部节点为 0。",
-      "bytes": "树占用的字节数。",
-      "triangleCount": "树持有的三角形数。"
     }
   },
   "world.beforeFrame": {
@@ -7629,7 +7525,10 @@
     "summary": "循环倾斜、摆动树木骨骼的动画片段。",
     "parameters": {
       "bones": "从树干到枝梢依次排列的骨骼。",
-      "options": "方向、最大弯曲角度及频率。"
+      "options": "方向、最大弯曲角度及频率。",
+      "options.direction": "地平面内的方向 `[x, z]`；默认 `[1, 0]`。",
+      "options.angle": "以弧度计的最大弯曲；默认 0.1。",
+      "options.frequency": "每秒摆动次数；默认 0.5。"
     },
     "parameters.options.direction": "地面方向 `[x, z]`，默认为 `[1, 0]`。",
     "parameters.options.angle": "最大弯曲角，单位为弧度，默认为 0.1。",
@@ -7662,13 +7561,34 @@
     "members.dirZ": "各波方向的归一化 z 分量。",
     "members.k": "各波的波数，单位为弧度每米。",
     "members.amplitude": "各波的竖直振幅，单位为米。",
-    "members.lateral": "各波归一化后的横向振幅，单位为米。"
+    "members.lateral": "各波归一化后的横向振幅，单位为米。",
+    "members": {
+      "count": "总和中的波数。",
+      "dirX": "每个波方向的归一化 x 分量。",
+      "dirZ": "每个波方向的归一化 z 分量。",
+      "k": "每个波的波数，单位为弧度每米。",
+      "amplitude": "每个波的垂直振幅，单位为米。",
+      "lateral": "每个波的归一化横向振幅，单位为米。",
+      "phase": "每个波在所设时间的相位，范围 [0, 2π)：唯一随时间变化的状态。",
+      "crest": "总和在静止状态之上所能达到的最高点：`Σ Aᵢ`。",
+      "steepness": "归一化之后的 `Σ Qᵢ·Aᵢ·kᵢ`：至多为 1。",
+      "phasesAt": "每个波在 `t` 秒时的相位，以双精度归约到 [0, 2π)。",
+      "setTime": "把波的时钟拨到 `t` 秒；上一帧的表面是 `setTime(t - dt)`。",
+      "offset": "静止点 `(x, 0, z)` 的位移 `[x, y, z]`，写入 `out`。",
+      "displacementBox": "容纳矩形 `[x0, x1] × [z0, z1]` 内某静止点每个位移的盒子，先是其最小角，再是最大角，写入 `out`：逐波而言，其相位覆盖矩形沿其方向的跨度，在该跨度上其正弦和余弦保持在两端以及该跨度所含波峰和波谷的最小值与最大值之间；各波的盒子之和包含总和。对 `count` 个波求和，取前几个：即为按更少数量定尺寸的记录所绘制的内容。",
+      "normal": "表面在静止点 `(x, z)` 处的单位法线 `[x, y, z]`，写入 `out`。"
+    }
   },
   "WindOptions": {
     "summary": "风向（地面上的 `x`、`z`）、骨骼最大弯曲角度（弧度）以及每秒摆动次数。",
     "members.direction": "地面方向 `[x, z]`，默认为 `[1, 0]`。",
     "members.angle": "最大弯曲角，单位为弧度，默认为 0.1。",
-    "members.frequency": "每秒摆动次数，默认为 0.5。"
+    "members.frequency": "每秒摆动次数，默认为 0.5。",
+    "members": {
+      "direction": "地平面内的方向 `[x, z]`；默认 `[1, 0]`。",
+      "angle": "以弧度计的最大弯曲；默认 0.1。",
+      "frequency": "每秒摆动次数；默认 0.5。"
+    }
   },
   "world.setTransform": {
     "summary": "移动节点 `nodeName`，使其世界位姿为 `matrix`：页面未持有引用的节点通过其名称（`object.name`）在场景中查找而抵达。",
@@ -7839,5 +7759,114 @@
   },
   "TRANSPARENT_DEPTH_LAYER": {
     "summary": "透明遍绘制所在的层：恰好贴在不透明面上的玻璃、贴花或水面会画在它之上 —— 透明表面从不进入编译器的阶段，所以它的页带层 0 —，比不透明光栅与它自己的光栅之间的浮点舍入高出一个层级，永远不足以触及位于其上方的表面。"
+  },
+  "ByteMeter": {
+    "summary": "统计一次加载读取的字节数，并与其清单声明的长度对照。",
+    "members": {
+      "plan": "加载读取的文件，从地址到声明的长度：它们的总和立即计入总量，但已读完的文件除外，那是随到达而计入的。空计划不算计划：加载此时只在结束时被通知一次，整体通知。",
+      "read": "返回 `response`（从 `url` 读取），其正文随到达而计数。",
+      "settle": "丢弃从未被读取的计划文件，使最后一个事件有 `loaded === total`。"
+    }
+  },
+  "CacheSession": {
+    "summary": "通过缓存读取的会话：谁会听到页面被逐出，或一次没有找到可取之物的逐出。",
+    "description": "它从总量中预留的部分，每次变化时告知它所开启的席位（`open`）。",
+    "members": {
+      "evicted": "缓存逐出某页时，以该页的 url 调用。",
+      "blocked": "超出预算的逐出没有找到可取之物时调用。"
+    }
+  },
+  "EvictionOrder": {
+    "summary": "GPU 切分发布的逐出顺序（`../dag/evict.ts`），其键随受害者被取走而逐个读取。",
+    "members": {
+      "count": "该顺序列出多少个键。",
+      "keyAt": "排名 `at` 处的键，第一个受害者在 0。"
+    }
+  },
+  "FAR_PLANE_SLOT": {
+    "summary": "FAR 平面在六个平面中的排名，即 `planes` 的浮点数按每平面四个所寻址的槽位。"
+  },
+  "ModelScene": {
+    "summary": "模型记录所展示的场景：其加载器构建的图，不含它所打开的世界根，那些由模型留给自己世界的会话。",
+    "members": {
+      "source": "场景节点的根，按选项要求复制。",
+      "associations": "场景中每个节点所代表的网格和图元，按节点。",
+      "nodes": "每个 glTF 节点的宿主节点，按其索引；场景被分区或复制时没有：分区重新编号该表，副本复制它。",
+      "clips": "文件所播放的剪辑（#357）。",
+      "textureIndices": "场景的每张纹理在着色器所索引的表中的排名。",
+      "partitions": "读取分区场景所依据的单元，场景未分区时没有。",
+      "sceneLightingSource": "其灯光与环境照亮场景的节点：`options.sceneLighting`，否则是任何复制之前场景自身的根。",
+      "framingLot": "相机取景从中获取场景边界的批次，没有节点有边界时为 `null`；由调用方归还。"
+    }
+  },
+  "PageCache": {
+    "summary": "会话所读取的已解码页缓存（`createPageCache`）。",
+    "members": {
+      "bytes": "每个条目所持有的字节数。",
+      "heldBytes": "有人持有的条目的字节数：任何逐出都不会取走它们。",
+      "pageCount": "它持有多少页。",
+      "levelBytes": "纹理级别和图块记录所持有的字节数。",
+      "cpuBytes": "CPU 总量：条目、清单表、传输队列和引擎表合计。",
+      "reservedBytes": "通过它读取的会话从总量中预留的字节数。",
+      "budgetBytes": "条目可以持有的字节数：总量减去已预留的部分（`reservedBytes`）。",
+      "roomBytes": "到达的条目可占用的字节数：预算，减去任何逐出都不能取走的部分。",
+      "weight": "`key` 处条目所持有的字节数；没有则为 0。",
+      "weigh": "`key` 处的条目现在重 `bytes` ——一次被保留的读取的已解码分配——，只要缓存还保留着它。",
+      "page": "`url` 处的页面，不作任何标记。",
+      "touch": "`url` 处的页面，标记为最近使用。",
+      "put": "将 `array` 放为 `url` 处最近使用的页面；刚读取并验证时给出 `sha256`。它的持有保持不变：被固定或在途的页面带着持有到达。",
+      "drop": "`url` 处的条目离开，连同它的持有。",
+      "foreign": "`url` 处所持有的页面是否是 `announced` 所指名的另一个文件：另一个指纹或另一个大小，或从未对照指纹验证过的字节。仅有名字不是文件：另一个场景、另一个基础路径或重新烹制的同一文件夹，可能以相同大小重用它。同一个指纹就是同样的字节，读取时已验证，在任何基础路径下都一样。",
+      "acquire": "对 `url` 处的条目再加一次持有，甚至在它到达之前。",
+      "release": "对 `url` 处条目的一次持有结束；调用方完成后称量缓存（`fit`）。",
+      "fit": "逐出不再容纳得下的内容（`fit`）：在页面到达或持有结束之后。",
+      "file": "服务器整体应答的 `url` 处的文件，只要缓存保留着它，就标记为最近使用。",
+      "keepFile": "将服务器整体应答的 `url` 处的文件保留为最近使用的条目，前提是它容纳于逐出所能腾出的空间（`roomBytes`）：超出的文件会取走每个条目，然后是它自己，因此被放弃。",
+      "level": "在 `id` 下持有的纹理级别或图块记录，标记为最近使用。",
+      "keepLevel": "在 `id` 下持有 `level`，从此缓存拥有它：它离开时缓存将其关闭。已被持有的级别——在此期间由被设备丢失所取代的会话读取——保留，标记为最近使用，副本则关闭：其字节只计一次。",
+      "keep": "`key` 所指名的文件的读取，共 `bytes` 字节——场景的常驻代理——，整体保留以取代其他任何读取：未被保留时，`start` 在缓存自己的取消机制上开始它，此间重新打开的会话加入在途的那一个。其字节从被请求的那一刻起计数；在途时被持有，到达后才离开，并且只有在没有页面、文件或级别可以离开时才离开（`SCENE_TIER`）。它跨会话保留，直到 `keepOnly` 不再指名它。失败的读取立即离开。",
+      "keepOnly": "放走场景的代理，取消其读取，除非 `key` 指名了它：一个已离开的场景。",
+      "resize": "设定总量，并立即逐出不再容纳得下的内容。",
+      "open": "`session` 自此通过缓存读取，从总量中预留 `reserving` 字节，直到它离开：交给它的席位告知每次新的预留（`reserve`）和它的离开（`leave`）。",
+      "clear": "清空缓存：它的所有者已离开。",
+      "readRange": "通过 HTTP Range 读取 `url` 处文件的字节 `[offset, offset + length)`，服务于通过此缓存读取的每次加载和会话：服务器整体应答的文件只读取一次，并保存在这里（`createRangedReads`）。"
+    }
+  },
+  "RangeAsk": {
+    "summary": "一个范围如何读取：统计到达量的计量器、`checked` 至多发出的请求数，以及放走请求者的信号。",
+    "members": {
+      "meter": "统计到达的字节数。",
+      "attempts": "`checked` 为该范围至多发出的请求数。",
+      "signal": "放走请求者：没人再等待时读取停止。"
+    }
+  },
+  "ReadRange": {
+    "summary": "从 `url` 处文件的 `offset` 起读取 `length` 字节（`createRangedReads`）。"
+  },
+  "TextureLevelAddress": {
+    "summary": "级别所在之处：它的地址，以及会话所采样的格式。",
+    "members": {
+      "sha256": "源图像的指纹。",
+      "atlas": "哪个图集。",
+      "level": "哪个级别。",
+      "format": "哪种格式。",
+      "url": "缓存列出一个时，级别自己的地址——一个替身图集级别（`maps.<name>.levels[k].url`）。由同一个读取器读取，相对 `base` 解析，取代 `textures.url` 模板：一个加载器，一个预算。"
+    }
+  },
+  "TextureLevelStore": {
+    "summary": "已读取的级别保存之处：页缓存，在它的条目之间（`PageCache.level`），每个级别在不得离开期间由其请求者持有在那里（`acquire`、`release`，然后 `fit`）。",
+    "members": {
+      "level": "在 `id` 下持有的纹理级别或图块记录，标记为最近使用。",
+      "keepLevel": "在 `id` 下持有 `level`，从此缓存拥有它：它离开时缓存将其关闭。已被持有的级别——在此期间由被设备丢失所取代的会话读取——保留，标记为最近使用，副本则关闭：其字节只计一次。",
+      "roomBytes": "到达的条目可占用的字节数：预算，减去任何逐出都不能取走的部分。",
+      "levelBytes": "纹理级别和图块记录所持有的字节数。",
+      "acquire": "对 `url` 处的条目再加一次持有，甚至在它到达之前。",
+      "release": "对 `url` 处条目的一次持有结束；调用方完成后称量缓存（`fit`）。",
+      "fit": "逐出不再容纳得下的内容（`fit`）：在页面到达或持有结束之后。"
+    }
+  },
+  "createPageCache": {
+    "summary": "唯一的宿主缓存：每个已读取的页面和包、每个服务器整体应答而非按范围应答的文件（`readRange`）、每个已解码的纹理级别和块图块记录（`level`），以及场景的常驻代理（`keep`）的字节，作为同一个条目集合，一个预算、一次逐出（`cacheEntries.ts`），对照 CPU 总量（`cpuBytes`、`world.budget.cpu`）。",
+    "description": "其所有者让它跨会话保留：世界把同一个缓存交给它开启的每个会话，因此重新打开的会话——在丢失之后再次获准的设备上，或在已变化的场景上——从这里读取上一个会话所取得的内容，并且不再获取它已持有的任何东西。通过它读取的每个会话预留其清单表、传输队列和引擎的表（`manifestTableBytes`、`maxTransferBytes`、流式器的 `reserve`），随变化而告知（`open`），缓存保留它们的总和，并对它所固定或读取的页面施加持有；其余由条目持有（`budgetBytes`）。只有缓存会逐出，一旦其条目超过预算：绝不逐出有人持有的条目，然后是最久未使用的页面、文件和级别，代理最后。级别不需要自己的空间：它占用逐出所能腾出的部分（`roomBytes`），和页面一样。"
   }
 }

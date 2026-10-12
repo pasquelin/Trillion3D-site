@@ -1174,13 +1174,6 @@
         "Adaptatif : `pixelError: 2`, augmenté avec la vitesse de caméra ; une vue immobile conserve la base."
       ]
     },
-    "ScreenErrorVariant": {
-      "description": "Projection de l’erreur de cluster comparée au seuil. Cet état de module est lu par la métrique CPU et intégré au shader de sélection à sa compilation. Source publique : Karis, Stubbe et Wihlidal, SIGGRAPH 2021.",
-      "values": [
-        "Notre borne, par défaut : elle ne sous-estime jamais l’erreur.",
-        "Formule publiée, utilisée par le banc comparatif."
-      ]
-    },
     "MathPathMode": {
       "description": "Chemin exécuté par un lot. En `auto`, le gouverneur compare les médianes glissantes en nanosecondes par élément et ne bascule qu’après plusieurs exécutions favorables ; JS reste la référence et le repli.",
       "values": [
@@ -1377,9 +1370,6 @@
     },
     "boxTransformBatch": {
       "description": "`n` boîtes transformées par `n` matrices. `out` et `boxes` portent six nombres par élément, `mats` une sous-vue de seize."
-    },
-    "hierarchyUpdateBatch": {
-      "description": "Met à jour une hiérarchie complète en une passe, parents avant enfants : composition locale puis multiplication par la matrice monde du parent. `parents[i]` doit désigner un nœud déjà mis à jour ; toute autre valeur crée une racine."
     },
     "createPathGovernor": {
       "description": "Arbitre JS contre WebAssembly par opération : médianes glissantes en nanosecondes par élément, bascule après cinq avances consécutives, puis rééchantillonnage périodique de l’autre chemin."
