@@ -6,8 +6,10 @@ name: Quality
 # site build. The install's `prepare` checks the pinned engine out and writes the API files first.
 on:
   pull_request:
-    branches: [main]
+    branches: [develop, main]
     types: [opened, synchronize, reopened]
+  push:
+    branches: [develop]
   workflow_dispatch:
 
 concurrency:

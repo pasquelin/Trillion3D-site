@@ -1,5 +1,5 @@
 #!/bin/sh
-# Shared by the tracked git hooks: every change reaches main through an issue and a pull request,
+# Shared by the tracked git hooks: every change reaches develop through an issue and a pull request,
 # whoever (or whatever) types the command. Installed by `pnpm install` (`prepare`:
 # `git config core.hooksPath .githooks`). Each hook ends by delegating to the hook of the same name
 # installed locally in .git/hooks, so core.hooksPath preserves personal hooks.

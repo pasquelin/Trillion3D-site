@@ -112,7 +112,7 @@ ships the built SDK and neither the sources the site bundles nor the compiler's 
 
 ## Deploy
 
-`.github/workflows/site.yml` builds the site on every pull request and push to `main`. On a push to
+`.github/workflows/site.yml` builds the site on every pull request and push to `develop` and `main`. On a push to
 `main`, or a manual run asked to deploy (`gh workflow run site.yml -f deploy=true --ref main`), it
 also builds the engine's native compiler, cooks the scene caches, builds the published tree (with
 the audience measurement), brotli-compresses the caches' objects, checks the file-count floor,
@@ -138,8 +138,9 @@ What the server holds, as for the open world:
 
 The rules are Trillion3D's, with what differs here in [AGENTS.md](AGENTS.md) and
 [CONTRIBUTING.md](CONTRIBUTING.md): one issue and one pull request per change, on a branch
-`<issue>-<short-name>` cut from `main`, with `validate` and `pr-body` green. `pnpm install` installs
-the tracked git hooks; `.github/ruleset.json` is the ruleset applied to `main`.
+`<issue>-<short-name>` cut from `develop`, with `validate` and `pr-body` green; a release pull
+request carries `develop` to `main`. `pnpm install` installs
+the tracked git hooks; `.github/ruleset.json` is the ruleset applied to `develop` and `main`.
 
 ## Licence
 

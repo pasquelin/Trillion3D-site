@@ -29,7 +29,7 @@ mission, the image rules and the code rules; this page says what applies here.
 
 ## Contribution workflow
 
-1. Claim the issue (`in progress`, assignee `pasquelin`); branch `<issue>-<name>` from `main` in
+1. Claim the issue (`in progress`, assignee `pasquelin`); branch `<issue>-<name>` from `develop` in
    `.worktrees/<branch>/`, `pnpm install`.
 2. Deliver every To-do and Proof item, nothing beyond.
 3. Review the whole diff twice: simplification, then correctness against these rules; then
@@ -37,4 +37,5 @@ mission, the image rules and the code rules; this page says what applies here.
 4. Commit in English, push, open the pull request from `.github/PULL_REQUEST_TEMPLATE.md`,
    `Closes #<issue>` first, its "Local review before push" filled (the CI checks both), auto-merge
    on.
-5. Merged: remove the worktree and branch; the merge to `main` publishes the site (`site.yml`).
+5. Merged into `develop`: remove the worktree and branch. A release pull request (`develop` → `main`)
+   publishes the site (`site.yml`).
