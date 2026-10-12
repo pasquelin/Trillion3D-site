@@ -12,9 +12,9 @@ here. What differs:
   host path.
 - **No image loss**: the built site is the same site, page for page, after any change but one that
   says what it adds.
-- **Benches, Chrome, timings and thumbnails are the recette's**
+- **Chrome runs, timings and thumbnails are run by hand, after the merges, and never block one**
   (`scripts/docs/examples-thumbnails.ts`, `scripts/site-first-load.ts`,
-  `scripts/prove-install-page.ts`), after the merges; they never block one.
+  `scripts/prove-install-page.ts`). The engine's benches stay in the engine repository.
 - **Built files are never committed**: `dist/`, the scene caches and the API files are rebuilt on
   demand.
 - **Branches** are `<issue>-<short-name>`, cut from `develop` in `.worktrees/<branch>/`. Every change

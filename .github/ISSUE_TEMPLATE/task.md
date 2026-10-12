@@ -1,6 +1,6 @@
 ---
 name: Task
-about: One bounded piece of work with its proof — written as Trillion3D's skills/t3d-writer/SKILL.md shows
+about: One bounded piece of work with its proof
 title: ''
 labels: ''
 ---
@@ -13,7 +13,7 @@ labels: ''
 
 ## Cost and target
 
-<!-- Engine or performance work: the cost as a formula (what grows with the world, the visible objects and the pixels, against the hardware's minimum) and an absolute target number. Docs and tooling: none. -->
+<!-- Page weight or load time work: the cost as a formula and an absolute target number. Docs and tooling: none. -->
 
 ## Code context
 
@@ -21,7 +21,7 @@ labels: ''
 
 ## Proof
 
-<!-- What shows the work is done: test names, the timing scene and the image proof the acceptance session runs. One item per line: the pull request's Verification quotes each (the CI checks it). -->
+<!-- What shows the work is done: test names, the commands to run, the pages to look at. One item per line: the pull request's Proof quotes each. -->
 
 ## Links
 
