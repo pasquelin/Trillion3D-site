@@ -1,8 +1,8 @@
 # Asset license manifest audit
 
-Run `pnpm audit:assets path/to/licenses.json` before using a corpus. This offline tool checks
+Run the engine's `pnpm audit:assets path/to/licenses.json` before using a corpus. This offline tool checks
 asset and evidence SHA-256 hashes and compares **declared** license and usage with the repository's
-[content policy](COMPILER.md#content-licenses--independent-of-format). It does not fetch assets,
+[content policy](https://github.com/pasquelin/Trillion3D/blob/develop/docs/COMPILER.md#content-licenses--independent-of-format). It does not fetch assets,
 follow source URLs, send documents, infer a license from a marketplace, or certify legal compliance.
 Authenticity, contract interpretation and whether a document actually grants a claimed right remain
 human review responsibilities. A hash proves which document was supplied, not what it permits.
@@ -107,4 +107,4 @@ keeps the licence of its own page); this repository redistributes none of them.
 Sponza, DamagedHelmet and Duck carry terms that go beyond a plain attribution (a vendor licence,
 a non-commercial part, a shared-source licence). They stay out of git and out of the site until
 their texts are read and accepted. Any change that tracks or shows one of them must add its row's
-attribution to [`THIRD_PARTY_NOTICES.md`](../THIRD_PARTY_NOTICES.md#assets).
+attribution to [`THIRD_PARTY_NOTICES.md`](https://github.com/pasquelin/Trillion3D/blob/develop/THIRD_PARTY_NOTICES.md#assets).
