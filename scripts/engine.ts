@@ -4,9 +4,10 @@
  * there and nowhere else: its sources import it as `#engine/<path>` (the `imports` field of
  * `package.json`), its scripts as `ENGINE`. Only what the site reads is fetched (`SPARSE`).
  *
- * `TRILLION3D_ENGINE=<folder> pnpm run engine` makes `.engine` a link to a local engine
- * checkout instead, to build the site against a tree being worked on; `pnpm run engine` alone puts
- * the pinned commit back.
+ * With `TRILLION3D_ENGINE=<folder>` in the environment, `.engine` is a link to that local engine
+ * checkout instead, to build the site against a tree being worked on; the variable stays set while
+ * it is used, since every install reruns this script (`prepare`). Without it, the pinned commit
+ * comes back.
  *
  * A pnpm git dependency cannot carry it: pnpm packs a git dependency by its `files` field, which
  * ships the built SDK and neither the sources the site bundles nor the compiler's crate.

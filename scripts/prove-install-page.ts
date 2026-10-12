@@ -11,7 +11,7 @@
  * `node scripts/prove-install-page.ts [--model <file>]`: a Chrome proof, run by hand. The default
  * model is the morphing cube of the examples, a 2-unit cube at the origin. The package is built and
  * packed from the engine under `.engine/`, with its own dependencies installed: a local checkout
- * linked there (`TRILLION3D_ENGINE=<folder> pnpm run engine`), since the pinned one holds only what
+ * linked there (`TRILLION3D_ENGINE`, `scripts/engine.ts`), since the pinned one holds only what
  * the site reads.
  */
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'

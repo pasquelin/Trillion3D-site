@@ -105,8 +105,10 @@ ships the built SDK and neither the sources the site bundles nor the compiler's 
 
 - **Bump the pin**: set `trillion3d.commit` to the new full SHA, run `pnpm install` (or
   `pnpm run engine`), then `pnpm run validate`; one pull request.
-- **Build against a local engine**: `TRILLION3D_ENGINE=../Trillion3D pnpm run engine` makes
-  `.engine` a link to that checkout; `pnpm run engine` alone puts the pinned commit back.
+- **Build against a local engine**: `export TRILLION3D_ENGINE=../Trillion3D`, then
+  `pnpm run engine`, makes `.engine` a link to that checkout. Keep the variable set while you work:
+  `pnpm install` (and the install pnpm may run before a script) reruns `pnpm run engine`.
+  `unset TRILLION3D_ENGINE && pnpm run engine` puts the pinned commit back.
 
 ## Deploy
 
