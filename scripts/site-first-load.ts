@@ -9,7 +9,7 @@
 import { resolve } from 'node:path'
 import type { Browser } from 'playwright'
 import { routeThree } from './three-route.ts'
-import { quantileFloorOf } from '#engine/packages/math/src/scalar/quantile.ts'
+import { quantileFloorOf } from '../site/maths.ts'
 import { launchChrome } from './chrome.ts'
 import { createDocsServer } from './docs/serve.ts'
 import { listen } from './static-server.ts'

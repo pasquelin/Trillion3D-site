@@ -1,7 +1,8 @@
 import { length3 } from '#engine/packages/math/src/vector/vector.ts'
 import { encodePng } from '#engine/packages/sdk-node/src/cutout/png.mts'
 import { snap, type RandomStream } from './random.ts'
-import { clampLowWins, lerp, smoothstep, wrap } from '#engine/packages/math/src/scalar/reals.ts'
+import { clampLowWins, lerp, wrap } from '#engine/packages/math/src/scalar/reals.ts'
+import { smoothstep } from '../../../site/maths.ts'
 
 /**
  * A small raster toolkit for the textures drawn in code: square float images of one or three
