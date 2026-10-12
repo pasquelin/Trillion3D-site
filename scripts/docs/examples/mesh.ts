@@ -1,5 +1,6 @@
 import { HALF_PI } from '#engine/packages/math/src/constants.ts'
-import { divideVector3, length2, length3 } from '#engine/packages/math/src/vector/vector.ts'
+import { length2, length3 } from '#engine/packages/math/src/vector/vector.ts'
+import { divideVector3 } from '../../../site/maths.ts'
 import { snap, type Vec3 } from './random.ts'
 import { geometry, type Geometry } from '#engine/packages/sdk-core/src/world/geometry/index.ts'
 import { computeNormals } from '#engine/packages/sdk-core/src/world/geometry/normals.ts'

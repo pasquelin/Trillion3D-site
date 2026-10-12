@@ -6,13 +6,13 @@ ignores, against the Trillion3D engine at the commit `package.json` pins (`trill
 checked out under `.engine/` by `pnpm run engine` ([README](../README.md#the-engine)). This page is
 a map: each rule lives in the header of the file named, which is the contract.
 
-| Folder | Role |
-|---|---|
-| `site/app/` | the portal: primitives `ui/`, layouts `layout/`, pages built only from both |
-| `site/content/`, `site/demos/` | entries, API reference, examples list; per-entry demos |
-| `site/i18n/`, `site/examples/i18n/` | the portal's and the examples' words, one file a language |
-| `site/examples/` | one standalone HTML file per example, and the kit (`site/examples/kit/`) |
-| `site/assets/`, `site/data/`, `site/reports/`, `site/styles/` | served as they are, or styles |
+| Folder                                                        | Role                                                                        |
+| ------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| `site/app/`                                                   | the portal: primitives `ui/`, layouts `layout/`, pages built only from both |
+| `site/content/`, `site/demos/`                                | entries, API reference, examples list; per-entry demos                      |
+| `site/i18n/`, `site/examples/i18n/`                           | the portal's and the examples' words, one file a language                   |
+| `site/examples/`                                              | one standalone HTML file per example, and the kit (`site/examples/kit/`)    |
+| `site/assets/`, `site/data/`, `site/reports/`, `site/styles/` | served as they are, or styles                                               |
 
 ## Build and preview
 
@@ -45,7 +45,7 @@ push to `main`; its comments state each step. A manual run publishes only from `
    `node scripts/docs/examples-assets.ts <scene>`.
 3. Add its entry to `site/content/gallery-roadmap.json`, in learning order within its theme; the
    entry statuses are stated in `site/app/examples/list.ts`.
-4. Declare its thumbnail moment, `<meta name="thumbnail" content="3">`; the recette captures it
+4. Declare its thumbnail moment, `<meta name="thumbnail" content="3">`; it is captured by hand after the merges
    (`scripts/docs/examples-thumbnails.ts`, listed by `pnpm run check:thumbnails`).
 
 A scene too heavy to cook here lives in https://github.com/pasquelin/Trillion3D-openworld, served

@@ -4,7 +4,7 @@ Closes #
 
 ## Proof
 
-<!-- Commands run and their outcome; measurements follow Trillion3D's AGENTS.md. -->
+<!-- Commands run and their outcome; measurements follow the engine's AGENTS.md (https://github.com/pasquelin/Trillion3D/blob/develop/AGENTS.md). -->
 
 ## Local review before push
 
