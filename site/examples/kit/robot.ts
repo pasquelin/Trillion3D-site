@@ -1,5 +1,5 @@
 import type { Families, Look, Shape, Vec3 } from './engineTypes.ts'
-import { HALF_PI } from '../../../packages/math/src/constants.ts'
+import { HALF_PI } from '#engine/packages/math/src/constants.ts'
 
 type Node = ReturnType<Families<'object'>['object']['group']>
 

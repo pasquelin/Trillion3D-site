@@ -16,7 +16,7 @@ export function createDocsServer(
     compress: isCacheObject,
     headers: {
       'Cache-Control': 'no-store',
-      // Cross-origin isolation, as the published site answers (checked by the deploy, pages.yml):
+      // Cross-origin isolation, as the published site answers (checked by the deploy, site.yml):
       // `SharedArrayBuffer` for the physics. `credentialless` still lets the consent panel and its
       // analytics load.
       'Cross-Origin-Opener-Policy': 'same-origin',

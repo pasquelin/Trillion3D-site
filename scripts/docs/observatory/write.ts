@@ -1,8 +1,8 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { createObservatory, observatoryMaterials, observatorySky } from './scene.ts'
-import { hypot4 } from '../../../packages/math/src/float/hypot.ts'
-import { boxFromPoints } from '../../../packages/math/src/geometry/box.ts'
+import { hypot4 } from '#engine/packages/math/src/float/hypot.ts'
+import { boxFromPoints } from '#engine/packages/math/src/geometry/box.ts'
 
 interface GltfBufferView {
   buffer: number

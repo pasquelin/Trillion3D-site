@@ -3,19 +3,21 @@
 // with a summary of its own and every row explained; its translations are `scripts/i18n-keys.ts`'s.
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
+import { join } from 'node:path'
 import test from 'node:test'
 import generated from '../../site/content/reference/api.json' with { type: 'json' }
-import * as browser from '../../packages/sdk/browser.ts'
+import * as browser from '#engine/packages/sdk/browser.ts'
 import { entriesIn } from '../../site/app/portal/data.ts'
 import { expandEntryLinks } from '../../site/app/portal/entryLinks.ts'
 import { LEARN_SECTIONS } from '../../site/app/portal/routes.ts'
 import { NOTES } from '../../site/content/entries/reference.ts'
 import { entrySummary, FAMILIES, SECTIONS } from '../../site/content/model.ts'
 import type { PortalEntry } from '../../site/content/model.ts'
+import { ENGINE, ROOT } from '../engine.ts'
 import { API_FILES } from '../generate-api-reference.ts'
 import { assertUntracked } from '../git-paths.ts'
 import { repositoryFiles } from '../repository-files.ts'
-import { apiProgram, entryModules, PUBLIC_ENTRIES, ROOT } from '../sdk-api-model.ts'
+import { apiProgram, entryModules, PUBLIC_ENTRIES } from '../sdk-api-model.ts'
 
 const api = entriesIn('en').filter((entry) => !LEARN_SECTIONS.includes(entry.section))
 const ids = new Set(api.map((entry) => entry.id))
@@ -74,9 +76,9 @@ test('every code an EngineError is thrown with is explained on its page', () => 
   const thrown =
     /(?:new EngineError|sceneNodeFail)\(\s*(?:[^'(),]*\?\s*)?'([A-Z][A-Z0-9_]+)'(?:\s*:\s*'([A-Z][A-Z0-9_]+)')?/g
   const codes = new Set<string>()
-  for (const file of repositoryFiles() ?? [])
+  for (const file of repositoryFiles(ENGINE) ?? [])
     if (/^packages\/.*\.m?ts$/.test(file) && !file.includes('.test.'))
-      for (const match of readFileSync(file, 'utf8').matchAll(thrown))
+      for (const match of readFileSync(join(ENGINE, file), 'utf8').matchAll(thrown))
         for (const code of match.slice(1)) if (code) codes.add(code)
   assert.ok(codes.size > 0, 'no thrown code found')
   const page = api.find(({ id }) => id === 'EngineError')

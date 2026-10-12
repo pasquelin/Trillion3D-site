@@ -4,7 +4,7 @@ import { ms } from './statUnit.ts'
 import type { Cadence } from './cadence.ts'
 import type { StatsCorner } from './statsLayout.ts'
 import { language } from './words.ts'
-import { MIB } from '../../../packages/math/src/constants.ts'
+import { MIB } from '#engine/packages/math/src/constants.ts'
 
 /** What the stats corner reads of a frame: the engine's own counters, `null` when not measured.
  *  Any other counter the frame publishes rides along under its own name (`shadowLines`). */

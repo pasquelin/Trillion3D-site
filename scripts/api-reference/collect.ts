@@ -1,7 +1,7 @@
 import { relative } from 'node:path'
 import ts from 'typescript'
 import type { PortalMember, PortalParameter } from '../../site/content/model.ts'
-import { ROOT } from '../sdk-api-model.ts'
+import { ENGINE } from '../engine.ts'
 import { readDoc, type SymbolDoc } from './docs.ts'
 
 const FORMAT =
@@ -41,7 +41,7 @@ export class Shapes {
   }
 
   moduleOf(symbol: ts.Symbol): string {
-    return relative(ROOT, this.declarationOf(symbol)?.getSourceFile().fileName ?? '')
+    return relative(ENGINE, this.declarationOf(symbol)?.getSourceFile().fileName ?? '')
   }
 
   typeOf(symbol: ts.Symbol): ts.Type {

@@ -11,11 +11,12 @@ import {
 import { getPriority, setPriority } from 'node:os'
 import { dirname, join, resolve } from 'node:path'
 
-// The heavy local steps (a test run, `build`, `build:docs`, `build:native`, `compile:caches`) of
-// every worktree on the machine run one at a time, at low priority: several agents checking at once
+// The heavy local steps (a test run, `build:docs`, `compile:caches`) of every worktree of this
+// repository on the machine run one at a time, at low priority: several agents checking at once
 // otherwise start dozens of processes together. The lock is a file in the main checkout's
 // `.worktrees/logs/`, which every worktree shares; a lock whose process is dead is taken over. The
-// CI runs each job on its own machine, and takes no lock.
+// CI runs each job on its own machine, and takes no lock. The engine's checkouts keep their own
+// lock, by the same rule (the engine's `scripts/heavy-lock.ts`).
 
 /** Environment variable a lock holder passes to its children, so a nested heavy step runs inside it. */
 const HELD = 'TRILLION3D_HEAVY_LOCK'
@@ -25,7 +26,7 @@ const LOW_PRIORITY = 10
 
 /** The machine-wide lock file: under the main checkout, whichever worktree `cwd` is in; none
  *  outside a Git checkout. */
-export function heavyLockPath(cwd = process.cwd()): string | undefined {
+function heavyLockPath(cwd = process.cwd()): string | undefined {
   try {
     const common = execFileSync('git', ['rev-parse', '--git-common-dir'], {
       cwd,
@@ -61,7 +62,7 @@ function holder(path: string): { pid: number; step: string; cwd: string } | unde
  * one waiter can do to a given file; a lock that is not the dead one's (another waiter took
  * it over first and was granted it) is put back, unless the lock was taken again meanwhile.
  */
-export function takeOver(path: string, dead: number): void {
+function takeOver(path: string, dead: number): void {
   const aside = `${path}.${process.pid}.stale`
   try {
     renameSync(path, aside)
@@ -81,7 +82,7 @@ export function takeOver(path: string, dead: number): void {
 const pause = new Int32Array(new SharedArrayBuffer(4))
 
 /** Takes the lock at `path`, waiting while a live process holds it; returns the release. */
-export function acquireHeavyLock(path: string, step: string, pollMs = 500): () => void {
+function acquireHeavyLock(path: string, step: string, pollMs = 500): () => void {
   mkdirSync(dirname(path), { recursive: true })
   const record = JSON.stringify({ pid: process.pid, step, cwd: process.cwd() })
   let told = false

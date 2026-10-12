@@ -1,4 +1,4 @@
-import type { PhysicsOption } from '../../../packages/sdk-core/src/physics/options.ts'
+import type { PhysicsOption } from '#engine/packages/sdk-core/src/physics/options.ts'
 
 /** The glTF shapes the example recipe writes, and the material row its scenes list. */
 

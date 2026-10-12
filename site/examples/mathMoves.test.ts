@@ -1,13 +1,13 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { DEG2RAD } from '../../packages/math/src/constants.ts'
+import { DEG2RAD } from '#engine/packages/math/src/constants.ts'
 import {
   HALTON_SWEEP,
   assertSameFloat32,
   edgeValues,
   haltonSpan,
-} from '../../packages/math/src/sequence/sweep.fixture.ts'
-import { math } from '../../packages/sdk-core/src/world/math/index.ts'
+} from '#engine/packages/math/src/sequence/sweep.fixture.ts'
+import { math } from '#engine/packages/sdk-core/src/world/math/index.ts'
 
 /** The pages' angle, the field of view, the gradient and the vectors, each against the expression
  *  the page wrote before it read `math`. */

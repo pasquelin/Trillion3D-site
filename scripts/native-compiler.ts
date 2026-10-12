@@ -1,12 +1,13 @@
 /**
- * The native compiler as the repository's own tools run it: the scene generators, the gallery
- * recipes, the render proofs and the bench. One executable rule — the SDK's own
- * (`currentCompilerExecutable`: `TRILLION3D_COMPILER_BIN`, else this checkout's release build,
- * refused while older than its sources) — and one triangle budget for every full cache.
+ * The native compiler as the site's tools run it: the scene caches, the example scenes and the
+ * gallery recipes. One executable rule — the engine SDK's own (`currentCompilerExecutable`:
+ * `TRILLION3D_COMPILER_BIN`, else the release build of the engine under `.engine/`, made by
+ * `pnpm run build:native` and refused while older than its sources) — and one triangle budget for
+ * every full cache, the engine's.
  */
 import { spawnSync, type StdioOptions } from 'node:child_process'
 import { existsSync } from 'node:fs'
-import { currentCompilerExecutable } from '../packages/sdk-node/src/compiler/executable.mts'
+import { currentCompilerExecutable } from '#engine/packages/sdk-node/src/compiler/executable.mts'
 
 /** The triangle budget of a `full` cache, the one every published and measured scene uses. */
 export const TRIANGLE_BUDGET = '150000'
@@ -28,13 +29,13 @@ export interface FullCompile {
   /** Where the cache is written: `cache` beside the source by default. */
   cache?: string
   /** Prefix of the resource URLs the cache records; relative by default, since a cache that
-   *  names the machine it was built on is refused (`self-contained-repository.test.ts`). */
+   *  names the machine it was built on cannot be published. */
   resourceBase?: string
   threads?: number
   ramMb?: number
   simplification?: 'none' | 'qem-endpoints'
   stdio?: StdioOptions
-  /** The compiler to run: this checkout's by default (`nativeCompiler`). */
+  /** The compiler to run: the engine's by default (`nativeCompiler`). */
   executable?: string
 }
 

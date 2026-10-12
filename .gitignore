@@ -1,48 +1,21 @@
 node_modules/
 dist/
-**/target/
-benchmark-runs/
 .idea/
-.mesure/
-# Worktrees, agents' logs and throwaway files live inside the project, never beside it (#452):
+.DS_Store
+# The engine, checked out at the commit package.json pins (`pnpm run engine`), or linked to a
+# local checkout: never committed.
+.engine
+# Worktrees, agents' logs and throwaway files live inside the project, never beside it:
 # `.worktrees/<branch>/` for each tree, `.worktrees/logs/` for logs and scratch files.
 /.worktrees
-# Personal files stay local. Shared checks read these patterns. No entry ends with a slash: a
-# pattern that does matches directories alone, and a linked worktree carries these as symbolic
-# links (scripts/local-files.ts), which git would then see as files to track.
-# Local files begin
+# Personal files stay local.
 .claude
-.codex
-.agents
-.grok
-AGENTS.local.md
-AGENTS.override.md
-CLAUDE.md
 CLAUDE.local.md
-CODEX.md
-CODEX.local.md
-GROK.md
-GROK.local.md
-RTK.md
-.graphifyignore
+AGENTS.local.md
 graphify-out
-/scripts/graphify-communautes.json
-/scripts/graphify-libelles.mjs
-/scripts/graphify-libelles.test.mjs
-# Local files end
-
-# Local test assets (see docs/COMPILER.md, "Input formats")
-tests/assets/
-# The open world's cook, written here before it moved to pasquelin/Trillion3D-openworld (#426):
-# a leftover copy (about 1 GB) must never be staged.
-site/assets/examples/openworld/
-# Written by `pnpm install` and `pnpm run generate:api` (#683): committed, they conflicted.
+# Written by `pnpm install` and `pnpm run generate:api` from the pinned engine: never committed.
 site/content/reference/api.json
 site/data/api-inventory.json
-# Compiled from their sources by `pnpm run compile:caches`, the site deploy and the test runners.
+# Compiled from their sources by `pnpm run compile:caches` and the site deploy.
 site/assets/**/cache/
 site/assets/**/cache-*/
-tests/fixtures/scenes/*/cache/
-
-# The compiler binary a platform package ships, copied in by `scripts/compiler-dist.ts` (#1352).
-packages/compiler/*/bin

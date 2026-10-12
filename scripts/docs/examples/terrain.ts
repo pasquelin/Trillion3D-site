@@ -1,4 +1,4 @@
-import { divideVector3, length3 } from '../../../packages/math/src/vector/vector.ts'
+import { divideVector3, length3 } from '#engine/packages/math/src/vector/vector.ts'
 import { SceneGltf } from './gltf-scene.ts'
 import { empty, moved } from './mesh.ts'
 import { icosphere } from './solids.ts'

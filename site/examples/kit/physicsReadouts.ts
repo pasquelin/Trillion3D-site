@@ -1,4 +1,4 @@
-import type { PhysicsStats } from '../../../packages/sdk-browser/src/index.ts'
+import type { PhysicsStats } from '#engine/packages/sdk-browser/src/index.ts'
 import { readout } from './readout.ts'
 import { ms } from './statUnit.ts'
 

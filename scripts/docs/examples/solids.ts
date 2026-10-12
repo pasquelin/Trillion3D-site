@@ -1,9 +1,9 @@
-import { GOLDEN_FRACTION, HALF_PI, TAU } from '../../../packages/math/src/constants.ts'
+import { GOLDEN_FRACTION, HALF_PI, TAU } from '#engine/packages/math/src/constants.ts'
 import { facing, fromGeometry, solid, welded, type Mesh } from './mesh.ts'
 import type { Vec3 } from './random.ts'
-import { geometry } from '../../../packages/sdk-core/src/world/geometry/index.ts'
-import { SplineCurve } from '../../../packages/sdk-core/src/world/math/curves.ts'
-import { Vector3 } from '../../../packages/sdk-core/src/world/math/vector3.ts'
+import { geometry } from '#engine/packages/sdk-core/src/world/geometry/index.ts'
+import { SplineCurve } from '#engine/packages/sdk-core/src/world/math/curves.ts'
+import { Vector3 } from '#engine/packages/sdk-core/src/world/math/vector3.ts'
 
 /** The three values of vertex `v` in a flat list of positions or normals. */
 const corner = (values: readonly number[], v: number): Vec3 => [

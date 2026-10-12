@@ -1,6 +1,6 @@
 import type { SceneActions } from './actions.ts'
 import type { Session } from './session.ts'
-import { length2 } from '../../../packages/math/src/vector/vector.ts'
+import { length2 } from '#engine/packages/math/src/vector/vector.ts'
 
 /** How far a press may travel, in CSS pixels, and still be a click that selects: past it, the
  *  press was an orbit of the camera. */

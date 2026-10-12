@@ -5,7 +5,7 @@
  */
 
 import type { Families } from './engineTypes.ts'
-import { saturate, smoothstep } from '../../../packages/math/src/scalar/reals.ts'
+import { saturate, smoothstep } from '#engine/packages/math/src/scalar/reals.ts'
 
 /** The curves a move eases on: `t` from 0 to 1 (clamped) gives how far along it is. */
 export const ease = {

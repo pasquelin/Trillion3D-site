@@ -8,7 +8,7 @@ import { SearchInput } from '../ui/Input.tsx'
 import { Modal } from '../ui/Modal.tsx'
 import { Note } from '../ui/Text.tsx'
 import { usePortal } from './PortalContext.ts'
-import { clamp } from '../../../packages/math/src/scalar/reals.ts'
+import { clamp } from '#engine/packages/math/src/scalar/reals.ts'
 
 const LIMIT = 50
 

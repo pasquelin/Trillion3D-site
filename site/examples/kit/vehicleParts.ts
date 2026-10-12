@@ -1,5 +1,5 @@
 import type { Engine, Families, Look, Mesh, Shape, Vec3 } from './engineTypes.ts'
-import { HALF_PI } from '../../../packages/math/src/constants.ts'
+import { HALF_PI } from '#engine/packages/math/src/constants.ts'
 
 type Paint = Omit<Parameters<(typeof Engine)['material']['meshStandard']>[0] & object, 'color'>
 /** The primitives a body's drawn part collides as. */

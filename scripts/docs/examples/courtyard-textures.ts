@@ -1,9 +1,9 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { TAU } from '../../../packages/math/src/constants.ts'
-import { fromUnorm8 } from '../../../packages/math/src/color/color.ts'
-import { mean } from '../../../packages/math/src/scalar/quantile.ts'
-import { mix } from '../../../packages/math/src/scalar/reals.ts'
+import { TAU } from '#engine/packages/math/src/constants.ts'
+import { fromUnorm8 } from '#engine/packages/math/src/color/color.ts'
+import { mean } from '#engine/packages/math/src/scalar/quantile.ts'
+import { mix } from '#engine/packages/math/src/scalar/reals.ts'
 import { randomStream, snap, type RandomStream } from './random.ts'
 import {
   blur,

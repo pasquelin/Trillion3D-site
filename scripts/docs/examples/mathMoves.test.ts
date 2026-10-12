@@ -1,11 +1,11 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { GOLDEN_FRACTION, TAU } from '../../../packages/math/src/constants.ts'
+import { GOLDEN_FRACTION, TAU } from '#engine/packages/math/src/constants.ts'
 import {
   HALTON_SWEEP,
   edgeValues,
   haltonSpan,
-} from '../../../packages/math/src/sequence/sweep.fixture.ts'
+} from '#engine/packages/math/src/sequence/sweep.fixture.ts'
 import { yaw } from './gltf-scene.ts'
 import { snap } from './random.ts'
 

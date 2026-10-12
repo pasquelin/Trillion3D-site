@@ -1,11 +1,11 @@
-import { length2 } from '../../../packages/math/src/vector/vector.ts'
-import { geometry } from '../../../packages/sdk-core/src/world/geometry/index.ts'
+import { length2 } from '#engine/packages/math/src/vector/vector.ts'
+import { geometry } from '#engine/packages/sdk-core/src/world/geometry/index.ts'
 import { SceneGltf } from './gltf-scene.ts'
 import { empty, fromGeometry, merge, type Mesh } from './mesh.ts'
 import type { Vec3 } from './random.ts'
-import { boxCenter } from '../../../packages/math/src/geometry/box.ts'
-import { ceilDiv } from '../../../packages/math/src/scalar/integers.ts'
-import { clamp } from '../../../packages/math/src/scalar/reals.ts'
+import { boxCenter } from '#engine/packages/math/src/geometry/box.ts'
+import { ceilDiv } from '#engine/packages/math/src/scalar/integers.ts'
+import { clamp } from '#engine/packages/math/src/scalar/reals.ts'
 
 /** Footprint and storey of the chalet, in metres; its walls of octagonal logs, `LOG_RADIUS` in
  *  radius and `LOG_SEGMENTS` quads long; its balcony slabs and boards, `SLAB` thick. */

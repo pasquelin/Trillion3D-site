@@ -1,12 +1,12 @@
-// The two API files git never tracks, from the declarations of the public entries: the
+// The two API files git never tracks, from the declarations of the pinned engine's public entries
+// (`.engine/`, `scripts/engine.ts`): the
 // portal's reference, one entry per export, family member and world member with its signature and
 // TSDoc; and the export inventory. `pnpm install` writes them, every reader rewrites them first
 // when a source is newer. The translations, `api.<language>.json`, are the translators' alone.
 import { statSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { join } from 'node:path'
+import { ENGINE, ROOT } from './engine.ts'
 import { repositoryFiles } from './repository-files.ts'
-
-const ROOT = resolve(import.meta.dirname, '..')
 
 /** Where the reference and the inventory are written. */
 export const API_FILES = {
@@ -19,13 +19,19 @@ export const API_SOURCES = /\.(?:[cm]?[jt]sx?)$/
 
 const json = (value: unknown) => `${JSON.stringify(value, null, 2)}\n`
 
-const modified = (file: string) => statSync(join(ROOT, file), { throwIfNoEntry: false })?.mtimeMs
+const modified = (file: string) => statSync(file, { throwIfNoEntry: false })?.mtimeMs
 
-/** Whether both files are newer than every source file of the repository: the declarations they
- *  read, the consumers the inventory names, their generators. */
+/** The source files of the checkout `root`, absolute. */
+const sourcesOf = (root: string) =>
+  (repositoryFiles(root) ?? [])
+    .filter((file) => API_SOURCES.test(file))
+    .map((file) => join(root, file))
+
+/** Whether both files are newer than every source file of the engine and of the site: the
+ *  declarations they read, the consumers the inventory names, their generators. */
 function current(): boolean {
-  const since = Math.min(...Object.values(API_FILES).map((file) => modified(file) ?? 0))
-  const sources = (repositoryFiles() ?? []).filter((file) => API_SOURCES.test(file))
+  const since = Math.min(...Object.values(API_FILES).map((file) => modified(join(ROOT, file)) ?? 0))
+  const sources = [...sourcesOf(ENGINE), ...sourcesOf(ROOT)]
   return since > 0 && sources.every((file) => (modified(file) ?? 0) <= since)
 }
 

@@ -10,8 +10,8 @@ import { ease } from './opening.ts'
 import {
   lcgRandom,
   mulberry32 as mulberry32Sequence,
-} from '../../../packages/math/src/sequence/random.ts'
-import { fract } from '../../../packages/math/src/scalar/reals.ts'
+} from '#engine/packages/math/src/sequence/random.ts'
+import { fract } from '#engine/packages/math/src/scalar/reals.ts'
 import type { Families } from './engineTypes.ts'
 
 /** A sequence of numbers in [0, 1) from a seed. */

@@ -1,6 +1,6 @@
 import { copyFile, cp, mkdir, readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { geometry } from '../../../packages/sdk-core/src/world/geometry/index.ts'
+import { geometry } from '#engine/packages/sdk-core/src/world/geometry/index.ts'
 import { appendSurfacesGltf } from './gltf.ts'
 import { codeScenes } from './code-scenes.ts'
 import { fromGeometry, merge } from './mesh.ts'

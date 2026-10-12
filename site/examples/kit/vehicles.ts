@@ -1,7 +1,7 @@
 import type { Engine, Families, Mesh, Vec3 } from './engineTypes.ts'
 import { vehicleParts, type Hulled } from './vehicleParts.ts'
-import { HALF_PI } from '../../../packages/math/src/constants.ts'
-import { decayFactor } from '../../../packages/math/src/scalar/reals.ts'
+import { HALF_PI } from '#engine/packages/math/src/constants.ts'
+import { decayFactor } from '#engine/packages/math/src/scalar/reals.ts'
 
 type World = Pick<Engine.World, 'camera' | 'raycast'>
 

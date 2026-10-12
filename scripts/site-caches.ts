@@ -1,9 +1,11 @@
-/** The scene caches git never tracks, compiled from their committed sources by this
- *  checkout's native compiler, on demand (`pnpm run compile:caches`) and before their readers. */
+/** The scene caches git never tracks, compiled from their committed sources by the native
+ *  compiler of the pinned engine (`pnpm run build:native`), on demand (`pnpm run compile:caches`)
+ *  and before their readers. */
 import { existsSync, readdirSync, readFileSync, rmSync, statSync, writeFileSync } from 'node:fs'
 import { resolve } from 'node:path'
-import { firstNewer } from '../packages/sdk-node/src/compiler/freshness.mts'
+import { firstNewer } from '#engine/packages/sdk-node/src/compiler/freshness.mts'
 import { modelScenes } from './docs/examples/models.ts'
+import { ROOT } from './engine.ts'
 import { heavyStep } from './heavy-lock.ts'
 import {
   compileFullCache,
@@ -12,8 +14,6 @@ import {
   requireNativeCompiler,
   TRIANGLE_BUDGET,
 } from './native-compiler.ts'
-
-const ROOT = resolve(import.meta.dirname, '..')
 
 /** A scene folder, relative to the root, holding `source` and the `cache` compiled from it. */
 export interface CookedScene extends Pick<
@@ -37,8 +37,7 @@ const example = (name: string): CookedScene => ({
 const COMMITTED_SOURCES = ['hall', 'cesium-man', 'animated-morph-cube']
 
 /** Every cooked scene: the examples (`modelScenes` and `COMMITTED_SOURCES`), the terrain tiles'
- *  exact cook beside their simplified one, the gallery's and the two scenes only the tests
- *  read. */
+ *  exact cook beside their simplified one, and the gallery's. */
 export const COOKED_SCENES: Record<string, CookedScene> = {
   ...Object.fromEntries(
     [...Object.keys(modelScenes), ...COMMITTED_SOURCES].map((name) => [name, example(name)]),
@@ -52,15 +51,6 @@ export const COOKED_SCENES: Record<string, CookedScene> = {
     directory: 'site/assets/gallery/signature-architecture',
     source: 'source/geometry.gltf',
     simplification: 'qem-endpoints',
-  },
-  'mountain-terrain': {
-    directory: 'tests/fixtures/scenes/mountain-terrain',
-    source: 'source/geometry.gltf',
-    simplification: 'qem-endpoints',
-  },
-  'kinetic-garden': {
-    directory: 'tests/fixtures/scenes/kinetic-garden',
-    source: 'source/garden.gltf',
   },
 }
 
@@ -121,11 +111,6 @@ export function isStale(scene: CookedScene, root = ROOT, compiled = compilerTime
   const since = statSync(stamp).mtimeMs
   return (compiled ?? 0) > since || firstNewer(sourceOf(scene, root), since) !== null
 }
-
-/** The scenes the engine's tests read, beside them under `tests/`: what the test runners cook. */
-export const TEST_SCENES = Object.values(COOKED_SCENES).filter(({ directory }) =>
-  directory.startsWith('tests/'),
-)
 
 /** Compiles every stale cache of `scenes`. Without a compiler, a `required` run throws; another
  *  names what it left and goes on, for a caller that may read none of them. */

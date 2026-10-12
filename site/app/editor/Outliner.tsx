@@ -1,4 +1,4 @@
-import type { Object3D } from '../../../packages/sdk-browser/src/index.ts'
+import type { Object3D } from '#engine/packages/sdk-browser/src/index.ts'
 import { useWords } from '../i18n.ts'
 import { usePortal } from '../layout/PortalContext.ts'
 import { Note } from '../ui/Text.tsx'

@@ -1,9 +1,9 @@
-import { TAU } from '../../../packages/math/src/constants.ts'
+import { TAU } from '#engine/packages/math/src/constants.ts'
 import { SceneGltf, yaw } from './gltf-scene.ts'
 import { lathe, moved, pairs, solid } from './mesh.ts'
 import { randomStream } from './random.ts'
 import { box, heightfield, spline, torusKnot } from './solids.ts'
-import { clampLowWins } from '../../../packages/math/src/scalar/reals.ts'
+import { clampLowWins } from '#engine/packages/math/src/scalar/reals.ts'
 
 /**
  * `detail-by-pixel-error`: an avenue of fluted marble urns leading to a bronze knot on its

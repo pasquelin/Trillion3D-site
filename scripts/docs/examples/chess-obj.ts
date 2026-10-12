@@ -1,6 +1,6 @@
 import { writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
-import { DEG2RAD } from '../../../packages/math/src/constants.ts'
+import { DEG2RAD } from '#engine/packages/math/src/constants.ts'
 import { boardMeshes, pieceTurn, playOpening, SQUARE, type Placed } from './chess-game.ts'
 import { chessPieces } from './chess-pieces.ts'
 import { moved, type Mesh } from './mesh.ts'

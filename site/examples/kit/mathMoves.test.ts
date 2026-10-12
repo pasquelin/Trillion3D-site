@@ -1,15 +1,15 @@
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { math } from '../../../packages/sdk-core/src/world/math/index.ts'
+import { math } from '#engine/packages/sdk-core/src/world/math/index.ts'
 import {
   HALTON_SWEEP,
   edgeValues,
   haltonSpan,
-} from '../../../packages/math/src/sequence/sweep.fixture.ts'
-import { HALF_PI, RAD2DEG, TAU } from '../../../packages/math/src/constants.ts'
-import { clamp, saturate } from '../../../packages/math/src/scalar/reals.ts'
-import { unorm8 } from '../../../packages/math/src/color/color.ts'
-import { axisAngleQuaternion } from '../../../packages/math/src/quaternion/quaternion.ts'
+} from '#engine/packages/math/src/sequence/sweep.fixture.ts'
+import { HALF_PI, RAD2DEG, TAU } from '#engine/packages/math/src/constants.ts'
+import { clamp, saturate } from '#engine/packages/math/src/scalar/reals.ts'
+import { unorm8 } from '#engine/packages/math/src/color/color.ts'
+import { axisAngleQuaternion } from '#engine/packages/math/src/quaternion/quaternion.ts'
 import { formatNumber } from '../../demos/kit.ts'
 import { ease, mix } from './opening.ts'
 import { matcapBall } from './painted.ts'

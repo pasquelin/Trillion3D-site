@@ -38,7 +38,7 @@ function fileUnder(dir: string, path: string): string | null {
 }
 
 /** Ends `response` with `status`, and `body` of `type` when given; true, as an `answer` returns. */
-export function reply(response: ServerResponse, status: number, type?: string, body?: string) {
+function reply(response: ServerResponse, status: number, type?: string, body?: string) {
   response.writeHead(status, type ? { 'content-type': type } : {}).end(body)
   return true
 }
@@ -68,7 +68,7 @@ function acceptsBrotli(header: string | undefined) {
 }
 
 /** Brotli as a local server can afford per request: quality 5 of 11 compresses tens of megabytes a
- *  second; a published tree carries its files compressed at the top quality (`pages.yml`). */
+ *  second; a published tree carries its files compressed at the top quality (`site.yml`). */
 const ON_THE_FLY = { params: { [constants.BROTLI_PARAM_QUALITY]: 5 } }
 
 /** The bytes a `Range` header asks of a file of `size` bytes, first and last included: `undefined`

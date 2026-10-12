@@ -1,8 +1,8 @@
-import { HALF_PI } from '../../../packages/math/src/constants.ts'
-import { divideVector3, length2, length3 } from '../../../packages/math/src/vector/vector.ts'
+import { HALF_PI } from '#engine/packages/math/src/constants.ts'
+import { divideVector3, length2, length3 } from '#engine/packages/math/src/vector/vector.ts'
 import { snap, type Vec3 } from './random.ts'
-import { geometry, type Geometry } from '../../../packages/sdk-core/src/world/geometry/index.ts'
-import { computeNormals } from '../../../packages/sdk-core/src/world/geometry/normals.ts'
+import { geometry, type Geometry } from '#engine/packages/sdk-core/src/world/geometry/index.ts'
+import { computeNormals } from '#engine/packages/sdk-core/src/world/geometry/normals.ts'
 
 /**
  * The mesh toolkit of the scenes modelled in code: flat position, normal, (u, v) and index

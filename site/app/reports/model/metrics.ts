@@ -1,5 +1,5 @@
 import type { Locale } from '../../../content/locale.ts'
-import { MIB } from '../../../../packages/math/src/constants.ts'
+import { MIB } from '#engine/packages/math/src/constants.ts'
 import { isObject, readPath } from './contract.ts'
 import type { ReportRecord, TimingStat } from './types.ts'
 

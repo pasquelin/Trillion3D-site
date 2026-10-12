@@ -4,7 +4,7 @@ import { bufferPacker } from './gltf.ts'
 import type { GltfDocument, GltfMaterial, GltfNode, Primitive } from './gltf-types.ts'
 import { snapped, type Mesh } from './mesh.ts'
 import { snap } from './random.ts'
-import { axisAngleQuaternion } from '../../../packages/math/src/quaternion/quaternion.ts'
+import { axisAngleQuaternion } from '#engine/packages/math/src/quaternion/quaternion.ts'
 
 type Colour = readonly [number, number, number]
 

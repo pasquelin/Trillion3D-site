@@ -1,10 +1,11 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs'
-import { dirname, join, relative, resolve } from 'node:path'
+import { dirname, join, relative } from 'node:path'
 import prettier from 'prettier'
 import ts from 'typescript'
+import { ENGINE, ROOT } from './engine.ts'
 import { repositoryFiles } from './repository-files.ts'
 
-export const ROOT = resolve(import.meta.dirname, '..')
+/** The public entries of the engine, under its checkout (`ENGINE`). */
 export const ENTRIES = {
   core: 'packages/sdk-core/src/index.ts',
   browser: 'packages/sdk-browser/src/index.ts',
@@ -40,13 +41,13 @@ function exportKind(symbol: ts.Symbol, checker: ts.TypeChecker): ExportKind {
 function definingModule(symbol: ts.Symbol, checker: ts.TypeChecker): string {
   const target = symbol.flags & ts.SymbolFlags.Alias ? checker.getAliasedSymbol(symbol) : symbol
   const file = target.declarations?.[0]?.getSourceFile().fileName
-  return file ? relative(ROOT, file) : 'unknown'
+  return file ? relative(ENGINE, file) : 'unknown'
 }
 
 let program: ts.Program | undefined
 const buildApiProgram = (old?: ts.Program) =>
   ts.createProgram(
-    [...Object.values(ENTRIES), ...Object.values(PUBLIC_ENTRIES)].map((file) => join(ROOT, file)),
+    [...Object.values(ENTRIES), ...Object.values(PUBLIC_ENTRIES)].map((file) => join(ENGINE, file)),
     {
       target: ts.ScriptTarget.ES2022,
       module: ts.ModuleKind.NodeNext,
@@ -78,7 +79,7 @@ export function entryModules(
   const checker = program.getTypeChecker()
   // `Object.entries` always widens object keys to `string`: the entry names are `ExportEntry`.
   return (Object.entries(entries) as [ExportEntry, string][]).map(([entry, file]) => {
-    const source = program.getSourceFile(join(ROOT, file))
+    const source = program.getSourceFile(join(ENGINE, file))
     const module = source && checker.getSymbolAtLocation(source)
     if (!module) throw new Error(`Cannot resolve ${file}`)
     return [entry, module]
@@ -100,7 +101,7 @@ export function analyzeEntries(): ExportRow[] {
         entries: [],
         identity: checker
           .getFullyQualifiedName(target)
-          .replace(`${ROOT.replaceAll('\\', '/')}/`, ''),
+          .replace(`${ENGINE.replaceAll('\\', '/')}/`, ''),
       }
       row.entries.push(entry)
       rows.set(key, row)
@@ -111,12 +112,17 @@ export function analyzeEntries(): ExportRow[] {
   )
 }
 
-export function consumerImports(root = ROOT): Map<string, Set<string>> {
+/** The files that import each name of the engine's entries: the engine's own (by their path in the
+ *  engine) and the site's (by their path in the site, under `site/`, `scripts/`, `tests/`). */
+export function consumerImports(): Map<string, Set<string>> {
   const consumers = new Map<string, Set<string>>()
-  const found = repositoryFiles(root)
-  if (!found) throw new Error('Not a Git repository.')
-  for (const path of found.filter((file) => /\.(?:[cm]?[jt]sx?)$/.test(file))) {
-    const file = join(root, path)
+  const [engine, site] = [repositoryFiles(ENGINE), repositoryFiles(ROOT)]
+  if (!engine || !site) throw new Error('Not a Git repository.')
+  const files = [
+    ...engine.map((path) => ({ path, file: join(ENGINE, path) })),
+    ...site.map((path) => ({ path, file: join(ROOT, path) })),
+  ]
+  for (const { path, file } of files.filter(({ path }) => /\.(?:[cm]?[jt]sx?)$/.test(path))) {
     const source = ts.createSourceFile(
       file,
       readFileSync(file, 'utf8'),
@@ -147,7 +153,7 @@ function addConsumer(consumers: Map<string, Set<string>>, name: string, file: st
 }
 
 /**
- * Writes a generated file, formatted by the repository's Prettier settings; with `--check` on the
+ * Writes a generated file of the site, formatted by the site's Prettier settings; with `--check` on the
  * command line, fails instead when the file on disk differs from what would be written.
  */
 export async function writeGenerated(path: string, content: string): Promise<void> {

@@ -1,8 +1,8 @@
-// The inline forms of a formula `packages/math` holds, refused by the lint everywhere but in the
-// maths themselves and in the declared oracles (`eslint.config.ts`): each is one AST selector of
-// `no-restricted-syntax`, its message naming the function or constant to call instead
-// (`docs/MATHS.md`). `scripts/lint-maths.test.ts` plants each form and lints it through the config.
-import { matchesGlob } from 'node:path'
+// The inline forms of a formula the engine's `packages/math` holds, refused by the lint everywhere
+// in the site but in the declared oracles (`eslint.config.ts`): each is one AST selector of
+// `no-restricted-syntax`, its message naming the function or constant of the engine to call instead
+// (the engine's `docs/MATHS.md`). The rule is the engine's own `scripts/lint-maths.ts`, kept here
+// for the code the site writes.
 
 /** A call of `Math.<name>`. */
 const math = (name: string) =>
@@ -88,22 +88,6 @@ export const MATHS_FORMS = [
   },
 ]
 
-/** The maths themselves, where every form has its one home. */
-export const MATHS_HOME = 'packages/math/**'
-
-/** Where the forms are written on purpose, the declared oracles: the bench's reference
- *  implementations and the witness library, the image metric's reference, the test kit's
- *  references, the before-forms a rewrite is proved against, and the test modules, fixtures and
- *  GPU proofs (`isTestModule`, `scripts/repository-files.ts`), whose expectations are their own
- *  arithmetic, independent of the code they check. */
-export const MATHS_ORACLES = [
-  'bench/oracles/**',
-  'bench/witnesses/**',
-  'bench/runner/references/flip.ts',
-  'tests/kit/reference/**',
-  '**/*Before.fixture.ts',
-  '**/*.{test,fixture,perf,gpu}.{ts,mts}',
-]
-
-/** Whether `file`, a path from the repository root, is one of the declared oracles. */
-export const isMathsOracle = (file: string) => MATHS_ORACLES.some((glob) => matchesGlob(file, glob))
+/** Where the forms are written on purpose, the declared oracles: the tests, whose expectations are
+ *  their own arithmetic, independent of the code they check. */
+export const MATHS_ORACLES = ['**/*.test.{ts,mts}']

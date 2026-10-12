@@ -1,4 +1,4 @@
-/** Pre-compresses a built site's scene-cache objects in brotli beside their originals (`pages.yml`). */
+/** Pre-compresses a built site's scene-cache objects in brotli beside their originals (`site.yml`). */
 import { readdir, readFile, writeFile } from 'node:fs/promises'
 import { availableParallelism } from 'node:os'
 import { resolve } from 'node:path'

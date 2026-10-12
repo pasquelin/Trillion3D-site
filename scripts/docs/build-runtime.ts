@@ -1,16 +1,20 @@
 /**
- * Build this repository's engine as one self-contained bundle: a host imports only this
- * repository's own module. The engine names no rendering library, and the build
+ * Build the pinned engine (`.engine/`, `scripts/engine.ts`) as one self-contained bundle: a host
+ * imports only the engine's own module. The engine names no rendering library, and the build
  * proves it on its own product: a runtime file that folds in a module of one is refused.
  */
 import { build } from 'esbuild'
 import { copyFile, mkdir } from 'node:fs/promises'
 import { resolve } from 'node:path'
+import { ENGINE } from '../engine.ts'
 import { inlineModules } from './inline-modules.ts'
+
+/** A file of the engine's browser SDK. */
+const sdk = (path: string) => resolve(ENGINE, 'packages/sdk-browser/src', path)
 
 /** The two modules an example page imports, `../runtime/<name>.js`. */
 const RUNTIME_ENTRIES = {
-  engine: 'packages/sdk-browser/src/index.ts',
+  engine: sdk('index.ts'),
   // The examples' own panels and pieces, imported beside the engine; they bundle nothing of it,
   // and a piece builds with the engine families the page hands it. The few `packages/math`
   // constants and helpers they read are a chunk the engine shares, loaded once.
@@ -23,12 +27,12 @@ export async function buildRuntime(root: string, outdir: string) {
     absWorkingDir: root,
     metafile: true,
     entryPoints: {
-      pageWorker: 'packages/sdk-browser/src/page/work/pageWorker.ts',
-      pageIntegrationWorker: 'packages/sdk-browser/src/page/integration/pageIntegrationWorker.ts',
+      pageWorker: sdk('page/work/pageWorker.ts'),
+      pageIntegrationWorker: sdk('page/integration/pageIntegrationWorker.ts'),
       // The physics worker, spawned only by a world that turns physics on.
-      physicsWorker: 'packages/sdk-browser/src/physics/physicsWorker.ts',
+      physicsWorker: sdk('physics/physicsWorker.ts'),
       // The animation worker, started only by a world whose clips play at a fixed step.
-      animationWorker: 'packages/sdk-browser/src/animation/animationWorker.ts',
+      animationWorker: sdk('animation/animationWorker.ts'),
       ...RUNTIME_ENTRIES,
     },
     outdir,
@@ -60,10 +64,10 @@ export async function buildRuntime(root: string, outdir: string) {
     'physics/joltPhysics.wasm',
     'physics/joltPhysicsThreads.wasm',
   ])
-    await copyFile(
-      resolve(root, 'packages/sdk-browser/src', wasm),
-      resolve(outdir, wasm.slice(wasm.lastIndexOf('/') + 1)),
-    )
+    await copyFile(sdk(wasm), resolve(outdir, wasm.slice(wasm.lastIndexOf('/') + 1)))
   // Jolt's licence travels with the physics modules it is built into.
-  await copyFile(resolve(root, 'THIRD_PARTY_NOTICES.md'), resolve(outdir, 'THIRD_PARTY_NOTICES.md'))
+  await copyFile(
+    resolve(ENGINE, 'THIRD_PARTY_NOTICES.md'),
+    resolve(outdir, 'THIRD_PARTY_NOTICES.md'),
+  )
 }

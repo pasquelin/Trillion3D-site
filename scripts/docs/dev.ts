@@ -6,11 +6,10 @@ import { resolve, sep } from 'node:path'
 import { pathToFileURL } from 'node:url'
 import { createDocsServer, DOCS_PORT } from './serve.ts'
 import { inHead } from './measurement.ts'
-import { buildSite, SITE_OUTPUT, SITE_STEPS } from './site.ts'
+import { buildSite, ENGINE_PACKAGES, SITE_OUTPUT, SITE_STEPS } from './site.ts'
+import { ROOT } from '../engine.ts'
 import { ignoredPaths } from '../git-paths.ts'
 import { contentType, listen } from '../static-server.ts'
-
-const ROOT = resolve(import.meta.dirname, '../..')
 
 /** The event stream an open page listens on. Only this server adds it, to the pages it serves:
  *  the built tree never holds it (checked by `scripts/docs/measurement.test.ts`). */
@@ -19,7 +18,20 @@ export const RELOAD_EVENTS = '/__docs-dev/reload'
 const RELOAD_SCRIPT = `<script>if (self === top) new EventSource('${RELOAD_EVENTS}').onmessage = () => location.reload();</script>`
 
 /** The folders followed, under the root: the engine, the site and its examples. */
-const FOLLOWED = ['packages', 'site']
+const FOLLOWED = [ENGINE_PACKAGES, 'site']
+/** The engine's checkout, under the root: its own ignore rules name what of it is a product. */
+const ENGINE_FOLDER = '.engine/'
+
+/** The `paths` (under `root`) git ignores: the site's by its rules, the engine's by the engine's. */
+function ignoredUnder(root: string, paths: string[]): Set<string> {
+  const engine = paths.filter((path) => path.startsWith(ENGINE_FOLDER))
+  const site = paths.filter((path) => !path.startsWith(ENGINE_FOLDER))
+  const inEngine = engine.map((path) => path.slice(ENGINE_FOLDER.length))
+  return new Set([
+    ...ignoredPaths(site, root),
+    ...ignoredPaths(inEngine, resolve(root, ENGINE_FOLDER)).map((path) => ENGINE_FOLDER + path),
+  ])
+}
 
 /** Whether the `/`-separated `path` is `entry` or lies under it. */
 const underOrAt = (path: string, entry: string) => path === entry || path.startsWith(`${entry}/`)
@@ -68,7 +80,7 @@ export async function followSite(root: string, out: string, port = 0) {
       changed = new Set()
       // What git ignores is never read by the build or written by it: dependencies, products,
       // the API files and the scene caches, so a rebuild does not restart itself.
-      const ignored = new Set(ignoredPaths(fresh, root))
+      const ignored = ignoredUnder(root, fresh)
       const paths = [...failed, ...fresh.filter((path) => !ignored.has(path))]
       const steps = stepsReading(paths)
       if (!steps.length) continue

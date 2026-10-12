@@ -10,8 +10,8 @@ import {
   HALTON_SWEEP,
   assertSameFloat32,
   haltonSpan,
-} from '../../packages/math/src/sequence/sweep.fixture.ts'
-import { math } from '../../packages/sdk-core/src/world/math/index.ts'
+} from '#engine/packages/math/src/sequence/sweep.fixture.ts'
+import { math } from '#engine/packages/sdk-core/src/world/math/index.ts'
 import { ease } from './kit/opening.ts'
 
 /** Lengths from tiny to large, the spans the sweeps draw each component from. */

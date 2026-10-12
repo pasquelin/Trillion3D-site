@@ -7,7 +7,7 @@
 // every candidate's verdict at every sea level and steepness the controls offer.
 import assert from 'node:assert/strict'
 import { test } from 'node:test'
-import { math } from '../../packages/sdk-core/src/world/math/index.ts'
+import { math } from '#engine/packages/sdk-core/src/world/math/index.ts'
 import { seeded, valueNoise } from './kit/random.ts'
 
 type Lengths = { unit: (v: number[]) => number[]; length: (v: number[]) => number }

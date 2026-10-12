@@ -6,7 +6,7 @@ import { formatValue } from './model/metrics.ts'
 import type { ReportRecord } from './model/types.ts'
 import type { Dictionary } from '../../content/i18n/dictionary.ts'
 import type { Locale } from '../../content/locale.ts'
-import { MIB } from '../../../packages/math/src/constants.ts'
+import { MIB } from '#engine/packages/math/src/constants.ts'
 
 interface ConditionsProps {
   a: ReportRecord

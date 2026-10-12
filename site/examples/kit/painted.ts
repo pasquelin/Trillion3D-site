@@ -1,7 +1,7 @@
 import type { Families, Vec3 } from './engineTypes.ts'
 import { mix } from './opening.ts'
-import { saturate } from '../../../packages/math/src/scalar/reals.ts'
-import { unorm8 } from '../../../packages/math/src/color/color.ts'
+import { saturate } from '#engine/packages/math/src/scalar/reals.ts'
+import { unorm8 } from '#engine/packages/math/src/color/color.ts'
 
 /** The side of every painted picture, in pixels. */
 const SIZE = 256

@@ -8,19 +8,22 @@
  * — the CDN of its `importmap` played by the installed package, from another origin — and opened in
  * Chrome, where it must draw the model.
  *
- * `node scripts/prove-install-page.ts [--model <file>]`: a Chrome proof (AGENTS.md
- * rule 2). The default model is the morphing cube of the examples, a 2-unit cube at the origin.
+ * `node scripts/prove-install-page.ts [--model <file>]`: a Chrome proof, run by hand. The default
+ * model is the morphing cube of the examples, a 2-unit cube at the origin. The package is built and
+ * packed from the engine under `.engine/`, with its own dependencies installed: a local checkout
+ * linked there (`TRILLION3D_ENGINE=<folder> pnpm run engine`), since the pinned one holds only what
+ * the site reads.
  */
 import { copyFileSync, mkdirSync, rmSync, writeFileSync } from 'node:fs'
-import { join, resolve } from 'node:path'
-import { fileURLToPath } from 'node:url'
+import { join } from 'node:path'
 import { parseArgs } from 'node:util'
-import { launchChrome } from '../bench/runner/harness/chrome.ts'
+import { launchChrome } from './chrome.ts'
 import { drawnShare } from './docs/examples/capture.ts'
-import { currentCompilerExecutable } from '../packages/sdk-node/src/compiler/executable.mts'
+import { currentCompilerExecutable } from '#engine/packages/sdk-node/src/compiler/executable.mts'
+import { createInstalledFixture, packArchive } from '#engine/scripts/installed-package/fixture.ts'
+import { packPlatformPackages } from '#engine/scripts/installed-package/platforms.ts'
+import { ENGINE, ROOT } from './engine.ts'
 import { codeBlocks, installPageHtml, walkthrough } from './install-page.ts'
-import { createInstalledFixture, packArchive } from './installed-package/fixture.ts'
-import { packPlatformPackages } from './installed-package/platforms.ts'
 import { listen, staticServer } from './static-server.ts'
 
 /** The CDN the page's `importmap` names, and where the fixture server plays it. */
@@ -31,12 +34,13 @@ const DRAWN = 0.01
 /** The summed channel distance from the canvas's corner at which a pixel counts as drawn. */
 const DRAWN_DISTANCE = 24
 
-const root = resolve(fileURLToPath(new URL('..', import.meta.url)))
+/** The engine the package is packed from. */
+const root = ENGINE
 const { values } = parseArgs({
   options: {
     model: {
       type: 'string',
-      default: join(root, 'site/assets/examples/animated-morph-cube/source/AnimatedMorphCube.glb'),
+      default: join(ROOT, 'site/assets/examples/animated-morph-cube/source/AnimatedMorphCube.glb'),
     },
   },
 })

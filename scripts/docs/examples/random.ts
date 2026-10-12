@@ -1,6 +1,6 @@
-import { TAU } from '../../../packages/math/src/constants.ts'
-import { lerp, snap as snapTo } from '../../../packages/math/src/scalar/reals.ts'
-import { normalizeVector3 } from '../../../packages/math/src/vector/vector.ts'
+import { TAU } from '#engine/packages/math/src/constants.ts'
+import { lerp, snap as snapTo } from '#engine/packages/math/src/scalar/reals.ts'
+import { normalizeVector3 } from '#engine/packages/math/src/vector/vector.ts'
 import { mulberry32 } from '../../../site/examples/kit/random.ts'
 
 export type Vec3 = readonly [number, number, number]

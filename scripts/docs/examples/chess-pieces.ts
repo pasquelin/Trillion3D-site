@@ -1,9 +1,9 @@
-import { HALF_PI, QUARTER_PI } from '../../../packages/math/src/constants.ts'
-import { length2 } from '../../../packages/math/src/vector/vector.ts'
-import { mean } from '../../../packages/math/src/scalar/quantile.ts'
+import { HALF_PI, QUARTER_PI } from '#engine/packages/math/src/constants.ts'
+import { length2 } from '#engine/packages/math/src/vector/vector.ts'
+import { mean } from '#engine/packages/math/src/scalar/quantile.ts'
 import { facing, fromGeometry, lathe, merge, moved, pairs, solid, type Mesh } from './mesh.ts'
-import { geometry } from '../../../packages/sdk-core/src/world/geometry/index.ts'
-import { triangulate } from '../../../packages/sdk-core/src/world/geometry/triangulate.ts'
+import { geometry } from '#engine/packages/sdk-core/src/world/geometry/index.ts'
+import { triangulate } from '#engine/packages/sdk-core/src/world/geometry/triangulate.ts'
 import { box, spline } from './solids.ts'
 
 /**

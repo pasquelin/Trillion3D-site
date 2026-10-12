@@ -1,4 +1,4 @@
-import { quantileFloor } from '../../../packages/math/src/scalar/quantile.ts'
+import { quantileFloor } from '#engine/packages/math/src/scalar/quantile.ts'
 
 /** Median and 95th percentile of a window, in milliseconds. */
 interface Spread {

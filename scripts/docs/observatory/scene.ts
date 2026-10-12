@@ -1,4 +1,4 @@
-import { HALF_PI, TAU } from '../../../packages/math/src/constants.ts'
+import { HALF_PI, TAU } from '#engine/packages/math/src/constants.ts'
 import { bottom, createWorkshop, top, type Part } from './geometry.ts'
 
 /** Name, glTF base color RGBA, metallic factor, roughness factor. */

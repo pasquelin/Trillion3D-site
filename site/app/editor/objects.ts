@@ -4,8 +4,8 @@ import type {
   Material,
   Mesh,
   Object3D,
-} from '../../../packages/sdk-browser/src/index.ts'
-import { HALF_PI } from '../../../packages/math/src/constants.ts'
+} from '#engine/packages/sdk-browser/src/index.ts'
+import { HALF_PI } from '#engine/packages/math/src/constants.ts'
 import type { Engine } from './session.ts'
 
 /** The shapes the Add menu builds, each with the first arguments of its family call named. */

@@ -1,11 +1,13 @@
 /**
- * The site: handwritten sources under `site/`, one built tree under `dist/site/` that git ignores.
+ * The site: handwritten sources under `site/`, built against the pinned engine under `.engine/`
+ * (`scripts/engine.ts`) into one tree under `dist/site/` that git ignores.
  * Every consumer — `build:docs`, `docs:serve`, the browser proofs, the site deployment — builds
  * the same tree from the same function; nothing under `site/` is a build product.
  */
 import { copyFile, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises'
 import { extname, relative, resolve } from 'node:path'
 import { API_FILES, API_SOURCES, generateApiFiles } from '../generate-api-reference.ts'
+import { ROOT } from '../engine.ts'
 import { gitPathsSync } from '../git-paths.ts'
 import { cacheOf, COOKED_SCENES, compileSiteCaches } from '../site-caches.ts'
 import { buildFlags } from './build-flags.ts'
@@ -14,7 +16,6 @@ import { buildPortal } from './build-portal.ts'
 import { buildRuntime } from './build-runtime.ts'
 import { buildStyles, STYLE_SOURCES } from './build-styles.ts'
 
-const ROOT = resolve(import.meta.dirname, '../..')
 export const SITE_OUTPUT = resolve(ROOT, 'dist/site')
 
 /** The one public address of the site: its canonical link and its crawler rules derive from it,
@@ -88,12 +89,15 @@ export interface SiteStep {
 
 const scenes = Object.values(COOKED_SCENES)
 
+/** The engine's packages, under the root: what the API files and the runtime are built from. */
+export const ENGINE_PACKAGES = '.engine/packages'
+
 /** Every step of `buildSite`, in its order: stale API files and caches first, then the build
  *  products (styles, engine runtime and portal in one folder, language flags), the statics last. */
 export const SITE_STEPS: readonly SiteStep[] = [
   {
     name: 'api',
-    reads: ['packages', 'site'],
+    reads: [ENGINE_PACKAGES, 'site'],
     files: API_SOURCES,
     writes: Object.values(API_FILES),
     run: () => generateApiFiles(),
@@ -113,7 +117,7 @@ export const SITE_STEPS: readonly SiteStep[] = [
   {
     name: 'runtime',
     reads: [
-      'packages',
+      ENGINE_PACKAGES,
       ...['app', 'content', 'demos', 'examples', 'i18n', 'reports'].map((name) => `site/${name}`),
       'site/assets/examples/thumbnails',
     ],

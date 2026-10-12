@@ -1,4 +1,4 @@
-import { geometry } from '../../../packages/sdk-core/src/world/geometry/index.ts'
+import { geometry } from '#engine/packages/sdk-core/src/world/geometry/index.ts'
 import { SceneGltf } from './gltf-scene.ts'
 import { fromGeometry, moved } from './mesh.ts'
 

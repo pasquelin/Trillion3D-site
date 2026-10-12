@@ -1,18 +1,19 @@
-// The portal may only name what the repository delivers: every entry that is not marked as
-// carried by an open issue declares the symbols it documents, and each must be exported by the
-// file it names (the reference's signatures are read from the declarations themselves). An
-// entry that is marked must name an issue the portal lists. Every demo must belong to an entry.
+// The portal may only name what the pinned engine delivers (`.engine/`, `scripts/engine.ts`): every
+// entry that is not marked as carried by an open issue declares the symbols it documents, and each
+// must be exported by the engine file it names (the reference's signatures are read from the
+// declarations themselves). An entry that is marked must name an issue the portal lists. Every
+// demo must belong to an entry.
 import test from 'node:test'
 import assert from 'node:assert/strict'
 import { existsSync, readFileSync } from 'node:fs'
-import { join, resolve } from 'node:path'
+import { join } from 'node:path'
 import ts from 'typescript'
 import { ISSUES, SECTIONS } from '../../site/content/model.ts'
 import type { PortalEntry } from '../../site/content/model.ts'
 import { DEMOS } from '../../site/demos/registry.ts'
 import { entriesIn } from '../../site/app/portal/data.ts'
+import { ENGINE } from '../../scripts/engine.ts'
 
-const ROOT = resolve(import.meta.dirname, '../..')
 const ENTRIES: PortalEntry[] = entriesIn('en')
 
 /** Names a file declares or re-exports, read once per file from its syntax tree. */
@@ -20,7 +21,7 @@ const exportsOf = new Map<string, Set<string>>()
 function exported(module: string): Set<string> {
   const known = exportsOf.get(module)
   if (known) return known
-  const file = join(ROOT, module)
+  const file = join(ENGINE, module)
   const source = ts.createSourceFile(file, readFileSync(file, 'utf8'), ts.ScriptTarget.Latest)
   const names = new Set<string>()
   for (const statement of source.statements) {
@@ -47,7 +48,7 @@ function exported(module: string): Set<string> {
 test('every delivered entry names a file that exists', () => {
   for (const entry of ENTRIES) {
     if (!entry.module || entry.issue) continue
-    assert.ok(existsSync(join(ROOT, entry.module)), `${entry.id}: missing ${entry.module}`)
+    assert.ok(existsSync(join(ENGINE, entry.module)), `${entry.id}: missing ${entry.module}`)
   }
 })
 
@@ -72,9 +73,9 @@ function surfaceOf(file: string, seen: Set<string> = new Set()): Set<string> {
   const cached = surfaces.get(file)
   if (cached) return cached
   const names = new Set<string>()
-  if (seen.has(file) || !existsSync(join(ROOT, file))) return names
+  if (seen.has(file) || !existsSync(join(ENGINE, file))) return names
   seen.add(file)
-  const source = readFileSync(join(ROOT, file), 'utf8')
+  const source = readFileSync(join(ENGINE, file), 'utf8')
   for (const name of exported(file)) names.add(name)
   const directory = file.slice(0, file.lastIndexOf('/'))
   for (const match of source.matchAll(/export\s+\*\s+from\s+'([^']+)'/g))
@@ -110,7 +111,7 @@ test('an example only imports what the file or entry point it names really expor
       const files = exampleModule(match[2])
       assert.ok(files, `${entry.id}: unsupported public import: ${match[2]}`)
       for (const file of files)
-        assert.ok(existsSync(join(ROOT, file)), `${entry.id}: ${file} does not exist`)
+        assert.ok(existsSync(join(ENGINE, file)), `${entry.id}: ${file} does not exist`)
       const surface = new Set(files.flatMap((file) => [...surfaceOf(file)]))
       for (const name of match[1]
         .split(',')

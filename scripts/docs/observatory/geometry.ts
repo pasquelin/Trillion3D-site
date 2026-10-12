@@ -1,12 +1,12 @@
-import { TAU } from '../../../packages/math/src/constants.ts'
+import { TAU } from '#engine/packages/math/src/constants.ts'
 import {
   crossVector3,
   divideVector3,
   length3,
   lengthSqVector3,
-} from '../../../packages/math/src/vector/vector.ts'
-import { geometry, type Geometry } from '../../../packages/sdk-core/src/world/geometry/index.ts'
-import { Box3 } from '../../../packages/sdk-core/src/world/math/box3.ts'
+} from '#engine/packages/math/src/vector/vector.ts'
+import { geometry, type Geometry } from '#engine/packages/sdk-core/src/world/geometry/index.ts'
+import { Box3 } from '#engine/packages/sdk-core/src/world/math/box3.ts'
 
 /** One material's authored surface: interleaved position/normal streams and triangle indices. */
 export interface SurfaceMesh {
