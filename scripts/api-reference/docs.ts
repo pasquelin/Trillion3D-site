@@ -1,6 +1,5 @@
 import ts from 'typescript'
-import { ENGINE_ERROR_CODES } from '#engine/packages/sdk-core/src/contracts/errorCodes.ts'
-import { ENGINE_ERROR_MEANINGS } from './errorCodeMeanings.ts'
+import { ENGINE_ERROR_CODES, ENGINE_ERROR_MEANINGS } from './errorCodeMeanings.ts'
 
 /** What the TSDoc of one symbol says: its text, `@param` lines, `@returns`, `@defaultValue` and
  *  `@example`. */

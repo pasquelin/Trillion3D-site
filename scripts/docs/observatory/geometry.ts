@@ -1,10 +1,6 @@
 import { TAU } from '#engine/packages/math/src/constants.ts'
-import {
-  crossVector3,
-  divideVector3,
-  length3,
-  lengthSqVector3,
-} from '#engine/packages/math/src/vector/vector.ts'
+import { crossVector3, length3, lengthSqVector3 } from '#engine/packages/math/src/vector/vector.ts'
+import { divideVector3 } from '../../../site/maths.ts'
 import { geometry, type Geometry } from '#engine/packages/sdk-core/src/world/geometry/index.ts'
 import { Box3 } from '#engine/packages/sdk-core/src/world/math/box3.ts'
 
