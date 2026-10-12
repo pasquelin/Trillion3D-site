@@ -1,12 +1,13 @@
 name: Site
 
-# The documentation portal, built from the sources into dist/site and deployed to the site's own
-# server (docs/LEARNING_PORTAL.md, "Deploy"), on a push to main or a manual run asked to deploy. A
-# pull request's site is built by the required `validate` check (`build:docs`,
-# `scripts/validate-steps.ts`); the audience tag only the published build adds is proved by
-# `scripts/docs/measurement.test.ts`. The open world is cooked and published by its own
+# The website, built against the pinned engine (`trillion3d.commit`, `scripts/engine.ts`) into
+# dist/site on every pull request and push to main, and published to the site's own server on a push
+# to main or a manual run asked to deploy (README.md, "Deploy"). The audience tag only the published
+# build adds is proved by `scripts/docs/measurement.test.ts`. The open world is published by its own
 # repository, pasquelin/Trillion3D-openworld, under `openworld/`, which this deploy leaves alone.
 on:
+  pull_request:
+    branches: [main]
   push:
     branches: [main]
   workflow_dispatch:
@@ -25,42 +26,51 @@ jobs:
     timeout-minutes: 40
     outputs:
       deploy: ${{ steps.plan.outputs.deploy }}
-      floor: ${{ steps.plan.outputs.floor }}
     steps:
-      # A deploying run compiles the scene caches, with the native compiler that links the pinned
-      # Jolt.
       - uses: actions/checkout@v7
-        with:
-          submodules: true
+      # The install's `prepare` checks the pinned engine out under `.engine/` and writes the API
+      # files from its declarations.
       - uses: ./.github/actions/node
       # Whether this run publishes, decided once: only main is ever published.
-      # The file-count floor of a sound output: the build copies every tracked served static of
-      # site/ (sources .ts/.tsx excluded) and writes index.html, robots.txt and the report.html
-      # redirect beside them, so a tree holding fewer files than that lost part of the copy.
       - id: plan
         env:
           DEPLOY: >-
             ${{ github.ref == 'refs/heads/main' && (github.event_name == 'push' ||
             (github.event_name == 'workflow_dispatch' && inputs.deploy)) }}
-        run: |
-          statics=$(git ls-files -- site/examples site/assets site/data site/reports | grep -cEv '\.tsx?$')
-          echo "deploy=$DEPLOY" >> "$GITHUB_OUTPUT"
-          echo "floor=$((statics + 3))" >> "$GITHUB_OUTPUT"
+        run: echo "deploy=$DEPLOY" >> "$GITHUB_OUTPUT"
+      # A deploying run cooks the scene caches with the native compiler of the pinned engine, which
+      # links the engine's pinned Jolt.
       - if: steps.plan.outputs.deploy == 'true'
         uses: dtolnay/rust-toolchain@stable
       - if: steps.plan.outputs.deploy == 'true'
         uses: Swatinem/rust-cache@v2
         with:
-          workspaces: packages/asset-compiler-rust
+          workspaces: .engine/packages/asset-compiler-rust
       - if: steps.plan.outputs.deploy == 'true'
         run: pnpm run build:native && pnpm run compile:caches
       # Styles, demo maths, browser engine, workers, portal, API files, scene caches and statics;
-      # `--published` adds the audience measurement, which no local or proof build carries.
-      - run: node scripts/docs/build.ts --published
+      # `--published` adds the audience measurement, which no pull request or local build carries.
+      - if: steps.plan.outputs.deploy == 'true'
+        run: node scripts/docs/build.ts --published
+      - if: steps.plan.outputs.deploy != 'true'
+        run: pnpm run build:docs
+      # The floor of a sound output: the build copies every tracked served static of site/
+      # (sources .ts/.tsx excluded) and writes index.html, robots.txt and the report.html redirect
+      # beside them, so a tree holding fewer files than that lost part of the copy.
+      - name: Refuse an empty or partial output
+        run: |
+          for file in index.html runtime/portal.js runtime/engine.js; do
+            test -s "dist/site/$file" || { echo "::error::dist/site/$file is missing"; exit 1; }
+          done
+          statics=$(git ls-files -- site/examples site/assets site/data site/reports | grep -cEv '\.tsx?$')
+          floor=$((statics + 3))
+          count=$(find dist/site -type f | wc -l)
+          echo "$count files, floor $floor"
+          test "$count" -ge "$floor" || { echo "::error::$count files, fewer than $floor"; exit 1; }
       # The scene caches' objects, geometry pages among them, are the exception to the gzip below:
-      # brotli takes 11 to 24 % off them. Sent beside each original with
-      # `Content-Encoding: br` to a browser that accepts it; `isCacheObject` picks them, as the
-      # docs server does locally, and the engine reads the decoded bytes its fingerprints check.
+      # brotli takes 11 to 24 % off them. Sent beside each original with `Content-Encoding: br` to
+      # a browser that accepts it; `isCacheObject` picks them, as the docs server does locally, and
+      # the engine reads the decoded bytes its fingerprints check.
       - if: steps.plan.outputs.deploy == 'true'
         run: node scripts/compress-cache-objects.ts dist/site
       - if: steps.plan.outputs.deploy == 'true'
@@ -71,6 +81,8 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+  # Its own job: until the maintainer adds the DEPLOY_* secrets, it fails with a message and the
+  # build above stays green.
   deploy:
     needs: build
     if: needs.build.outputs.deploy == 'true'
@@ -80,21 +92,23 @@ jobs:
     concurrency:
       group: site
       cancel-in-progress: false
+    env:
+      DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+      DEPLOY_KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
+      DEPLOY_TARGET: ${{ secrets.DEPLOY_TARGET }}
+      DEPLOY_SSH_PORT: ${{ secrets.DEPLOY_SSH_PORT }}
     steps:
+      - name: Require the deploy secrets
+        run: |
+          missing=""
+          for name in DEPLOY_SSH_KEY DEPLOY_KNOWN_HOSTS DEPLOY_TARGET DEPLOY_SSH_PORT; do
+            test -n "${!name}" || missing="$missing $name"
+          done
+          test -z "$missing" || { echo "::error::missing secrets:$missing"; exit 1; }
       - uses: actions/download-artifact@v8
         with:
           name: site
           path: dist/site
-      - name: Refuse an empty or partial output
-        env:
-          FLOOR: ${{ needs.build.outputs.floor }}
-        run: |
-          for file in index.html runtime/portal.js; do
-            test -s "dist/site/$file" || { echo "::error::dist/site/$file is missing"; exit 1; }
-          done
-          count=$(find dist/site -type f | wc -l)
-          echo "$count files, floor $FLOOR"
-          test "$count" -ge "$FLOOR" || { echo "::error::$count files, fewer than $FLOOR"; exit 1; }
       # Served as is by the web server beside each original; binary pages and caches do not shrink.
       - name: Pre-compress the text files
         run: >-
@@ -102,25 +116,19 @@ jobs:
           -o -name '*.svg' -o -name '*.json' -o -name '*.xml' -o -name '*.txt' -o -name '*.gltf'
           -o -name '*.obj' -o -name '*.wasm' \) -exec gzip -9 -k -f {} +
       - name: Install the deploy key
-        env:
-          KEY: ${{ secrets.DEPLOY_SSH_KEY }}
-          KNOWN_HOSTS: ${{ secrets.DEPLOY_KNOWN_HOSTS }}
         run: |
           install -d -m 700 ~/.ssh
-          printf '%s\n' "$KEY" > ~/.ssh/deploy
-          printf '%s\n' "$KNOWN_HOSTS" > ~/.ssh/known_hosts
+          printf '%s\n' "$DEPLOY_SSH_KEY" > ~/.ssh/deploy
+          printf '%s\n' "$DEPLOY_KNOWN_HOSTS" > ~/.ssh/known_hosts
           chmod 600 ~/.ssh/deploy ~/.ssh/known_hosts
       # The key is restricted to the web root on the server, so the target path is that root.
       # `openworld/` belongs to pasquelin/Trillion3D-openworld's deploy: never deleted from here.
       - name: Transfer
-        env:
-          TARGET: ${{ secrets.DEPLOY_TARGET }}
-          PORT: ${{ secrets.DEPLOY_SSH_PORT }}
         run: >-
           rsync -rltz --delete-delay --delay-updates --stats --exclude '.well-known/'
           --exclude 'openworld/'
-          -e "ssh -p $PORT -i $HOME/.ssh/deploy -o StrictHostKeyChecking=yes"
-          dist/site/ "$TARGET:/"
+          -e "ssh -p $DEPLOY_SSH_PORT -i $HOME/.ssh/deploy -o StrictHostKeyChecking=yes"
+          dist/site/ "$DEPLOY_TARGET:/"
       # The address checked is the one the built page declares canonical (scripts/docs/site.ts).
       # Each answer must carry the cross-origin isolation `scripts/docs/serve.ts` serves locally:
       # without it `crossOriginIsolated` is false and the physics falls back to one thread.

@@ -1,0 +1,41 @@
+name: Quality
+
+# The gates of every pull request to main, in one job whose name is the one required check
+# (`.github/ruleset.json`): the sources' format, lint and unused code, the types of the site and of
+# its scripts against the pinned engine, the links, words and translations, the unit tests, and the
+# site build. The install's `prepare` checks the pinned engine out and writes the API files first.
+on:
+  pull_request:
+    branches: [main]
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  validate:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v7
+      - uses: ./.github/actions/node
+      - run: pnpm run format:check
+      - run: pnpm run lint
+      - run: pnpm run knip
+      - run: pnpm run check:site-types
+      - run: pnpm run check:tools-types
+      - run: pnpm run check:links
+      - run: pnpm run check:docs-three
+      - run: pnpm run check:i18n
+      - run: pnpm run check:translations
+      # A count of French words below the baseline is written there: the diff refuses a stale one.
+      - run: pnpm run check:english && git diff --exit-code -- scripts/english-baseline.json
+      - run: pnpm run check:thumbnails
+      - run: pnpm run test:docs
+      - run: pnpm run build:docs
+      - run: pnpm run check:docs-bundles
