@@ -1,14 +1,11 @@
-/** Batch demos: n elements in one call, checked against the unit function they repeat. */
+/** Batch demos: n elements in one call. */
 import {
   BOX_VALUES,
   IDENTITY_MATRIX4,
-  MATRIX_VALUES,
   POSITION_VALUES,
   SPHERE_VALUES,
   createCameraFrame,
   frustumKeepsBoxBatch,
-  multiplyMatrix4,
-  multiplyMatrix4Batch,
   perspectiveProjection,
   sphereFromBoundsBatch,
   transformPointsBatch,
@@ -69,37 +66,6 @@ export const BATCH_DEMOS: Record<string, DemoDef> = {
           ['rejected by the frustum', String(count - visible)],
           ['behind the camera, by construction', String(Math.floor(count / 2))],
           ['first survivor, view-space z', m ? formatNumber(viewCentres[2]) : '—'],
-        ]),
-      ]
-    },
-  },
-  multiplyMatrix4Batch: {
-    controls: [slider('count', 'products in the batch', 100, 50000, 10000, 100)],
-    run(state) {
-      const count = Math.round(state.count)
-      const make = () =>
-        Array.from({ length: count }, (_, index) => {
-          const m = new Float64Array(16)
-          m.set([1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, index % 7, 0, 0, 1])
-          return m
-        })
-      const a = make(),
-        b = make()
-      const out = Array.from({ length: count }, () => new Float64Array(16))
-      multiplyMatrix4Batch(out, a, b, count)
-      const single = new Float64Array(16)
-      multiplyMatrix4(single, a[count - 1], b[count - 1])
-      let worst = 0
-      for (let index = 0; index < MATRIX_VALUES; index++)
-        worst = Math.max(worst, Math.abs(out[count - 1][index] - single[index]))
-      return [
-        valueView('the batch against the unit function it repeats', [
-          ['products', String(count)],
-          ['largest difference on the last element', formatNumber(worst)],
-          [
-            'note',
-            'the unit function stays the oracle; the WebAssembly kernel repeats it term by term',
-          ],
         ]),
       ]
     },

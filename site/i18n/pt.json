@@ -1174,14 +1174,6 @@
         "Adaptativo — `pixelError: 2`, aumentado com a velocidade da câmera por `adaptivePixelError(base, speed, radius)`; uma visão parada mantém a base."
       ]
     },
-    "MathPathMode": {
-      "description": "Qual caminho um lote executa. `auto` decide por medição: o regulador mantém uma mediana móvel de nanossegundos por elemento em cada lado e troca depois de uma sequência de execuções com essa vantagem, com o JS permanecendo a referência e o caminho de reserva. `MATH_PATH_CONTRACT` versiona o relatório publicado.",
-      "values": [
-        "Decisão por medição (o padrão).",
-        "O caminho JavaScript imposto, para uma campanha.",
-        "O kernel WebAssembly imposto, quando existe um para essa operação."
-      ]
-    },
     "JobStatus": {
       "description": "Ciclo de vida de um job criado por `createJob` — uma compilação, a criação de um mundo. Um job cancelado ou que falhou descarta o resultado que possuía.",
       "values": [
@@ -1365,15 +1357,6 @@
     "lookAtNode": {
       "description": "Vira `node` em direção ao ponto do mundo `(x, y, z)`. `viewer` é verdadeiro para uma câmera ou uma luz, que olham em direção ao seu `−z`, falso para um objeto, que apresenta seu `+z`. `up` é o up do nó, `(0, 1, 0)` por padrão. Os ancestrais e o nó são atualizados primeiro."
     },
-    "multiplyMatrix4Batch": {
-      "description": "`n` produtos `out[i] = a[i] · b[i]`, com os três lados dados como sub-views de dezesseis números. As sub-views são criadas uma vez, nunca por quadro; um kernel WebAssembly repete a mesma fórmula termo a termo e o regulador escolhe qual caminho é medido como mais rápido."
-    },
-    "boxTransformBatch": {
-      "description": "`n` caixas transformadas por `n` matrizes: `out[i] = boxTransform(boxes[i], mats[i])`. `out` e `boxes` carregam seis números por elemento, `mats` uma sub-view de dezesseis."
-    },
-    "createPathGovernor": {
-      "description": "O que decide entre JS e WebAssembly, por operação nomeada: medianas móveis de nanossegundos por elemento, uma troca só depois de cinco execuções consecutivas com essa vantagem, e uma execução em cinquenta repetindo o outro caminho para atualizar sua mediana. Com menos de cinco amostras nada é decidido — um único valor formaria a mediana. `metrics()` publica, por operação, `path`, `jsNsPerElement`, `wasmNsPerElement`, a contagem de trocas, e a resolução do relógio em que a medição se apoia."
-    },
     "frustumKeepsBoxBatch": {
       "description": "`n` caixas de seis números (min e depois max) contra os vinte e quatro floats de um frustum: `kept[i]` é 1 quando a caixa intersecta ou está totalmente dentro, e a contagem mantida é devolvida — `frustumExcludesBox` invertido, a polaridade em que a referência responde. O lote de esferas escreve `SPHERE_VALUES` números por caixa, centro e depois raio até o canto, como `sphereFromBounds` faz. Os dois laços vivem em `packages/math/src/batch/culling.ts`."
     },
@@ -1437,8 +1420,6 @@
       "high": "alta",
       "balanced": "equilibrado",
       "adaptive": "adaptativo",
-      "switches": "trocas",
-      "arbitration": "arbitragem",
       "box 0": "caixa 0",
       "box 1": "caixa 1",
       "box 2": "caixa 2",
@@ -1478,8 +1459,6 @@
       "saturation": "saturação",
       "lightness": "luminosidade",
       "scalar": "escalar",
-      "nodes in the batch": "nós no lote",
-      "products in the batch": "produtos no lote",
       "boxes in the batch": "caixas no lote",
       "boxes tested": "caixas testadas",
       "kept by the frustum": "mantidas pelo frustum",
@@ -1496,12 +1475,6 @@
       "cone half-angle (rad)": "meio-ângulo do cone (rad)",
       "cone axis, heading (rad)": "eixo do cone, direção (rad)",
       "viewer distance": "distância do observador",
-      "JS nanoseconds per element": "nanossegundos de JS por elemento",
-      "Wasm nanoseconds per element": "nanossegundos de Wasm por elemento",
-      "executions observed": "execuções observadas",
-      "contract version": "versão do contrato",
-      "path chosen": "caminho escolhido",
-      "not decided yet": "ainda não decidido",
       "read and never written": "lido e nunca escrito",
       "the constant itself, read from the engine": "a própria constante, lida do motor",
       "reversed depth, infinite far plane": "profundidade invertida, plano distante infinito",
@@ -1516,8 +1489,6 @@
       "its forward direction": "sua direção para a frente",
       "under the root": "sob a raiz",
       "reparented to the world": "reatribuída ao mundo",
-      "allocations during the call": "alocações durante a chamada",
-      "largest difference on the last element": "maior diferença no último elemento",
       "this frame": "este quadro",
       "a box beyond the declared far plane": "uma caixa além do plano distante declarado",
       "a box three metres ahead": "uma caixa três metros à frente",
@@ -1541,11 +1512,6 @@
       "the unit box carried by that matrix": "a caixa unitária levada por essa matriz",
       "the union of the eight transformed corners, never the eight of the result": "a união dos oito cantos transformados, nunca os oito do resultado",
       "one buffer holds many matrices; no view is sliced per frame": "um buffer guarda várias matrizes; nenhuma view é recortada por quadro",
-      "one chain of nodes, parents before children, in one call": "uma cadeia de nós, pais antes dos filhos, em uma única chamada",
-      "none: the buffers are the caller’s": "nenhuma: os buffers são do chamador",
-      "the unit function stays the oracle; the WebAssembly kernel repeats it term by term": "a função unitária continua sendo o oráculo; o kernel WebAssembly a repete termo a termo",
-      "the governor, after those executions": "o regulador, depois dessas execuções",
-      "the kernel leads by enough, for long enough, to be worth the switch": "o kernel está à frente o suficiente, por tempo suficiente, para valer a troca",
       "the reads of one node": "as leituras de um nó",
       "the sign alone decides, with no square root: the exact clip test": "só o sinal decide, sem raiz quadrada: o teste de recorte exato",
       "the subtraction happens in double; only the write rounds": "a subtração acontece em double; só a escrita arredonda",
@@ -1582,7 +1548,6 @@
       "the child, before and after the root moves": "o filho, antes e depois de a raiz se mover",
       "the child, attached then detached": "o filho, anexado e depois desanexado",
       "matrices do not move until the next update, like the reference `add`": "as matrizes não se movem até a próxima atualização, como o `add` da referência",
-      "the batch against the unit function it repeats": "o lote comparado à função unitária que ele repete",
       "frame.view — the inverse of the camera world matrix": "frame.view — a inversa da matriz de mundo da câmera",
       "DIAGNOSTICS — the engine says which modes it can produce, and why not": "DIAGNOSTICS — o motor diz quais modos consegue produzir, e por que não",
       "LOD_QUALITY, as the engine holds it": "LOD_QUALITY, como o motor a guarda",
@@ -1592,7 +1557,6 @@
       "singular: the adjugate as-is, so the flattened surface keeps a normal": "singular: a adjunta como está, para que a superfície achatada mantenha uma normal",
       "no finite scale: nine zeros": "sem escala finita: nove zeros",
       "rejected: every normal of that cluster faces away from the viewer": "rejeitado: toda normal desse cluster aponta para longe do observador",
-      "JS keeps the work: under five samples, or the lead is not a burst": "o JS continua com o trabalho: menos de cinco amostras, ou a vantagem não é consistente",
       "nodeWorldDirection (object, +z)": "nodeWorldDirection (object, +z)",
       "nodeWorldDirection (viewer, −z)": "nodeWorldDirection (viewer, −z)",
       "root": "raiz",
@@ -1622,7 +1586,6 @@
       "column 1": "coluna 1",
       "column 2": "coluna 2",
       "out = a, aliased": "out = a, com alias",
-      "clock resolution the measurement rests on (ms)": "resolução do relógio em que a medição se apoia (ms)",
       "decomposeMatrix4 of that matrix — the round trip": "decomposeMatrix4 dessa matriz — a ida e volta",
       "depth against distance: it falls from 1 at the near plane toward 0 at infinity": "profundidade contra distância: cai de 1 no plano próximo até 0 no infinito",
       "depth at the near plane (0.1 m)": "profundidade no plano próximo (0,1 m)",
@@ -1638,7 +1601,6 @@
       "rotation of A (rad)": "rotação de A (rad)",
       "the direction (1, 0, 0) under that matrix": "a direção (1, 0, 0) sob essa matriz",
       "the identity written at offset 16 of one large buffer": "a identidade escrita no deslocamento 16 de um grande buffer",
-      "x of the last node — the sum 0 + 1 + … + (n − 1)": "x do último nó — a soma 0 + 1 + … + (n − 1)",
       "transformHomogeneousPoint — four components": "transformHomogeneousPoint — quatro componentes",
       "matrixAtRenderOrigin — the same matrix, applied at the origin": "matrixAtRenderOrigin — a mesma matriz, aplicada na origem",
       "viewToRenderOrigin — the view without its translation": "viewToRenderOrigin — a view sem sua translação",
@@ -1653,9 +1615,7 @@
       "surface": "superfície",
       "target": "alvo",
       "viewer": "observador",
-      "expected": "esperado",
       "orientation": "orientação",
-      "products": "produtos",
       "nodes": "nós"
     },
     "patterns": {

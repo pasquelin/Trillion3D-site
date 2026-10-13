@@ -1,19 +1,8 @@
 import type { EntryNote } from '../model.ts'
 
-/** Batch math: `n` elements per call on flat buffers, the governor that arbitrates the paths. */
+/** Batch math: `n` elements per call on flat buffers. */
 
 export const BATCHES: EntryNote[] = [
-  {
-    id: 'multiplyMatrix4Batch',
-    replaces: 'a loop of Matrix4.multiplyMatrices',
-  },
-  {
-    id: 'boxTransformBatch',
-    replaces: 'a loop of Box3.applyMatrix4',
-  },
-  {
-    id: 'createPathGovernor',
-  },
   {
     id: 'frustumKeepsBoxBatch',
     replaces: 'a loop of Frustum.intersectsBox, of Box3.getBoundingSphere',

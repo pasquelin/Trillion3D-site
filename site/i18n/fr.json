@@ -1174,14 +1174,6 @@
         "Adaptatif : `pixelError: 2`, augmenté avec la vitesse de caméra ; une vue immobile conserve la base."
       ]
     },
-    "MathPathMode": {
-      "description": "Chemin exécuté par un lot. En `auto`, le gouverneur compare les médianes glissantes en nanosecondes par élément et ne bascule qu’après plusieurs exécutions favorables ; JS reste la référence et le repli.",
-      "values": [
-        "Arbitrage par la mesure, valeur par défaut.",
-        "Chemin JavaScript imposé pour une campagne.",
-        "Noyau WebAssembly imposé lorsqu’il existe pour cette opération."
-      ]
-    },
     "JobStatus": {
       "description": "Cycle de vie d’une tâche créée par `createJob`. Une tâche annulée ou échouée libère le résultat qu’elle possédait.",
       "values": [
@@ -1365,15 +1357,6 @@
     "lookAtNode": {
       "description": "Oriente `node` vers le point monde `(x, y, z)`. Une caméra ou une lumière regarde par `−z`, un objet présente `+z`. Les ancêtres puis le nœud sont mis à jour avant le calcul."
     },
-    "multiplyMatrix4Batch": {
-      "description": "`n` produits `out[i] = a[i] · b[i]`, sur des sous-vues de seize nombres créées une seule fois. Un noyau WebAssembly répète la même formule et le gouverneur choisit le chemin mesuré le plus rapide."
-    },
-    "boxTransformBatch": {
-      "description": "`n` boîtes transformées par `n` matrices. `out` et `boxes` portent six nombres par élément, `mats` une sous-vue de seize."
-    },
-    "createPathGovernor": {
-      "description": "Arbitre JS contre WebAssembly par opération : médianes glissantes en nanosecondes par élément, bascule après cinq avances consécutives, puis rééchantillonnage périodique de l’autre chemin."
-    },
     "frustumKeepsBoxBatch": {
       "description": "`n` boîtes de six nombres (min puis max) contre les vingt-quatre flottants d’un frustum : `kept[i]` vaut 1 où la boîte coupe ou tient dans le volume, et le nombre gardé est renvoyé — `frustumExcludesBox` inversé, la polarité de la référence. Le lot de sphères écrit `SPHERE_VALUES` nombres par boîte, centre puis rayon jusqu’au coin, comme `sphereFromBounds`. Les deux boucles vivent dans `packages/math/src/batch/culling.ts`."
     },
@@ -1437,8 +1420,6 @@
       "high": "haute",
       "balanced": "équilibrée",
       "adaptive": "adaptative",
-      "switches": "bascules",
-      "arbitration": "arbitrage",
       "box 0": "boîte 0",
       "box 1": "boîte 1",
       "box 2": "boîte 2",
@@ -1478,8 +1459,6 @@
       "saturation": "saturation",
       "lightness": "luminosité",
       "scalar": "scalaire",
-      "nodes in the batch": "nœuds dans le lot",
-      "products in the batch": "produits dans le lot",
       "boxes in the batch": "boîtes dans le lot",
       "boxes tested": "boîtes testées",
       "kept by the frustum": "gardées par le frustum",
@@ -1496,12 +1475,6 @@
       "cone half-angle (rad)": "demi-angle du cône (rad)",
       "cone axis, heading (rad)": "orientation de l’axe du cône (rad)",
       "viewer distance": "distance de l’observateur",
-      "JS nanoseconds per element": "nanosecondes JS par élément",
-      "Wasm nanoseconds per element": "nanosecondes Wasm par élément",
-      "executions observed": "exécutions observées",
-      "contract version": "version du contrat",
-      "path chosen": "chemin choisi",
-      "not decided yet": "pas encore décidé",
       "read and never written": "lu et jamais modifié",
       "the constant itself, read from the engine": "la constante elle-même, lue dans le moteur",
       "reversed depth, infinite far plane": "profondeur inversée, plan lointain infini",
@@ -1516,8 +1489,6 @@
       "its forward direction": "sa direction avant",
       "under the root": "sous la racine",
       "reparented to the world": "rattaché au monde",
-      "allocations during the call": "allocations pendant l’appel",
-      "largest difference on the last element": "plus grand écart sur le dernier élément",
       "this frame": "cette image",
       "a box beyond the declared far plane": "une boîte au-delà du plan lointain déclaré",
       "a box three metres ahead": "une boîte trois mètres devant",
@@ -1541,11 +1512,6 @@
       "the unit box carried by that matrix": "la boîte unité transportée par cette matrice",
       "the union of the eight transformed corners, never the eight of the result": "union des huit coins transformés, jamais des huit coins du résultat",
       "one buffer holds many matrices; no view is sliced per frame": "un tampon contient plusieurs matrices ; aucune vue n’est découpée par image",
-      "one chain of nodes, parents before children, in one call": "une chaîne de nœuds, parents avant enfants, en un appel",
-      "none: the buffers are the caller’s": "aucune : les tampons appartiennent à l’appelant",
-      "the unit function stays the oracle; the WebAssembly kernel repeats it term by term": "la fonction unitaire reste l’oracle ; le noyau WebAssembly la répète terme par terme",
-      "the governor, after those executions": "le gouverneur après ces exécutions",
-      "the kernel leads by enough, for long enough, to be worth the switch": "le noyau garde une avance suffisante assez longtemps pour justifier la bascule",
       "the reads of one node": "les lectures d’un nœud",
       "the sign alone decides, with no square root: the exact clip test": "seul le signe décide, sans racine carrée : le test de clip exact",
       "the subtraction happens in double; only the write rounds": "la soustraction se fait en double précision ; seule l’écriture arrondit",
@@ -1582,7 +1548,6 @@
       "the child, before and after the root moves": "l’enfant avant et après le déplacement de la racine",
       "the child, attached then detached": "l’enfant, d’abord attaché puis détaché",
       "matrices do not move until the next update, like the reference `add`": "les matrices ne bougent qu’à la prochaine mise à jour, comme le `add` de référence",
-      "the batch against the unit function it repeats": "le lot comparé à la fonction unitaire qu’il répète",
       "frame.view — the inverse of the camera world matrix": "frame.view — inverse de la matrice monde de la caméra",
       "DIAGNOSTICS — the engine says which modes it can produce, and why not": "DIAGNOSTICS — le moteur indique les modes disponibles et la raison des absences",
       "LOD_QUALITY, as the engine holds it": "LOD_QUALITY tel que le conserve le moteur",
@@ -1592,7 +1557,6 @@
       "singular: the adjugate as-is, so the flattened surface keeps a normal": "singulier : l’adjointe telle quelle conserve une normale à la surface aplatie",
       "no finite scale: nine zeros": "aucune échelle finie : neuf zéros",
       "rejected: every normal of that cluster faces away from the viewer": "rejetée : toutes les normales de ce cluster tournent le dos à l’observateur",
-      "JS keeps the work: under five samples, or the lead is not a burst": "JS conserve le travail : moins de cinq échantillons ou avance trop peu durable",
       "nodeWorldDirection (object, +z)": "nodeWorldDirection (objet, +z)",
       "nodeWorldDirection (viewer, −z)": "nodeWorldDirection (observateur, −z)",
       "root": "racine",
@@ -1622,7 +1586,6 @@
       "column 1": "colonne 1",
       "column 2": "colonne 2",
       "out = a, aliased": "out = a, même tampon",
-      "clock resolution the measurement rests on (ms)": "résolution de l’horloge sur laquelle repose la mesure (ms)",
       "decomposeMatrix4 of that matrix — the round trip": "decomposeMatrix4 de cette matrice — l’aller-retour",
       "depth against distance: it falls from 1 at the near plane toward 0 at infinity": "profondeur selon la distance : elle va de 1 au plan proche vers 0 à l’infini",
       "depth at the near plane (0.1 m)": "profondeur au plan proche (0,1 m)",
@@ -1638,7 +1601,6 @@
       "rotation of A (rad)": "rotation de A (rad)",
       "the direction (1, 0, 0) under that matrix": "la direction (1, 0, 0) sous cette matrice",
       "the identity written at offset 16 of one large buffer": "l’identité écrite au décalage 16 d’un grand tampon",
-      "x of the last node — the sum 0 + 1 + … + (n − 1)": "x du dernier nœud — somme 0 + 1 + … + (n − 1)",
       "transformHomogeneousPoint — four components": "transformHomogeneousPoint — quatre composantes",
       "matrixAtRenderOrigin — the same matrix, applied at the origin": "matrixAtRenderOrigin — même matrice appliquée à l’origine",
       "viewToRenderOrigin — the view without its translation": "viewToRenderOrigin — vue sans sa translation",
@@ -1653,9 +1615,7 @@
       "surface": "surface",
       "target": "cible",
       "viewer": "observateur",
-      "expected": "attendu",
       "orientation": "orientation",
-      "products": "produits",
       "nodes": "nœuds"
     },
     "patterns": {

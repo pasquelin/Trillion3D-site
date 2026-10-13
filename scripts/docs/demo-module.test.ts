@@ -21,7 +21,6 @@ test('the module carries the public maths the demos call', () => {
     'boxConeRejects',
     'createTransformTree',
     'srgbToLinear',
-    'createPathGovernor',
   ].filter((name) => typeof exports[name] !== 'function')
   assert.deepEqual(missing, [])
 })
