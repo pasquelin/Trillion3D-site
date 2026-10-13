@@ -911,7 +911,6 @@
     "work": "Gemessene Arbeit",
     "cpuNote": "Der Balken zeigt die gemessene Gesamtdauer. Die Mediane der einzelnen Phasen ergeben nicht diese Summe.",
     "reused": "Dieses Bild wurde wiederverwendet, wodurch ein Teil der Renderarbeit entfällt.",
-    "coarseClock": "Grobe Uhr: 0 ms beweist nicht, dass eine Phase kostenlos ist. Die genauen Werte stehen in den Details.",
     "gpuNote": "Diese Phasen zeigen, wo die GPU arbeitet. Ihre Zeiten überlappen sich: addiere sie nicht.",
     "noTimings": "Für diese Phasen wurden keine Zeiten aufgezeichnet.",
     "exact": "Genaue Werte und Messbedingungen"
@@ -1391,6 +1390,10 @@
       "title": "Eine Szene speichern und öffnen",
       "description": "`scene.toJSON(camera)` schreibt die Szene als einfaches, versioniertes JSON; `scene.fromJSON(json, camera)` baut sie wieder auf.",
       "html": "<p>Formen werden über den Aufruf gespeichert, der sie gebaut hat, Materialien über ihre Werte, geladene Modelle über ihre Adresse — nie eingebettet — und <code>helper</code>-Markierungen gar nicht. Eine andere Formatversion wird namentlich abgelehnt. Sehen Sie es in <a href=\"#/de/examples/save-the-scene\">Save the scene</a>.</p>"
+    },
+    "BounceOccupancy": {
+      "summary": "Wo eine Sonde sich lohnt: die Belegungskarte der Kaskaden.",
+      "description": "Eine Kaskade über einer Stadt verschwendet die meisten ihrer Zellen im leeren Himmel und im vollen Kern der Gebäude, wo Bestrahlungsstärke nie verlangt wird. Der Planer muss wissen, bevor er einen Strahl ausgibt, ob eine Zelle Geometrie berührt. Das ist eine Eigenschaft der Welt, nicht der Kamera: beim Bau berechnet und erneut, sobald bewegte Geometrie zur Ruhe kommt, gültig für alle Positionen, die die beweglichen Stufen später einnehmen. Die Karte der feinsten Stufe wird von den Weltboxen der Proxys der Platzierungen plus einem Rand von einer Zelle markiert: die acht Ecken einer belegten Zelle werden immer behalten, sodass nichts Nützliches verloren geht. Die folgenden Stufen sind exakte Reduktionen — zwei Zellen zu einer pro Achse, da die Abstände potenzierte Vielfache der feinsten sind — dann aus demselben Grund um eine Zelle erweitert. Nichts hier benennt eine Szene oder betrachtet die Kamera: eine Ausdehnung, Dreiecke, Zellen."
     }
   },
   "canvas": {

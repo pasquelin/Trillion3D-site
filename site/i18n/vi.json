@@ -461,7 +461,6 @@
     "work": "Công việc được đo",
     "cpuNote": "Thanh này thể hiện tổng thời lượng đo được. Trung vị của từng chặng không cộng lại thành tổng số này.",
     "reused": "Hình ảnh này đã được dùng lại, giúp tránh một phần công việc kết xuất.",
-    "coarseClock": "Đồng hồ đo thô: 0 ms không chứng minh rằng một chặng nào đó miễn phí. Số liệu chính xác nằm trong phần chi tiết.",
     "gpuNote": "Các chặng này cho thấy GPU làm việc ở đâu. Thời gian của chúng chồng lấn nhau: đừng cộng chúng lại.",
     "noTimings": "Không có số liệu thời gian nào được ghi lại cho các chặng này.",
     "exact": "Giá trị chính xác và điều kiện đo lường"
@@ -941,6 +940,10 @@
       "title": "Lưu và mở một cảnh",
       "description": "`scene.toJSON(camera)` ghi cảnh thành JSON đơn giản có phiên bản; `scene.fromJSON(json, camera)` dựng lại nó.",
       "html": "<p>Hình khối được lưu bằng lệnh gọi đã tạo ra chúng, vật liệu bằng giá trị của chúng, mô hình đã nạp bằng địa chỉ của chúng — không bao giờ chép vào trong — còn các dấu <code>helper</code> thì hoàn toàn không được lưu. Một phiên bản định dạng khác bị từ chối kèm theo tên. Xem nó trong <a href=\"#/vi/examples/save-the-scene\">Lưu cảnh</a>.</p>"
+    },
+    "BounceOccupancy": {
+      "summary": "Nơi nào việc giữ một đầu dò là đáng giá: bản đồ chiếm dụng cascade.",
+      "description": "Một cascade trải khắp thành phố tốn phần lớn ô cho bầu trời trống và lõi tòa nhà đặc, nơi không bao giờ cần truy vấn độ chiếu sáng. Bộ lập lịch cần biết, trước khi tốn một tia, liệu một ô có chạm vào hình học hay không. Đây là một tính chất của thế giới, không phải của camera: được tính khi khởi tạo và tính lại khi hình học đã di chuyển dừng yên, có hiệu lực cho mọi vị trí mà các tầng di động sẽ nhận sau này. Bản đồ tầng mịn nhất được đánh dấu bởi các hộp thế giới của proxy của các vị trí đặt cộng thêm một biên một ô: tám góc của một ô bị chiếm luôn được giữ lại, nên không có gì hữu ích bị mất. Các tầng tiếp theo là các phép rút gọn chính xác — hai ô thành một trên mỗi trục, vì khoảng cách là bội số lũy thừa hai của tầng mịn nhất — rồi được nới rộng thêm một ô vì cùng lý do đó. Không có gì ở đây gọi tên một cảnh hay xem xét camera: khu vực, tam giác, ô."
     }
   },
   "canvas": {

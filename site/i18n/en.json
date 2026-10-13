@@ -911,7 +911,6 @@
     "work": "Measured work",
     "cpuNote": "The bar shows the measured overall duration. Stage medians do not add up to this total.",
     "reused": "This image was reused, avoiding part of the rendering work.",
-    "coarseClock": "Coarse clock: 0 ms does not prove a stage is free. Exact readings are in the details.",
     "gpuNote": "These stages show where the GPU works. Their timings overlap: do not add them.",
     "noTimings": "No timings recorded for these stages.",
     "exact": "Exact values and measurement conditions"
@@ -1391,6 +1390,10 @@
       "title": "Save and open a scene",
       "description": "`scene.toJSON(camera)` writes the scene as plain versioned JSON; `scene.fromJSON(json, camera)` builds it again.",
       "html": "<p>Shapes are stored by the call that built them, materials by their values, loaded models by their address — never inlined — and <code>helper</code> marks not at all. Another format version is refused by name. See it in <a href=\"#/en/examples/save-the-scene\">Save the scene</a>.</p>"
+    },
+    "BounceOccupancy": {
+      "summary": "Where keeping a probe is worthwhile: cascade occupancy map.",
+      "description": "A cascade across a city spends most cells on empty sky and solid building cores, where irradiance is never queried. The scheduler needs to know, before spending a ray, whether a cell touches geometry. This is a property of the world, not the camera: calculated at construction and again once moved geometry settles, valid for all positions mobile levels take later. The finest level map is marked by the world boxes of the placements' proxies plus a one-cell boundary: eight corners of an occupied cell are always retained, so nothing useful is lost. Subsequent levels are exact reductions — two cells to one per axis, since spacings are power-of-two multiples of the finest — then dilated by one cell for the same reason. Nothing here names a scene or inspects the camera: extent, triangles, cells."
     }
   },
   "canvas": {

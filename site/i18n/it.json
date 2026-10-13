@@ -911,7 +911,6 @@
     "work": "Lavoro misurato",
     "cpuNote": "La barra mostra la durata totale misurata. Le mediane delle fasi non sommano a questo totale.",
     "reused": "Questa immagine è stata riutilizzata, evitando parte del lavoro di rendering.",
-    "coarseClock": "Orologio a bassa risoluzione: 0 ms non dimostra che una fase sia gratuita. Le letture esatte sono nei dettagli.",
     "gpuNote": "Queste fasi mostrano dove lavora la GPU. I loro tempi si sovrappongono: non sommarli.",
     "noTimings": "Nessun tempo registrato per queste fasi.",
     "exact": "Valori esatti e condizioni di misurazione"
@@ -1391,6 +1390,10 @@
       "title": "Salvare e aprire una scena",
       "description": "`scene.toJSON(camera)` scrive la scena come JSON semplice e versionato; `scene.fromJSON(json, camera)` la ricostruisce.",
       "html": "<p>Le forme sono salvate tramite la chiamata che le ha costruite, i materiali tramite i loro valori, i modelli caricati tramite il loro indirizzo — mai incorporati — e i segni <code>helper</code> per niente. Un'altra versione del formato viene rifiutata per nome. Guardatelo in <a href=\"#/it/examples/save-the-scene\">Salvare la scena</a>.</p>"
+    },
+    "BounceOccupancy": {
+      "summary": "Dove mantenere una sonda vale la pena: la mappa di occupazione delle cascate.",
+      "description": "Una cascata sopra una città spende la maggior parte delle sue celle nel cielo vuoto e nel nucleo pieno degli edifici, dove l'irradianza non viene mai richiesta. Il pianificatore deve sapere, prima di spendere un raggio, se una cella tocca della geometria. È una proprietà del mondo, non della camera: calcolata alla costruzione e di nuovo quando la geometria spostata si ferma, valida per tutte le posizioni che i livelli mobili assumono in seguito. La mappa del livello più fine viene marcata dalle scatole nel mondo dei proxy dei posizionamenti più un bordo di una cella: gli otto angoli di una cella occupata sono sempre mantenuti, quindi nulla di utile va perso. I livelli successivi sono riduzioni esatte — due celle per una su ciascun asse, poiché le distanze sono multipli in potenze di due della più fine — poi dilatate di una cella per lo stesso motivo. Nulla qui nomina una scena né esamina la camera: un'estensione, triangoli, celle."
     }
   },
   "canvas": {

@@ -911,7 +911,6 @@
     "work": "Travail mesuré",
     "cpuNote": "La barre montre la durée globale mesurée. Les médianes des étapes ne s’additionnent pas pour retrouver ce total.",
     "reused": "Cette image a été réutilisée : une partie du travail de rendu a été évitée.",
-    "coarseClock": "Horloge peu précise : 0 ms ne prouve pas qu’une étape ne coûte rien. Les valeurs exactes sont dans les détails.",
     "gpuNote": "Ces étapes montrent où travaille la carte graphique. Leurs durées se chevauchent : ne les additionnez pas.",
     "noTimings": "Aucune durée enregistrée pour ces étapes.",
     "exact": "Valeurs exactes et conditions de mesure"
@@ -1391,6 +1390,10 @@
       "title": "Enregistrer et ouvrir une scène",
       "description": "`scene.toJSON(camera)` écrit la scène en JSON simple et versionné ; `scene.fromJSON(json, camera)` la reconstruit.",
       "html": "<p>Les formes sont stockées par l’appel qui les a construites, les matériaux par leurs valeurs, les modèles chargés par leur adresse — jamais recopiés — et les repères <code>helper</code> pas du tout. Une autre version du format est refusée nommément. Voyez-le dans <a href=\"#/fr/examples/save-the-scene\">Enregistrer la scène</a>.</p>"
+    },
+    "BounceOccupancy": {
+      "summary": "Où garder une sonde vaut la peine : la carte d’occupation des cascades.",
+      "description": "Une cascade au-dessus d’une ville dépense la plupart de ses cases dans le ciel vide et le cœur plein des bâtiments, où l’irradiance n’est jamais demandée. Le planificateur doit savoir, avant de dépenser un rayon, si une case touche de la géométrie. C’est une propriété du monde, pas de la caméra : calculée à la construction puis de nouveau quand la géométrie déplacée se pose, valable pour toutes les positions que prennent ensuite les niveaux mobiles. La carte du niveau le plus fin est marquée par les boîtes monde des proxys des placements plus une bordure d’une case : les huit coins d’une case occupée sont toujours gardés, donc rien d’utile n’est perdu. Les niveaux suivants sont des réductions exactes — deux cases pour une par axe, puisque les écarts sont des multiples puissances de deux du plus fin — puis dilatées d’une case pour la même raison. Rien ici ne nomme une scène ni n’examine la caméra : une étendue, des triangles, des cases."
     }
   },
   "canvas": {
