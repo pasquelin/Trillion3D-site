@@ -7,9 +7,7 @@ import {
   DIAGNOSTICS,
   IDENTITY_MATRIX4,
   LOD_QUALITY,
-  MATH_PATH_CONTRACT,
   adaptivePixelError,
-  createPathGovernor,
   lodQuality,
 } from './engine.ts'
 import { formatNumber, matrixView, slider, valueView, verdictView } from './kit.ts'
@@ -59,44 +57,6 @@ export const TABLE_DEMOS: Record<string, DemoDef> = {
           ['threshold at this speed', formatNumber(adapted)],
           ['note', 'a still view keeps the base; a moving view may coarsen'],
         ]),
-      ]
-    },
-  },
-  MathPathMode: {
-    controls: [
-      slider('js', 'JS nanoseconds per element', 1, 200, 80, 1),
-      slider('wasm', 'Wasm nanoseconds per element', 1, 200, 40, 1),
-      slider('runs', 'executions observed', 1, 40, 12, 1),
-    ],
-    run(state) {
-      const governor = createPathGovernor(() => performance.now(), 'auto')
-      governor.setWasm(true, true, null)
-      const elements = 1000
-      for (let run = 0; run < Math.round(state.runs); run++) {
-        governor.observe('demo', 'js', (state.js * elements) / 1e6, elements)
-        governor.observe('demo', 'wasm', (state.wasm * elements) / 1e6, elements)
-      }
-      const metrics = governor.metrics()
-      const operation = metrics.operations.demo ?? {}
-      return [
-        valueView('the governor, after those executions', [
-          ['contract version', String(MATH_PATH_CONTRACT)],
-          ['path chosen', String(operation.path ?? 'not decided yet')],
-          ['jsNsPerElement', formatNumber(operation.jsNsPerElement ?? Number.NaN)],
-          ['wasmNsPerElement', formatNumber(operation.wasmNsPerElement ?? Number.NaN)],
-          ['switches', String(operation.switches ?? 0)],
-          [
-            'clock resolution the measurement rests on (ms)',
-            formatNumber(metrics.clockResolutionMs),
-          ],
-        ]),
-        verdictView(
-          'arbitration',
-          operation.path === 'wasm',
-          operation.path === 'wasm'
-            ? 'the kernel leads by enough, for long enough, to be worth the switch'
-            : 'JS keeps the work: under five samples, or the lead is not a burst',
-        ),
       ]
     },
   },
