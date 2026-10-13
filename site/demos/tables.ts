@@ -10,7 +10,7 @@ import {
   adaptivePixelError,
   lodQuality,
 } from './engine.ts'
-import { formatNumber, matrixView, slider, valueView, verdictView } from './kit.ts'
+import { formatNumber, matrixView, slider, valueView } from './kit.ts'
 import type { DemoDef } from './kit.ts'
 
 export const TABLE_DEMOS: Record<string, DemoDef> = {
