@@ -407,6 +407,8 @@
     }
   },
   "BounceOccupancy": {
+    "summary": "Wo eine Sonde sich lohnt: die Belegungskarte der Kaskaden.",
+    "description": "Eine Kaskade über einer Stadt verschwendet die meisten ihrer Zellen im leeren Himmel und im vollen Kern der Gebäude, wo Bestrahlungsstärke nie verlangt wird. Der Planer muss wissen, bevor er einen Strahl ausgibt, ob eine Zelle Geometrie berührt. Das ist eine Eigenschaft der Welt, nicht der Kamera: beim Bau berechnet und erneut, sobald bewegte Geometrie zur Ruhe kommt, gültig für alle Positionen, die die beweglichen Stufen später einnehmen. Die Karte der feinsten Stufe wird von den Weltboxen der Proxys der Platzierungen plus einem Rand von einer Zelle markiert: die acht Ecken einer belegten Zelle werden immer behalten, sodass nichts Nützliches verloren geht. Die folgenden Stufen sind exakte Reduktionen — zwei Zellen zu einer pro Achse, da die Abstände potenzierte Vielfache der feinsten sind — dann aus demselben Grund um eine Zelle erweitert. Nichts hier benennt eine Szene oder betrachtet die Kamera: eine Ausdehnung, Dreiecke, Zellen.",
     "members": {
       "moved": "Platzierungen wurden bewegt: `boxes` enthält sechs Weltgrenzen pro Platzierung (eine leere Box für eine, die keine hält), `rows` die Läufe derer, die sich bewegt haben: die Arbeit folgt ihnen, nie der Anzahl der Platzierungen.",
       "settle": "Einmal pro Bild: Das erste Bild nach dem Ende der Bewegung baut die exakte Karte über `extent` neu auf.",
@@ -1262,7 +1264,8 @@
     "summary": "Was den Proxy einer verformten Platzierung aus seiner Ruheform stellt: für jede Ecke der Proxy-Dreiecke, in Dreiecks- und Eckenreihenfolge, behält der Vertex, aus dem sie gebaut wurde, seinen Skin und seine Morph-Deltas (`world/page/runtimeDeform.ts`).",
     "description": "Eine Ecke sind `CORNER_INFLUENCES` Gelenkränge, ebenso viele Gewichte, dann die drei Deltas jedes Targets: `8 + 3 × targets` Floats.",
     "members": {
-      "targets": "Morph-Targets des Meshs."
+      "targets": "Morph-Targets des Meshs.",
+      "corners": "Der Eintrag jeder Ecke, `8 + 3 × targets` Floats, in der Dreiecks- und Eckenreihenfolge des Proxys."
     }
   },
   "CUTOUT_SHEET_FILE": {
@@ -5097,6 +5100,7 @@
       "kindOf": "Die Art eines Lichts (`LIGHT_KIND`), aus dem Puffer gelesen wie sein Ausschnitt.",
       "ids": "Der Name des Lichts an jedem Platz.",
       "count": "Wie viele Lichter.",
+      "shadowedSuns": "Lichter mit Schatten, die Sonnen sind, die lokale Lichter sind; Lichter, die Rechtecke sind: bei jedem Hinzufügen, Ändern und Entfernen gezählt (`createLightKinds`).",
       "epoch": "Erhöht, wenn sich die Lichtmenge ändert.",
       "transportEpoch": "Mit der Epoche erhöht, außer durch eine Änderung allein des Nebels oder allein einer Schattenscheibe: Nebel ist ein Term des Sichtstrahls und eine Scheibe der Ort, an dem die Karten eines Lichts adressiert werden, keines von beiden Lichttransport, sodass das, was transportiertes Licht zwischenspeichert (die Bounce-Sonden), es behält.",
       "environment": "Die Umgebung der Szene.",
@@ -7802,7 +7806,11 @@
     }
   },
   "MovedRows": {
-    "summary": "Die Platzierungen, die eine Änderung berührt hat, als Läufe von Zeilen: `count` Paare `[first, last]` (`createChangedRuns`)."
+    "summary": "Die Platzierungen, die eine Änderung berührt hat, als Läufe von Zeilen: `count` Paare `[first, last]` (`createChangedRuns`).",
+    "members": {
+      "count": "Wie viele Läufe `pairs` enthält.",
+      "pairs": "Die Läufe, Zeilenpaare `[first, last]`, erste und letzte eingeschlossen."
+    }
   },
   "PageCache": {
     "summary": "Der Cache dekodierter Seiten, über den eine Sitzung liest (`createPageCache`).",

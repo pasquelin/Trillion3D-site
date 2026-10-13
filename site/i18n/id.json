@@ -940,10 +940,6 @@
       "title": "Menyimpan dan membuka scene",
       "description": "`scene.toJSON(camera)` menulis scene sebagai JSON sederhana berversi; `scene.fromJSON(json, camera)` membangunnya kembali.",
       "html": "<p>Bentuk disimpan lewat panggilan yang membangunnya, material lewat nilainya, model yang dimuat lewat alamatnya — tidak pernah disalin ke dalam — dan penanda <code>helper</code> tidak disimpan sama sekali. Versi format lain ditolak dengan menyebut namanya. Lihat di <a href=\"#/en/examples/save-the-scene\">Menyimpan scene</a>.</p>"
-    },
-    "BounceOccupancy": {
-      "summary": "Di mana menyimpan sebuah probe itu berharga: peta okupansi cascade.",
-      "description": "Sebuah cascade di seluruh kota menghabiskan sebagian besar sel untuk langit kosong dan inti bangunan padat, tempat iradiansi tidak pernah ditanyakan. Penjadwal perlu tahu, sebelum menghabiskan satu sinar, apakah sebuah sel menyentuh geometri. Ini adalah sifat dari dunia, bukan kamera: dihitung saat pembuatan dan sekali lagi ketika geometri yang bergerak sudah diam, berlaku untuk semua posisi yang diambil tingkat-tingkat bergerak nanti. Peta tingkat terhalus ditandai oleh kotak dunia dari proxy penempatan ditambah batas satu sel: delapan sudut sebuah sel yang terisi selalu disimpan, sehingga tidak ada yang berguna hilang. Tingkat-tingkat berikutnya adalah reduksi pasti — dua sel jadi satu per sumbu, karena jaraknya adalah kelipatan pangkat dua dari yang terhalus — lalu dilebarkan satu sel karena alasan yang sama. Tidak ada di sini yang menyebut nama sebuah adegan atau memeriksa kamera: area, segitiga, sel."
     }
   },
   "canvas": {

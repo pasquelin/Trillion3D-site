@@ -217,6 +217,8 @@
     }
   },
   "BounceOccupancy": {
+    "summary": "Nơi nào việc giữ một đầu dò là đáng giá: bản đồ chiếm dụng cascade.",
+    "description": "Một cascade trải khắp thành phố tốn phần lớn ô cho bầu trời trống và lõi tòa nhà đặc, nơi không bao giờ cần truy vấn độ chiếu sáng. Bộ lập lịch cần biết, trước khi tốn một tia, liệu một ô có chạm vào hình học hay không. Đây là một tính chất của thế giới, không phải của camera: được tính khi khởi tạo và tính lại khi hình học đã di chuyển dừng yên, có hiệu lực cho mọi vị trí mà các tầng di động sẽ nhận sau này. Bản đồ tầng mịn nhất được đánh dấu bởi các hộp thế giới của proxy của các vị trí đặt cộng thêm một biên một ô: tám góc của một ô bị chiếm luôn được giữ lại, nên không có gì hữu ích bị mất. Các tầng tiếp theo là các phép rút gọn chính xác — hai ô thành một trên mỗi trục, vì khoảng cách là bội số lũy thừa hai của tầng mịn nhất — rồi được nới rộng thêm một ô vì cùng lý do đó. Không có gì ở đây gọi tên một cảnh hay xem xét camera: khu vực, tam giác, ô.",
     "members": {
       "moved": "Các vị trí đặt đã di chuyển: `boxes` chứa sáu giới hạn thế giới cho mỗi vị trí đặt (một hộp rỗng cho vị trí không chứa gì), `rows` các dải của những vị trí đã di chuyển: công việc đi theo chúng, không bao giờ theo số vị trí đặt.",
       "settle": "Mỗi khung hình một lần: khung hình đầu tiên sau khi chuyển động dừng sẽ dựng lại bản đồ chính xác trên `extent`.",
@@ -713,7 +715,8 @@
     "summary": "Thứ tạo dáng cho proxy của một vị trí đặt bị biến dạng từ hình dạng nghỉ của nó: với mỗi góc của các tam giác proxy, theo thứ tự tam giác và thứ tự góc, đỉnh mà góc đó được dựng từ giữ lại skin và các delta morph của nó (`world/page/runtimeDeform.ts`).",
     "description": "Một góc gồm `CORNER_INFLUENCES` hạng khớp, cùng số trọng số, rồi ba delta của mỗi target: `8 + 3 × targets` số thực.",
     "members": {
-      "targets": "Các target morph của mesh."
+      "targets": "Các target morph của mesh.",
+      "corners": "Bản ghi của mỗi góc, `8 + 3 × targets` số thực, theo thứ tự tam giác và góc của proxy."
     }
   },
   "CutoutModel": {
@@ -2902,6 +2905,7 @@
       "kindOf": "Loại của một đèn (`LIGHT_KIND`), đọc từ bộ đệm như lát của nó.",
       "ids": "Tên nguồn sáng của mỗi khe.",
       "count": "Có bao nhiêu nguồn sáng.",
+      "shadowedSuns": "Các đèn đổ bóng là mặt trời, là đèn cục bộ; các đèn là hình chữ nhật: được đếm ở mỗi lần thêm, thay đổi và xóa (`createLightKinds`).",
       "epoch": "Tăng lên khi tập hợp các nguồn sáng thay đổi.",
       "transportEpoch": "Được tăng cùng epoch, trừ khi chỉ sương mù thay đổi hoặc chỉ một lát bóng đổ thay đổi: sương mù là một số hạng của tia nhìn và một lát là nơi các bản đồ của một đèn được định địa chỉ, cái nào cũng không phải truyền ánh sáng, nên thứ lưu đệm ánh sáng được truyền (các đầu dò nảy) giữ nguyên nó.",
       "environment": "Môi trường của cảnh đó.",
@@ -7802,7 +7806,11 @@
     }
   },
   "MovedRows": {
-    "summary": "Các vị trí đặt mà một thay đổi đã chạm tới, dưới dạng các dải hàng: `count` cặp `[first, last]` (`createChangedRuns`)."
+    "summary": "Các vị trí đặt mà một thay đổi đã chạm tới, dưới dạng các dải hàng: `count` cặp `[first, last]` (`createChangedRuns`).",
+    "members": {
+      "count": "Số dải mà `pairs` chứa.",
+      "pairs": "Các dải, cặp hàng `[first, last]`, tính cả hàng đầu và hàng cuối."
+    }
   },
   "PageCache": {
     "summary": "Bộ nhớ đệm các trang đã giải mã mà một phiên đọc qua (`createPageCache`).",

@@ -1390,10 +1390,6 @@
       "title": "Salvar e abrir uma cena",
       "description": "`scene.toJSON(camera)` escreve a cena como JSON simples e versionado; `scene.fromJSON(json, camera)` a reconstrói.",
       "html": "<p>As formas são guardadas pela chamada que as construiu, os materiais por seus valores, os modelos carregados por seu endereço — nunca embutidos — e as marcas <code>helper</code> de forma alguma. Outra versão do formato é recusada pelo nome. Veja em <a href=\"#/pt/examples/save-the-scene\">Salvar a cena</a>.</p>"
-    },
-    "BounceOccupancy": {
-      "summary": "Onde vale a pena manter uma sonda: mapa de ocupação da cascata.",
-      "description": "Uma cascata sobre uma cidade gasta a maioria das células em céu vazio e núcleos sólidos de prédios, onde a irradiância nunca é consultada. O escalonador precisa saber, antes de gastar um raio, se uma célula toca a geometria. Isso é uma propriedade do mundo, não da câmera: calculada na construção e de novo quando a geometria movida se assenta, válida para todas as posições que os níveis móveis assumem depois. O mapa do nível mais fino é marcado pelas caixas de mundo dos proxies dos posicionamentos mais uma borda de uma célula: os oito cantos de uma célula ocupada são sempre mantidos, então nada útil se perde. Os níveis seguintes são reduções exatas — duas células para uma por eixo, já que os espaçamentos são múltiplos de potência de dois do mais fino — depois dilatadas por uma célula pelo mesmo motivo. Nada aqui nomeia uma cena ou inspeciona a câmera: extensão, triângulos, células."
     }
   },
   "canvas": {

@@ -217,6 +217,8 @@
     }
   },
   "BounceOccupancy": {
+    "summary": "Onde vale a pena manter uma sonda: mapa de ocupação da cascata.",
+    "description": "Uma cascata sobre uma cidade gasta a maioria das células em céu vazio e núcleos sólidos de prédios, onde a irradiância nunca é consultada. O escalonador precisa saber, antes de gastar um raio, se uma célula toca a geometria. Isso é uma propriedade do mundo, não da câmera: calculada na construção e de novo quando a geometria movida se assenta, válida para todas as posições que os níveis móveis assumem depois. O mapa do nível mais fino é marcado pelas caixas de mundo dos proxies dos posicionamentos mais uma borda de uma célula: os oito cantos de uma célula ocupada são sempre mantidos, então nada útil se perde. Os níveis seguintes são reduções exatas — duas células para uma por eixo, já que os espaçamentos são múltiplos de potência de dois do mais fino — depois dilatadas por uma célula pelo mesmo motivo. Nada aqui nomeia uma cena ou inspeciona a câmera: extensão, triângulos, células.",
     "members": {
       "moved": "Posicionamentos se moveram: `boxes` traz seis limites de mundo por posicionamento (uma caixa vazia para o que não contém nenhum), `rows` as séries dos que se moveram: o trabalho os segue, nunca o número de posicionamentos.",
       "settle": "Uma vez por quadro: o primeiro quadro após o movimento parar reconstrói o mapa exato sobre `extent`.",
@@ -706,7 +708,8 @@
     "summary": "O que posa o proxy de um posicionamento deformado a partir da sua forma de repouso: para cada canto dos triângulos do proxy, na ordem dos triângulos e dos cantos, o vértice a partir do qual foi construído guarda a sua pele e os seus deltas de morph (`world/page/runtimeDeform.ts`).",
     "description": "Um canto são `CORNER_INFLUENCES` posições de articulação, outros tantos pesos, e depois os três deltas de cada alvo: `8 + 3 × targets` floats.",
     "members": {
-      "targets": "Alvos de morph da malha."
+      "targets": "Alvos de morph da malha.",
+      "corners": "O registro de cada canto, `8 + 3 × targets` floats, na ordem dos triângulos e dos cantos do proxy."
     }
   },
   "CutoutModel": {
@@ -2819,6 +2822,7 @@
       "kindOf": "O tipo de uma luz (`LIGHT_KIND`), lido do buffer como a sua fatia.",
       "ids": "O nome da luz de cada slot.",
       "count": "Quantas luzes.",
+      "shadowedSuns": "Luzes que projetam sombra e são sóis, as que são luzes locais; luzes que são retângulos: contadas a cada adição, mudança e remoção (`createLightKinds`).",
       "epoch": "Incrementado quando o conjunto de luzes muda.",
       "transportEpoch": "Incrementado com a época, exceto por uma alteração só do nevoeiro ou só de uma fatia de sombra: o nevoeiro é um termo do raio de visão e uma fatia é onde os mapas de uma luz são endereçados, e nenhum é transporte de luz, pelo que o que guarda em cache a luz transportada (as sondas de ressalto) o mantém.",
       "environment": "O ambiente da cena.",
@@ -7802,7 +7806,11 @@
     }
   },
   "MovedRows": {
-    "summary": "Os posicionamentos que uma mudança tocou, como séries de linhas: `count` pares `[first, last]` (`createChangedRuns`)."
+    "summary": "Os posicionamentos que uma mudança tocou, como séries de linhas: `count` pares `[first, last]` (`createChangedRuns`).",
+    "members": {
+      "count": "Quantas séries `pairs` contém.",
+      "pairs": "As séries, pares de linhas `[first, last]`, primeira e última incluídas."
+    }
   },
   "PageCache": {
     "summary": "O cache de páginas decodificadas pelo qual uma sessão lê (`createPageCache`).",

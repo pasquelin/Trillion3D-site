@@ -407,6 +407,8 @@
     }
   },
   "BounceOccupancy": {
+    "summary": "Dónde merece la pena mantener una sonda: el mapa de ocupación de las cascadas.",
+    "description": "Una cascada sobre una ciudad gasta la mayoría de sus celdas en el cielo vacío y el núcleo lleno de los edificios, donde la irradiancia nunca se pide. El planificador debe saber, antes de gastar un rayo, si una celda toca geometría. Es una propiedad del mundo, no de la cámara: calculada en la construcción y de nuevo cuando la geometría movida se asienta, válida para todas las posiciones que toman después los niveles móviles. El mapa del nivel más fino se marca con las cajas del mundo de los proxies de las colocaciones más un borde de una celda: las ocho esquinas de una celda ocupada siempre se conservan, así que no se pierde nada útil. Los niveles siguientes son reducciones exactas — dos celdas por una en cada eje, ya que las separaciones son múltiplos en potencias de dos del más fino — luego dilatadas una celda por la misma razón. Nada aquí nombra una escena ni examina la cámara: una extensión, triángulos, celdas.",
     "members": {
       "moved": "Se movieron colocaciones: `boxes` contiene seis límites del mundo por colocación (una caja vacía para la que no contiene ninguno), `rows` los tramos de las que se movieron: el trabajo las sigue, nunca el número de colocaciones.",
       "settle": "Una vez por fotograma: el primer fotograma tras detenerse el movimiento reconstruye el mapa exacto sobre `extent`.",
@@ -1262,7 +1264,8 @@
     "summary": "Lo que posa el proxy de una colocación deformada a partir de su forma de reposo: para cada esquina de los triángulos del proxy, en orden de triángulos y de esquinas, el vértice del que se construyó conserva su piel y sus deltas de morph (`world/page/runtimeDeform.ts`).",
     "description": "Una esquina son `CORNER_INFLUENCES` rangos de articulación, otros tantos pesos, y luego los tres deltas de cada objetivo: `8 + 3 × targets` flotantes.",
     "members": {
-      "targets": "Objetivos de morph de la malla."
+      "targets": "Objetivos de morph de la malla.",
+      "corners": "El registro de cada esquina, `8 + 3 × targets` flotantes, en el orden de triángulos y esquinas del proxy."
     }
   },
   "CUTOUT_SHEET_FILE": {
@@ -5097,6 +5100,7 @@
       "kindOf": "El tipo de una luz (`LIGHT_KIND`), leído del búfer como su porción.",
       "ids": "El nombre de la luz de cada plaza.",
       "count": "Cuántas luces.",
+      "shadowedSuns": "Luces que proyectan sombra y son soles, las que son luces locales; luces que son rectángulos: contadas en cada alta, cambio y baja (`createLightKinds`).",
       "epoch": "Aumentado cuando cambia el conjunto de luces.",
       "transportEpoch": "Se incrementa con la época, salvo por un cambio solo de la niebla o solo de un fragmento de sombra: la niebla es un término del rayo de vista y un fragmento es donde se direccionan los mapas de una luz, y ninguno es transporte de luz, de modo que lo que guarda en caché la luz transportada (las sondas de rebote) lo conserva.",
       "environment": "El entorno de la escena.",
@@ -7802,7 +7806,11 @@
     }
   },
   "MovedRows": {
-    "summary": "Las colocaciones que tocó un cambio, como tramos de filas: `count` pares `[first, last]` (`createChangedRuns`)."
+    "summary": "Las colocaciones que tocó un cambio, como tramos de filas: `count` pares `[first, last]` (`createChangedRuns`).",
+    "members": {
+      "count": "Cuántos tramos contiene `pairs`.",
+      "pairs": "Los tramos, pares de filas `[first, last]`, primera y última incluidas."
+    }
   },
   "PageCache": {
     "summary": "La caché de páginas decodificadas a través de la cual lee una sesión (`createPageCache`).",

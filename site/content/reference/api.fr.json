@@ -407,6 +407,8 @@
     }
   },
   "BounceOccupancy": {
+    "summary": "Où garder une sonde vaut la peine : la carte d’occupation des cascades.",
+    "description": "Une cascade au-dessus d’une ville dépense la plupart de ses cases dans le ciel vide et le cœur plein des bâtiments, où l’irradiance n’est jamais demandée. Le planificateur doit savoir, avant de dépenser un rayon, si une case touche de la géométrie. C’est une propriété du monde, pas de la caméra : calculée à la construction puis de nouveau quand la géométrie déplacée se pose, valable pour toutes les positions que prennent ensuite les niveaux mobiles. La carte du niveau le plus fin est marquée par les boîtes monde des proxys des placements plus une bordure d’une case : les huit coins d’une case occupée sont toujours gardés, donc rien d’utile n’est perdu. Les niveaux suivants sont des réductions exactes — deux cases pour une par axe, puisque les écarts sont des multiples puissances de deux du plus fin — puis dilatées d’une case pour la même raison. Rien ici ne nomme une scène ni n’examine la caméra : une étendue, des triangles, des cases.",
     "members": {
       "moved": "Des placements ont bougé : `boxes` porte six bornes monde par placement (une boîte vide pour celui qui n’en tient aucune), `rows` les suites de ceux qui ont bougé : le travail les suit, jamais le nombre de placements.",
       "settle": "Une fois par image : la première image après l’arrêt du mouvement reconstruit la carte exacte sur `extent`.",
@@ -1262,7 +1264,8 @@
     "summary": "Ce qui pose le proxy d’un placement déformé depuis sa forme de repos : pour chaque coin des triangles du proxy, dans l’ordre des triangles et des coins, le sommet dont il a été construit garde sa peau et ses écarts de morphing (`world/page/runtimeDeform.ts`).",
     "description": "Un coin, ce sont `CORNER_INFLUENCES` rangs d’articulations, autant de poids, puis les trois écarts de chaque cible : `8 + 3 × targets` flottants.",
     "members": {
-      "targets": "Cibles de morphing du maillage."
+      "targets": "Cibles de morphing du maillage.",
+      "corners": "L’enregistrement de chaque coin, `8 + 3 × targets` flottants, dans l’ordre des triangles et des coins du proxy."
     }
   },
   "CUTOUT_SHEET_FILE": {
@@ -5105,6 +5108,7 @@
       "kindOf": "Le type d’une lumière (`LIGHT_KIND`), lu dans le tampon comme sa tranche.",
       "ids": "Le nom de la lumière de chaque place.",
       "count": "Combien de lumières.",
+      "shadowedSuns": "Les lumières qui projettent une ombre et sont des soleils, celles qui sont des lumières locales ; les lumières qui sont des rectangles : comptées à chaque ajout, changement et retrait (`createLightKinds`).",
       "epoch": "Augmenté quand l’ensemble des lumières change.",
       "transportEpoch": "Incrémenté avec l’époque, sauf par un changement du seul brouillard ou de la seule tranche d’ombre : le brouillard est un terme du rayon de vue et une tranche l’endroit où les cartes d’une lumière sont adressées, ni l’un ni l’autre n’étant du transport de lumière, de sorte que ce qui met en cache la lumière transportée (les sondes de rebond) le conserve.",
       "environment": "L’environnement de la scène.",
@@ -7802,7 +7806,11 @@
     }
   },
   "MovedRows": {
-    "summary": "Les placements qu’un changement a touchés, en suites de rangées : `count` paires `[first, last]` (`createChangedRuns`)."
+    "summary": "Les placements qu’un changement a touchés, en suites de rangées : `count` paires `[first, last]` (`createChangedRuns`).",
+    "members": {
+      "count": "Combien de suites `pairs` contient.",
+      "pairs": "Les suites, des paires de rangées `[first, last]`, la première et la dernière comprises."
+    }
   },
   "PageCache": {
     "summary": "Le cache des pages décodées par lequel une session lit (`createPageCache`).",

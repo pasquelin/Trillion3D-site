@@ -225,6 +225,8 @@
     }
   },
   "BounceOccupancy": {
+    "summary": "Bir probu tutmanın değdiği yer: kademe doluluk haritası.",
+    "description": "Bir şehir üzerindeki bir kademe, çoğu hücreyi ışınımın hiç sorgulanmadığı boş gökyüzüne ve katı bina çekirdeklerine harcar. Zamanlayıcının, bir ışın harcamadan önce, bir hücrenin geometriye değip değmediğini bilmesi gerekir. Bu, kameranın değil dünyanın bir özelliğidir: yapım sırasında ve hareket eden geometri durduğunda yeniden hesaplanır, daha sonra hareketli seviyelerin aldığı tüm pozisyonlar için geçerlidir. En ince seviye haritası, yerleştirmelerin proxy'lerinin dünya kutuları artı bir hücrelik bir sınırla işaretlenir: dolu bir hücrenin sekiz köşesi her zaman korunur, böylece hiçbir yararlı şey kaybolmaz. Sonraki seviyeler tam indirgemelerdir — aralıklar en incenin ikinin kuvveti katları olduğundan, eksen başına iki hücreden bire — sonra aynı nedenle bir hücre genişletilir. Burada hiçbir şey bir sahneyi adlandırmaz ya da kamerayı incelemez: genişlik, üçgenler, hücreler.",
     "members": {
       "moved": "Yerleştirmeler hareket etti: `boxes` yerleştirme başına altı dünya sınırı taşır (hiçbir şey tutmayan biri için boş bir kutu), `rows` hareket edenlerin dizilerini: iş onları izler, asla yerleştirme sayısını değil.",
       "settle": "Kare başına bir kez: hareket durduktan sonraki ilk kare, `extent` üzerinde tam haritayı yeniden kurar.",
@@ -811,7 +813,8 @@
     "summary": "Deforme edilmiş bir yerleştirmenin proxy'sini dinlenme biçiminden poza getiren şey: proxy üçgenlerinin her köşesi için, üçgen ve köşe sırasıyla, köşenin kurulduğu tepe noktası derisini ve morph deltalarını korur (`world/page/runtimeDeform.ts`).",
     "description": "Bir köşe `CORNER_INFLUENCES` eklem sırası, aynı sayıda ağırlık, ardından her hedefin üç deltasıdır: `8 + 3 × targets` kayan nokta sayısı.",
     "members": {
-      "targets": "Meshin morph hedefleri."
+      "targets": "Meshin morph hedefleri.",
+      "corners": "Her köşenin kaydı, proxy'nin üçgen ve köşe sırasıyla `8 + 3 × targets` kayan nokta sayısı."
     }
   },
   "CutoutModel": {
@@ -3360,6 +3363,7 @@
       "kindOf": "Bir ışığın türü (`LIGHT_KIND`), dilimi gibi tampondan okunur.",
       "ids": "Her slotun ışık adı.",
       "count": "Kaç ışık.",
+      "shadowedSuns": "Gölge düşüren ve güneş olan ışıklar, yerel ışık olanlar; dikdörtgen olan ışıklar: her eklemede, değişiklikte ve kaldırmada sayılır (`createLightKinds`).",
       "epoch": "Işık kümesi değiştiğinde artırılır.",
       "transportEpoch": "Dönemle birlikte artırılır, yalnızca sisin ya da yalnızca bir gölge diliminin değişmesi hariç: sis bir görüş ışını terimidir ve dilim bir ışığın haritalarının adreslendiği yerdir, hiçbiri ışık taşınımı değildir, bu yüzden taşınan ışığı önbelleğe alan şey (sıçrama probları) onu korur.",
       "environment": "Sahnenin ortamı.",
@@ -7802,7 +7806,11 @@
     }
   },
   "MovedRows": {
-    "summary": "Bir değişikliğin dokunduğu yerleştirmeler, satır dizileri olarak: `count` adet `[first, last]` çifti (`createChangedRuns`)."
+    "summary": "Bir değişikliğin dokunduğu yerleştirmeler, satır dizileri olarak: `count` adet `[first, last]` çifti (`createChangedRuns`).",
+    "members": {
+      "count": "`pairs`'in kaç dizi tuttuğu.",
+      "pairs": "Diziler, `[first, last]` satır çiftleri, ilki ve sonuncusu dahil."
+    }
   },
   "PageCache": {
     "summary": "Bir oturumun okuduğu çözülmüş sayfa önbelleği (`createPageCache`).",

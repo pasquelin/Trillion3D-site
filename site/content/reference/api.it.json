@@ -407,6 +407,8 @@
     }
   },
   "BounceOccupancy": {
+    "summary": "Dove mantenere una sonda vale la pena: la mappa di occupazione delle cascate.",
+    "description": "Una cascata sopra una città spende la maggior parte delle sue celle nel cielo vuoto e nel nucleo pieno degli edifici, dove l'irradianza non viene mai richiesta. Il pianificatore deve sapere, prima di spendere un raggio, se una cella tocca della geometria. È una proprietà del mondo, non della camera: calcolata alla costruzione e di nuovo quando la geometria spostata si ferma, valida per tutte le posizioni che i livelli mobili assumono in seguito. La mappa del livello più fine viene marcata dalle scatole nel mondo dei proxy dei posizionamenti più un bordo di una cella: gli otto angoli di una cella occupata sono sempre mantenuti, quindi nulla di utile va perso. I livelli successivi sono riduzioni esatte — due celle per una su ciascun asse, poiché le distanze sono multipli in potenze di due della più fine — poi dilatate di una cella per lo stesso motivo. Nulla qui nomina una scena né esamina la camera: un'estensione, triangoli, celle.",
     "members": {
       "moved": "Dei posizionamenti si sono mossi: `boxes` contiene sei limiti nel mondo per posizionamento (una scatola vuota per quello che non ne contiene), `rows` le serie di quelli che si sono mossi: il lavoro segue loro, mai il numero di posizionamenti.",
       "settle": "Una volta per fotogramma: il primo fotogramma dopo la fine del movimento ricostruisce la mappa esatta su `extent`.",
@@ -1262,7 +1264,8 @@
     "summary": "Ciò che posa il proxy di un posizionamento deformato a partire dalla sua forma a riposo: per ogni angolo dei triangoli del proxy, in ordine di triangoli e di angoli, il vertice da cui è stato costruito conserva la sua pelle e i suoi delta di morph (`world/page/runtimeDeform.ts`).",
     "description": "Un angolo sono `CORNER_INFLUENCES` ranghi di giunto, altrettanti pesi, poi i tre delta di ogni target: `8 + 3 × targets` float.",
     "members": {
-      "targets": "Target di morph della mesh."
+      "targets": "Target di morph della mesh.",
+      "corners": "Il record di ogni angolo, `8 + 3 × targets` float, nell'ordine dei triangoli e degli angoli del proxy."
     }
   },
   "CUTOUT_SHEET_FILE": {
@@ -5097,6 +5100,7 @@
       "kindOf": "Il tipo di una luce (`LIGHT_KIND`), letto dal buffer come la sua fetta.",
       "ids": "Il nome della luce di ogni posto.",
       "count": "Quante luci.",
+      "shadowedSuns": "Luci che proiettano un'ombra e sono soli, quelle che sono luci locali; luci che sono rettangoli: contate a ogni aggiunta, modifica e rimozione (`createLightKinds`).",
       "epoch": "Incrementato quando cambia l'insieme delle luci.",
       "transportEpoch": "Incrementato con l’epoca, tranne che per un cambiamento della sola nebbia o della sola fetta d’ombra: la nebbia è un termine del raggio di vista e una fetta è dove le mappe di una luce sono indirizzate, e nessuno dei due è trasporto di luce, così ciò che mette in cache la luce trasportata (le sonde di rimbalzo) lo conserva.",
       "environment": "L'ambiente della scena.",
@@ -7802,7 +7806,11 @@
     }
   },
   "MovedRows": {
-    "summary": "I posizionamenti che una modifica ha toccato, come serie di righe: `count` coppie `[first, last]` (`createChangedRuns`)."
+    "summary": "I posizionamenti che una modifica ha toccato, come serie di righe: `count` coppie `[first, last]` (`createChangedRuns`).",
+    "members": {
+      "count": "Quante serie contiene `pairs`.",
+      "pairs": "Le serie, coppie di righe `[first, last]`, prima e ultima comprese."
+    }
   },
   "PageCache": {
     "summary": "La cache delle pagine decodificate attraverso cui legge una sessione (`createPageCache`).",

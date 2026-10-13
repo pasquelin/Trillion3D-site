@@ -1390,10 +1390,6 @@
       "title": "Save and open a scene",
       "description": "`scene.toJSON(camera)` writes the scene as plain versioned JSON; `scene.fromJSON(json, camera)` builds it again.",
       "html": "<p>Shapes are stored by the call that built them, materials by their values, loaded models by their address — never inlined — and <code>helper</code> marks not at all. Another format version is refused by name. See it in <a href=\"#/en/examples/save-the-scene\">Save the scene</a>.</p>"
-    },
-    "BounceOccupancy": {
-      "summary": "Where keeping a probe is worthwhile: cascade occupancy map.",
-      "description": "A cascade across a city spends most cells on empty sky and solid building cores, where irradiance is never queried. The scheduler needs to know, before spending a ray, whether a cell touches geometry. This is a property of the world, not the camera: calculated at construction and again once moved geometry settles, valid for all positions mobile levels take later. The finest level map is marked by the world boxes of the placements' proxies plus a one-cell boundary: eight corners of an occupied cell are always retained, so nothing useful is lost. Subsequent levels are exact reductions — two cells to one per axis, since spacings are power-of-two multiples of the finest — then dilated by one cell for the same reason. Nothing here names a scene or inspects the camera: extent, triangles, cells."
     }
   },
   "canvas": {

@@ -217,6 +217,8 @@
     }
   },
   "BounceOccupancy": {
+    "summary": "Di mana menyimpan sebuah probe itu berharga: peta okupansi cascade.",
+    "description": "Sebuah cascade di seluruh kota menghabiskan sebagian besar sel untuk langit kosong dan inti bangunan padat, tempat iradiansi tidak pernah ditanyakan. Penjadwal perlu tahu, sebelum menghabiskan satu sinar, apakah sebuah sel menyentuh geometri. Ini adalah sifat dari dunia, bukan kamera: dihitung saat pembuatan dan sekali lagi ketika geometri yang bergerak sudah diam, berlaku untuk semua posisi yang diambil tingkat-tingkat bergerak nanti. Peta tingkat terhalus ditandai oleh kotak dunia dari proxy penempatan ditambah batas satu sel: delapan sudut sebuah sel yang terisi selalu disimpan, sehingga tidak ada yang berguna hilang. Tingkat-tingkat berikutnya adalah reduksi pasti — dua sel jadi satu per sumbu, karena jaraknya adalah kelipatan pangkat dua dari yang terhalus — lalu dilebarkan satu sel karena alasan yang sama. Tidak ada di sini yang menyebut nama sebuah adegan atau memeriksa kamera: area, segitiga, sel.",
     "members": {
       "moved": "Penempatan bergerak: `boxes` memuat enam batas dunia per penempatan (kotak kosong untuk yang tidak memuat apa pun), `rows` deretan yang bergerak: pekerjaan mengikutinya, tidak pernah jumlah penempatan.",
       "settle": "Sekali per frame: frame pertama setelah gerakan berhenti membangun ulang peta yang tepat pada `extent`.",
@@ -713,7 +715,8 @@
     "summary": "Yang memosekan proxy sebuah penempatan yang terdeformasi dari bentuk diamnya: untuk setiap sudut segitiga proxy, dalam urutan segitiga dan urutan sudut, verteks asal pembangunannya menyimpan skin dan delta morph-nya (`world/page/runtimeDeform.ts`).",
     "description": "Sebuah sudut adalah `CORNER_INFLUENCES` peringkat sendi, bobot sebanyak itu, lalu tiga delta dari setiap target: `8 + 3 × targets` float.",
     "members": {
-      "targets": "Target morph dari mesh."
+      "targets": "Target morph dari mesh.",
+      "corners": "Catatan setiap sudut, `8 + 3 × targets` float, dalam urutan segitiga dan sudut proxy."
     }
   },
   "CutoutModel": {
@@ -2902,6 +2905,7 @@
       "kindOf": "Jenis sebuah cahaya (`LIGHT_KIND`), dibaca dari buffer seperti irisannya.",
       "ids": "Nama cahaya tiap slot.",
       "count": "Berapa banyak cahaya.",
+      "shadowedSuns": "Lampu yang menjatuhkan bayangan dan merupakan matahari, yang merupakan lampu lokal; lampu yang berupa persegi panjang: dihitung pada setiap penambahan, perubahan, dan penghapusan (`createLightKinds`).",
       "epoch": "Dinaikkan saat set cahaya berubah.",
       "transportEpoch": "Dinaikkan bersama epoch, kecuali oleh perubahan kabut saja atau irisan bayangan saja: kabut adalah suku sinar pandang dan irisan adalah tempat peta cahaya dialamatkan, keduanya bukan transpor cahaya, sehingga apa yang menyimpan cache cahaya terangkut (probe pantulan) tetap menyimpannya.",
       "environment": "Lingkungan scene itu.",
@@ -7802,7 +7806,11 @@
     }
   },
   "MovedRows": {
-    "summary": "Penempatan yang tersentuh sebuah perubahan, sebagai deretan baris: `count` pasangan `[first, last]` (`createChangedRuns`)."
+    "summary": "Penempatan yang tersentuh sebuah perubahan, sebagai deretan baris: `count` pasangan `[first, last]` (`createChangedRuns`).",
+    "members": {
+      "count": "Berapa banyak deretan yang dimuat `pairs`.",
+      "pairs": "Deretan itu, pasangan baris `[first, last]`, yang pertama dan yang terakhir termasuk."
+    }
   },
   "PageCache": {
     "summary": "Cache halaman terdekode tempat sebuah sesi membaca (`createPageCache`).",
