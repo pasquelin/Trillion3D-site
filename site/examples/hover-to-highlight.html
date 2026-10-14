@@ -74,17 +74,24 @@
         if (inside && values.highlightEnabled)
           show(world.raycast(pointer, { objects: parts })?.object ?? null);
       }, requestAnimationFrame);
-      world.canvas.addEventListener('pointermove', (event) => {
+      // A move with no button held, or the release that ends a press, aims the next ray.
+      const aim = (event) => {
         if (!values.highlightEnabled || event.buttons) return;
         inside = true;
         pointer.x = event.offsetX;
         pointer.y = event.offsetY;
         ray();
-      });
-      world.canvas.addEventListener('pointerleave', () => {
+      };
+      world.canvas.addEventListener('pointermove', aim);
+      // A press may start an orbit: the ray a hover queued before it is not cast, and the part
+      // lit when it went down goes dark until the buttons are up again.
+      const rest = () => {
         inside = false;
         show(null);
-      });
+      };
+      world.canvas.addEventListener('pointerdown', rest);
+      world.canvas.addEventListener('pointerleave', rest);
+      world.canvas.addEventListener('pointerup', aim);
 
       world.scene.add(
         light.hemisphere({ color: '#dbeeff', groundColor: '#29323a', intensity: 1.2 }),

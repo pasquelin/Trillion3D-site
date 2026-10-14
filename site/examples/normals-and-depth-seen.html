@@ -142,11 +142,17 @@
         if (ui.spin) turn += step;
         knot.rotation.set(0, turn * 0.5, 0);
         for (const { mesh, speed, tilt } of turners) mesh.rotation.set(tilt, turn * speed, 0);
+        // A frame is asked for only while the pieces turn, or once more when the depth view's far
+        // plane follows a camera the viewer moved; a still court asks for none.
+        let moved = ui.spin;
         if (view === 'depth') {
           const far = world.camera.position.distanceTo(centre) + radius;
-          if (Math.abs(far - world.camera.far) > far * 0.01) world.camera.far = far;
+          if (Math.abs(far - world.camera.far) > far * 0.01) {
+            world.camera.far = far;
+            moved = true;
+          }
         }
-        world.invalidate();
+        if (moved) world.invalidate();
       });
     </script>
   </body>

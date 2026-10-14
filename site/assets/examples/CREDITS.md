@@ -51,6 +51,7 @@ scenes above (`full`, 2 threads, 256 MB, `qem-endpoints`, the default `bc7` text
 | `flag/` | `flag.ts` | `flag.gltf`: a flag on a pole over a lawn, its node declaring a cloth pinned along the pole |
 | `chalet/` | `chalet.ts` | `chalet.gltf`: a chalet of thin closed shapes, a whitewash ground floor, walls of logs, balcony boards, a shingle roof |
 | `instanced-gltf/` | `forest.ts` | `forest.gltf`: a valley, its lake, four tree shapes and a rock placed 4,250 times by `EXT_mesh_gpu_instancing` |
+| `cooked-blocks/` | `cooked-blocks.ts` | `blocks.gltf`: forty-eight painted blocks over a stepped plinth, each node declaring a dynamic rigid body |
 
 ## Public animation samples
 

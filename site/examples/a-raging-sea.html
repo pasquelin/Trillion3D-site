@@ -1,0 +1,170 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>A raging sea</title>
+    <meta name="thumbnail" content="4" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #171d28;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, geometry, material, object, light, effect, buffer, joint, math } from '../runtime/engine.js';
+      import { controls, seeded } from '../runtime/kit.js';
+
+      // The sea is the physics' water: the waves that toss the ship are the very ones drawn.
+      const world = createWorld('view', { controls: 'orbit', physics: true });
+      world.camera.far = 2000;
+
+      // A storm: one dark grey for the sky and the air, thick near the water where the spray
+      // hangs, thinner above it. A linear display curve keeps the fog's colour the sky's.
+      const STORM = math.color('#262e36'), FLASH = STORM.clone().lerp(math.color('#8d99ab'), 0.7);
+      const air = (colour) => {
+        world.scene.background = colour;
+        world.scene.fog = { color: colour, density: 0.014, heightFalloff: 0.04, baseHeight: 0 };
+      };
+      air(STORM);
+      world.toneMapping = 'linear';
+
+      // One grid laid flat at the water's rest level, its rows fine around the ship and wider
+      // toward the horizon (each step a share of its distance), so the near waves keep their
+      // shape and the far ones cost little. Lying on the rest plane, it is the water's own: the
+      // GPU carries each of its points where the waves put it, every frame.
+      const ROWS = 400, REACH = 1500, GROWTH = 4.8;
+      const stretch = (u) => (Math.sign(u) * REACH * (Math.exp(GROWTH * Math.abs(u)) - 1)) / (Math.exp(GROWTH) - 1);
+      const position = new Float32Array((ROWS + 1) ** 2 * 3), normal = new Float32Array(position.length), index = new Uint32Array(ROWS * ROWS * 6);
+      for (let row = 0, at = 0; row <= ROWS; row++)
+        for (let column = 0; column <= ROWS; column++, at += 3) {
+          position[at] = stretch((2 * column) / ROWS - 1);
+          position[at + 2] = stretch((2 * row) / ROWS - 1);
+          normal[at + 1] = 1;
+        }
+      for (let row = 0, at = 0; row < ROWS; row++)
+        for (let column = 0; column < ROWS; column++, at += 6) {
+          const a = row * (ROWS + 1) + column, b = a + ROWS + 1;
+          index.set([a, b, a + 1, a + 1, b, b + 1], at);
+        }
+      const grid = geometry.createBuffer({ position: buffer.float32(position, 3), normal: buffer.float32(normal, 3), index: buffer.uint32(index, 1) });
+      const sea = object.mesh(grid, material.meshStandard({ color: '#1b2f37', roughness: 0.28 }));
+      world.scene.add(sea);
+
+      // A long, tall swell and the steep chop the wind raises on it. The waves share one
+      // steepness: the nearer their sum comes to 1, the sharper the ridges between wide troughs.
+      // Here they add up to 0.66, so a full gale (1.5) brings them almost there.
+      const WAVES = [
+        { direction: [1, 0.15], wavelength: 62, amplitude: 2.4, steepness: 0.22 },
+        { direction: [0.85, 0.5], wavelength: 35, amplitude: 1.3, steepness: 0.18 },
+        { direction: [1, -0.4], wavelength: 19, amplitude: 0.6, steepness: 0.12 },
+        { direction: [0.5, 1], wavelength: 10, amplitude: 0.26, steepness: 0.08 },
+        { direction: [-0.3, 1], wavelength: 5.5, amplitude: 0.1, steepness: 0.06 },
+      ];
+
+      const paint = (color, roughness = 0.5) => material.meshStandard({ color, roughness });
+      const glow = (emissive, emissiveIntensity) => material.meshStandard({ color: '#000000', emissive, emissiveIntensity });
+      const part = (shape, matter, x, y, z) => {
+        const mesh = object.mesh(shape, matter);
+        mesh.position.set(x, y, z);
+        return mesh;
+      };
+
+      // The ship: the hull holds the body, lighter than the water it displaces; its wheelhouse,
+      // funnel, mast and running lights — red to port, green to starboard — are drawn children.
+      // Its bow faces the waves, held there by an anchor rope to the sea bed ahead of it, a
+      // little slack, then stretching like a spring.
+      const ship = object.mesh(geometry.box(10, 2.4, 3.6), material.meshStandard({ color: '#3e4f5c', roughness: 0.6, physics: 'wood', density: 450 }));
+      ship.physics = 'dynamic';
+      ship.position.set(0, 0.5, 0);
+      ship.rotation.y = Math.PI;
+      const running = geometry.sphere(0.14, 12, 8), cream = paint('#d9d4c8');
+      ship.add(
+        part(geometry.box(10.1, 0.35, 3.7), paint('#8e2a22'), 0, -0.6, 0),
+        part(geometry.box(3, 2, 3), cream, -1.8, 2.2, 0),
+        part(geometry.cylinder(0.4, 0.45, 1.6, 16), paint('#b23a2b'), -3.6, 2, 0),
+        part(geometry.cylinder(0.08, 0.1, 5, 12), cream, 1.5, 3.7, 0),
+        part(running, glow('#fff4dc', 16), 1.5, 6.3, 0),
+        part(running, glow('#ff3a2a', 16), -1.2, 3.3, -1.55),
+        part(running, glow('#3aff6a', 16), -1.2, 3.3, 1.55),
+      );
+      world.scene.add(ship);
+      world.physics.add(joint.distance(ship, null, { anchor: [-5, 0, 0], anchorB: [-30, -40, 0], limits: { max: 48 }, spring: { frequency: 0.2, damping: 0.6 } }));
+
+      // A lighthouse on a rock standing 7 m out of the water, above the tallest crests, its tower
+      // in red and white bands and a lantern room that glows.
+      const LAMP = [-34, 23, -28];
+      const rock = object.mesh(geometry.cylinder(7, 11, 14, 9), paint('#3d3a36', 0.95));
+      rock.position.set(LAMP[0], 0, LAMP[2]);
+      world.scene.add(rock);
+      const red = paint('#a3302a', 0.7), white = paint('#d8d3c6', 0.7);
+      for (let band = 0; band < 6; band++)
+        world.scene.add(part(geometry.cylinder(1.9 - (band + 1) * 0.12, 1.9 - band * 0.12, 2.5, 32), band % 2 ? red : white, LAMP[0], 8.25 + band * 2.5, LAMP[2]));
+      world.scene.add(
+        part(geometry.cylinder(1.1, 1.1, 1.6, 24), glow('#fff1c4', 20), ...LAMP),
+        part(geometry.cone(1.4, 1.2, 24), red, LAMP[0], LAMP[1] + 1.4, LAMP[2]),
+      );
+      // Its beam: a spot light in the lantern, sweeping the sea 60 m out — over the ship once a
+      // turn. It turns every frame, so it casts no shadow: a moving shadow is redrawn each frame.
+      const beam = light.spot({ position: LAMP, color: '#fff1c4', intensity: 30000, distance: 240, angle: 0.13, penumbra: 0.4 });
+
+      // What little light the clouds let through, and lightning: a flash from above that also
+      // lights the sky, now and then — more often the stronger the wind.
+      const flash = light.directional({ intensity: 0, color: '#d6e2ff', position: [20, 60, -30] });
+      world.scene.add(
+        beam,
+        flash,
+        light.directional({ intensity: 0.9, color: '#a8b8c8', position: [30, 40, 20] }),
+        light.hemisphere({ intensity: 1.1, color: '#6a7a88', groundColor: '#0b1116' }),
+      );
+      // A faint glow around what shines: the lantern, the running lights, the flashes.
+      world.effects.add(effect.bloom({ intensity: 0.08 }));
+
+      world.camera.position.set(22, 9, 26);
+      world.controls.target.set(-4, 2, -4);
+      world.controls.minDistance = 8;
+      world.controls.maxDistance = 90;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
+
+      // `height` lifts every wave; `wind` sharpens their crests and raises the short chop. Set
+      // again, the waves would start over: each goes on from the phase it has reached.
+      const ui = controls({ height: [0, 2, 1, 0.05], wind: [0, 1.5, 1, 0.05] }, (values) => {
+        const now = world.physics.waterSurface?.wavesNow();
+        world.physics.water = {
+          level: 0,
+          waves: WAVES.map((wave, i) => ({
+            ...wave,
+            amplitude: wave.amplitude * values.height * (i < 2 ? 1 : values.wind),
+            steepness: wave.steepness * values.wind,
+            phase: now?.[i].phase ?? 0,
+          })),
+        };
+      }, world);
+
+      const next = seeded(5);
+      let strike = 4;
+      world.onFrame(({ time, delta }) => {
+        const turn = time * 0.5;
+        beam.target.position.set(LAMP[0] + Math.cos(turn) * 60, 0, LAMP[2] + Math.sin(turn) * 60);
+        // A strike is two quick flickers; the next comes 3 to 15 s later, sooner in a stronger wind.
+        strike -= delta;
+        if (strike < -0.5) strike = (3 + next() * 12) / Math.max(ui.wind, 0.1);
+        const lit = strike < 0 && (strike > -0.12 || (strike < -0.25 && strike > -0.4));
+        if (lit !== flash.intensity > 0) {
+          flash.intensity = lit ? 4 : 0;
+          air(lit ? FLASH : STORM);
+        }
+        world.invalidate();
+      });
+    </script>
+  </body>
+</html>

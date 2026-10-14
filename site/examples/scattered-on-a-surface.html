@@ -171,7 +171,18 @@
         planet.add(rock);
         return rock;
       });
+      planet.rotation.set(0.35, 0, 0);
       world.scene.add(planet);
+
+      // The air: three thin shells round the ball, drawn from inside and added to what is behind,
+      // so a blue rim brightens toward the ground, where the light crosses most air. They rise
+      // and fall with the sea.
+      const shell = geometry.sphere(1, 64, 32);
+      const air = [[1.04, 0.07], [1.08, 0.06], [1.14, 0.05]].map(([scale, opacity]) => {
+        const layer = object.mesh(shell, material.meshBasic({ color: '#6fb4ff', transparent: true, opacity, blending: 'additive', depthWrite: false, side: 'back' }));
+        world.scene.add(layer);
+        return [layer, scale];
+      });
 
       // Clouds drift round the planet a little faster than it turns.
       const clouds = object.group(), puff = geometry.sphere(0.16, 16, 10), white = material.meshStandard({ color: '#ffffff', roughness: 1 });
@@ -198,8 +209,9 @@
 
       // A low sun from one side — the terminator crosses the planet — and a faint blue fill so the
       // night side keeps its shapes.
+      const sun = light.directional({ color: '#fff0d8', intensity: 3.4, position: [9, 3, 5], castShadow: true });
       world.scene.add(
-        light.directional({ color: '#fff0d8', intensity: 3.4, position: [9, 3, 5], castShadow: true }),
+        sun,
         light.hemisphere({ color: '#5a78c8', groundColor: '#1a1420', intensity: 0.45 }),
       );
       world.camera.position.set(0, 2.6, 8.8);
@@ -214,6 +226,7 @@
       const scatter = ({ trees: wanted, rocks: stones, steepest, seaLevel }) => {
         const sea = SEA + seaLevel;
         ocean.scale.setScalar(sea);
+        for (const [layer, scale] of air) layer.scale.setScalar(sea * scale);
         let t = 0, r = 0, no = 0;
         for (const spot of candidates) {
           const dry = spot.r > sea + 0.02;
@@ -253,13 +266,19 @@
 
       // The opening: the camera comes in from deep space while the forest sprouts.
       const from = [0, 9, 26], to = [0, 2.6, 8.8];
-      // The viewer's hand wins: a press or a wheel on the canvas ends the opening where it is.
-      opening(world, (time) => {
+      // The planet stands still, so its thousands of trees and rocks are posed once: its turning
+      // is the camera and the sun circling it together, the same day crossing the ground. The
+      // clouds drift round on their own, a little faster.
+      const up = math.vector3(0, 1, 0), around = math.quaternion(), turned = math.quaternion();
+      let turn = 0;
+      // The viewer's hand wins: a press or a wheel on the canvas ends the opening where it is. The
+      // glide is turned with the camera, so the day keeps crossing the ground meanwhile.
+      const glide = opening(world, (time) => {
         const k = ease.out(time / 3.5);
         world.camera.position.set(...mix({ math }, from, to, k));
+        world.camera.position.applyQuaternion(turned.setFromAxisAngle(up, -turn));
         return time < 3.5;
       });
-      let turn = 0;
       world.onFrame(({ delta }) => {
         const step = Math.min(delta, 0.05);
         if (sprout < 1) {
@@ -267,10 +286,20 @@
           grown = Math.max(0.001, ease.out(sprout));
           for (const tree of trees) if (tree.visible) tree.scale.setScalar(tree.userData.size * grown);
         }
-        if (ui.spin) turn += step * 0.08;
-        planet.rotation.set(0.35, turn, 0);
-        clouds.rotation.set(0.35, turn * 1.6, 0);
-        world.invalidate();
+        if (ui.spin) {
+          const angle = step * 0.08, { position } = world.camera, { target } = world.controls;
+          turn += angle;
+          around.setFromAxisAngle(up, -angle);
+          sun.position.applyQuaternion(around);
+          // Round the point the viewer orbits, wherever a pan has taken it.
+          if (!glide.gliding) {
+            position.sub(target).applyQuaternion(around).add(target);
+            world.camera.lookAt(target);
+            world.controls.update();
+          }
+        }
+        clouds.rotation.set(0.35, turn * 0.6, 0);
+        if (sprout < 1 || ui.spin) world.invalidate();
       });
     </script>
   </body>

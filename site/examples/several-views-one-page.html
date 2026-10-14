@@ -77,21 +77,25 @@
           return mesh;
         };
         const scene = world.scene, stone = paint('#a39888', 0.9, 0, true), slate = paint('#454b55', 0.7, 0, true), wood = paint('#8b6a4a', 0.8), cloth = paint('#efe6d2', 0.9), trim = paint('#f4f1ea', 0.6);
-        // The island: grass on a bank of earth, a path to the door, a fence round the edge.
+        // The island: grass on a bank of earth, a path to the door, a fence round the edge. A part
+        // repeated — a post, a tree, a sack, a window, a rail, a sail's bar — is one shape worn by
+        // every copy, so the copies are drawn together.
+        const post = geometry.box(0.16, 1.1, 0.16), bark = paint('#5b4331'), leaves = paint('#4a7a33', 0.9), trunk = geometry.cylinder(0.3, 0.4, 3, 8), crown = geometry.sphere(2.4, 20, 14);
         add(scene, geometry.cylinder(15, 15.6, 1.2, 72), paint('#5f8b3a', 0.95), 0, -0.6, 0);
         add(scene, geometry.cylinder(15.6, 13, 2.4, 72), paint('#6b5440', 0.95), 0, -2.4, 0);
         add(scene, geometry.box(2.4, 0.06, 10), paint('#c9b48e', 0.9), 0, 0.03, 9);
         for (let k = 0; k < 36; k++) {
           const a = (k / 36) * Math.PI * 2;
           if (Math.abs(a - Math.PI / 2) < 0.12) continue;
-          add(scene, geometry.box(0.16, 1.1, 0.16), wood, Math.cos(a) * 14, 0.55, Math.sin(a) * 14);
+          add(scene, post, wood, Math.cos(a) * 14, 0.55, Math.sin(a) * 14);
         }
         for (const [x, z] of [[-9, -6], [8, -8]]) {
-          add(scene, geometry.cylinder(0.3, 0.4, 3, 8), paint('#5b4331'), x, 1.5, z);
-          add(scene, geometry.sphere(2.4, 20, 14), paint('#4a7a33', 0.9), x, 4.4, z);
+          add(scene, trunk, bark, x, 1.5, z);
+          add(scene, crown, leaves, x, 4.4, z);
         }
         add(scene, geometry.cylinder(1.1, 1.1, 0.35, 32).rotateZ(1.3), stone, 5.5, 1, 5.2);
-        for (let k = 0; k < 3; k++) add(scene, geometry.capsule(0.4, 0.5, 4, 10), cloth, 3.6 + k * 0.7, 0.6, 6.8 - k * 0.3);
+        const sack = geometry.capsule(0.4, 0.5, 4, 10);
+        for (let k = 0; k < 3; k++) add(scene, sack, cloth, 3.6 + k * 0.7, 0.6, 6.8 - k * 0.3);
 
         // The mill in four parts that an exploded view pulls apart: the stone base, the tower with
         // its gallery, and the cap carrying the sails. Each part is a group, raised on its own.
@@ -102,25 +106,28 @@
         add(tower, geometry.lathe([[4.25, 0], [3.05, 9.6], [0, 9.6]], 8, Math.PI / 8), slate);
         // Windows on four faces, each just proud of its face: the face's distance is cos(π/8)
         // of the tower's radius at that height.
+        const pane = geometry.box(0.8, 1.1, 0.3);
         for (const [y, a] of [[3.2, 0], [5.2, Math.PI / 2], [7.4, Math.PI], [4.2, -Math.PI / 2]]) {
           const out = (4.25 - 0.125 * y) * Math.cos(Math.PI / 8) + 0.12;
-          add(tower, geometry.box(0.8, 1.1, 0.3), trim, Math.sin(a) * out, y, Math.cos(a) * out).rotation.set(0, a, 0);
+          add(tower, pane, trim, Math.sin(a) * out, y, Math.cos(a) * out).rotation.set(0, a, 0);
         }
         add(gallery, geometry.cylinder(6.2, 6.2, 0.25, 8), wood);
         add(gallery, geometry.torus(5.6, 0.06, 6, 16).rotateX(Math.PI / 2), wood, 0, 1.1, 0);
-        for (let k = 0; k < 16; k++) add(gallery, geometry.box(0.1, 1.1, 0.1), wood, Math.cos((k / 16) * Math.PI * 2) * 5.6, 0.55, Math.sin((k / 16) * Math.PI * 2) * 5.6);
+        const rail = geometry.box(0.1, 1.1, 0.1);
+        for (let k = 0; k < 16; k++) add(gallery, rail, wood, Math.cos((k / 16) * Math.PI * 2) * 5.6, 0.55, Math.sin((k / 16) * Math.PI * 2) * 5.6);
         add(cap, geometry.lathe([[3.4, 0], [3.2, 1.3], [2.3, 2.6], [0.9, 3.3], [0, 3.4]], 32), paint('#7c5636', 0.85));
         add(cap, geometry.cylinder(0.35, 0.35, 3, 16).rotateX(Math.PI / 2), wood, 0, 1.6, 3.2);
         add(cap, geometry.box(0.25, 0.25, 4.5).rotateX(-0.5), wood, 0, 0.6, -4.2);
         // The sails: four stocks with their cloths, turning together about the shaft.
         sails.position.set(0, 1.6, 4.8);
         add(sails, geometry.box(1, 1, 0.8), wood);
+        const stock = geometry.box(0.32, 12.5, 0.32).translate(0, 6.6, 0), sail = geometry.box(2.2, 9.6, 0.08).translate(1.3, 7.6, 0.05), crossbar = geometry.box(2.6, 0.1, 0.14);
         for (let k = 0; k < 4; k++) {
           const arm = object.group();
           arm.rotation.set(0, 0, (k * Math.PI) / 2);
-          add(arm, geometry.box(0.32, 12.5, 0.32).translate(0, 6.6, 0), wood);
-          add(arm, geometry.box(2.2, 9.6, 0.08).translate(1.3, 7.6, 0.05), cloth);
-          for (let bar = 0; bar < 6; bar++) add(arm, geometry.box(2.6, 0.1, 0.14).translate(1.2, 3.4 + bar * 1.8, 0.14), wood);
+          add(arm, stock, wood);
+          add(arm, sail, cloth);
+          for (let bar = 0; bar < 6; bar++) add(arm, crossbar, wood, 1.2, 3.4 + bar * 1.8, 0.14);
           sails.add(arm);
         }
         cap.add(sails);

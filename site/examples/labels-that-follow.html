@@ -60,8 +60,8 @@
     <canvas id="view"></canvas>
     <div id="labels"></div>
     <script type="module">
-      import { createWorld, geometry, material, object, light, math } from '../runtime/engine.js';
-      import { controls, words, language, opening, ease } from '../runtime/kit.js';
+      import { buffer, createWorld, effect, geometry, material, object, light, math, texture } from '../runtime/engine.js';
+      import { controls, words, language, opening, ease, seeded } from '../runtime/kit.js';
       const say = words();
 
       const world = createWorld('view', { controls: 'orbit' });
@@ -80,22 +80,43 @@
         { name: 'Neptune', colour: '#4a6fe8', radius: 0.92, orbit: 29.5, au: 30.1, days: 60190, moons: 16 },
       ];
 
-      // The Sun glows on its own; its light falls off with the square of the distance, so a sky
-      // fill keeps the far planets' night sides from going black.
+      // The Sun glows on its own, brighter than white, and a soft bloom spreads its light into the
+      // dark; its light falls off with the square of the distance, and a faint fill keeps the far
+      // planets' night sides from going black.
       const sunRadius = 2.6;
-      const sun = object.mesh(geometry.sphere(sunRadius, 64, 32), material.meshBasic({ color: '#ffc45a' }));
-      const corona = object.mesh(geometry.sphere(sunRadius * 1.12, 48, 24), material.meshBasic({ color: '#ff8a2a', side: 'back' }));
+      const sun = object.mesh(geometry.sphere(sunRadius, 64, 32), material.meshStandard({ color: '#000000', emissive: '#ffc45a', emissiveIntensity: 4 }));
+      const corona = object.mesh(geometry.sphere(sunRadius * 1.12, 48, 24), material.meshStandard({ color: '#000000', emissive: '#ff8a2a', emissiveIntensity: 1.5, side: 'back' }));
       world.scene.add(
         sun,
         corona,
         light.point({ color: '#fff0d6', intensity: 260, position: [0, 0, 0] }),
-        light.hemisphere({ color: '#6f86c8', groundColor: '#2a2030', intensity: 0.9 }),
+        light.ambient({ color: '#6f86c8', intensity: 0.4 }),
       );
+      world.effects.add(effect.bloom({ intensity: 0.08 }));
+      // Far stars: a shell of points, one object.
+      const sky = [], next = seeded(5);
+      for (let k = 0; k < 2000; k++) {
+        const y = next() * 2 - 1, around = next() * Math.PI * 2, ring = Math.sqrt(1 - y * y);
+        sky.push(ring * Math.cos(around) * 180, y * 180, ring * Math.sin(around) * 180);
+      }
+      world.scene.add(object.points(geometry.createBuffer({ position: buffer.float32(new Float32Array(sky), 3) }), material.points({ color: '#cfd8ff', size: 0.5 })));
+      // The gas giants wear bands of cloud: a picture of stripes drawn on a canvas, wrapped round,
+      // each stripe the next colour of the list.
+      const banded = (colours) => {
+        const canvas = Object.assign(document.createElement('canvas'), { width: 4, height: 128 }), paint = canvas.getContext('2d');
+        for (let stripe = 0; stripe < 16; stripe++) {
+          paint.fillStyle = colours[stripe % colours.length];
+          paint.fillRect(0, stripe * 8, 4, 8);
+        }
+        return texture.canvas(canvas);
+      };
+      const BANDS = { Jupiter: banded(['#a0663e', '#d9b08c', '#efe0c8', '#b9825a', '#e8cfa8']), Saturn: banded(['#cdb27a', '#e6d29a', '#f2e6c0', '#d8c08a']) };
 
       // Every planet a sphere and a faint ring for its path; Saturn wears its rings, Earth its Moon.
       const orbitPaint = material.meshBasic({ color: '#28324e' });
       const bodies = PLANETS.map((planet, index) => {
-        const mesh = object.mesh(geometry.sphere(planet.radius, 48, 24), material.meshStandard({ color: planet.colour, roughness: 0.75 }));
+        const map = BANDS[planet.name], surface = map ? { map } : { color: planet.colour };
+        const mesh = object.mesh(geometry.sphere(planet.radius, 48, 24), material.meshStandard({ ...surface, roughness: 0.75 }));
         const path = object.mesh(geometry.torus(planet.orbit, 0.025, 6, 256), orbitPaint);
         path.rotation.x = Math.PI / 2;
         world.scene.add(mesh, path);
@@ -128,15 +149,18 @@
         'names only': () => '',
       };
 
-      // Where a world point lands on the page: the camera's own frame, then its field of view.
+      // Where a world point lands on the page: the camera's own frame, then its field of view,
+      // over the canvas — where it stands on the page and the size it is shown at.
       const eye = math.vector3(), turn = math.quaternion();
-      let width = innerWidth, height = innerHeight;
-      addEventListener('resize', () => ((width = innerWidth), (height = innerHeight)));
+      let left = 0, top = 0, width = 1, height = 1;
+      const measure = () => ({ left, top, width, height } = world.canvas.getBoundingClientRect());
+      measure();
+      new ResizeObserver(measure).observe(world.canvas);
       function onScreen(point, radius) {
         eye.copy(point).sub(world.camera.position).applyQuaternion(turn.copy(world.camera.quaternion).invert());
         const depth = -eye.z, slope = Math.tan(math.degToRad(world.camera.fov / 2)) * depth;
         if (depth <= world.camera.near) return null;
-        return { x: (0.5 + eye.x / (2 * slope * (width / height))) * width, y: (0.5 - eye.y / (2 * slope)) * height, size: (radius / slope) * (height / 2), depth };
+        return { x: left + (0.5 + eye.x / (2 * slope * (width / height))) * width, y: top + (0.5 - eye.y / (2 * slope)) * height, size: (radius / slope) * (height / 2), depth };
       }
       // A label is hidden while its body is behind the Sun: the sight line from the eye to the
       // body passes through the Sun's ball before it reaches it.
@@ -149,7 +173,7 @@
       function placeLabels(fact) {
         for (const body of tagged) {
           const at = body.mesh.position, seen = body === tagged[0] || !behindSun(at) ? onScreen(at, body.height) : null;
-          const tag = body.tag, show = seen !== null && seen.x > -80 && seen.x < width + 80 && seen.y > -40 && seen.y < height + 80;
+          const tag = body.tag, show = seen !== null && seen.x > left - 80 && seen.x < left + width + 80 && seen.y > top - 40 && seen.y < top + height + 80;
           if (tag.shown !== show) tag.element.style.display = (tag.shown = show) ? '' : 'none';
           if (!show) continue;
           // The foot of the label stands on the top of the body's disc, the nearest labels on top.

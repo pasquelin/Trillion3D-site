@@ -118,9 +118,13 @@ export class SceneGltf {
   }
 }
 
-/** A turn of `angle` radians about +Y, as the quaternion a node's `rotation` takes, rounded. */
-export const yaw = (angle: number) =>
+/** A turn of `angle` radians about the unit `axis`, as the quaternion a node's `rotation` takes,
+ *  rounded. */
+export const turn = (axis: readonly [number, number, number], angle: number) =>
   Array.from(
-    axisAngleQuaternion(new Float64Array(4), [0, 1, 0], angle),
+    axisAngleQuaternion(new Float64Array(4), axis, angle),
     (value) => Math.round(snap(value) * 1e6) / 1e6,
   )
+
+/** A turn of `angle` radians about +Y. */
+export const yaw = (angle: number) => turn([0, 1, 0], angle)

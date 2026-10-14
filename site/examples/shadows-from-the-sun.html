@@ -26,7 +26,11 @@
       const say = words();
 
       const world = createWorld('view', { controls: 'orbit' });
-      world.scene.background = math.color('#8fb3d9');
+      // The sky by the sun's height, in radians: deep blue once it is well down, a warm glow as it
+      // crosses the horizon, clear blue from a quarter of a radian up.
+      const SKY = [[-0.2, '#1b2140'], [0, '#e3956a'], [0.25, '#8fb3d9']].map(([at, colour]) => ({ at, colour: math.color(colour) }));
+      const backdrop = SKY.at(-1).colour.clone(), WHITE = math.color('#ffffff');
+      world.scene.background = backdrop;
 
       // A sundial garden, in metres, north toward −z and east toward +x. An obelisk stands in
       // the middle; round it a pergola, a carved screen and a windmill throw shadows of every
@@ -110,7 +114,7 @@
       const tipOf = ({ direction: [x, y, z] }) => [(-x / y) * OBELISK, (-z / y) * OBELISK];
 
       const sun = light.directional({ castShadow: true });
-      const sky = light.hemisphere({ color: '#a9c8ff', groundColor: '#5b6b3a', intensity: 0.8 });
+      const sky = light.hemisphere({ groundColor: '#5b6b3a', intensity: 0.8 });
       world.scene.add(sun, sky);
       world.camera.position.set(0, 60, 30);
       world.controls.target.set(0, 1.5, 0);
@@ -146,6 +150,13 @@
         sun.intensity = 3.4 * Math.min(1, up / 0.12);
         sun.color.set('#ff8a45').lerp(math.color('#fff5e6'), Math.min(1, up / 0.5));
         sky.intensity = 0.25 + 0.6 * math.clamp((now.height + 0.1) / 0.4, 0, 1);
+        let next = 1;
+        while (next < SKY.length - 1 && now.height > SKY[next].at) next++;
+        const low = SKY[next - 1], high = SKY[next];
+        backdrop.copy(low.colour).lerp(high.colour, math.clamp((now.height - low.at) / (high.at - low.at), 0, 1));
+        sky.color.copy(backdrop).lerp(WHITE, 0.3);
+        // As the light fails the eye opens, up to three times, so twilight still reads.
+        world.exposure = 1 + 2 * (1 - math.clamp((now.height + 0.15) / 0.35, 0, 1));
         HOURS.forEach((hour, k) => {
           const then = sunAt(hour, day, values.latitude), [tx, tz] = tipOf(then);
           markers[k].visible = then.height > math.degToRad(8) && Math.hypot(tx, tz) < 24;

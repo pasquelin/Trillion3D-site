@@ -29,7 +29,7 @@
     <canvas id="view"></canvas>
     <p data-words="credit"></p>
     <script type="module">
-      import { createWorld, light, math } from '../runtime/engine.js';
+      import { createWorld, effect, light, math } from '../runtime/engine.js';
       import { controls } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
@@ -61,11 +61,15 @@
       world.camera.lookAt(0.75, 1.6, 1);
 
       // `world.bounce` adds the light the surfaces send back, traced against the compiled model.
+      // At night a soft glow spreads the globe's and the lit panes' light into the dark air.
+      const glow = effect.bloom({ intensity: 0.07 });
       let spin = false;
       controls({ night: true, bounce: true, spin: false, sun: [-80, 80, 30, 1], lamp: '#ffb866' }, (values) => {
         spin = values.spin;
         sun.visible = !values.night;
         lamp.visible = shopLight.visible = values.night;
+        world.effects.remove(glow);
+        if (values.night) world.effects.add(glow);
         lamp.color.set(values.lamp);
         const turn = math.degToRad(values.sun);
         sun.position.set(Math.sin(turn) * 15, 11, Math.cos(turn) * 15);

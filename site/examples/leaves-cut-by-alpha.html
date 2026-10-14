@@ -9,7 +9,7 @@
       body {
         margin: 0;
         height: 100%;
-        background: #171d28;
+        background: #a9c4dc;
       }
       canvas {
         display: block;
@@ -25,6 +25,7 @@
       import { controls, leafTexture, seeded } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#a9c4dc');
       const ground = object.mesh(geometry.cylinder(3.2, 3.2, 0.2, 64), material.meshStandard({ color: '#5b6b3a', roughness: 0.95 }));
       ground.position.y = -0.1;
       world.scene.add(ground);
@@ -36,10 +37,13 @@
       // `alphaTest`: a leaf pixel whose alpha is under it is thrown away; the leaf is one rectangle.
       const leafMaterial = material.meshStandard({ map: leafTexture({ texture }), alphaTest: 0.5, side: side.double, roughness: 0.6 });
       // The branches and leaves are placed by a seeded sequence: the same tree on every run.
-      const leafShape = geometry.plane(0.28, 0.6), next = seeded(5), up = math.vector3(0, 1, 0);
+      // Every branch is one tapered stick of unit size, stretched to its length and radius: one
+      // shape for them all, drawn together, as the leaves share one rectangle.
+      const leafShape = geometry.plane(0.28, 0.6), stickShape = geometry.cylinder(0.7, 1, 1, 12), next = seeded(5), up = math.vector3(0, 1, 0);
       const branches = [], leaves = [];
       function grow(from, direction, length, radius, level) {
-        const stick = object.mesh(geometry.cylinder(radius * 0.7, radius, length, 12), bark);
+        const stick = object.mesh(stickShape, bark);
+        stick.scale.set(radius, length, radius);
         stick.quaternion.setFromUnitVectors(up, direction);
         stick.position.copy(from).addScaledVector(direction, length / 2);
         world.scene.add(stick);

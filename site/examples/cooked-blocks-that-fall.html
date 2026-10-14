@@ -1,0 +1,66 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Cooked blocks that fall</title>
+    <meta name="thumbnail" content="1.2" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #d6e2ec;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, light, math } from '../runtime/engine.js';
+      import { controls, physicsReadouts } from '../runtime/kit.js';
+
+      // A compiled model: each of its forty-eight blocks is a node that declares a dynamic body
+      // (`KHR_physics_rigid_bodies`). The compiler cooked each one's collider with the model — a
+      // ball's declared sphere, the hull of every other block, weighed — and the page builds no
+      // body: once the physics is on, the bodies are restored as the model loads, and each one
+      // moves its own drawn node. The plinth declares nothing and stays static ground.
+      const world = createWorld('view', { controls: 'orbit', physics: true });
+      world.scene.background = math.color('#d6e2ec');
+      const MODEL = '../assets/examples/cooked-blocks/cache/native/full/manifest.json';
+      let model = await world.scene.load(MODEL),
+        reloading = false;
+
+      const sun = light.directional({ intensity: 3, castShadow: true });
+      sun.position.set(-6, 12, 7);
+      world.scene.add(sun, light.hemisphere({ intensity: 1.1, color: '#ffffff', groundColor: '#7a6f62' }));
+      world.camera.position.set(7.5, 5.5, 9);
+      world.controls.target.set(0, 1.6, 0);
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
+
+      controls(
+        {
+          // Loaded again, the blocks are back in the air where the file holds them, and fall anew.
+          // One load at a time: a second press while one is on its way would leave two models.
+          again: async () => {
+            if (reloading) return;
+            reloading = true;
+            world.scene.remove(model);
+            model = await world.scene.load(MODEL).finally(() => (reloading = false));
+          },
+          slowMotion: false,
+        },
+        ({ slowMotion }) => {
+          world.physics.timeScale = slowMotion ? 0.25 : 1;
+        },
+        world,
+      );
+      // The balls bounce down the steps: their rubber is the matter their collider declares.
+      physicsReadouts(world, ['bodies', 'step']);
+    </script>
+  </body>
+</html>

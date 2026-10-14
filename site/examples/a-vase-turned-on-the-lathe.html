@@ -21,10 +21,11 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light } from '../runtime/engine.js';
+      import { createWorld, geometry, material, object, light, math } from '../runtime/engine.js';
       import { controls } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#171d28');
       const bench = object.mesh(geometry.box(8, 0.3, 2.4), material.meshStandard({ color: '#5a3a24', roughness: 0.5 }));
       bench.position.y = -0.15;
       world.scene.add(bench);
@@ -48,8 +49,21 @@
         world.scene.add(vase);
         return vase;
       });
-      world.scene.add(light.directional({ intensity: 3, color: '#fff1dc', position: [5, 8, 7], castShadow: true }));
-      world.scene.add(light.point({ intensity: 30, color: '#7fb0ff', position: [-3, 2.5, -2], distance: 12 }));
+      world.scene.add(light.directional({ intensity: 2, color: '#fff1dc', position: [5, 8, 7], castShadow: true }));
+      // A tall softbox at the front left and a long strip low behind the bench, as a potter's
+      // photographer would light them: on a glaze each shows as a soft window and a bright rim
+      // down the vase's edge. A softbox is a rectangle light (`rectArea`) aimed at the vases and a
+      // white panel drawn where it hangs.
+      const panel = material.meshBasic({ color: '#fff4e6' });
+      for (const [width, height, position, intensity] of [[1.6, 2.4, [-4.2, 2.6, 3.6], 9], [8, 0.4, [0, 1.6, -3], 10]]) {
+        const softbox = light.rectArea({ color: '#fff4e6', intensity, width, height, position });
+        softbox.lookAt(0, 1, 0);
+        const face = object.mesh(geometry.plane(width, height), panel);
+        face.position.set(...position);
+        face.lookAt(0, 1, 0);
+        face.castShadow = false;
+        world.scene.add(softbox, face);
+      }
       world.scene.add(light.point({ intensity: 30, color: '#ff9a6a', position: [4, 1.5, -2], distance: 12 }));
       world.camera.position.set(0, 2.2, 6.2);
       world.camera.lookAt(0, 1, 0);

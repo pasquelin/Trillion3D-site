@@ -25,6 +25,7 @@
       import { controls, mix } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#b9cde3');
 
       // The height map: a height for every point of the ground, here written as a formula — three
       // ridges, a shoulder, a winding valley cut between them and a little erosion.
@@ -88,17 +89,17 @@
         }
       const colours = ['#2e4029', '#4a6133', '#614a33', '#b8b3a6'];
       bands.forEach(({ position, normal }, index) => {
+        // Every triangle has its own three corners, in order: no index is needed.
         const ground = geometry.createBuffer({
           position: buffer.float32(new Float32Array(position), 3),
           normal: buffer.float32(new Float32Array(normal), 3),
-          index: buffer.uint32(Array.from({ length: position.length / 3 }, (_, vertex) => vertex)),
         });
         world.scene.add(object.mesh(ground, material.meshStandard({ color: colours[index], roughness: 0.9 })));
       });
 
       // The water lies flat at one level: wherever the valley floor dips below it, a river shows.
       // It covers the same square as the ground, no more.
-      const water = object.mesh(geometry.plane(SIZE, SIZE), material.meshStandard({ color: '#0b5a80', metalness: 0.1, roughness: 0.2 }));
+      const water = object.mesh(geometry.plane(SIZE, SIZE), material.meshStandard({ color: '#0b5a80', metalness: 0.1, roughness: 0.06 }));
       water.rotation.set(-Math.PI / 2, 0, 0);
       water.position.y = WATER;
       world.scene.add(water);
@@ -136,12 +137,20 @@
       world.controls.target.set(0, 0.9, 0);
       world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
 
+      // A mist lies along the river, thick at the water and gone a metre up, so the valley reads
+      // deeper than the peaks. The fog is light, exposed and tone-mapped like a surface, the
+      // background is not: this radiance, divided by the exposure, is the one the display curve
+      // shows as the sky's #b9cde3.
+      const MIST = [0.358, 0.584, 1.054], mist = { color: math.color(MIST), density: 0.08, heightFalloff: 2.5, baseHeight: WATER };
+      world.scene.fog = mist;
+
       // The hour moves the sun across the range, and the peaks' shadows swing across the valley.
       controls({ hour: [6, 18, 9, 0.25], sunColour: '#ffe2b8', exposure: [0.4, 2.5, 1.1] }, (values) => {
         const arc = ((values.hour - 6) / 12) * Math.PI;
         sun.position.set(Math.cos(arc) * 10, Math.sin(arc) * 8 + 0.5, 4);
         sun.color.set(values.sunColour);
         world.exposure = values.exposure;
+        mist.color.set(MIST).multiplyScalar(1 / values.exposure);
         world.invalidate();
       }, world);
     </script>
