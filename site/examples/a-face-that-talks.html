@@ -42,7 +42,6 @@
         sheen: 0.4,
         subsurfaceColor: '#ff8a72',
       });
-      const twoSided = 'double';
 
       // The head is an ellipsoid; `surface` gives its front at (x, y), where the features sit.
       const HEAD = [0.78, 1, 0.8];
@@ -166,8 +165,8 @@
       }
       const lipPaint = material.meshPhysical({ color: '#c25b67', roughness: 0.3, clearcoat: 0.6 });
       morphed('lips', lipsShape, lipPaint);
-      morphed('inner', innerShape, material.meshStandard({ color: '#2a0910', side: twoSided }));
-      morphed('teeth', teethShape, material.meshStandard({ color: '#f7f2ea', side: twoSided }));
+      morphed('inner', innerShape, material.meshStandard({ color: '#2a0910', side: 'double' }));
+      morphed('teeth', teethShape, material.meshStandard({ color: '#f7f2ea', side: 'double' }));
 
       // The eyes turn in their sockets; the lids, domes a little larger, close over them.
       const iris = material.meshStandard({
@@ -193,7 +192,7 @@
         color: '#ecc9b8',
         roughness: 0.45,
         sheen: 0.4,
-        side: twoSided,
+        side: 'double',
       });
       const browShape = geometry.capsule(0.017, 0.14, 6, 12),
         browPaint = material.meshStandard({ color: '#2d1830', roughness: 0.6 });

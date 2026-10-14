@@ -459,7 +459,7 @@
       world.controls.minDistance = 2.5;
       world.controls.maxDistance = 6;
 
-      const ui = controls(
+      controls(
         { speed: [0, 1.5, 1, 0.05] },
         (values) => {
           action.timeScale = values.speed;
@@ -467,14 +467,17 @@
         },
         world,
       );
-      world.onFrame(({ delta }) => {
-        if (!ui.speed) return;
-        const step = groundSpeed * ui.speed * Math.min(delta, 0.05);
+      // The ground follows the clip's own time, ahead of each frame and after the clip has
+      // stepped: whatever the frame rate, it is drawn where the hooves are.
+      let played = action.time;
+      world.beforeFrame(() => {
+        const step = groundSpeed * (action.time - played);
+        played = action.time;
+        if (!step) return;
         for (const mesh of passing) {
           mesh.position.x -= step;
           if (mesh.position.x < -SPAN / 2) mesh.position.x += SPAN;
         }
-        world.invalidate();
       });
     </script>
   </body>

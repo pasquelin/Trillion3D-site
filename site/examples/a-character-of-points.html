@@ -122,7 +122,8 @@
         body: material.points({ color: '#6fd6ff', size: 0.016 }),
         glow: material.points({ color: '#ffc27a', size: 0.02 }),
       };
-      let clouds = [];
+      let clouds = [],
+        scattered = 0;
       /** Scatters `count` points over the segments, by area, and skins them to the skeleton. */
       function scatter(count) {
         // The clouds of the last count go, and their point lists with them.
@@ -130,6 +131,7 @@
           cloud.removeFromParent();
           cloud.geometry.dispose();
         }
+        scattered = count;
         const random = seeded(7);
         const lists = {
           body: { at: [], joints: [], weights: [] },
@@ -234,8 +236,8 @@
       world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
       const ui = controls(
         { points: [2000, 30000, 12000, 1000], speed: [0, 2, 1], spin: true },
-        (values, key) => {
-          if (key === undefined || key === 'points') scatter(values.points);
+        (values) => {
+          if (values.points !== scattered) scatter(values.points);
           action.timeScale = values.speed;
           world.invalidate();
         },

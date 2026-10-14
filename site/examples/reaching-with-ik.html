@@ -155,14 +155,16 @@
         },
         world,
       );
-      const goal = math.vector3(0, 1.8, 0);
+      // The pointer leads the light on the plane 1.8 m up.
+      const LEAD = 1.8;
+      const goal = math.vector3(0, LEAD, 0);
       world.canvas.addEventListener('pointermove', (event) => {
         if (ui.follow !== 'pointer') return;
-        const met = pointerOnPlane(world, event, goal.y);
+        const met = pointerOnPlane(world, event, LEAD);
         if (!met) return;
         const [x, z] = met;
         const scale = Math.min(1, 0.8 / Math.hypot(x, z));
-        goal.set(x * scale, goal.y, z * scale);
+        goal.set(x * scale, LEAD, z * scale);
         world.invalidate();
       });
 
