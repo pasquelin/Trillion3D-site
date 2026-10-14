@@ -53,6 +53,7 @@ export interface GltfMaterial {
 /** The shape read from and written to `geometry.gltf`, the fields this recipe touches. */
 export interface GltfDocument {
   asset: { version: string; generator: string; copyright?: string }
+  extensionsUsed?: string[]
   scene?: number
   scenes: { nodes: number[] }[]
   nodes: GltfNode[]
@@ -75,4 +76,6 @@ export interface GltfNode {
   children?: number[]
   /** What the compiler reads beside the node: a soft body's `physics` options. */
   extras?: { physics?: PhysicsOption }
+  /** Its mesh drawn once per pose, the accessors of each pose's translation, rotation, scale. */
+  extensions?: { EXT_mesh_gpu_instancing: { attributes: Record<string, number> } }
 }
