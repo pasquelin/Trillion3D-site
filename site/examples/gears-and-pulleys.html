@@ -9,7 +9,7 @@
       body {
         margin: 0;
         height: 100%;
-        background: #171d28;
+        background: #17110d;
       }
       canvas {
         display: block;
@@ -21,15 +21,18 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, math, joint } from '../runtime/engine.js';
+      import { createWorld, geometry, material, object, light, math, joint, effect } from '../runtime/engine.js';
       import { controls, readout } from '../runtime/kit.js';
 
       // A clockwork of gears, a lift driven by a rack and pinion, and a bucket on a rope over two
       // pulley wheels. Every wheel turns on a hinge; `joint.gear`, `joint.rackAndPinion` and
       // `joint.pulley` are Jolt's own constraints that tie the bodies' motions together.
       const world = createWorld('view', { controls: 'orbit', physics: true });
-      world.scene.background = math.color('#e3e9f1');
+      // A dark workshop: a wooden wall, a worn floor, one warm lamp. The metal has only the lights to
+      // shine with, so they are few and warm, and bloom lets their glints spill a little.
+      world.scene.background = math.color('#17110d');
       world.camera.far = 300;
+      world.effects.add(effect.bloom({ intensity: 0.06 }));
 
       // One material per colour and matter, shared by every part painted with it.
       const paints = new Map();
@@ -48,38 +51,74 @@
       };
       const block = (size, at, color, physics, metalness) =>
         place(object.mesh(geometry.box(...size), paint(color, 'wood', metalness)), at, physics);
-      block([26, 1, 10], [0, -0.5, 0], '#9aa7b5', 'static', 0);
-      block([26, 9, 0.3], [0, 4.5, -0.9], '#d6dce4', 'static', 0);
+      block([26, 1, 10], [0, -0.5, 0], '#3d332c', 'static', 0);
+      block([26, 9, 0.3], [0, 4.5, -0.9], '#5e3f29', 'static', 0);
 
-      // A gear: a hub that turns on its hinge, its teeth drawn around it. Every gear has the same
-      // tooth spacing (PITCH metres along its rim), so their numbers of teeth set the ratios.
+      // A gear: one solid wheel, its outline cut as a flat shape and pushed DEPTH deep. Every gear
+      // has the same tooth spacing (PITCH metres along its pitch circle), so their numbers of teeth
+      // set the ratios. The teeth have involute flanks, the curve a taut thread draws unwinding from
+      // a circle: two such wheels roll on each other at a steady ratio. Tips stand MODULE past the
+      // pitch circle, roots 1.25 MODULE inside it; tooth k is centred on `phase` + k × 2π / teeth.
       const PITCH = 0.3,
-        DEPTH = 0.25;
-      const gear = (teeth, at, color) => {
-        const radius = (teeth * PITCH) / (2 * Math.PI);
-        const hub = object.mesh(
-          geometry.cylinder(radius - 0.1, radius - 0.1, DEPTH, 48),
-          paint(color),
-        );
-        hub.rotation.x = Math.PI / 2; // its axis along z
-        const rim = object.group();
-        rim.rotation.x = -Math.PI / 2; // teeth laid out in the plane of the wall
-        hub.add(rim);
+        DEPTH = 0.25,
+        MODULE = PITCH / Math.PI,
+        PRESSURE = (20 * Math.PI) / 180;
+      const involute = (angle) => Math.tan(angle) - angle;
+      const polar = (rho, angle) => [rho * Math.cos(angle), rho * Math.sin(angle)];
+      const wheelShape = (teeth, spokes) => {
+        const pitch = (MODULE * teeth) / 2,
+          tip = pitch + MODULE,
+          root = pitch - 1.25 * MODULE;
+        const base = pitch * Math.cos(PRESSURE),
+          step = (2 * Math.PI) / teeth;
+        // Half a tooth's width, as an angle, at the radius rho: a little under a quarter step on the
+        // pitch circle, the play that keeps two wheels from binding.
+        const half = (rho) =>
+          step * 0.23 + involute(PRESSURE) - involute(Math.acos(Math.min(1, base / rho)));
+        const outline = [];
+        for (let k = 0; k < teeth; k++) {
+          const flank = [0, 0.25, 0.5, 0.75, 1].map((t) => root + (tip - root) * t);
+          for (const rho of flank) outline.push(polar(rho, k * step - half(rho)));
+          for (const rho of flank.reverse()) outline.push(polar(rho, k * step + half(rho)));
+        }
+        const shape = math.shape(outline);
+        // A large wheel is lightened by windows between its spokes: along the rim, back by the hub.
+        const rim = root - 2 * MODULE,
+          hub = rim * 0.28,
+          width = rim * 0.14;
+        for (let s = 0; s < spokes; s++) {
+          const from = (s * 2 * Math.PI) / spokes,
+            to = from + (2 * Math.PI) / spokes;
+          const window = math.shape();
+          window.absarc(0, 0, rim, from + width / 2 / rim, to - width / 2 / rim);
+          window.absarc(0, 0, hub, to - width / 2 / hub, from + width / 2 / hub, true);
+          shape.holes.push(window);
+        }
+        return shape;
+      };
+      // Pushed along z and centred on its plane, its edges rounded by a bevel that catches the light.
+      const solid = (shape) =>
+        geometry
+          .extrude(shape, {
+            depth: DEPTH - 0.06,
+            bevelThickness: 0.03,
+            bevelSize: 0.006,
+            bevelSegments: 2,
+            curveSegments: 16,
+          })
+          .translate(0, 0, -(DEPTH - 0.06) / 2);
+      // The body is a plain cylinder inside the roots, turned to lie along z: the wheels never
+      // touch, their joints alone tie them together.
+      const alongZ = [Math.SQRT1_2, 0, 0, Math.SQRT1_2];
+      const gear = (teeth, at, color, phase = 0) => {
+        const radius = (MODULE * teeth) / 2;
+        const wheel = solid(wheelShape(teeth, teeth >= 24 ? 5 : 0)).rotateZ(phase);
+        const hub = object.mesh(wheel, paint(color));
         hub.teeth = teeth;
         hub.radius = radius;
-        hub.rim = rim;
-        place(hub, at, { type: 'dynamic', mass: 4 * radius });
+        const core = { type: 'cylinder', halfHeight: DEPTH / 2, radius: radius - 1.25 * MODULE - 0.03, quaternion: alongZ };
+        place(hub, at, { type: 'dynamic', mass: 4 * radius, shape: { type: 'compound', parts: [core] } });
         return hub;
-      };
-      // Teeth at `phase` + k × pitch angle, square to the rim.
-      const cut = (hub, phase, color) => {
-        for (let k = 0; k < hub.teeth; k++) {
-          const angle = phase + (2 * Math.PI * k) / hub.teeth;
-          const tooth = object.mesh(geometry.box(0.2, PITCH * 0.42, DEPTH), paint(color));
-          tooth.position.set(Math.cos(angle) * hub.radius, Math.sin(angle) * hub.radius, 0);
-          tooth.rotation.z = angle;
-          hub.rim.add(tooth);
-        }
       };
       // Each wheel turns on a pin through its centre (the anchor defaults to the body's position).
       const hinge = (hub, motor) => joint.hinge(hub, null, { axis: [0, 0, 1], motor });
@@ -99,7 +138,7 @@
       let phase = 0;
       for (const [i, { teeth, bearing, color }] of train.entries()) {
         const last = wheels[i - 1];
-        const radius = (teeth * PITCH) / (2 * Math.PI);
+        const radius = (MODULE * teeth) / 2;
         const at = last
           ? [
               last.position.x + (last.radius + radius) * Math.cos(bearing),
@@ -107,20 +146,18 @@
               0,
             ]
           : [-9, 4.2, 0];
-        const hub = gear(teeth, at, color);
         if (last) {
           const pitchAngle = (2 * Math.PI) / last.teeth;
           const offset =
             ((((phase - bearing) % pitchAngle) + pitchAngle) % pitchAngle) * last.radius;
           phase = bearing + Math.PI - (offset + PITCH / 2) / radius;
         }
-        cut(hub, phase, color);
-        wheels.push(hub);
+        wheels.push(gear(teeth, at, color, phase));
       }
       // The last wheel carries a hand.
       const hand = object.mesh(geometry.box(0.08, 1.1, 0.06), paint('#2b303a'));
       hand.position.set(0, 0.45, DEPTH / 2 + 0.04);
-      wheels[3].rim.add(hand);
+      wheels[3].add(hand);
       const driver = hinge(wheels[0], { mode: 'velocity', target: 0.8, maxForce: 400 });
       joints.push(driver, ...wheels.slice(1).map((hub) => hinge(hub)));
       for (let i = 1; i < wheels.length; i++)
@@ -135,20 +172,27 @@
       // carrying a platform and a crate. A turn of the pinion moves the rack by its rim, so the
       // ratio is 1 / its radius (radians per metre).
       const pinion = gear(12, [0, 3.4, 0], '#8d99a6');
-      cut(pinion, 0, '#8d99a6');
-      const RACK = 5.4;
-      const rack = block([0.3, RACK, 0.3], [pinion.radius + 0.2, RACK / 2 + 0.2, 0], '#6b7480', {
+      const RACK = 5.4,
+        LINE = 0.3;
+      const rack = block([0.3, RACK, 0.3], [pinion.radius + LINE, RACK / 2 + 0.2, 0], '#6b7480', {
         type: 'dynamic',
         mass: 20,
       });
       // Its teeth face the pinion's: half a pitch above the pinion's tooth on the line they share.
+      // A rack is a gear of infinite radius: its flanks are straight, leaning at the pressure angle,
+      // its pitch line LINE in front of the bar's middle, where the pinion's pitch circle touches.
       const toothAt = 3.4 + PITCH / 2 - rack.position.y;
       const lowest = toothAt - PITCH * Math.floor((toothAt + RACK / 2) / PITCH);
-      for (let y = lowest; y < RACK / 2; y += PITCH) {
-        const tooth = object.mesh(geometry.box(0.2, PITCH * 0.42, DEPTH), paint('#6b7480'));
-        tooth.position.set(-0.2, y, 0);
-        rack.add(tooth);
-      }
+      const lean = Math.tan(PRESSURE),
+        tipHalf = PITCH * 0.23 - MODULE * lean,
+        rootHalf = PITCH * 0.23 + 1.25 * MODULE * lean;
+      const [tip, root, back] = [-LINE - MODULE, -LINE + 1.25 * MODULE, -0.14];
+      const strip = [[back, -RACK / 2], [root, -RACK / 2]];
+      for (let y = lowest; y + rootHalf < RACK / 2; y += PITCH)
+        if (y - rootHalf > -RACK / 2)
+          strip.push([root, y - rootHalf], [tip, y - tipHalf], [tip, y + tipHalf], [root, y + rootHalf]);
+      strip.push([root, RACK / 2], [back, RACK / 2]);
+      rack.add(object.mesh(solid(math.shape(strip)), paint('#6b7480')));
       const platform = block(
         [1.8, 0.12, 1.4],
         [rack.position.x + 1.05, RACK + 0.26, 0],
@@ -182,11 +226,22 @@
         [9, TOP, 0],
       ];
       block([4.4, 0.2, 0.4], [7.5, TOP + 0.5, -0.4], '#6b4f36', 'static');
+      // A pulley wheel is turned on a lathe: a thin web between two flanges, a groove for the rope,
+      // two crossed ribs on the web that show it turning.
+      const sheave = geometry.lathe(
+        [[0, -0.04], [0.25, -0.04], [0.27, -0.09], [0.35, -0.09], [0.35, -0.06], [0.3, 0],
+          [0.35, 0.06], [0.35, 0.09], [0.27, 0.09], [0.25, 0.04], [0, 0.04]],
+        48,
+      );
+      const rib = geometry.box(0.5, 0.12, 0.05);
       const pulleys = over.map((at) => {
-        const wheel = object.mesh(geometry.cylinder(0.35, 0.35, 0.18, 32), paint('#8d99a6'));
+        const wheel = object.mesh(sheave, paint('#8d99a6'));
         wheel.rotation.x = Math.PI / 2;
-        const spoke = object.mesh(geometry.box(0.66, 0.06, 0.2), paint('#2b303a'));
-        wheel.add(spoke);
+        for (const turn of [0, Math.PI / 2]) {
+          const spoke = object.mesh(rib, paint('#2b303a'));
+          spoke.rotation.y = turn;
+          wheel.add(spoke);
+        }
         return place(wheel, at);
       });
       // The bucket: its floor is the body, its four walls parts of the same compound shape.
@@ -261,11 +316,23 @@
         world,
       );
 
-      const sun = light.directional({ intensity: 3, castShadow: true });
-      sun.position.set(6, 16, 12);
+      // A warm key from high on the left rakes across the wall and throws the wheels' shadows on
+      // it; a dim warm sky fills; a bare bulb over the bench is the workshop's own lamp.
+      const sun = light.directional({ intensity: 3.5, color: '#ffd9a8', castShadow: true });
+      sun.position.set(-8, 14, 12);
+      const bulb = object.mesh(geometry.sphere(0.12, 24, 12), material.meshBasic({ color: '#ffe0a8' }));
+      const shade = object.mesh(
+        geometry.cylinder(0.12, 0.45, 0.35, 32),
+        paint('#2f3a33', 'metal', 0.3),
+      );
+      shade.position.y = 0.2;
+      const cord = object.mesh(geometry.cylinder(0.01, 0.01, 1.4, 6), paint('#111111', 'wood', 0));
+      cord.position.y = 1.05;
+      bulb.add(shade, cord, light.point({ position: [0, -0.15, 0], intensity: 30, distance: 14, color: '#ffc77a' }));
+      place(bulb, [-3.2, 7.6, 1.6]);
       world.scene.add(
         sun,
-        light.hemisphere({ intensity: 1.2, color: '#ffffff', groundColor: '#8a9099' }),
+        light.hemisphere({ intensity: 0.4, color: '#ffe6c8', groundColor: '#2a1f18' }),
       );
       world.camera.position.set(0, 6, 17);
       world.controls.target.set(0, 4, 0);
