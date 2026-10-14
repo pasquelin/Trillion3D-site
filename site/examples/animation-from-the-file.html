@@ -130,7 +130,11 @@
       // second at speed 1 —, and the deck turns back under the feet at that pace, so they hold
       // on it; a negative speed plays the clip backwards and turns the deck forward.
       const WALK = 0.9;
-      const ui = controls(
+      // The deck follows the first walker's clip time, so it keeps step with the feet whatever
+      // the frame rate: `played` is the time it has turned for.
+      const lead = walkers[0].action;
+      let played = 0;
+      controls(
         { walkers: [1, MOST, 12, 1], speed: [-1.5, 2, 1] },
         (values, key) => {
           walkers.forEach(({ holder, action, clip }, index) => {
@@ -139,20 +143,24 @@
             action.timeScale = values.speed;
             if (key !== undefined && key !== 'walkers') return;
             // A hidden walker stops playing; the shown ones are laid out round the ring again.
-            if (!shown) return void action.stop();
+            if (!shown) {
+              action.stop();
+              return;
+            }
             const angle = (index / values.walkers) * Math.PI * 2;
             holder.position.set(Math.sin(angle) * RADIUS, 0, Math.cos(angle) * RADIUS);
             holder.rotation.y = angle + Math.PI / 2;
             action.play().seek((index / values.walkers) * clip.duration);
           });
+          played = lead.time;
           world.invalidate();
         },
         world,
       );
-      world.onFrame(({ delta }) => {
-        if (!ui.speed) return;
-        carousel.rotation.y -= (WALK / RADIUS) * ui.speed * Math.min(delta, 0.05);
-        world.invalidate();
+      // Ahead of each frame, after the clips have stepped: the deck is drawn where the feet are.
+      world.beforeFrame(() => {
+        carousel.rotation.y -= (WALK / RADIUS) * (lead.time - played);
+        played = lead.time;
       });
     </script>
   </body>

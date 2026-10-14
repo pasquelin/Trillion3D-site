@@ -37,13 +37,14 @@
       world.scene.background = math.color('#0b1018');
 
       // A dark polished floor with two faint rings: the arms stand on the inner one.
+      const RING = 1.8;
       const floor = object.mesh(
         geometry.cylinder(9, 9, 0.2, 96),
         material.meshStandard({ color: '#151b25', roughness: 0.32, metalness: 0.4 }),
       );
       floor.position.y = -0.1;
       world.scene.add(floor);
-      for (const radius of [1.8, 3.4]) {
+      for (const radius of [RING, 3.4]) {
         const ring = object.mesh(
           geometry.torus(radius, 0.012, 8, 160),
           material.meshStandard({ color: '#000000', emissive: '#3fb6ff', emissiveIntensity: 1.5 }),
@@ -71,6 +72,9 @@
       const accent = material.meshStandard({ color: '#ff7a3d', roughness: 0.4, metalness: 0.3 });
       const UPPER = 1.45,
         LOWER = 1.35;
+      // The chain's built bend: the shoulder and the elbow turned up from straight.
+      const SHOULDER = 0.5,
+        ELBOW = 1.5;
       const shapes = {
         foot: geometry.cylinder(0.42, 0.5, 0.24, 48),
         column: geometry.cylinder(0.15, 0.2, 0.9, 32),
@@ -100,11 +104,11 @@
         part(turret, shapes.joint, graphite);
         part(turret, shapes.collar, accent).rotation.x = Math.PI / 2;
         const shoulder = object.group();
-        shoulder.rotation.x = 0.5;
+        shoulder.rotation.x = SHOULDER;
         part(shoulder, shapes.upper, ceramic, [0, UPPER / 2, 0]);
         const elbow = object.group();
         elbow.position.y = UPPER;
-        elbow.rotation.x = 1.5;
+        elbow.rotation.x = ELBOW;
         part(elbow, shapes.joint, graphite).scale.setScalar(0.75);
         part(elbow, shapes.lower, ceramic, [0, LOWER / 2, 0]);
         const wrist = object.group();
@@ -144,7 +148,7 @@
           // The shown arms share the ring evenly, whatever their number.
           arms.forEach(({ base }, index) => {
             const angle = (index / values.arms) * Math.PI * 2;
-            base.position.set(Math.sin(angle) * 1.8, 0, Math.cos(angle) * 1.8);
+            base.position.set(Math.sin(angle) * RING, 0, Math.cos(angle) * RING);
             base.visible = index < values.arms;
           });
           world.invalidate();
@@ -196,8 +200,8 @@
           pole.getWorldPosition(poleAt);
           // Back to the built bend first: `reach` then blends from that pose, never from the
           // last frame's solve.
-          shoulder.rotation.set(0.5, 0, 0);
-          elbow.rotation.set(1.5, 0, 0);
+          shoulder.rotation.set(SHOULDER, 0, 0);
+          elbow.rotation.set(ELBOW, 0, 0);
           animation.twoBoneIK(shoulder, elbow, wrist, at, poleAt, ui.reach);
         });
         if (ui.speed || orb.position.distanceToSquared(goal) > 1e-6) world.invalidate();

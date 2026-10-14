@@ -80,9 +80,12 @@
       });
       // The whole foliage is one skinned mesh: each leaf's blade is laid where its holder puts it,
       // its vertices bound to its own four bones of one skeleton. Made now, with the bones as
-      // built, so this is the bind pose.
+      // built, so this is the bind pose. (At the pinned engine, several hand-built skinned meshes
+      // each on its own skeleton draw torn once their poses differ; one mesh draws whole.)
       const skeleton = animation.skeleton(
-        holders.flatMap((holder) => [0, 1, 2, 3].map((i) => holder.getObjectByName(`bone${i}`))),
+        holders.flatMap((holder) =>
+          Array.from({ length: BONES }, (_, i) => holder.getObjectByName(`bone${i}`)),
+        ),
       );
       const flat = [],
         curled = [],

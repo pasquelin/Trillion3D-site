@@ -195,6 +195,8 @@
         sheen: 0.4,
         side: twoSided,
       });
+      const browShape = geometry.capsule(0.017, 0.14, 6, 12),
+        browPaint = material.meshStandard({ color: '#2d1830', roughness: 0.6 });
       const brows = object.group();
       brows.name = 'brows';
       head.add(brows);
@@ -219,10 +221,7 @@
         lid.position.set(...at);
         lid.rotation.x = -0.62;
         lid.add(object.mesh(dome, lidSkin));
-        const brow = object.mesh(
-          geometry.capsule(0.017, 0.14, 6, 12),
-          material.meshStandard({ color: '#2d1830', roughness: 0.6 }),
-        );
+        const brow = object.mesh(browShape, browPaint);
         brow.rotation.z = Math.PI / 2 + side * 0.12;
         brow.position.set(side * 0.27, 0.38, surface(0.27, 0.38) + 0.005);
         brows.add(brow);
