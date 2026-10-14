@@ -21,7 +21,7 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, math, buffer } from '../runtime/engine.js';
+      import { createWorld, geometry, material, object, light, math, buffer, effect } from '../runtime/engine.js';
       import { controls, readout, language, seeded, opening, ease, mix } from '../runtime/kit.js';
 
       const next = seeded(7);
@@ -49,6 +49,8 @@
           world.scene.add(mesh);
           points.push(mesh);
         }
+      // A soft glow round what is bright: the dots and the buoys' lamps.
+      world.effects.add(effect.bloom({ intensity: 0.07 }));
 
       // The patterns, each a height over the field at a time. Rain drops a stone every second
       // somewhere on the field; each stone sends out one ring that fades as it spreads.
