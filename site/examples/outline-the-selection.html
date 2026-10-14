@@ -23,7 +23,7 @@
       // Needs the outline pass: effect.outline({ objects, color: ColorInput, thickness }) with watched setters.
       import { createWorld } from '../runtime/engine.js';
       import { effect, geometry, light, material, math, object } from '../runtime/engine.js';
-      import { controls } from '../runtime/kit.js';
+      import { controls, onClick } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
       world.scene.background = math.color('#18202c');
@@ -75,15 +75,8 @@
         world,
       );
 
-      let down = null;
-      world.canvas.addEventListener(
-        'pointerdown',
-        (event) => (down = [event.offsetX, event.offsetY]),
-      );
-      world.canvas.addEventListener('pointerup', (event) => {
-        const start = down;
-        down = null;
-        if (!start || Math.hypot(event.offsetX - start[0], event.offsetY - start[1]) > 3) return;
+      // A click that did not drag the camera outlines what it hit, or nothing.
+      onClick(world.canvas, (event) => {
         const hit = world.raycast({ x: event.offsetX, y: event.offsetY }, { objects: exhibits });
         outline.objects = hit ? [hit.object] : [];
       });
