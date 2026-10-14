@@ -43,13 +43,19 @@ pnpm run build:native      # the pinned engine's native compiler, built with Car
 pnpm run compile:caches    # every scene cache of site/assets/
 ```
 
+A scene too heavy for git, NVIDIA's Emerald Square (a glTF of 0.8 GB), is an asset of the release
+[`scenes-orca-1`](https://github.com/pasquelin/Trillion3D-site/releases/tag/scenes-orca-1):
+`compile:caches` downloads it into `.scenes/` (git-ignored, never served), refuses it unless its
+sha256 is the one `scripts/site-caches.ts` declares, and cooks it in 8 GB on 4 threads, about four
+minutes. Only its cache, 2.6 GB, is published.
+
 ## Commands
 
 | Command                       | What it does                                                                   |
 | ----------------------------- | ------------------------------------------------------------------------------ |
 | `pnpm run engine`             | Checks out the pinned Trillion3D commit under `.engine/` (what the site reads) |
 | `pnpm run build:native`       | The same, then builds the engine's native compiler                             |
-| `pnpm run compile:caches`     | Compiles the scene caches of the examples and the gallery                      |
+| `pnpm run compile:caches`     | Compiles the scene caches of the examples and the gallery (downloads first)    |
 | `pnpm run generate:api`       | Writes the API reference and inventory from the engine's declarations          |
 | `pnpm run build:docs`         | Builds the whole site into `dist/site/`                                        |
 | `pnpm run docs:serve`         | Builds, then serves `dist/site/` cross-origin isolated (`PORT` overrides)      |
