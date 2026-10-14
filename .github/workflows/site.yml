@@ -23,7 +23,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    timeout-minutes: 40
+    # A deploying run cooks Emerald Square too, a few minutes in 8 GB of the runner's 16.
+    timeout-minutes: 60
     outputs:
       deploy: ${{ steps.plan.outputs.deploy }}
     steps:
@@ -46,8 +47,10 @@ jobs:
         uses: Swatinem/rust-cache@v2
         with:
           workspaces: .engine/packages/asset-compiler-rust
+      # The cook downloads the release's scene sources into `.scenes/` (README, "Quick start");
+      # once their caches are written they are only disk the build's copies need.
       - if: steps.plan.outputs.deploy == 'true'
-        run: pnpm run build:native && pnpm run compile:caches
+        run: pnpm run build:native && pnpm run compile:caches && rm -rf .scenes
       # Styles, demo maths, browser engine, workers, portal, API files, scene caches and statics;
       # `--published` adds the audience measurement, which no pull request or local build carries.
       - if: steps.plan.outputs.deploy == 'true'

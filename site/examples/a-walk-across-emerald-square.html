@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>A walk across Emerald Square</title>
+    <meta name="thumbnail" content="10" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #b7cde6;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      p {
+        position: absolute;
+        top: 0;
+        margin: 0.5rem;
+        color: #1d2a3a;
+        font: 12px system-ui;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <p data-words="credit"></p>
+    <script type="module">
+      import { createWorld, light, math } from '../runtime/engine.js';
+      import { controls } from '../runtime/kit.js';
+
+      // NVIDIA's Emerald Square, ten million triangles in metres, walked in first person: click,
+      // look with the mouse, walk with W/A/S/D. The compiler cut it into pages the walk streams in.
+      const world = createWorld('view', { controls: 'firstPerson' });
+      world.scene.background = math.color('#b7cde6');
+      world.scene.add(
+        light.directional({ intensity: 3.4, color: '#fff1d6', position: [40, 90, 30] }),
+        light.hemisphere({ intensity: 1.6, color: '#d6e6ff', groundColor: '#8a7c64' }),
+      );
+      // Kept on one line so the shared example proof checks this published manifest and its credit.
+      // prettier-ignore
+      await world.scene.load('../assets/examples/emerald-square/cache/native/full/manifest.json');
+
+      world.camera.near = 0.05;
+      world.camera.far = 400;
+      const HOME = { position: [-30, 2.2, 45], target: [-10, 2.6, 10] };
+      const home = () => world.camera.set(HOME);
+      home();
+
+      // The geometry pool in MiB, from the engine's default of 512: below it the square's ground
+      // and walls wait for pages that no longer fit, and the view shows the sky through them.
+      const MiB = 1024 * 1024;
+      controls(
+        {
+          walkSpeed: [0.5, 12, 3, 0.5],
+          memory: [128, 2048, 512, 64],
+          view: ['beauty', 'lod', 'clusters'],
+          home,
+        },
+        (values, key) => {
+          if (key === undefined || key === 'walkSpeed')
+            world.controls.movementSpeed = values.walkSpeed;
+          if (key === undefined || key === 'memory')
+            world.budget.geometryPool = values.memory * MiB;
+          if (key === undefined || key === 'view') world.diagnostic.mode = values.view;
+          world.invalidate();
+        },
+        world,
+      );
+    </script>
+  </body>
+</html>
