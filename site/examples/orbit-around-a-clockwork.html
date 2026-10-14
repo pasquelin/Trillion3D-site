@@ -9,7 +9,7 @@
       body {
         margin: 0;
         height: 100%;
-        background: #171d28;
+        background: #120e0b;
       }
       canvas {
         display: block;
@@ -21,26 +21,32 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light } from '../runtime/engine.js';
+      import { createWorld, geometry, material, object, light, math, effect } from '../runtime/engine.js';
       import { controls } from '../runtime/kit.js';
 
       // The gear train, in two planes: front (z 0.3) and back (z -0.3). A gear's pitch radius is
       // MODULE × teeth / 2; two gears that mesh stand exactly the sum of their radii apart, and a
-      // gear on another gear's axle (same x, y) turns with it. `drives` names the gear it is turned by.
+      // gear on another gear's axle (same x, y) turns with it. `drives` names the gear it is turned by;
+      // `spokes` cuts windows in a large wheel, as a clockmaker lightens one.
       const MODULE = 0.08;
       const GEARS = [
-        { "id": "great", "teeth": 30, "plane": 0.3, "x": -0.9, "y": 1.8 },
+        { "id": "great", "teeth": 30, "plane": 0.3, "x": -0.9, "y": 1.8, "spokes": 5 },
         { "id": "pinion", "teeth": 10, "plane": 0.3, "x": 0.7, "y": 1.8, "drives": "great" },
-        { "id": "third", "teeth": 24, "plane": -0.3, "x": 0.7, "y": 1.8, "axle": "pinion" },
+        { "id": "third", "teeth": 24, "plane": -0.3, "x": 0.7, "y": 1.8, "axle": "pinion", "spokes": 4 },
         { "id": "fourth", "teeth": 12, "plane": -0.3, "x": 1.42, "y": 3.0471, "drives": "third" },
-        { "id": "escape", "teeth": 15, "plane": 0.3, "x": 1.42, "y": 3.0471, "axle": "fourth" }
+        { "id": "escape", "teeth": 15, "plane": 0.3, "x": 1.42, "y": 3.0471, "axle": "fourth", "spokes": 4, "escape": true }
       ];
 
       // `orbit`: the camera circles a point, `world.controls.target`, and never loses the horizon.
       const world = createWorld('view', { controls: 'orbit' });
-      const brass = material.meshStandard({ color: '#d4a24c', metalness: 0.8, roughness: 0.3 });
-      const steel = material.meshStandard({ color: '#aab3bd', metalness: 0.85, roughness: 0.25 });
-      const wood = material.meshStandard({ color: '#4a2e1c', roughness: 0.6 });
+      // A dark, warm cabinet: polished metal mirrors its surroundings, and with no picture to
+      // mirror, the lights below are all the brass has to shine with. Bloom lets the brightest
+      // glints spill a little, as they do through a lens.
+      world.scene.background = math.color('#120e0b');
+      world.effects.add(effect.bloom({ intensity: 0.06 }));
+      const brass = material.meshStandard({ color: '#d4a24c', metalness: 0.9, roughness: 0.28 });
+      const steel = material.meshStandard({ color: '#aab3bd', metalness: 0.9, roughness: 0.22 });
+      const wood = material.meshStandard({ color: '#3b2416', roughness: 0.55 });
       function part(shape, matter, [x, y, z], turn = [0, 0, 0]) {
         const mesh = object.mesh(shape, matter);
         mesh.position.set(x, y, z);
@@ -48,30 +54,61 @@
         world.scene.add(mesh);
         return mesh;
       }
-      // The frame: a wooden back board on a base, two brass pillars and a front bridge.
+      // The frame: a walnut back board on a base, two brass pillars and a front bridge.
       part(geometry.box(4.6, 4.4, 0.12), wood, [0.1, 2.3, -0.65]);
       part(geometry.box(5.2, 0.3, 1.8), wood, [0.1, 0.15, 0]);
-      for (const x of [-2.1, 2.3]) part(geometry.cylinder(0.07, 0.07, 4, 16), brass, [x, 2.3, 0.55]);
+      const pillar = geometry.cylinder(0.07, 0.07, 4, 24);
+      for (const x of [-2.1, 2.3]) part(pillar, brass, [x, 2.3, 0.55]);
       part(geometry.box(4.5, 0.1, 0.06), brass, [0.1, 4.2, 0.55]);
 
-      // A gear: a disc and its teeth, cut clear of each other, on an axle through both planes.
-      const radius = (gear) => (MODULE * gear.teeth) / 2;
-      function gear(spec, matter) {
-        const group = object.group();
-        group.position.set(spec.x, spec.y, spec.plane);
-        const r = radius(spec);
-        group.add(object.mesh(geometry.cylinder(r - MODULE, r - MODULE, 0.1, 64), matter));
-        group.children[0].rotation.x = Math.PI / 2;
-        for (let index = 0; index < spec.teeth; index++) {
-          const angle = (index / spec.teeth) * Math.PI * 2;
-          const tooth = object.mesh(geometry.box(MODULE * 2, MODULE * 1.3, 0.1), matter);
-          tooth.position.set(Math.cos(angle) * r, Math.sin(angle) * r, 0);
-          tooth.rotation.z = angle;
-          group.add(tooth);
+      // A wheel's outline, cut once as a flat shape and pushed into a solid. Its teeth have involute
+      // flanks, the curve a taut thread draws as it unwinds from a circle: two such wheels roll on
+      // each other at a steady ratio. Tooth k is centred on k × 2π / teeth; the tips stand one
+      // MODULE past the pitch circle, the roots 1.25 inside it. Spokes are holes cut in the shape.
+      const PRESSURE = (20 * Math.PI) / 180;
+      const involute = (angle) => Math.tan(angle) - angle;
+      const at = (rho, angle) => [rho * Math.cos(angle), rho * Math.sin(angle)];
+      function wheelShape(teeth, { spokes = 0, ratchet = false } = {}) {
+        const pitch = (MODULE * teeth) / 2, tip = pitch + MODULE, root = pitch - 1.25 * MODULE;
+        const base = pitch * Math.cos(PRESSURE), step = (2 * Math.PI) / teeth;
+        // Half a tooth's width, as an angle, at the radius rho: a little under a quarter step on the
+        // pitch circle, the play that keeps two wheels from binding.
+        const half = (rho) => step * 0.23 + involute(PRESSURE) - involute(Math.acos(Math.min(1, base / rho)));
+        const outline = [];
+        for (let k = 0; k < teeth; k++) {
+          const c = k * step;
+          // An escape wheel's teeth are hooks, tips leading as it turns clockwise: a steep face up to
+          // the tip, a long back down behind it.
+          if (ratchet) outline.push(at(tip - MODULE, c - step * 0.22), at(tip, c - step * 0.1), at(root - MODULE, c + step / 2));
+          else {
+            const flank = [0, 0.25, 0.5, 0.75, 1].map((t) => root + (tip - root) * t);
+            for (const rho of flank) outline.push(at(rho, c - half(rho)));
+            for (const rho of flank.reverse()) outline.push(at(rho, c + half(rho)));
+          }
         }
-        world.scene.add(group);
-        part(geometry.cylinder(0.05, 0.05, 1.2, 16), steel, [spec.x, spec.y, 0], [Math.PI / 2, 0, 0]);
-        return group;
+        const shape = math.shape(outline);
+        // Each window between two spokes: an arc along the rim, back along the hub.
+        const rim = root - 1.8 * MODULE, hub = rim * 0.3, width = rim * 0.12;
+        for (let s = 0; s < spokes; s++) {
+          const from = (s * 2 * Math.PI) / spokes, to = from + (2 * Math.PI) / spokes;
+          const window = math.shape();
+          window.absarc(0, 0, rim, from + width / 2 / rim, to - width / 2 / rim);
+          window.absarc(0, 0, hub, to - width / 2 / hub, from + width / 2 / hub, true);
+          shape.holes.push(window);
+        }
+        return shape;
+      }
+      // Pushed 6 cm deep, its edges rounded by a bevel that catches the light; centred on its plane.
+      const solid = (shape) =>
+        geometry.extrude(shape, { depth: 0.06, bevelThickness: 0.015, bevelSize: 0.004, bevelSegments: 2, curveSegments: 16 }).translate(0, 0, -0.03);
+
+      // A gear: one solid wheel on an arbor through both planes, a collet holding it.
+      const arbor = geometry.cylinder(0.05, 0.05, 1.2, 16), collet = geometry.cylinder(0.1, 0.1, 0.05, 32);
+      function gear(spec, matter) {
+        const wheel = part(solid(wheelShape(spec.teeth, { spokes: spec.spokes, ratchet: spec.escape })), matter, [spec.x, spec.y, spec.plane]);
+        part(arbor, steel, [spec.x, spec.y, 0], [Math.PI / 2, 0, 0]);
+        part(collet, steel, [spec.x, spec.y, spec.plane + 0.07], [Math.PI / 2, 0, 0]);
+        return wheel;
       }
       // Each gear's turn follows from the one before: meshing flips the direction and scales by the
       // tooth ratio, an axle keeps it. `phase` sets a meshing pair's teeth between each other's.
@@ -93,19 +130,39 @@
       pendulum.position.set(escape.spec.x, 3.95, 0.8);
       const rod = object.mesh(geometry.cylinder(0.025, 0.025, 2.9, 8), steel);
       rod.position.y = -1.45;
-      const bob = object.mesh(geometry.cylinder(0.32, 0.32, 0.1, 48), brass);
-      bob.rotation.x = Math.PI / 2;
+      // A lens bob: a sphere pressed flat, so its faces round off the light as a polished bob does.
+      const bob = object.mesh(geometry.sphere(0.32, 32, 16), brass);
+      bob.scale.set(1, 1, 0.25);
       bob.position.y = -2.95;
-      const anchor = object.mesh(geometry.box(0.9, 0.08, 0.08), steel);
-      anchor.position.y = -0.5;
-      pendulum.add(rod, bob, anchor);
+      // The anchor: an arch over the escape wheel, centred on its arbor, a pallet hooked in at each
+      // end where the wheel's teeth catch.
+      const below = escape.spec.y - pendulum.position.y, top = Math.PI / 2;
+      const arch = math.shape();
+      arch.absarc(0, below, 0.84, top - 0.5, top + 0.5);
+      const pallet = (angle) => arch.lineTo(0.64 * Math.cos(angle), below + 0.64 * Math.sin(angle));
+      pallet(top + 0.46);
+      arch.absarc(0, below, 0.74, top + 0.4, top - 0.4, true);
+      pallet(top - 0.46);
+      // It sits just in front of the wheel, on a pin back from the pendulum's pivot.
+      const anchor = object.mesh(solid(arch), steel);
+      anchor.position.z = escape.spec.plane + 0.12 - pendulum.position.z;
+      const pin = object.mesh(geometry.cylinder(0.03, 0.03, -anchor.position.z, 12), steel);
+      pin.rotation.x = Math.PI / 2;
+      pin.position.z = anchor.position.z / 2;
+      pendulum.add(rod, bob, anchor, pin);
       world.scene.add(pendulum);
 
-      world.scene.add(light.spot({ position: [3, 6, 5], intensity: 300, distance: 18, angle: 0.55, penumbra: 0.4, castShadow: true, color: '#fff1dc' }));
-      world.scene.add(light.point({ position: [-3, 3, 3], intensity: 30, distance: 12, color: '#6fa8ff' }));
-      world.scene.add(light.hemisphere({ color: '#d8e4ff', groundColor: '#4a3a30', intensity: 0.6 }));
+      // A warm key from above right throws the wheels' shadows on the board; a cool rim from
+      // behind outlines their edges. The softbox, a glowing rectangle off to the left, is what the
+      // flat brass faces mirror: turning round the clock slides its highlight across them.
+      world.scene.add(light.spot({ position: [3, 6, 5], intensity: 300, distance: 18, angle: 0.55, penumbra: 0.4, castShadow: true, color: '#ffe2b8' }));
+      world.scene.add(light.point({ position: [-3.2, 5, -1.6], intensity: 45, distance: 14, color: '#7fa8ff' }));
+      world.scene.add(light.hemisphere({ color: '#ffe9d0', groundColor: '#2a1c14', intensity: 0.3 }));
+      const softbox = light.rectArea({ position: [-2.4, 2.4, 5.8], width: 2.4, height: 1.4, intensity: 6, color: '#fff3e2' });
+      world.scene.add(softbox);
+      softbox.lookAt(0.2, 2.2, 0);
       // A showroom plinth under the piece.
-      part(geometry.cylinder(3.4, 3.6, 0.2, 96), material.meshStandard({ color: '#20242c', roughness: 0.4 }), [0.1, -0.1, 0]);
+      part(geometry.cylinder(3.4, 3.6, 0.2, 96), material.meshStandard({ color: '#1a1512', roughness: 0.35 }), [0.1, -0.1, 0]);
 
       // A product viewer: the camera circles the clock's middle; the view list puts it back on a
       // studied angle, as a shop page does, and the orbit carries on from there.
