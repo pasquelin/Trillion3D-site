@@ -35,20 +35,22 @@
       // A compiled valley: its collision was cooked with it — a height field for the grid, tiles
       // for the boulders — and the physics streams it in on its own once it is on.
       const world = createWorld('view', { controls: 'orbit', physics: true });
-      world.scene.background = math.color('#cfe0ee');
-      // Haze over the far side of the valley. The fog is light, exposed and tone-mapped like a
-      // surface, the background is not: this is the radiance the display curve shows as #cfe0ee.
-      world.scene.fog = { color: math.color([0.509, 0.927, 1.642]), near: 100, far: 360 };
+      world.scene.background = math.color('#a4cbec');
+      // A light haze over the far side of the valley. The fog is light, exposed and tone-mapped
+      // like a surface, the background is not: this is the radiance the display curve shows as
+      // #a4cbec.
+      world.scene.fog = { color: math.color([0.194, 0.557, 1.466]), near: 90, far: 400 };
       world.camera.far = 400;
       await world.scene.load('../assets/examples/terrain/cache/native/full/manifest.json');
 
-      const sun = light.directional({ intensity: 3, castShadow: true });
-      sun.position.set(40, 60, 20);
+      // A low, warm afternoon sun: the hills are modelled by their shade, the balls by theirs.
+      const sun = light.directional({ color: '#ffd9a8', intensity: 3, castShadow: true });
+      sun.position.set(60, 35, -10);
       world.scene.add(
         sun,
-        light.hemisphere({ intensity: 1.1, color: '#ffffff', groundColor: '#6d7a5a' }),
+        light.hemisphere({ intensity: 0.5, color: '#cfe2ff', groundColor: '#6d7a5a' }),
       );
-      world.camera.position.set(70, 45, 70);
+      world.camera.position.set(34, 42, 46);
       world.controls.target.set(0, 0, 0);
 
       const matters = {

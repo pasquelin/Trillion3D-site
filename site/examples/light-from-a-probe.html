@@ -92,7 +92,7 @@
       world.scene.add(ball);
 
       // A key light gives the shapes their shadows; switch it off to see the probe alone.
-      const lamp = light.directional({ intensity: 1.4, position: [6, 8, 4], castShadow: true });
+      const lamp = light.directional({ intensity: 4, position: [-8, 6, 2], castShadow: true });
       const KEYS = { 'desert at sunset': '#ffb070', 'forest clearing': '#f4ffd8', 'neon alley': '#ff7ad8', snowfield: '#ffffff' };
       world.scene.add(probe, lamp);
       world.camera.position.set(0.6, 3.4, 9.4);
@@ -114,14 +114,14 @@
       }, (values, key) => {
         if (key === undefined || key === 'place' || key === 'turn') aim = project(PLACES[values.place], math.degToRad(values.turn));
         // The key light takes the place's colour; behind the stage, a dim tint of its horizon: its
-        // light averaged round the level directions, a third of it over the dark.
+        // light averaged round the level directions, a twentieth of it over the dark.
         if (key === undefined || key === 'place') {
           const ring = [0, 0, 0];
           for (let k = 0; k < 16; k++) {
             const a = (k / 16) * Math.PI * 2, seen = PLACES[values.place]([Math.cos(a), 0, Math.sin(a)]);
             for (let ch = 0; ch < 3; ch++) ring[ch] += seen[ch] / 16;
           }
-          horizon.copy(DARK).lerp(math.color(ring), 0.35);
+          horizon.copy(DARK).lerp(math.color(ring), 0.05);
           lamp.color.set(KEYS[values.place]);
         }
         probe.intensity = values.strength;

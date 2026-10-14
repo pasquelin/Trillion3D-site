@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <title>A cooked flag</title>
-    <meta name="thumbnail" content="3" />
+    <meta name="thumbnail" content="1.6" />
     <style>
       html,
       body {
@@ -38,15 +38,16 @@
       const world = createWorld('view', { controls: 'orbit', physics: true });
       // A summer afternoon around the lawn: a meadow out to a hazy horizon, a few trees, and a
       // haze that fades the far side into the sky.
-      const sky = math.color('#cfe0ee');
-      world.scene.background = sky;
-      world.scene.fog = { color: sky, density: 0.02, heightFalloff: 0.3, baseHeight: 0 };
+      world.scene.background = math.color('#a4cbec');
+      // The fog is light, exposed and tone-mapped like a surface, the background is not: this is
+      // the radiance the display curve shows as #a4cbec.
+      world.scene.fog = { color: math.color([0.194, 0.557, 1.466]), density: 0.008, heightFalloff: 0.3, baseHeight: 0 };
       const MODEL = '../assets/examples/flag/cache/native/full/manifest.json';
       let model = await world.scene.load(MODEL),
         reloading = false;
 
       // The meadow lies a hair under the model's lawn; the trees share one trunk and one crown.
-      const meadow = object.mesh(geometry.box(300, 0.1, 300), material.meshStandard({ color: '#6f8a48', roughness: 0.95 }));
+      const meadow = object.mesh(geometry.box(300, 0.1, 300), material.meshStandard({ color: '#9bb685', roughness: 0.9 }));
       meadow.position.y = -0.06;
       const trunk = geometry.cylinder(0.12, 0.18, 1.6, 10), crown = geometry.sphere(1, 20, 12);
       const bark = material.meshStandard({ color: '#5a4030', roughness: 0.9 });
@@ -64,9 +65,9 @@
       }
       const sun = light.directional({ intensity: 3, color: '#fff1dc', castShadow: true });
       sun.position.set(6, 12, 8);
-      world.scene.add(meadow, sun, light.hemisphere({ intensity: 1, color: '#e4efff', groundColor: '#5f6e45' }));
-      world.camera.position.set(1.5, 3.2, 5);
-      world.controls.target.set(0.8, 2.9, 0);
+      world.scene.add(meadow, sun, light.hemisphere({ intensity: 0.6, color: '#e4efff', groundColor: '#5f6e45' }));
+      world.camera.position.set(2.1, 2.9, 3.9);
+      world.controls.target.set(0.7, 2.6, 0);
 
       controls(
         {

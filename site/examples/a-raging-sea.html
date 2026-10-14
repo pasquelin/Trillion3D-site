@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <title>A raging sea</title>
-    <meta name="thumbnail" content="4" />
+    <meta name="thumbnail" content="3.2" />
     <style>
       html,
       body {
@@ -30,10 +30,10 @@
 
       // A storm: one dark grey for the sky and the air, thick near the water where the spray
       // hangs, thinner above it. A linear display curve keeps the fog's colour the sky's.
-      const STORM = math.color('#262e36'), FLASH = STORM.clone().lerp(math.color('#8d99ab'), 0.7);
+      const STORM = math.color('#34414e'), FLASH = STORM.clone().lerp(math.color('#8d99ab'), 0.7);
       const air = (colour) => {
         world.scene.background = colour;
-        world.scene.fog = { color: colour, density: 0.014, heightFalloff: 0.04, baseHeight: 0 };
+        world.scene.fog = { color: colour, density: 0.007, heightFalloff: 0.04, baseHeight: 0 };
       };
       air(STORM);
       world.toneMapping = 'linear';
@@ -57,7 +57,7 @@
           index.set([a, b, a + 1, a + 1, b, b + 1], at);
         }
       const grid = geometry.createBuffer({ position: buffer.float32(position, 3), normal: buffer.float32(normal, 3), index: buffer.uint32(index, 1) });
-      const sea = object.mesh(grid, material.meshStandard({ color: '#1b2f37', roughness: 0.28 }));
+      const sea = object.mesh(grid, material.meshStandard({ color: '#1a4250', roughness: 0.2 }));
       world.scene.add(sea);
 
       // A long, tall swell and the steep chop the wind raises on it. The waves share one
@@ -113,7 +113,7 @@
         part(geometry.cylinder(1.1, 1.1, 1.6, 24), glow('#fff1c4', 20), ...LAMP),
         part(geometry.cone(1.4, 1.2, 24), red, LAMP[0], LAMP[1] + 1.4, LAMP[2]),
       );
-      // Its beam: a spot light in the lantern, sweeping the sea 60 m out — over the ship once a
+      // Its beam: a spot light in the lantern, sweeping the sea as far out as the ship — over it once a
       // turn. It turns every frame, so it casts no shadow: a moving shadow is redrawn each frame.
       const beam = light.spot({ position: LAMP, color: '#fff1c4', intensity: 30000, distance: 240, angle: 0.13, penumbra: 0.4 });
 
@@ -123,14 +123,14 @@
       world.scene.add(
         beam,
         flash,
-        light.directional({ intensity: 0.9, color: '#a8b8c8', position: [30, 40, 20] }),
-        light.hemisphere({ intensity: 1.1, color: '#6a7a88', groundColor: '#0b1116' }),
+        light.directional({ intensity: 2.4, color: '#b4c4d8', position: [-40, 30, 10] }),
+        light.hemisphere({ intensity: 1.2, color: '#6a7a88', groundColor: '#0b1116' }),
       );
       // A faint glow around what shines: the lantern, the running lights, the flashes.
       world.effects.add(effect.bloom({ intensity: 0.08 }));
 
-      world.camera.position.set(22, 9, 26);
-      world.controls.target.set(-4, 2, -4);
+      world.camera.position.set(17, 7, 19);
+      world.controls.target.set(-6, 3, -6);
       world.controls.minDistance = 8;
       world.controls.maxDistance = 90;
       world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
@@ -151,10 +151,13 @@
       }, world);
 
       const next = seeded(5);
-      let strike = 4;
+      // The beam reaches the ship's mooring four seconds after the first frame, then every 12.6 s.
+      const toShip = Math.atan2(-LAMP[2], -LAMP[0]), reach = Math.hypot(LAMP[0], LAMP[2]);
+      let strike = 7, opened;
       world.onFrame(({ time, delta }) => {
-        const turn = time * 0.5;
-        beam.target.position.set(LAMP[0] + Math.cos(turn) * 60, 0, LAMP[2] + Math.sin(turn) * 60);
+        opened ??= time;
+        const turn = (time - opened - 4) * 0.5 + toShip;
+        beam.target.position.set(LAMP[0] + Math.cos(turn) * reach, 0, LAMP[2] + Math.sin(turn) * reach);
         // A strike is two quick flickers; the next comes 3 to 15 s later, sooner in a stronger wind.
         strike -= delta;
         if (strike < -0.5) strike = (3 + next() * 12) / Math.max(ui.wind, 0.1);
