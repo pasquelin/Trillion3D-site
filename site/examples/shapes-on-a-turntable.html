@@ -31,14 +31,14 @@
       const plate = object.mesh(geometry.cylinder(3.4, 3.4, 0.25, 96), material.meshStandard({ color: '#2a2f3a', roughness: 0.6 }));
       plate.position.y = -0.125;
       // One colour, five finishes: matte clay, gloss, a lacquer under a clear coat, a soft metal
-      // and velvet. A material is how a surface answers the light.
+      // and tinted glass. A material is how a surface answers the light.
       const colour = '#e0663c';
       const paints = [
         material.meshStandard({ color: colour, roughness: 0.9 }),
         material.meshStandard({ color: colour, roughness: 0.15 }),
         material.meshPhysical({ color: colour, roughness: 0.5, clearcoat: 1, clearcoatRoughness: 0.05 }),
         material.meshStandard({ color: colour, roughness: 0.3, metalness: 1 }),
-        material.meshPhysical({ color: colour, roughness: 0.8, sheen: 1, sheenColor: '#ffffff' }),
+        material.meshPhysical({ color: colour, roughness: 0.05, transmission: 1, ior: 1.5, thickness: 1.2 }),
       ];
       const turntable = object.group();
       const shapes = [
