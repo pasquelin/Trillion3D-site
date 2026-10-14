@@ -87,7 +87,7 @@ The site reads Trillion3D at the commit `package.json` pins:
 ```json
 "trillion3d": {
   "repository": "https://github.com/pasquelin/Trillion3D.git",
-  "commit": "538ff1dae1f58de91db54604d047e2392ba0e92c"
+  "commit": "2be916b85d502e0346dae018284dd578e89f317d"
 }
 ```
 
