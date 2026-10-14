@@ -9,7 +9,7 @@
       body {
         margin: 0;
         height: 100%;
-        background: #171d28;
+        background: #e6d3b8;
       }
       canvas {
         display: block;
@@ -28,20 +28,28 @@
       // that breaks under a weight. Every joint is one of Jolt's constraints between two bodies,
       // or between a body and the world (`null`); `world.physics.add` puts it in the simulation.
       const world = createWorld('view', { controls: 'orbit', physics: true });
-      world.scene.background = math.color('#dfe8f2');
+      world.scene.background = math.color('#e6d3b8');
       world.camera.far = 300;
 
+      // One material per colour and matter, one box per size, shared by every block that has them:
+      // the ten chain links and the eleven planks are drawn together, and a rebuilt bridge makes
+      // nothing new.
+      const made = new Map();
+      const once = (key, make) => {
+        if (!made.has(key)) made.set(key, make());
+        return made.get(key);
+      };
       const paint = (color, physics = 'wood') =>
-        material.meshStandard({ color, roughness: 0.8, physics });
+        once(`${color} ${physics}`, () => material.meshStandard({ color, roughness: 0.8, physics }));
       const block = (size, at, color, type, physics) => {
-        const mesh = object.mesh(geometry.box(...size), paint(color, physics));
+        const mesh = object.mesh(once(String(size), () => geometry.box(...size)), paint(color, physics));
         mesh.position.set(...at);
         mesh.castShadow = mesh.receiveShadow = true;
         mesh.physics = type;
         world.scene.add(mesh);
         return mesh;
       };
-      block([40, 1, 40], [0, -0.5, 0], '#9aa7b5', 'static', 'stone');
+      block([40, 1, 40], [0, -0.5, 0], '#5d5048', 'static', 'stone');
 
       // The door turns about a pin along its left edge; its motor swings it to an angle.
       block([0.2, 2.3, 0.2], [-6.1, 1.15, 2], '#6b4f36', 'static');
@@ -139,11 +147,12 @@
       };
       for (const j of [hinge, rail, ...chain]) world.physics.add(j);
 
-      const sun = light.directional({ intensity: 3, castShadow: true });
+      // A warm afternoon sun and a sky that fills the shade.
+      const sun = light.directional({ intensity: 3.2, color: '#ffe3c2', castShadow: true });
       sun.position.set(8, 16, 10);
       world.scene.add(
         sun,
-        light.hemisphere({ intensity: 1.2, color: '#ffffff', groundColor: '#8a9099' }),
+        light.hemisphere({ intensity: 0.9, color: '#d9e4ff', groundColor: '#6b5440' }),
       );
       world.camera.position.set(0, 7, 14);
       world.controls.target.set(0, 1.5, -1);
