@@ -76,6 +76,8 @@ export async function writeCookedBlocks(directory: string) {
           kind === 'ball'
             ? { geometry: { shape: 0 }, physicsMaterial: 1 }
             : { geometry: { convexHull: true }, physicsMaterial: 0 }
+        // Drawn for every block, so the seeded draws after it stay where they were.
+        const rotation = turn(random.direction(), random.uniform(0, TAU))
         children.push(
           gltf.node({
             name: `${kind} ${n}`,
@@ -85,7 +87,9 @@ export async function writeCookedBlocks(directory: string) {
               4.2 + layer * 1.2,
               -1.65 + row * 1.1 + random.uniform(-0.05, 0.05),
             ],
-            rotation: turn(random.direction(), random.uniform(0, TAU)),
+            // A ball stands unturned: a sphere looks the same either way, and a rounded turn is
+            // a quaternion a hair off unit length, a scale the engine refuses for a sphere body.
+            ...(kind === 'ball' ? {} : { rotation }),
             extensions: { KHR_physics_rigid_bodies: { motion: {}, collider } },
           }),
         )
