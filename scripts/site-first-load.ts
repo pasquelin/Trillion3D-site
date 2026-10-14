@@ -9,7 +9,7 @@
 import { resolve } from 'node:path'
 import type { Browser } from 'playwright'
 import { routeThree } from './three-route.ts'
-import { quantileFloorOf } from '../site/maths.ts'
+import { quantileOf } from '#engine/packages/math/src/scalar/quantile.ts'
 import { launchChrome } from './chrome.ts'
 import { createDocsServer } from './docs/serve.ts'
 import { listen } from './static-server.ts'
@@ -57,7 +57,7 @@ try {
     const summary = Object.fromEntries(
       SUMMARY_KEYS.map((key) => [
         key,
-        quantileFloorOf(
+        quantileOf(
           samples.map((sample) => sample[key]),
           0.5,
         ) as number,

@@ -1,16 +1,8 @@
 import type { EntryNote } from '../model.ts'
 
-/** Constants and enums of the runtime: math path, jobs, capabilities, timings, format, sides. */
+/** Constants and enums of the runtime: jobs, capabilities, timings, format, sides. */
 
 export const ENUMS_RUNTIME: EntryNote[] = [
-  {
-    id: 'MathPathMode',
-    valueNames: ["'auto'", "'js'", "'wasm'"],
-    example: `import { MATH_PATH_CONTRACT, createPathGovernor } from 'trillion3d';
-
-const governor = createPathGovernor(performance.now.bind(performance), 'auto');
-console.log(MATH_PATH_CONTRACT, governor.metrics()); // per operation: jsNsPerElement, wasmNsPerElement, path, switches`,
-  },
   {
     id: 'JobStatus',
     valueNames: ["'queued'", "'running'", "'completed'", "'cancelled'", "'failed'"],

@@ -1174,21 +1174,6 @@
         "Адаптивно — `pixelError: 2`, повышается со скоростью камеры через `adaptivePixelError(base, speed, radius)`; неподвижный вид сохраняет базовое значение."
       ]
     },
-    "ScreenErrorVariant": {
-      "description": "Какую проекцию ошибки кластера срез сравнивает с порогом. Состояние модуля на всю страницу, считываемое метрикой CPU и встраиваемое в шейдер выбора при его компиляции; каждая сторона бенчмарка выполняется на своей странице. Публичный источник формулы: Карис, Штубе и Вилидал, SIGGRAPH 2021, «Advances in Real-Time Rendering in Games».",
-      "values": [
-        "Наша (по умолчанию): граница, которая никогда не занижает ошибку.",
-        "Опубликованная формула, для сравнительного бенчмарка."
-      ]
-    },
-    "MathPathMode": {
-      "description": "По какому пути выполняется пакет. `auto` принимает решение путём измерения: регулятор хранит скользящую медиану наносекунд на элемент для каждой стороны и переключается после серии выполнений с этим преимуществом, при этом JS остаётся эталоном и запасным путём. `MATH_PATH_CONTRACT` версионирует публикуемый отчёт.",
-      "values": [
-        "Решение путём измерения (по умолчанию).",
-        "Принудительно путь JavaScript, для кампании.",
-        "Принудительно ядро WebAssembly, когда оно существует для этой операции."
-      ]
-    },
     "JobStatus": {
       "description": "Жизненный цикл задачи, созданной `createJob`, — компиляции, создания мира. Отменённая или завершившаяся ошибкой задача освобождает результат, которым владела.",
       "values": [
@@ -1372,18 +1357,6 @@
     "lookAtNode": {
       "description": "Поворачивает `node` к мировой точке `(x, y, z)`. `viewer` истинно для камеры или источника света, которые смотрят в направлении своего `−z`, ложно для объекта, который показывает свой `+z`. `up` — это направление «вверх» узла, по умолчанию `(0, 1, 0)`. Предки и сам узел обновляются первыми."
     },
-    "multiplyMatrix4Batch": {
-      "description": "`n` произведений `out[i] = a[i] · b[i]`, все три стороны заданы как под-представления из шестнадцати чисел. Под-представления создаются один раз, никогда за кадр; ядро WebAssembly повторяет ту же формулу термин за термином, и регулятор выбирает тот путь, который измерен как более быстрый."
-    },
-    "boxTransformBatch": {
-      "description": "`n` коробок, преобразованных `n` матрицами: `out[i] = boxTransform(boxes[i], mats[i])`. `out` и `boxes` несут шесть чисел на элемент, `mats` — под-представление из шестнадцати."
-    },
-    "hierarchyUpdateBatch": {
-      "description": "Вся иерархия, обновляемая за один проход: `n` узлов, упорядоченных так, что родители идут перед детьми, каждый составляет свою локальную матрицу и затем умножает её на мировую матрицу родителя — обход из `packages/sdk-core/src/world/transform-tree/update.ts`, те же две формулы в том же порядке, на линейных буферах. `parents[i]` **обязан** индексировать уже обновлённый узел, значит строго меньше `i`; любое другое значение — включая сторожевое значение `HIERARCHY_ROOT` — делает узел корнем, чья мировая матрица равна его локальной матрице. Правило идентично на обоих путях: никакой вход, каким бы враждебным он ни был, не может заставить их разойтись. `local` — это единственная черновая матрица, переиспользуемая для каждого элемента."
-    },
-    "createPathGovernor": {
-      "description": "То, что решает между JS и WebAssembly для каждой именованной операции: скользящие медианы наносекунд на элемент, переключение только после пяти последовательных выполнений с этим преимуществом, и одно выполнение из пятидесяти, повторяющее другой путь, чтобы обновить его медиану. Меньше пяти образцов — ничего не решается: одно-единственное значение образовало бы медиану. `metrics()` публикует для каждой операции `path`, `jsNsPerElement`, `wasmNsPerElement`, счётчик переключений и разрешение часов, на которое опирается измерение."
-    },
     "frustumKeepsBoxBatch": {
       "description": "`n` коробок из шести чисел (сначала min, затем max) против двадцати четырёх float-ов фрустума: `kept[i]` равно 1, когда коробка пересекается или полностью внутри, и возвращается количество сохранённых — `frustumExcludesBox` с обратным знаком, полярность, в которой отвечает эталон. Пакет сфер записывает `SPHERE_VALUES` чисел на коробку, центр, затем радиус до угла, как это делает `sphereFromBounds`. Оба цикла живут в `packages/math/src/batch/culling.ts`."
     },
@@ -1418,6 +1391,19 @@
       "title": "Сохранить и открыть сцену",
       "description": "`scene.toJSON(camera)` записывает сцену как простой версионированный JSON; `scene.fromJSON(json, camera)` строит её заново.",
       "html": "<p>Фигуры сохраняются вызовом, который их построил, материалы — своими значениями, загруженные модели — своим адресом (никогда не встраиваются), а метки <code>helper</code> — никак. Другая версия формата отклоняется с указанием имени. Смотрите в <a href=\"#/ru/examples/save-the-scene\">Save the scene</a>.</p>"
+    },
+    "PlacementLink": {
+      "members": {
+        "rows": "Строки размещения, которым принадлежит связанная строка.",
+        "index": "Номер строки среди этих строк.",
+        "local": "Локальная матрица её меша относительно родителя: шестнадцать чисел."
+      }
+    },
+    "SceneLightStore": {
+      "members": {
+        "shadowedLocals": "Сколько источников, отбрасывающих тень, локальные, а не солнца.",
+        "rects": "Сколько источников света — прямоугольники."
+      }
     }
   },
   "canvas": {
@@ -1447,8 +1433,6 @@
       "high": "высокая",
       "balanced": "сбалансированная",
       "adaptive": "адаптивная",
-      "switches": "переключения",
-      "arbitration": "арбитраж",
       "box 0": "коробка 0",
       "box 1": "коробка 1",
       "box 2": "коробка 2",
@@ -1488,8 +1472,6 @@
       "saturation": "насыщенность",
       "lightness": "светлота",
       "scalar": "скаляр",
-      "nodes in the batch": "узлов в пакете",
-      "products in the batch": "произведений в пакете",
       "boxes in the batch": "коробок в пакете",
       "boxes tested": "проверено коробок",
       "kept by the frustum": "сохранены фрустумом",
@@ -1506,12 +1488,6 @@
       "cone half-angle (rad)": "полуугол конуса (рад)",
       "cone axis, heading (rad)": "ось конуса, направление (рад)",
       "viewer distance": "расстояние наблюдателя",
-      "JS nanoseconds per element": "наносекунд JS на элемент",
-      "Wasm nanoseconds per element": "наносекунд Wasm на элемент",
-      "executions observed": "выполнений замечено",
-      "contract version": "версия контракта",
-      "path chosen": "выбранный путь",
-      "not decided yet": "ещё не решено",
       "read and never written": "только для чтения, никогда не записывается",
       "the constant itself, read from the engine": "сама константа, считанная из движка",
       "reversed depth, infinite far plane": "обратная глубина, бесконечная дальняя плоскость",
@@ -1526,8 +1502,6 @@
       "its forward direction": "его направление вперёд",
       "under the root": "под корнем",
       "reparented to the world": "переприсоединён к миру",
-      "allocations during the call": "аллокаций за вызов",
-      "largest difference on the last element": "наибольшая разница на последнем элементе",
       "this frame": "этот кадр",
       "a box beyond the declared far plane": "коробка за объявленной дальней плоскостью",
       "a box three metres ahead": "коробка в трёх метрах впереди",
@@ -1551,11 +1525,6 @@
       "the unit box carried by that matrix": "единичная коробка, перенесённая этой матрицей",
       "the union of the eight transformed corners, never the eight of the result": "объединение восьми преобразованных углов, никогда не восьми углов результата",
       "one buffer holds many matrices; no view is sliced per frame": "один буфер хранит много матриц; ни одно представление не нарезается за кадр",
-      "one chain of nodes, parents before children, in one call": "одна цепочка узлов, родители перед детьми, за один вызов",
-      "none: the buffers are the caller’s": "никаких: буферы принадлежат вызывающему",
-      "the unit function stays the oracle; the WebAssembly kernel repeats it term by term": "единичная функция остаётся эталоном; ядро WebAssembly повторяет её термин за термином",
-      "the governor, after those executions": "регулятор, после этих выполнений",
-      "the kernel leads by enough, for long enough, to be worth the switch": "ядро лидирует достаточно и достаточно долго, чтобы переключение того стоило",
       "the reads of one node": "чтения одного узла",
       "the sign alone decides, with no square root: the exact clip test": "решает только знак, без квадратного корня: точный тест отсечения",
       "the subtraction happens in double; only the write rounds": "вычитание происходит в double; округляет только запись",
@@ -1592,7 +1561,6 @@
       "the child, before and after the root moves": "дочерний узел, до и после того, как двинулся корень",
       "the child, attached then detached": "дочерний узел, присоединённый, затем отсоединённый",
       "matrices do not move until the next update, like the reference `add`": "матрицы не двигаются до следующего обновления, как эталонный `add`",
-      "the batch against the unit function it repeats": "пакет против единичной функции, которую он повторяет",
       "frame.view — the inverse of the camera world matrix": "frame.view — обратная к мировой матрице камеры",
       "DIAGNOSTICS — the engine says which modes it can produce, and why not": "DIAGNOSTICS — движок сообщает, какие режимы он может выдать, и почему нет",
       "LOD_QUALITY, as the engine holds it": "LOD_QUALITY, как её хранит движок",
@@ -1602,7 +1570,6 @@
       "singular: the adjugate as-is, so the flattened surface keeps a normal": "вырождена: присоединённая матрица как есть, чтобы сплющенная поверхность сохранила нормаль",
       "no finite scale: nine zeros": "нет конечного масштаба: девять нулей",
       "rejected: every normal of that cluster faces away from the viewer": "отклонено: каждая нормаль этого кластера направлена от наблюдателя",
-      "JS keeps the work: under five samples, or the lead is not a burst": "JS сохраняет работу за собой: меньше пяти образцов, или преимущество не устойчиво",
       "nodeWorldDirection (object, +z)": "nodeWorldDirection (object, +z)",
       "nodeWorldDirection (viewer, −z)": "nodeWorldDirection (viewer, −z)",
       "root": "корень",
@@ -1632,7 +1599,6 @@
       "column 1": "столбец 1",
       "column 2": "столбец 2",
       "out = a, aliased": "out = a, с алиасингом",
-      "clock resolution the measurement rests on (ms)": "разрешение часов, на которое опирается измерение (мс)",
       "decomposeMatrix4 of that matrix — the round trip": "decomposeMatrix4 этой матрицы — обход туда-обратно",
       "depth against distance: it falls from 1 at the near plane toward 0 at infinity": "глубина в зависимости от расстояния: падает от 1 на ближней плоскости до 0 на бесконечности",
       "depth at the near plane (0.1 m)": "глубина на ближней плоскости (0,1 м)",
@@ -1648,7 +1614,6 @@
       "rotation of A (rad)": "поворот A (рад)",
       "the direction (1, 0, 0) under that matrix": "направление (1, 0, 0) под этой матрицей",
       "the identity written at offset 16 of one large buffer": "единичная матрица, записанная со смещением 16 в одном большом буфере",
-      "x of the last node — the sum 0 + 1 + … + (n − 1)": "x последнего узла — сумма 0 + 1 + … + (n − 1)",
       "transformHomogeneousPoint — four components": "transformHomogeneousPoint — четыре компонента",
       "matrixAtRenderOrigin — the same matrix, applied at the origin": "matrixAtRenderOrigin — та же матрица, применённая в начале координат",
       "viewToRenderOrigin — the view without its translation": "viewToRenderOrigin — вид без переноса",
@@ -1663,10 +1628,7 @@
       "surface": "поверхность",
       "target": "цель",
       "viewer": "наблюдатель",
-      "expected": "ожидаемое",
-      "orientation": "ориентация",
-      "products": "произведения",
-      "nodes": "узлы"
+      "orientation": "ориентация"
     },
     "patterns": {
       "singular": "определитель {{value}}: шестнадцать нулей — проверяйте определитель, никогда не результат"

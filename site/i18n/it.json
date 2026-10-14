@@ -1174,21 +1174,6 @@
         "Adattivo — `pixelError: 2`, aumentato con la velocità della camera tramite `adaptivePixelError(base, speed, radius)`; una vista ferma conserva la base."
       ]
     },
-    "ScreenErrorVariant": {
-      "description": "Quale proiezione dell'errore del cluster confronta il taglio con la soglia. Stato di modulo per l'intera pagina, letto dalla metrica della CPU e integrato nello shader di selezione alla compilazione; ogni lato di un banco viene eseguito nella propria pagina. Fonte pubblica della formula: Karis, Stubbe e Wihlidal, SIGGRAPH 2021, «Advances in Real-Time Rendering in Games».",
-      "values": [
-        "La nostra (predefinita): un limite che non sottostima mai l'errore.",
-        "La formula pubblicata, per il banco di confronto."
-      ]
-    },
-    "MathPathMode": {
-      "description": "Quale percorso segue un lotto. `auto` decide tramite misurazione: il regolatore mantiene una mediana mobile di nanosecondi per elemento su ciascun lato e cambia dopo una serie di esecuzioni con quel vantaggio, mantenendo JS come riferimento e ripiego. `MATH_PATH_CONTRACT` versiona il report pubblicato.",
-      "values": [
-        "Decisione tramite misurazione (predefinita).",
-        "Il percorso JavaScript imposto, per una campagna.",
-        "Il kernel WebAssembly imposto, quando ne esiste uno per quell'operazione."
-      ]
-    },
     "JobStatus": {
       "description": "Ciclo di vita di un compito creato da `createJob` — una compilazione, una creazione di mondo. Un compito annullato o fallito rilascia il risultato che possedeva.",
       "values": [
@@ -1372,18 +1357,6 @@
     "lookAtNode": {
       "description": "Ruota `node` verso il punto del mondo `(x, y, z)`. `viewer` è vero per una camera o una luce, che guardano verso il loro `−z`, falso per un oggetto, che presenta il suo `+z`. `up` è l'alto del nodo, `(0, 1, 0)` per impostazione predefinita. Gli antenati e il nodo vengono aggiornati prima."
     },
-    "multiplyMatrix4Batch": {
-      "description": "`n` prodotti `out[i] = a[i] · b[i]`, i tre lati dati come sottoviste di sedici numeri. Le sottoviste vengono costruite una volta, mai per fotogramma; un kernel WebAssembly ripete la stessa formula termine per termine e il regolatore sceglie il percorso misurato più veloce."
-    },
-    "boxTransformBatch": {
-      "description": "`n` box trasformati da `n` matrici: `out[i] = boxTransform(boxes[i], mats[i])`. `out` e `boxes` portano sei numeri per elemento, `mats` una sottovista di sedici."
-    },
-    "hierarchyUpdateBatch": {
-      "description": "Un'intera gerarchia aggiornata in un unico passaggio: `n` nodi ordinati genitori prima dei figli, ciascuno che compone la propria matrice locale e poi la moltiplica per la matrice del mondo del proprio genitore — l'attraversamento di `packages/sdk-core/src/world/transform-tree/update.ts`, le stesse due formule nello stesso ordine, su buffer piatti. `parents[i]` **deve** indicizzare un nodo già aggiornato, quindi strettamente minore di `i`; qualsiasi altro valore — la sentinella `HIERARCHY_ROOT` inclusa — rende il nodo una radice la cui matrice del mondo è la sua matrice locale. La regola è identica su entrambi i percorsi: nessun input, per quanto ostile, può farli divergere. `local` è un'unica matrice di lavoro, riutilizzata da ogni elemento."
-    },
-    "createPathGovernor": {
-      "description": "Ciò che decide tra JS e WebAssembly, per operazione nominata: mediane mobili di nanosecondi per elemento, un cambio solo dopo cinque esecuzioni consecutive con quel vantaggio, e un'esecuzione ogni cinquanta che ripete l'altro percorso per aggiornare la sua mediana. Sotto le cinque campioni non viene deciso nulla — un solo valore formerebbe la mediana. `metrics()` pubblica, per operazione, `path`, `jsNsPerElement`, `wasmNsPerElement`, il conteggio dei cambi e la risoluzione dell'orologio su cui riposa la misurazione."
-    },
     "frustumKeepsBoxBatch": {
       "description": "`n` box di sei numeri (min poi max) contro i ventiquattro float di un frustum: `kept[i]` è 1 dove il box interseca il frustum o è dentro, e il conteggio conservato viene restituito — `frustumExcludesBox` negato, la polarità con cui risponde il riferimento. Il batch di sfere scrive `SPHERE_VALUES` numeri per box, centro poi raggio fino all'angolo, come fa `sphereFromBounds`. Entrambi i cicli vivono in `packages/math/src/batch/culling.ts`."
     },
@@ -1418,6 +1391,19 @@
       "title": "Salvare e aprire una scena",
       "description": "`scene.toJSON(camera)` scrive la scena come JSON semplice e versionato; `scene.fromJSON(json, camera)` la ricostruisce.",
       "html": "<p>Le forme sono salvate tramite la chiamata che le ha costruite, i materiali tramite i loro valori, i modelli caricati tramite il loro indirizzo — mai incorporati — e i segni <code>helper</code> per niente. Un'altra versione del formato viene rifiutata per nome. Guardatelo in <a href=\"#/it/examples/save-the-scene\">Salvare la scena</a>.</p>"
+    },
+    "PlacementLink": {
+      "members": {
+        "rows": "Le righe di posizionamento a cui appartiene la riga collegata.",
+        "index": "Il rango della riga in quelle righe.",
+        "local": "La matrice locale della sua mesh, relativa al genitore: sedici numeri."
+      }
+    },
+    "SceneLightStore": {
+      "members": {
+        "shadowedLocals": "Quante luci che proiettano ombra sono locali anziché soli.",
+        "rects": "Quante luci sono rettangoli."
+      }
     }
   },
   "canvas": {
@@ -1447,8 +1433,6 @@
       "high": "alto",
       "balanced": "bilanciato",
       "adaptive": "adattivo",
-      "switches": "cambi",
-      "arbitration": "decisione",
       "box 0": "scatola 0",
       "box 1": "scatola 1",
       "box 2": "scatola 2",
@@ -1488,8 +1472,6 @@
       "saturation": "saturazione",
       "lightness": "luminosità",
       "scalar": "scalare",
-      "nodes in the batch": "nodi nel batch",
-      "products in the batch": "prodotti nel batch",
       "boxes in the batch": "box nel batch",
       "boxes tested": "box testati",
       "kept by the frustum": "conservati dal frustum",
@@ -1506,12 +1488,6 @@
       "cone half-angle (rad)": "semiangolo del cono (rad)",
       "cone axis, heading (rad)": "asse del cono, direzione (rad)",
       "viewer distance": "distanza dell'osservatore",
-      "JS nanoseconds per element": "nanosecondi JS per elemento",
-      "Wasm nanoseconds per element": "nanosecondi Wasm per elemento",
-      "executions observed": "esecuzioni osservate",
-      "contract version": "versione del contratto",
-      "path chosen": "percorso scelto",
-      "not decided yet": "non ancora deciso",
       "read and never written": "letto e mai scritto",
       "the constant itself, read from the engine": "la costante stessa, letta dal motore",
       "reversed depth, infinite far plane": "profondità invertita, piano lontano infinito",
@@ -1526,8 +1502,6 @@
       "its forward direction": "la sua direzione in avanti",
       "under the root": "sotto la radice",
       "reparented to the world": "riassegnato al mondo",
-      "allocations during the call": "allocazioni durante la chiamata",
-      "largest difference on the last element": "differenza maggiore sull'ultimo elemento",
       "this frame": "questo fotogramma",
       "a box beyond the declared far plane": "un box oltre il piano lontano dichiarato",
       "a box three metres ahead": "un box tre metri più avanti",
@@ -1551,11 +1525,6 @@
       "the unit box carried by that matrix": "il box unitario trasportato da quella matrice",
       "the union of the eight transformed corners, never the eight of the result": "l'unione degli otto angoli trasformati, mai gli otto del risultato",
       "one buffer holds many matrices; no view is sliced per frame": "un buffer contiene molte matrici; nessuna vista viene affettata per fotogramma",
-      "one chain of nodes, parents before children, in one call": "una catena di nodi, genitori prima dei figli, in un'unica chiamata",
-      "none: the buffers are the caller’s": "nessuna: i buffer sono del chiamante",
-      "the unit function stays the oracle; the WebAssembly kernel repeats it term by term": "la funzione unitaria resta l'oracolo; il kernel WebAssembly la ripete termine per termine",
-      "the governor, after those executions": "il regolatore, dopo quelle esecuzioni",
-      "the kernel leads by enough, for long enough, to be worth the switch": "il kernel è in vantaggio abbastanza, per abbastanza tempo, da rendere utile il cambio",
       "the reads of one node": "le letture di un nodo",
       "the sign alone decides, with no square root: the exact clip test": "il segno da solo decide, senza radice quadrata: il test di ritaglio esatto",
       "the subtraction happens in double; only the write rounds": "la sottrazione avviene in doppia precisione; solo la scrittura arrotonda",
@@ -1592,7 +1561,6 @@
       "the child, before and after the root moves": "il figlio, prima e dopo che la radice si muove",
       "the child, attached then detached": "il figlio, collegato e poi scollegato",
       "matrices do not move until the next update, like the reference `add`": "le matrici non si muovono fino al prossimo aggiornamento, come l'`add` di riferimento",
-      "the batch against the unit function it repeats": "il batch contro la funzione unitaria che ripete",
       "frame.view — the inverse of the camera world matrix": "frame.view — l'inversa della matrice del mondo della camera",
       "DIAGNOSTICS — the engine says which modes it can produce, and why not": "DIAGNOSTICS — il motore dice quali modalità può produrre, e perché no",
       "LOD_QUALITY, as the engine holds it": "LOD_QUALITY, così come lo mantiene il motore",
@@ -1602,7 +1570,6 @@
       "singular: the adjugate as-is, so the flattened surface keeps a normal": "singolare: l'aggiunta così com'è, così la superficie appiattita conserva una normale",
       "no finite scale: nine zeros": "nessuna scala finita: nove zeri",
       "rejected: every normal of that cluster faces away from the viewer": "respinto: ogni normale di quel cluster è rivolta lontano dall'osservatore",
-      "JS keeps the work: under five samples, or the lead is not a burst": "JS mantiene il lavoro: sotto le cinque campioni, o il vantaggio non è una serie",
       "nodeWorldDirection (object, +z)": "nodeWorldDirection (oggetto, +z)",
       "nodeWorldDirection (viewer, −z)": "nodeWorldDirection (osservatore, −z)",
       "root": "radice",
@@ -1632,7 +1599,6 @@
       "column 1": "colonna 1",
       "column 2": "colonna 2",
       "out = a, aliased": "out = a, con alias",
-      "clock resolution the measurement rests on (ms)": "risoluzione dell'orologio su cui riposa la misurazione (ms)",
       "decomposeMatrix4 of that matrix — the round trip": "decomposeMatrix4 di quella matrice — l'andata e ritorno",
       "depth against distance: it falls from 1 at the near plane toward 0 at infinity": "profondità rispetto alla distanza: scende da 1 al piano vicino verso 0 all'infinito",
       "depth at the near plane (0.1 m)": "profondità al piano vicino (0,1 m)",
@@ -1648,7 +1614,6 @@
       "rotation of A (rad)": "rotazione di A (rad)",
       "the direction (1, 0, 0) under that matrix": "la direzione (1, 0, 0) sotto quella matrice",
       "the identity written at offset 16 of one large buffer": "l'identità scritta all'offset 16 di un grande buffer",
-      "x of the last node — the sum 0 + 1 + … + (n − 1)": "x dell'ultimo nodo — la somma 0 + 1 + … + (n − 1)",
       "transformHomogeneousPoint — four components": "transformHomogeneousPoint — quattro componenti",
       "matrixAtRenderOrigin — the same matrix, applied at the origin": "matrixAtRenderOrigin — la stessa matrice, applicata all'origine",
       "viewToRenderOrigin — the view without its translation": "viewToRenderOrigin — la vista senza la sua traslazione",
@@ -1663,10 +1628,7 @@
       "surface": "superficie",
       "target": "obiettivo",
       "viewer": "osservatore",
-      "expected": "previsto",
-      "orientation": "orientamento",
-      "products": "prodotti",
-      "nodes": "nodi"
+      "orientation": "orientamento"
     },
     "patterns": {
       "singular": "determinante {{value}}: sedici zeri — testa il determinante, mai l'uscita"

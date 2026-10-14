@@ -1174,18 +1174,6 @@
         "自适应 — `pixelError: 2`,通过 `adaptivePixelError(base, speed, radius)` 随摄像机速度提高;静止视角保持基准值。"
       ]
     },
-    "ScreenErrorVariant": {
-      "description": "裁切时用来和阈值比较的,是簇误差的哪一种投影方式。这是整个页面共享的模块级状态,由 CPU 侧的指标读取,并在着色器编译时内联进选择着色器;基准测试的两侧各自运行在自己的页面上。公式的公开出处:Karis、Stubbe 与 Wihlidal,SIGGRAPH 2021,《Advances in Real-Time Rendering in Games》。",
-      "values": ["我们这边(默认):一个绝不会低估误差的上界。", "公开发表的公式,用于对比基准测试。"]
-    },
-    "MathPathMode": {
-      "description": "一个批处理运行在哪条路径上。`auto` 通过实测来裁定:调度器在每一侧都维护一个“每元素耗费纳秒数”的滑动中位数,并在连续多次执行都保持领先后才切换路径,JS 始终是基准,也是后备方案。`MATH_PATH_CONTRACT` 管理公开报告的版本号。",
-      "values": [
-        "由实测裁定(默认)。",
-        "为某次测量活动强制使用 JavaScript 路径。",
-        "在该运算存在 WebAssembly 内核时,强制使用 WebAssembly 路径。"
-      ]
-    },
     "JobStatus": {
       "description": "由 `createJob` 创建的任务(编译、创建世界)的生命周期。被取消或失败的任务会释放它所持有的结果。",
       "values": [
@@ -1369,18 +1357,6 @@
     "lookAtNode": {
       "description": "让 `node` 朝向世界坐标中的点 `(x, y, z)`。`viewer` 对于朝各自 `−z` 方向看的摄像机或灯光为 true,对于呈现自己 `+z` 方向的物体为 false。`up` 是该节点的上方向,默认是 `(0, 1, 0)`。祖先节点和该节点自身会先被更新。"
     },
-    "multiplyMatrix4Batch": {
-      "description": "`n` 个乘积 `out[i] = a[i] · b[i]`。三个参数都以十六数字的子视图形式给出。这些子视图只在初始化时创建一次,而不是每帧创建;一个 WebAssembly 内核会逐项重复同样的公式,调度器会根据实测结果选择更快的那一条路径。"
-    },
-    "boxTransformBatch": {
-      "description": "被 `n` 个矩阵变换的 `n` 个包围盒:`out[i] = boxTransform(boxes[i], mats[i])`。`out` 和 `boxes` 每个元素占六个数字,`mats` 是十六数字的子视图。"
-    },
-    "hierarchyUpdateBatch": {
-      "description": "一次遍历更新整个层级结构:`n` 个节点按父节点先于子节点排序,每个节点先合成自己的局部矩阵,再与父节点的世界矩阵相乘——这和 `packages/sdk-core/src/world/transform-tree/update.ts` 里的遍历完全一致,是在平铺缓冲区上执行的同样两个公式、同样的顺序。`parents[i]` **必须**指向一个已经更新过的节点,也就是严格小于 `i`;其他任何值(包括 `HIERARCHY_ROOT` 这个哨兵值)都会让该节点成为根节点,其世界矩阵就等于局部矩阵。这条规则在两条路径上完全一致:无论输入多么刁钻,都不可能让两者产生分歧。`local` 是一个所有元素共用的临时矩阵。"
-    },
-    "createPathGovernor": {
-      "description": "针对每个具名运算,决定在 JS 和 WebAssembly 之间如何裁定:每元素耗费纳秒数的滑动中位数、只有在连续五次执行都保持领先之后才会切换的规则,以及每五十次执行里有一次会重新跑一遍另一条路径来刷新它的中位数。样本数不足五个时不会做出任何决定——否则单个数值就会被当成中位数。`metrics()` 会按运算分别公开 `path`、`jsNsPerElement`、`wasmNsPerElement`、切换次数,以及测量所依赖的时钟分辨率。"
-    },
     "frustumKeepsBoxBatch": {
       "description": "把由六个数字(最小值、最大值)组成的 `n` 个包围盒,与视锥体的二十四个浮点数进行比较:当包围盒与视锥体相交或完全在其内部时,`kept[i]` 为 1,并返回被保留的数量——这是 `frustumExcludesBox` 的取反,和参考实现所使用的极性一致。球体版本的批处理会为每个包围盒写入 `SPHERE_VALUES` 个数字(中心坐标,以及到顶点的半径),方式和 `sphereFromBounds` 一样。这两个循环都在 `packages/math/src/batch/culling.ts` 里。"
     },
@@ -1415,6 +1391,19 @@
       "title": "保存和打开场景",
       "description": "`scene.toJSON(camera)` 将场景写为纯粹的、带版本的 JSON;`scene.fromJSON(json, camera)` 将其重建。",
       "html": "<p>形状按构建它们的调用保存,材质按其数值保存,已加载的模型按其地址保存 —— 从不内嵌 —— 而 <code>helper</code> 标记完全不保存。其他格式版本会被点名拒绝。请在 <a href=\"#/zh/examples/save-the-scene\">Save the scene</a> 中查看。</p>"
+    },
+    "PlacementLink": {
+      "members": {
+        "rows": "被链接的行所属的放置行。",
+        "index": "该行在这些行中的序号。",
+        "local": "其网格相对于父级的局部矩阵: 十六个数。"
+      }
+    },
+    "SceneLightStore": {
+      "members": {
+        "shadowedLocals": "投射阴影的光源中, 属于局部光源而非太阳的数量。",
+        "rects": "矩形光源的数量。"
+      }
     }
   },
   "canvas": {
@@ -1444,8 +1433,6 @@
       "high": "高",
       "balanced": "均衡",
       "adaptive": "自适应",
-      "switches": "切换次数",
-      "arbitration": "裁定",
       "box 0": "包围盒 0",
       "box 1": "包围盒 1",
       "box 2": "包围盒 2",
@@ -1485,8 +1472,6 @@
       "saturation": "饱和度",
       "lightness": "明度",
       "scalar": "标量",
-      "nodes in the batch": "批处理中的节点数",
-      "products in the batch": "批处理中的乘积数",
       "boxes in the batch": "批处理中的包围盒数",
       "boxes tested": "被测试的包围盒数",
       "kept by the frustum": "被视锥体保留的数量",
@@ -1503,12 +1488,6 @@
       "cone half-angle (rad)": "圆锥半顶角 (弧度)",
       "cone axis, heading (rad)": "圆锥轴朝向 (弧度)",
       "viewer distance": "到观察点的距离",
-      "JS nanoseconds per element": "JS 每元素纳秒数",
-      "Wasm nanoseconds per element": "Wasm 每元素纳秒数",
-      "executions observed": "观测到的执行次数",
-      "contract version": "契约版本",
-      "path chosen": "选中的路径",
-      "not decided yet": "尚未决定",
       "read and never written": "只读、从不写入",
       "the constant itself, read from the engine": "从引擎读取到的常量本身",
       "reversed depth, infinite far plane": "反转深度、无限远平面",
@@ -1523,8 +1502,6 @@
       "its forward direction": "它的前方方向",
       "under the root": "根节点之下",
       "reparented to the world": "重新挂到世界下",
-      "allocations during the call": "调用期间的分配次数",
-      "largest difference on the last element": "最后一个元素上的最大差异",
       "this frame": "本帧",
       "a box beyond the declared far plane": "超出声明远平面的包围盒",
       "a box three metres ahead": "前方三米处的包围盒",
@@ -1548,11 +1525,6 @@
       "the unit box carried by that matrix": "由该矩阵搬运后的单位包围盒",
       "the union of the eight transformed corners, never the eight of the result": "八个变换后顶点的并集,绝不是结果本身的八个顶点",
       "one buffer holds many matrices; no view is sliced per frame": "一个缓冲区容纳多个矩阵;不会每帧切出一个视图",
-      "one chain of nodes, parents before children, in one call": "一条节点链,父节点先于子节点,在一次调用里完成",
-      "none: the buffers are the caller’s": "没有:缓冲区属于调用者",
-      "the unit function stays the oracle; the WebAssembly kernel repeats it term by term": "单体函数始终是权威结果;WebAssembly 内核逐项重复它",
-      "the governor, after those executions": "经过那些执行之后的调度器状态",
-      "the kernel leads by enough, for long enough, to be worth the switch": "该内核领先的幅度足够大、持续时间足够长,值得为此切换",
       "the reads of one node": "对某一个节点的读取",
       "the sign alone decides, with no square root: the exact clip test": "只靠符号判断,不需要平方根:精确的裁剪测试",
       "the subtraction happens in double; only the write rounds": "减法在双精度下完成;只有写入时才会做舍入",
@@ -1589,7 +1561,6 @@
       "the child, before and after the root moves": "根节点移动前后的子节点",
       "the child, attached then detached": "先挂载再分离的子节点",
       "matrices do not move until the next update, like the reference `add`": "和参考实现的 `add` 一样,矩阵在下一次更新之前都不会变化",
-      "the batch against the unit function it repeats": "批处理结果与它所重复的单体函数的对比",
       "frame.view — the inverse of the camera world matrix": "frame.view —— 摄像机世界矩阵的逆矩阵",
       "DIAGNOSTICS — the engine says which modes it can produce, and why not": "DIAGNOSTICS —— 引擎说明它能生成哪些模式,以及不能生成的原因",
       "LOD_QUALITY, as the engine holds it": "引擎所持有的 LOD_QUALITY",
@@ -1599,7 +1570,6 @@
       "singular: the adjugate as-is, so the flattened surface keeps a normal": "奇异:伴随矩阵原样保留,因此被压扁的表面仍保有法线",
       "no finite scale: nine zeros": "没有有限的缩放值:九个零",
       "rejected: every normal of that cluster faces away from the viewer": "剔除:该簇的每一个法线都背对观察者",
-      "JS keeps the work: under five samples, or the lead is not a burst": "JS 继续承担工作:样本数不足五个,或者领先不是持续的",
       "nodeWorldDirection (object, +z)": "nodeWorldDirection(物体, +z)",
       "nodeWorldDirection (viewer, −z)": "nodeWorldDirection(观察者, −z)",
       "root": "根节点",
@@ -1629,7 +1599,6 @@
       "column 1": "第 1 列",
       "column 2": "第 2 列",
       "out = a, aliased": "out = a,别名",
-      "clock resolution the measurement rests on (ms)": "测量所依赖的时钟分辨率 (ms)",
       "decomposeMatrix4 of that matrix — the round trip": "对该矩阵执行 decomposeMatrix4 —— 往返",
       "depth against distance: it falls from 1 at the near plane toward 0 at infinity": "深度与距离的关系:从近平面的 1 一路降到无穷远处的 0",
       "depth at the near plane (0.1 m)": "近平面 (0.1m) 处的深度",
@@ -1645,7 +1614,6 @@
       "rotation of A (rad)": "A 的旋转 (弧度)",
       "the direction (1, 0, 0) under that matrix": "该矩阵下方向 (1, 0, 0) 的结果",
       "the identity written at offset 16 of one large buffer": "写入某个大缓冲区偏移量 16 处的单位矩阵",
-      "x of the last node — the sum 0 + 1 + … + (n − 1)": "最后一个节点的 x —— 即 0 + 1 + … + (n − 1) 之和",
       "transformHomogeneousPoint — four components": "transformHomogeneousPoint —— 四个分量",
       "matrixAtRenderOrigin — the same matrix, applied at the origin": "matrixAtRenderOrigin —— 同一个矩阵,应用在原点处",
       "viewToRenderOrigin — the view without its translation": "viewToRenderOrigin —— 去掉平移部分的视图",
@@ -1660,10 +1628,7 @@
       "surface": "表面",
       "target": "目标",
       "viewer": "观察者",
-      "expected": "期望值",
-      "orientation": "朝向",
-      "products": "乘积",
-      "nodes": "节点"
+      "orientation": "朝向"
     },
     "patterns": {
       "singular": "行列式 {{value}}:是十六个零 —— 请检测行列式本身,而不是输出结果"

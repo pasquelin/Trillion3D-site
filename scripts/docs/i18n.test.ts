@@ -8,8 +8,10 @@ import { compareKeys, describeMismatches, keyMismatches } from '../i18n-keys.ts'
 import { entrySummary } from '../../site/content/model.ts'
 import { DEFAULT_LANGUAGE, dictionaryOf, LANGUAGES } from '../../site/content/i18n/dictionary.ts'
 import { localizeDemoText } from '../../site/content/i18n/canvas.ts'
-import { NOTES } from '../../site/content/entries/reference.ts'
+import { NOTES, REFERENCE } from '../../site/content/entries/reference.ts'
 import { entriesIn, loadEntries } from '../../site/app/portal/data.ts'
+import type { WrittenText } from '../../site/content/i18n/entries.ts'
+import { rowKey } from '../../site/content/reference/translate.ts'
 import type { Header as HeaderComponent } from '../../site/app/layout/Header.tsx'
 
 const CODES = LANGUAGES.map(({ code }) => code)
@@ -67,11 +69,28 @@ test('a language without a dictionary reads the English entries', () => {
   assert.deepEqual(entriesIn('xx').map(words), english.map(words))
 })
 
+type Written = Record<string, WrittenText>
+
 test('a written table explains each word its note names, in order', () => {
-  const written: Record<string, { title?: string; description?: string; values?: string[] }> =
-    dictionaryOf(DEFAULT_LANGUAGE).written
+  const written: Written = dictionaryOf(DEFAULT_LANGUAGE).written
   for (const note of NOTES.values())
     assert.equal(written[note.id]?.values?.length, note.valueNames?.length, note.id)
+})
+
+test('a written member row fills only a row the engine leaves bare, in every language', () => {
+  const generated = new Map(REFERENCE.map((entry) => [entry.id, entry]))
+  for (const code of CODES) {
+    const written: Written = dictionaryOf(code).written
+    const shown = new Map(entriesIn(code).map((entry) => [entry.id, entry]))
+    for (const [id, { members }] of Object.entries(written))
+      for (const [name, desc] of Object.entries(members ?? {})) {
+        const named = (row: { name: string }) => rowKey(row.name) === name
+        const bare = generated.get(id)?.members?.find(named)
+        assert.equal(bare?.desc, '', `${id}.${name}: the engine describes it, or it is gone`)
+        const row = shown.get(id)?.members?.find(named)
+        assert.equal(row?.desc, desc, `${code}: ${id}.${name}`)
+      }
+  }
 })
 
 test('a demo canvas label is translated, its technical symbols and values kept', () => {

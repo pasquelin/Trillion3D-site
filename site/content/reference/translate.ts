@@ -18,7 +18,7 @@ interface WrittenFields {
 }
 
 /** The name a row is keyed by in a translation: `options.renderer`, `add`, without type or `?`. */
-const rowKey = (name: string) => name.replace(/[?(].*$/, '')
+export const rowKey = (name: string) => name.replace(/[?(].*$/, '')
 
 const LINES = ['summary', 'description', 'valuesTitle'] as const
 const ROWS = ['parameters', 'members', 'values'] as const
