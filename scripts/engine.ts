@@ -31,7 +31,7 @@ export const ENGINE = resolve(ROOT, '.engine')
  *  the root's among them: the notices, `.gitmodules`). `packages`: the browser engine, its
  *  workers and WebAssembly, the maths, the public facade the API reference reads, the native
  *  compiler's crate and the Jolt submodule it links. `.cargo`: the compiler's build flags.
- *  `bench/kit`: the measurement contract the reports read. `scripts/installed-package`: the
+ *  `bench/kit`: the measurement contract the examples' kit reads. `scripts/installed-package`: the
  *  package fixture the Install page proof packs. */
 const SPARSE = ['packages', '.cargo', 'bench/kit', 'scripts/installed-package']
 

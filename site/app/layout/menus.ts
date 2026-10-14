@@ -1,7 +1,6 @@
 import { dictionaryOf, wordFor } from '../../content/i18n/dictionary.ts'
 import type { Locale } from '../../content/locale.ts'
 import { entrySummary, SECTIONS } from '../../content/model.ts'
-import { REPORT_SECTIONS } from '../reports/model/presentation.ts'
 import type { PortalEntry } from '../../content/model.ts'
 import { exampleTitle, themeTitle, thumbnailOf, writtenThemes } from '../examples/list.ts'
 import { expandEntryLinks } from '../portal/entryLinks.ts'
@@ -94,17 +93,4 @@ export function examplesMenu(route: PortalRoute, query = ''): ExampleGroup[] {
       })),
     }))
     .filter(({ items }) => items.length > 0)
-}
-
-/** Measurements: the parts of the current campaign's report. */
-export function reportMenu(route: PortalRoute): SidebarMenuGroup[] {
-  const [campaign = '', active = 'overview'] = route.id.split('/')
-  const t = wordsOf(route.locale)
-  const items = REPORT_SECTIONS.map((id) => ({
-    key: id,
-    label: t(`report.sections.${id}`),
-    href: routeHref({ ...route, id: `${campaign}/${id}` }),
-    active: id === active,
-  }))
-  return [{ id: 'report', title: t('nav.reports'), items }]
 }

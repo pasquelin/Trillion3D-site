@@ -2,7 +2,7 @@
 
 # Trillion3D Site
 
-### The website of Trillion3D: the learning portal, the API reference, the measurement reports and the examples, built against the pinned engine.
+### The website of Trillion3D: the learning portal, the API reference and the examples, built against the pinned engine.
 
 [![TypeScript strict](https://img.shields.io/badge/TypeScript-strict-2b2d30?logo=typescript&logoColor=3178c6)](tsconfig.site.json)
 [![WebGPU](https://img.shields.io/badge/WebGPU-Trillion3D%20engine-2b2d30?logo=webgpu&logoColor=6fa8dc)](https://github.com/pasquelin/Trillion3D)
@@ -19,9 +19,8 @@
 ## What it is
 
 https://www.trillion3d.com: a React portal with hash routes (`#/<locale>/...`) that teaches the
-engine, documents its whole public API (generated from the engine's declarations), shows the
-measurement campaigns, and frames one standalone page per example, each drawn live by the engine in
-the browser. Every word is translated; the examples' scenes are compiled into Trillion3D caches by
+engine, documents its whole public API (generated from the engine's declarations) and frames one
+standalone page per example, each drawn live by the engine in the browser. Every word is translated; the examples' scenes are compiled into Trillion3D caches by
 the engine's native compiler.
 
 It lives apart from Trillion3D so that the engine's checks never build a website, and the site moves
@@ -70,11 +69,11 @@ pnpm run compile:caches    # every scene cache of site/assets/
 ## Structure
 
 ```text
-site/app/        the portal (React): primitives ui/, layouts layout/, pages, editor, reports
+site/app/        the portal (React): primitives ui/, layouts layout/, pages, editor
 site/content/    entries, API reference translations, examples list; site/demos/ per-entry demos
 site/i18n/       the portal's words, one file a language; site/examples/i18n/ the examples' words
 site/examples/   one standalone page per example, and their kit (kit/)
-site/assets/     the examples' and the gallery's scene sources, thumbnails; site/data/, site/reports/
+site/assets/     the examples' and the gallery's scene sources, thumbnails; site/data/
 scripts/docs/    the build, the servers, the example scene generators, the tests
 scripts/         the engine checkout, the API generator, the caches, the checks
 tests/           the portal's integration test
@@ -95,7 +94,7 @@ The site reads Trillion3D at the commit `package.json` pins:
 `.engine/`, ignored by git: a shallow, sparse, detached checkout of only what the site reads —
 `packages/` (the browser SDK and its workers and WebAssembly, the maths, the public facade the API
 reference reads, the native compiler's crate and its Jolt submodule), `.cargo/` (the compiler's
-build flags), `bench/kit/` (the measurement contract of the reports) and
+build flags), `bench/kit/` (the measurement contract of the examples' kit) and
 `scripts/installed-package/` (the package fixture of the Install page proof). The sources import
 the engine as `#engine/<path>` (the `imports` field of `package.json`, which Node, TypeScript and
 esbuild all read); the scripts reach it as `ENGINE`. Nothing of the engine is copied here.
