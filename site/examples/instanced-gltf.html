@@ -1,0 +1,108 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Instanced glTF</title>
+    <meta name="thumbnail" content="9" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #e7a273;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      p {
+        position: absolute;
+        top: 0;
+        margin: 0.5rem;
+        color: #3a2418;
+        font: 12px system-ui;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <p data-words="credit"></p>
+    <script type="module">
+      import { createWorld, light, math, effect } from '../runtime/engine.js';
+      import { controls, readout, words, language, opening, ease, circling, mix } from '../runtime/kit.js';
+      const say = words();
+
+      const world = createWorld('view', { controls: 'orbit' });
+      // Evening haze: the fog and the sky are one colour, and a linear display curve keeps them
+      // one, so the far hills melt into the sky.
+      const haze = math.color('#e7a273');
+      world.scene.background = haze;
+      world.toneMapping = 'linear';
+      // A low sun beyond the lake, warm, its shadows long; a cool sky fills what it leaves.
+      const sun = light.directional({ intensity: 2.6, color: '#ffb26b', castShadow: true });
+      world.scene.add(sun, light.hemisphere({ intensity: 0.5, color: '#9aa6d6', groundColor: '#5a3a26' }));
+      // A faint glow where the sun glints on the water.
+      world.effects.add(effect.bloom({ intensity: 0.06 }));
+
+      // Four thousand trees and two hundred and fifty rocks around a lake. The file writes each
+      // shape once and places it with `EXT_mesh_gpu_instancing`: one node per kind, its poses —
+      // translation, rotation, scale — three columns of the binary. The compiler expands every
+      // pose into a node of its own and cuts each shape once into clusters and coarser versions.
+      const [forest, file] = await Promise.all([
+        world.scene.load('../assets/examples/instanced-gltf/cache/native/full/manifest.json'),
+        fetch('../assets/examples/instanced-gltf/source/forest.gltf').then((response) => response.json()),
+      ]);
+      world.camera.near = 0.1;
+      world.camera.far = 600;
+      world.controls.minDistance = 3;
+      world.controls.maxDistance = 160;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
+
+      // The mist lies on the lake, read from the file's water, and thins out with height,
+      // divided by e every 8 m.
+      const lake = file.meshes.find((mesh) => mesh.name === 'lake');
+      const water = file.accessors[lake.primitives[0].attributes.POSITION].min[1];
+      controls({
+        sunHeight: [2, 35, 9, 1],
+        mist: [0, 3, 1, 0.1],
+        drift: () => drift.restart(),
+      }, (values) => {
+        const height = math.degToRad(values.sunHeight);
+        sun.position.set(-Math.cos(height) * 100, Math.sin(height) * 100, -25);
+        world.scene.fog = { color: haze, density: 0.012 * values.mist, heightFalloff: 0.125, baseHeight: water };
+        world.invalidate();
+      }, world);
+
+      // What the file says and what the cook made of it: a handful of nodes, thousands of objects.
+      const poses = file.nodes.reduce((sum, node) => {
+        const instancing = node.extensions?.EXT_mesh_gpu_instancing;
+        return sum + (instancing ? file.accessors[instancing.attributes.TRANSLATION].count : 0);
+      }, 0);
+      readout('nodesFile')(say('nodesPoses', { nodes: file.nodes.length.toLocaleString(language()), poses: poses.toLocaleString(language()) }));
+      readout('objectsCooked')(forest.metadata.totalNodes.toLocaleString(language()));
+      const drawn = readout('trianglesDrawn');
+      world.onFrame(({ metrics }) => {
+        const selected = metrics.selectedTriangles;
+        drawn(selected == null ? say('notCounted') : selected.toLocaleString(language()));
+      });
+
+      // The opening: low over the water towards the sun, then up and back over the trees until
+      // the whole valley is in view, and a slow turn around it. A press or a wheel hands the
+      // camera back; the Drift button starts the turn again.
+      const START = { eye: [4, 2, 24], look: [-50, 0, 6] };
+      const WIDE = { eye: [55, 38, 70], look: [-12, -2, 6] };
+      const drift = circling(world, 0.03);
+      drift.stop();
+      opening(world, (time) => {
+        const t = ease.smooth((time - 1) / 8);
+        const at = (from, to) => mix({ math }, from, to, t);
+        world.camera.position.set(...at(START.eye, WIDE.eye));
+        world.controls.target.set(...at(START.look, WIDE.look));
+        if (t < 1) return true;
+        drift.restart();
+        return false;
+      });
+    </script>
+  </body>
+</html>

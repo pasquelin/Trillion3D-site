@@ -78,6 +78,7 @@ export interface GltfNode {
   children?: number[]
   /** What the compiler reads beside the node: a soft body's `physics` options. */
   extras?: { physics?: PhysicsOption }
-  /** A rigid body the node declares, `KHR_physics_rigid_bodies`: its motion and its collider. */
+  /** What the node declares: a rigid body (`KHR_physics_rigid_bodies`), its motion and its
+   *  collider, or its mesh drawn once per pose (`EXT_mesh_gpu_instancing`). */
   extensions?: Record<string, unknown>
 }
