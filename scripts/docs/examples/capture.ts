@@ -88,7 +88,9 @@ export async function openExample(
   slowMs = 0,
 ) {
   const least = share ?? leastDrawn(entry.id)
-  const page = await browser.newPage({ viewport })
+  // In English whatever the machine's language: a page that writes words into its render (labels,
+  // a slider's ends) shows them in the gallery's own language.
+  const page = await browser.newPage({ viewport, locale: 'en-US' })
   const errors: string[] = [],
     requests: string[] = []
   const heard = (error: string) => declaredError(entry.id, error) || errors.push(error)
