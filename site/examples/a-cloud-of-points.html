@@ -21,7 +21,7 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, math, buffer } from '../runtime/engine.js';
+      import { createWorld, effect, geometry, material, object, math, buffer } from '../runtime/engine.js';
       import { controls, readout, seeded, language, ease, opening, mix } from '../runtime/kit.js';
 
       // A bell curve drawn from a seeded sequence (the kit's `seeded`): the same sky on every run.
@@ -153,6 +153,9 @@
       world.controls.target.set(0, 0, 0);
       world.controls.minDistance = 4;
       world.controls.maxDistance = 60;
+      // A soft glow: where points crowd, in a galaxy's core or a nebula's heart, their light
+      // spills into a haze around them.
+      world.effects.add(effect.bloom({ intensity: 0.1 }));
 
       // The chosen shape grows in, unwinding as it does; the one before shrinks away, winding up.
       let current = null, pointCount = null, groupCount = null;

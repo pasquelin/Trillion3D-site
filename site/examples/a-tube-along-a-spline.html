@@ -21,7 +21,7 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, math } from '../runtime/engine.js';
+      import { createWorld, effect, geometry, material, object, light, math } from '../runtime/engine.js';
       import { controls, readout, language } from '../runtime/kit.js';
 
       // Each path is a few points in space; `math.curve` passes a smooth spline through them.
@@ -65,6 +65,8 @@
       world.camera.position.set(0, 4.6, 8.2);
       world.camera.lookAt(0, 1.5, 0);
       world.controls.target.set(0, 1.5, 0);
+      // A soft glow round the beads, which shine brighter than white.
+      world.effects.add(effect.bloom({ intensity: 0.07 }));
 
       // A change of path, thickness or slicing builds a new tube; the paint alone is recoloured.
       let curve = paths.knot(), triangles = null, travel = 0;

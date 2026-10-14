@@ -25,7 +25,8 @@
       import { controls, readout, opening, ease } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
-      world.scene.background = math.color('#263042');
+      const DUSK = math.color('#263042'), backdrop = DUSK.clone();
+      world.scene.background = backdrop;
 
       // Pale sculptures floating over a wide floor. Painted almost white, they take the colour of
       // whatever lights them: the sky on their tops, the ground on their undersides, and a blend
@@ -98,6 +99,8 @@
           groundShown?.(place.ground);
         }
         sky.intensity = values.skyStrength;
+        // Behind the sculptures, the place's sky itself, fading to dusk as its light is turned down.
+        backdrop.copy(DUSK).lerp(sky.color, math.clamp(values.skyStrength / 1.6, 0, 1));
         // Without the sun, only the sky and the ground light the scene: no shadow, no key, just
         // the gradient from one colour to the other.
         sun.intensity = values.sun ? 1.4 : 0;

@@ -131,26 +131,32 @@
         const distance = 13 - 5.2 * arrive, height = 6.5 - 2.6 * arrive;
         world.camera.position.set(Math.sin(angle) * distance, height, Math.cos(angle) * distance);
       });
-      let time = 0, turn = 0;
+      // Everything that moves on its own — the sculpture's turn, the rings' gimbal, the lifted
+      // ball's bob — moves while `turn` is on; with it off, once risen and the balls settled, the
+      // gallery holds still and asks for no new frame.
+      let time = 0;
       world.onFrame(({ delta }) => {
         const step = Math.min(delta, 0.05);
-        time += step;
         rise = Math.min(1, rise + step / 1.6);
-        if (ui.turn) turn += step * 0.5;
+        if (ui.turn) time += step;
         const up = ease.out(rise);
         shown.holder.position.y = 0.2 + 2.7 * up;
         shown.holder.scale.setScalar(0.001 + up);
-        shown.holder.rotation.set(0, turn + (1 - up) * 3, 0);
+        shown.holder.rotation.set(0, time * 0.5 + (1 - up) * 3, 0);
         // The rings turn inside each other like a gimbal, each about one axis of its own.
         const [outer, middle, inner] = sculptures.rings.pieces;
         outer.rotation.set(Math.PI / 2 + Math.sin(time * 0.4) * 0.5, 0, 0);
         middle.rotation.set(0, time * 0.7, 0);
         inner.rotation.set(time * 1.1, 0, 0);
+        let settling = false;
         for (const one of samples) {
-          one.lift += ((one.name === ui.matcap ? 1 : 0) - one.lift) * Math.min(1, step * 6);
+          const goal = one.name === ui.matcap ? 1 : 0;
+          one.lift += (goal - one.lift) * Math.min(1, step * 6);
+          if (Math.abs(goal - one.lift) < 0.001) one.lift = goal;
+          else settling = true;
           one.sample.position.y = 0.8 + one.lift * 0.35 + Math.sin(time * 2 + one.sample.position.x) * 0.03 * one.lift;
         }
-        world.invalidate();
+        if (ui.turn || rise < 1 || settling) world.invalidate();
       });
     </script>
   </body>

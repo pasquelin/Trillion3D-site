@@ -26,6 +26,10 @@
 
       const world = createWorld('view', { controls: 'orbit' });
       world.scene.background = math.color('#d9bf9f');
+      // A late-afternoon haze down the avenue: the far end pales, a quarter of its light left at
+      // four hundred metres. The fog is light, exposed and tone-mapped like a surface, the
+      // background is not: this is the radiance the display curve shows as #d9bf9f.
+      world.scene.fog = { color: math.color([0.738, 0.442, 0.248]), density: 0.0035 };
 
       // An avenue four hundred metres long, in metres, running along z. At the end of the day
       // the sun sits low at its far end: the west side throws its shadow right across the street

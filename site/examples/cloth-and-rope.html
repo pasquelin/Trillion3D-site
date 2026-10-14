@@ -21,7 +21,7 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, math, buffer } from '../runtime/engine.js';
+      import { createWorld, geometry, material, object, light, math, buffer, texture } from '../runtime/engine.js';
       import { controls, physicsReadouts, readout } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit', physics: true });
@@ -45,7 +45,24 @@
       world.scene.add(pole, beam);
 
       const COLUMNS = 30, ROWS = 20;
-      const cloth = material.meshStandard({ color: '#c23b3b', roughness: 0.9, side: 'double' });
+      // The flag is painted once on a canvas: a red field, a cream band along the fly and a navy
+      // disc ringed in gold, so its folds read as it waves.
+      const banner = document.createElement('canvas');
+      banner.width = 384;
+      banner.height = 256;
+      const paint = banner.getContext('2d');
+      paint.fillStyle = '#c23b3b';
+      paint.fillRect(0, 0, 384, 256);
+      paint.fillStyle = '#f1e6c8';
+      paint.fillRect(312, 0, 40, 256);
+      paint.beginPath();
+      paint.arc(160, 128, 70, 0, Math.PI * 2);
+      paint.fillStyle = '#1f3566';
+      paint.fill();
+      paint.lineWidth = 12;
+      paint.strokeStyle = '#e2b13c';
+      paint.stroke();
+      const cloth = material.meshStandard({ map: texture.canvas(banner), roughness: 0.9, side: 'double' });
       // A plane's vertices run row by row from its bottom left corner: the first of each row is at the pole.
       const atPole = Array.from({ length: ROWS + 1 }, (_, row) => row * (COLUMNS + 1));
 
@@ -54,11 +71,16 @@
         const points = Array.from({ length: count }, (_, i) => [(i * length) / (count - 1), 0, 0]).flat();
         return geometry.createBuffer({ position: buffer.float32(new Float32Array(points), 3) });
       };
-      const rope = material.line({ color: '#2d2a26' });
+      // A pixel-thin line is lost against the sky: the ropes are drawn a few pixels wide.
+      const rope = material.line({ color: '#2d2a26', linewidth: 3 });
 
       let simulated = [];
       const hang = ({ stiff, stretch }) => {
-        for (const mesh of simulated) world.scene.remove(mesh);
+        // The former flag and ropes go, their shapes with them: each hang builds its own.
+        for (const mesh of simulated) {
+          world.scene.remove(mesh);
+          mesh.geometry.dispose();
+        }
         const flag = object.mesh(geometry.plane(3, 2, COLUMNS, ROWS), cloth);
         flag.position.set(-4 + 1.5, 3.8, 0);
         flag.physics = { type: 'cloth', pins: atPole, bend: stiff ? 0.001 : Infinity };

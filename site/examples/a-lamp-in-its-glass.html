@@ -21,7 +21,7 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light } from '../runtime/engine.js';
+      import { createWorld, geometry, material, object, light, effect } from '../runtime/engine.js';
       import { controls } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
@@ -51,11 +51,13 @@
       world.scene.add(barrel);
 
       // The lantern hangs 1.8 m below an iron plate in the ceiling: a bulb in a glass globe. The
-      // light's `radius` is the bulb's, so the bulb and its globe do not block their own lamp.
+      // light's `radius` is the bulb's, so the bulb and its globe do not block their own lamp. The
+      // globe is real glass: a physical material that lets the light through (`transmission`) and
+      // bends it (`ior`), so the bulb is seen through it, bent by its curve.
       const HOOK = [0, 5, -0.5], CHAIN = 1.8, bulbRadius = 0.07;
       const iron = material.meshStandard({ color: '#202124', metalness: 0.8, roughness: 0.45 });
       const filament = material.meshStandard({ color: '#000000', emissive: '#ffcf8a', emissiveIntensity: 5 });
-      const glass = material.meshStandard({ color: '#e6f0ff', roughness: 0.1, opacity: 0.25, transparent: true });
+      const glass = material.meshPhysical({ color: '#eef4ff', roughness: 0.25, transmission: 1, ior: 1.5, thickness: 0.02 });
       const lantern = object.group();
       lantern.position.set(...HOOK);
       const chain = object.mesh(geometry.cylinder(0.015, 0.015, CHAIN, 8), iron);
@@ -64,11 +66,14 @@
       bulb.position.y = -CHAIN - 0.2;
       const globe = object.mesh(geometry.sphere(0.24, 48, 32), glass);
       globe.position.y = -CHAIN - 0.2;
+      globe.castShadow = false;
       lantern.add(chain, bulb, globe);
       const plate = object.mesh(geometry.box(0.24, 0.06, 0.24), iron);
       plate.position.set(HOOK[0], HOOK[1] - 0.03, HOOK[2]);
       const lamp = light.point({ intensity: 14, distance: 10, radius: bulbRadius, castShadow: true });
       world.scene.add(plate, lantern, lamp, light.ambient({ intensity: 0.2, color: '#8fb4ff' }));
+      // The filament is far brighter than anything it lights: a light bloom lets it shine.
+      world.effects.add(effect.bloom({ intensity: 0.06 }));
       // The camera turns on an arc around the lantern's swing, far enough back to hold the plate,
       // the chain and the pool of light on the floor in one frame, and never above the ceiling,
       // below the floor or farther than the front wall (5.8 m from the middle of the swing, the
@@ -85,11 +90,12 @@
       world.camera.position.set(1.6, 2.1, 4.85);
       world.camera.lookAt(0, 2.5, -0.5);
 
+      // `glass` frosts the globe: from clear to milky, as rough as its surface is.
       const ui = controls({ swing: [0, 0.7, 0.45], lamp: '#ffcf8a', power: [0, 40, 14], glass: [0, 1, 0.25] }, (values) => {
         lamp.color.set(values.lamp);
         lamp.intensity = values.power;
         filament.emissive.set(values.lamp);
-        glass.opacity = values.glass;
+        glass.roughness = values.glass;
         world.invalidate();
       }, world);
       // A pendulum: the angle swings, the lamp follows the bulb it hangs from.

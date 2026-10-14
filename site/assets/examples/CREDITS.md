@@ -50,6 +50,7 @@ scenes above (`full`, 2 threads, 256 MB, `qem-endpoints`, the default `bc7` text
 | `terrain-tiles/` | `terrain-tiles.ts` | `terrain-tiles.gltf` and `ground.png`: a textured terrain of three by three tiles, each a mesh and a node of its own |
 | `flag/` | `flag.ts` | `flag.gltf`: a flag on a pole over a lawn, its node declaring a cloth pinned along the pole |
 | `chalet/` | `chalet.ts` | `chalet.gltf`: a chalet of thin closed shapes, a whitewash ground floor, walls of logs, balcony boards, a shingle roof |
+| `cooked-blocks/` | `cooked-blocks.ts` | `blocks.gltf`: forty-eight painted blocks over a stepped plinth, each node declaring a dynamic rigid body |
 
 ## Public animation samples
 

@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Hover over triangles</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #0d1220;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, geometry, material, object, light, effect, buffer, math } from '../runtime/engine.js';
+      import { controls, readout, seeded } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#0d1220');
+
+      // A knot cut into facets: three corners of its own per triangle (`toNonIndexed`), so each
+      // triangle carries its own normal and its own colour. Triangle `n` is corners 3n to 3n + 2,
+      // the rank a ray's hit names as `face`.
+      const shape = geometry.torusKnot(1.25, 0.42, 120, 12).toNonIndexed();
+      shape.computeVertexNormals();
+      const count = shape.attributes.position.count / 3;
+      const colours = buffer.float32(new Float32Array(count * 9), 3);
+      shape.setAttribute('color', colours);
+      // Recoloured every frame a trail fades: uploaded in place rather than cut again.
+      shape.usage = 'dynamic';
+
+      // Each facet's resting colour, deep blue to teal along the knot with a little grain, and
+      // the warm one a hovered facet glows in.
+      const deep = math.color('#1f3a68'), teal = math.color('#2f8f9d'), hot = math.color('#ffc061');
+      const grain = seeded(7);
+      const rest = Array.from({ length: count }, (_, n) =>
+        math.color().copy(deep).lerp(teal, 0.5 + 0.4 * Math.sin((n / count) * Math.PI * 6) + 0.1 * (grain() - 0.5)),
+      );
+      const shade = math.color();
+      const write = (n, heat) => {
+        shade.copy(rest[n]).lerp(hot, heat);
+        for (let k = 0; k < 3; k++) colours.setXYZ(3 * n + k, shade.r, shade.g, shade.b);
+      };
+      for (let n = 0; n < count; n++) write(n, 0);
+
+      const knot = object.mesh(shape, material.meshStandard({ vertexColors: true, roughness: 0.32, metalness: 0.15 }));
+      world.scene.add(knot);
+
+      // A warm key, a cold rim from behind and a dim sky: the facets read by their light alone.
+      world.scene.add(
+        light.directional({ color: '#ffe6c4', intensity: 2.6, position: [4, 5, 6] }),
+        light.directional({ color: '#6fa8ff', intensity: 1.8, position: [-5, -1, -6] }),
+        light.hemisphere({ color: '#33426a', groundColor: '#0d1220', intensity: 0.8 }),
+      );
+      world.effects.add(effect.bloom({ intensity: 0.06 }));
+      world.camera.position.set(0, 0.6, 6.4);
+      world.camera.lookAt(0, 0, 0);
+      world.controls.target.set(0, 0, 0);
+      world.controls.minDistance = 3;
+      world.controls.maxDistance = 12;
+
+      const ui = controls({ trail: [0, 3, 0.8, 0.1], spin: true }, () => world.invalidate(), world);
+      const under = readout('triangle');
+
+      // The heat of every facet the pointer crossed: 1 under it, then cooling to 0 over `trail`
+      // seconds. Only these facets are written again.
+      const heat = new Map();
+      const pointer = { x: 0, y: 0, inside: false };
+      world.canvas.addEventListener('pointermove', (event) => {
+        Object.assign(pointer, { x: event.offsetX, y: event.offsetY, inside: !event.buttons });
+        world.invalidate();
+      });
+      world.canvas.addEventListener('pointerleave', () => {
+        pointer.inside = false;
+        world.invalidate();
+      });
+
+      // Each frame: turn the knot, cast one ray at the pointer — the knot moves under a still
+      // pointer too —, light the triangle it hits and cool the others.
+      world.onFrame(({ delta }) => {
+        const step = Math.min(delta, 0.05);
+        if (ui.spin) knot.rotation.set(0.3, knot.rotation.y + step * 0.25, 0);
+        const hit = pointer.inside ? world.raycast(pointer, { objects: [knot] }) : null;
+        under(hit ? `${hit.face + 1} / ${count}` : '—');
+        // The colours are sent again only when one changed: a still pointer over a still knot
+        // writes nothing, and the world stops drawing until something moves.
+        let changed = false;
+        if (hit && heat.get(hit.face) !== 1) {
+          heat.set(hit.face, 1);
+          write(hit.face, 1);
+          changed = true;
+        }
+        for (const [n, h] of heat) {
+          if (n === hit?.face) continue;
+          const cooler = ui.trail ? h - step / ui.trail : 0;
+          if (cooler > 0) heat.set(n, cooler);
+          else heat.delete(n);
+          write(n, Math.max(cooler, 0));
+          changed = true;
+        }
+        if (changed) colours.needsUpdate = true;
+        if (ui.spin || changed) world.invalidate();
+      });
+      world.invalidate();
+      addEventListener('pagehide', () => world.dispose(), { once: true });
+    </script>
+  </body>
+</html>
