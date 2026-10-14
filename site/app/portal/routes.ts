@@ -4,7 +4,7 @@ import type { Locale } from '../../content/locale.ts'
 import type { PortalEntry } from '../../content/model.ts'
 
 /** The areas of the header, in navigation order; the sandbox and the editor take the whole width. */
-const AREAS = ['learn', 'sandbox', 'examples', 'editor', 'api', 'reports'] as const
+const AREAS = ['learn', 'sandbox', 'examples', 'editor', 'api'] as const
 type NavArea = (typeof AREAS)[number]
 
 export interface PortalRoute {
@@ -15,7 +15,6 @@ export interface PortalRoute {
 
 /** What a route resolves to, once the entries and examples are known. */
 export type ResolvedPage =
-  | { kind: 'report' }
   | { kind: 'home' }
   | { kind: 'entry'; entry: PortalEntry }
   | { kind: 'examples' }
@@ -79,7 +78,6 @@ export function resolvePage(
   exampleIds: string[] = [],
 ): ResolvedPage {
   const { area, id } = route
-  if (area === 'reports') return { kind: 'report' }
   const entry = entries.find((candidate) => candidate.id === id)
   const learnEntry = entry && LEARN_SECTIONS.includes(entry.section)
   if (area === 'learn' && id === 'home') return { kind: 'home' }

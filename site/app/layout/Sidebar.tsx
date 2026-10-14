@@ -5,7 +5,7 @@ import { hasSidebar } from '../portal/routes.ts'
 import { SearchInput } from '../ui/Input.tsx'
 import { Note } from '../ui/Text.tsx'
 import { PrimaryNavigation } from './Header.tsx'
-import { apiMenu, examplesMenu, learnMenu, reportMenu } from './menus.ts'
+import { apiMenu, examplesMenu, learnMenu } from './menus.ts'
 import { usePortal } from './PortalContext.ts'
 import { ExampleList } from './ExampleList.tsx'
 import { SidebarMenu } from './SidebarMenu.tsx'
@@ -37,7 +37,6 @@ function AreaMenu() {
   const { route, entries } = usePortal()
   if (!hasSidebar(route)) return null
   if (route.area === 'examples') return <ExamplesMenu />
-  if (route.area === 'reports') return <SidebarMenu groups={reportMenu(route)} />
   if (route.area === 'api') return <SidebarMenu groups={apiMenu(entries, route)} />
   return <SidebarMenu groups={learnMenu(entries, route)} />
 }

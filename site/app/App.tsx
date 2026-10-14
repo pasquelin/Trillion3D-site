@@ -14,29 +14,25 @@ import { Shell } from './layout/Shell.tsx'
 import type { PortalRoute, ResolvedPage } from './portal/routes.ts'
 
 // The areas a route may never visit load on demand: the examples, the scene editor, the sandbox
-// and its code editor, the migration guide, the reports and their presentation — none of them on
-// the home page.
+// and its code editor, the migration guide — none of them on the home page.
 const AREAS = {
   examples: () => import('./examples/Examples.tsx'),
   example: () => import('./examples/Example.tsx'),
   sandbox: () => import('./sandbox/Sandbox.tsx'),
   migration: () => import('./migration/ThreeMigration.tsx'),
   editor: () => import('./editor/SceneEditor.tsx'),
-  report: () => import('./reports/Report.tsx'),
 }
 const Examples = lazy(() => AREAS.examples().then((m) => ({ default: m.Examples })))
 const Example = lazy(() => AREAS.example().then((m) => ({ default: m.Example })))
 const Sandbox = lazy(() => AREAS.sandbox().then((m) => ({ default: m.Sandbox })))
 const ThreeMigration = lazy(() => AREAS.migration().then((m) => ({ default: m.ThreeMigration })))
 const SceneEditor = lazy(() => AREAS.editor().then((m) => ({ default: m.SceneEditor })))
-const Report = lazy(() => AREAS.report().then((m) => ({ default: m.Report })))
 
 /** Every area's chunk, fetched once the first page is up, so that no later click waits on one. */
 const preloadAreas = () => Promise.all(Object.values(AREAS).map((load) => load()))
 
 function Page({ page, route }: { page: ResolvedPage; route: PortalRoute }) {
   const { locale } = route
-  if (page.kind === 'report') return <Report route={route} />
   if (page.kind === 'home') return <Home locale={locale} />
   if (page.kind === 'api-index') return <ApiIndex />
   if (page.kind === 'examples') return <Examples locale={locale} />

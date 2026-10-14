@@ -22,10 +22,10 @@ export const SITE_OUTPUT = resolve(ROOT, 'dist/site')
  * and the deployment checks the address the built page declares. */
 const SITE_URL = 'https://www.trillion3d.com/'
 
-/** What the site serves as is: examples, assets, data, reports, and the icon every page gets. */
-const STATIC_ENTRIES = ['examples', 'assets', 'data', 'reports', 'favicon.ico']
+/** What the site serves as is: examples, assets, data, and the icon every page gets. */
+const STATIC_ENTRIES = ['examples', 'assets', 'data', 'favicon.ico']
 /** The pages the portal replaced, each moved to its route: an old link still lands on it. */
-const REDIRECTS: Record<string, string> = { 'report.html': '#/en/reports' }
+const REDIRECTS: Record<string, string> = { 'report.html': '#/en/learn/home' }
 /** What the build writes at the root from `SITE_URL`: the portal page, the crawler rules and the
  *  redirects. */
 const METADATA_ENTRIES = ['index.html', 'robots.txt', ...Object.keys(REDIRECTS)]
@@ -118,7 +118,7 @@ export const SITE_STEPS: readonly SiteStep[] = [
     name: 'runtime',
     reads: [
       ENGINE_PACKAGES,
-      ...['app', 'content', 'demos', 'examples', 'i18n', 'reports'].map((name) => `site/${name}`),
+      ...['app', 'content', 'demos', 'examples', 'i18n'].map((name) => `site/${name}`),
       'site/assets/examples/thumbnails',
     ],
     folder: 'runtime',

@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef } from 'react'
 import type { ReactNode } from 'react'
 import { Button } from './Button.tsx'
 
@@ -49,22 +49,5 @@ export function Modal({ open, onClose, title, closeLabel, size = 'normal', child
         </button>
       </form>
     </dialog>
-  )
-}
-
-interface ModalTriggerProps extends Omit<ModalProps, 'open' | 'onClose'> {
-  label: ReactNode
-}
-
-/** A button that opens its own modal. */
-export function ModalTrigger({ label, ...modal }: ModalTriggerProps) {
-  const [open, setOpen] = useState(false)
-  return (
-    <>
-      <Button variant="outline" size="sm" onClick={() => setOpen(true)}>
-        {label}
-      </Button>
-      <Modal {...modal} open={open} onClose={() => setOpen(false)} />
-    </>
   )
 }

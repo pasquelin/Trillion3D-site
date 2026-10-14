@@ -62,7 +62,7 @@ jobs:
           for file in index.html runtime/portal.js runtime/engine.js; do
             test -s "dist/site/$file" || { echo "::error::dist/site/$file is missing"; exit 1; }
           done
-          statics=$(git ls-files -- site/examples site/assets site/data site/reports | grep -cEv '\.tsx?$')
+          statics=$(git ls-files -- site/examples site/assets site/data | grep -cEv '\.tsx?$')
           floor=$((statics + 3))
           count=$(find dist/site -type f | wc -l)
           echo "$count files, floor $floor"
