@@ -23,8 +23,8 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-24.04
-    # A deploying run cooks Emerald Square too, a few minutes in 8 GB of the runner's 16.
-    timeout-minutes: 60
+    # A deploying run cooks the two ORCA scenes too, minutes each in 8 GB of the runner's 16.
+    timeout-minutes: 90
     outputs:
       deploy: ${{ steps.plan.outputs.deploy }}
     steps:

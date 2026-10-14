@@ -43,11 +43,12 @@ pnpm run build:native      # the pinned engine's native compiler, built with Car
 pnpm run compile:caches    # every scene cache of site/assets/
 ```
 
-A scene too heavy for git, NVIDIA's Emerald Square (a glTF of 0.8 GB), is an asset of the release
-[`scenes-orca-1`](https://github.com/pasquelin/Trillion3D-site/releases/tag/scenes-orca-1):
-`compile:caches` downloads it into `.scenes/` (git-ignored, never served), refuses it unless its
-sha256 is the one `scripts/site-caches.ts` declares, and cooks it in 8 GB on 4 threads, about four
-minutes. Only its cache, 2.6 GB, is published.
+Two scenes are too heavy for git: NVIDIA's ORCA Emerald Square and Bistro exterior, glTF files of
+0.8 and 1.1 GB, assets of the release
+[`scenes-orca-1`](https://github.com/pasquelin/Trillion3D-site/releases/tag/scenes-orca-1).
+`compile:caches` downloads each into `.scenes/` (git-ignored, never served), refuses it unless its
+sha256 is the one `scripts/site-caches.ts` declares, and cooks it in 8 GB on 4 threads: about four
+and eight minutes. Only their caches, 2.6 and 2.9 GB, are published.
 
 ## Commands
 
@@ -92,7 +93,7 @@ The site reads Trillion3D at the commit `package.json` pins:
 ```json
 "trillion3d": {
   "repository": "https://github.com/pasquelin/Trillion3D.git",
-  "commit": "2be916b85d502e0346dae018284dd578e89f317d"
+  "commit": "dc83dcbb6cd6f5909ea59c63c4c8d3d615b813c7"
 }
 ```
 

@@ -78,3 +78,15 @@ its cache (`full`, 4 threads, 8 GB, `qem-endpoints`); only the cache is publishe
   textures decoded to PNG, the specular map's packing (occlusion, roughness, metalness) applied,
   DirectX normals' green inverted, fully opaque materials marked opaque. The conversion is shared
   under the same licence. Used by `a-walk-across-emerald-square`.
+- `bistro/`, from `bistro-exterior-uv.glb` (sha256
+  `296f71e62f9de576d2ba1b93cdb2b4efea589cbc773e9084e2f4253829edaf8d`):
+  [Amazon Lumberyard Bistro](https://developer.nvidia.com/orca/amazon-lumberyard-bistro), exterior,
+  from NVIDIA's Open Research Content Archive. Amazon Lumberyard, 2017,
+  [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/). The glTF is a conversion of the
+  ORCA `BistroExterior.fbx` with Blender 5.2.1: frame 1 (the wind animations frozen), no
+  decimation, no texture resize, the specular map's packing applied, DirectX normals' green
+  inverted. One change for the cook: the 114 texture coordinates of the metal sheets of meshes 781
+  and 800 (`MASTER_Grain_Metal`) that lay beyond 256 texture periods are folded into [0, 1), since
+  the engine refuses a triangle spanning more periods than a page holds (`T3D-E041`). The file as
+  converted, `bistro-exterior.glb`, stays beside it in the release. Used by
+  `a-walk-down-the-bistro-street`.

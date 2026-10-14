@@ -91,6 +91,10 @@ export const COOKED_SCENES: Record<string, CookedScene> = {
     file: 'emerald-day.glb',
     sha256: '06866a47db0a96ae53024fbfb0ebfb8309165083f69243e5131d3ba1734bddb5',
   }),
+  bistro: orca('bistro', {
+    file: 'bistro-exterior-uv.glb',
+    sha256: '296f71e62f9de576d2ba1b93cdb2b4efea589cbc773e9084e2f4253829edaf8d',
+  }),
   observatory: {
     directory: 'site/assets/gallery/signature-architecture',
     source: 'source/geometry.gltf',
