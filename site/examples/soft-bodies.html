@@ -9,7 +9,7 @@
       body {
         margin: 0;
         height: 100%;
-        background: #1b222c;
+        background: #b9cde0;
       }
       canvas {
         display: block;
@@ -25,14 +25,16 @@
       import { controls, physicsReadouts, readout, seeded } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit', physics: true });
-      world.scene.background = math.color('#e6ecf2');
+      const sky = math.color('#b9cde0');
+      world.scene.background = sky;
+      world.scene.fog = { color: sky, near: 14, far: 30 };
 
-      const floor = object.mesh(geometry.box(30, 1, 30), material.meshStandard({ color: '#a4aab3', physics: 'stone' }));
+      const floor = object.mesh(geometry.box(30, 1, 30), material.meshStandard({ color: '#c9b79a', roughness: 0.9, physics: 'stone' }));
       floor.position.y = -0.5;
       floor.physics = 'static';
       floor.receiveShadow = true;
       // A step to bounce down: the volumes squash on its edge.
-      const step = object.mesh(geometry.box(4, 1, 6), material.meshStandard({ color: '#7d8691', physics: 'stone' }));
+      const step = object.mesh(geometry.box(4, 1, 6), material.meshStandard({ color: '#b8714f', roughness: 0.85, physics: 'stone' }));
       step.position.set(-2, 0.5, 0);
       step.physics = 'static';
       world.scene.add(floor, step);
@@ -40,7 +42,7 @@
       // Closed meshes held up by the gas inside: each vertex is simulated, the gas presses on
       // every triangle, and a squeezed volume pushes back as its pressure rises.
       const shapes = [geometry.sphere(0.6, 20, 14), geometry.box(1, 1, 1, 4, 4, 4), geometry.capsule(0.35, 0.8, 6, 12)];
-      const colours = ['#e0533d', '#3d8be0', '#e0b43d', '#4fb36d'].map((c) => material.meshStandard({ color: c, roughness: 0.5 }));
+      const colours = ['#e0533d', '#3d8be0', '#e0b43d', '#4fb36d', '#a35ad0', '#f08bb4'].map((c) => material.meshStandard({ color: c, roughness: 0.35 }));
       const next = seeded(11);
       let volumes = [];
       const drop = (count, pressure) => {
@@ -62,9 +64,9 @@
         volumes = [];
       };
 
-      const sun = light.directional({ intensity: 3, castShadow: true });
+      const sun = light.directional({ intensity: 3, color: '#fff1dc', castShadow: true });
       sun.position.set(6, 12, 8);
-      world.scene.add(sun, light.hemisphere({ intensity: 1.2, color: '#ffffff', groundColor: '#8d948c' }));
+      world.scene.add(sun, light.hemisphere({ intensity: 1.2, color: '#dceaff', groundColor: '#9a8466' }));
       world.camera.position.set(6, 5, 9);
       world.controls.target.set(-1, 1, 0);
 
