@@ -26,6 +26,7 @@
 
       const world = createWorld('view', { controls: 'orbit' });
       world.scene.background = math.color('#07080b');
+      world.exposure = 1.3;
 
       // A museum hall at night, its floor black lacquer. Nothing asks for a mirror: a smooth
       // physical surface reflects by itself. Under a roughness of about 0.07 the engine traces its
@@ -33,11 +34,13 @@
       const put = (mesh, x, y, z) => (mesh.position.set(x, y, z), world.scene.add(mesh), mesh);
       const lacquer = material.meshStandard({ color: '#0b0c10', roughness: 0.03 });
       put(object.mesh(geometry.box(30, 0.2, 30), lacquer), 0, -0.1, 0);
-      put(object.mesh(geometry.box(30, 9, 0.3), material.meshStandard({ color: '#17181d', roughness: 0.85 })), 0, 4.5, -8);
+      put(object.mesh(geometry.box(30, 9, 0.3), material.meshStandard({ color: '#2e3038', roughness: 0.85 })), 0, 4.5, -8);
 
-      // Tall slits of light in the back wall, each mirrored as a long streak across the floor.
+      // Tall slits of light in the back wall, each washing it warm and mirrored as a long streak
+      // across the floor.
       const slit = geometry.box(0.14, 5.5, 0.06), glow = material.meshStandard({ color: '#000000', emissive: '#ffd9a8', emissiveIntensity: 6 });
-      for (let x = -10.5; x <= 10.5; x += 3) put(object.mesh(slit, glow), x, 3.4, -7.83);
+      for (let x = -10.5; x <= 10.5; x += 3)
+        put(object.mesh(slit, glow), x, 3.4, -7.83).add(light.point({ position: [0, 0, 0.6], color: '#ffd9a8', intensity: 10, distance: 5 }));
 
       // Three plinths and their pieces — gold, glazed ceramic, chrome —, each under its own spot.
       const stone = material.meshStandard({ color: '#e6e1d8', roughness: 0.6 }), block = geometry.box(1.1, 1, 1.1);
@@ -52,7 +55,7 @@
         world.scene.add(light.spot({ position: [x, 6.5, 0], target: [x, 1.3, -2.5], angle: 0.32, penumbra: 0.6, intensity: 50, color: '#fff2dc', castShadow: true }));
         return put(object.mesh(shape, paint), x, y, -2.5);
       });
-      world.scene.add(light.hemisphere({ color: '#4a5878', groundColor: '#0b0c10', intensity: 0.12 }));
+      world.scene.add(light.hemisphere({ color: '#7f8db0', groundColor: '#0b0c10', intensity: 1 }));
       world.effects.add(effect.bloom({ intensity: 0.06 }));
 
       world.camera.position.set(1.5, 1.6, 7.5);
