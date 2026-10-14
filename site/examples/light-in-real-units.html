@@ -26,7 +26,8 @@
       const say = words();
 
       const world = createWorld('view', { controls: 'orbit' });
-      world.scene.background = math.color('#1c2433');
+      const NIGHT = math.color('#1c2433'), backdrop = NIGHT.clone();
+      world.scene.background = backdrop;
 
       // A village square, in metres. Every number of light below is the one a light meter would
       // read: the sun and the sky in lux, a lamp in lumens, a glowing globe in candela per square
@@ -146,6 +147,9 @@
           sun.intensity = moment.sun;
           sky.color.set(moment.skyColour);
           sky.intensity = moment.sky;
+          // The sky behind the roofs wears its own colour by day and sinks toward the night's as
+          // its light fails: full at 20 000 lx, gone below 1 lx.
+          backdrop.copy(NIGHT).lerp(sky.color, math.clamp(Math.log10(moment.sky) / 4.3, 0, 1));
         }
         // A bare globe sends its lumens every way: over the 4π steradians round it, that is its
         // intensity in candela; spread over its own surface, the luminance it glows with.

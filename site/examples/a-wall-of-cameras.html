@@ -144,16 +144,20 @@
         add(geometry.cylinder(4.3, 4.3, 0.1, 64), material.meshStandard({ color: '#3f86b8', roughness: 0.05, metalness: 0.2 }), 0, 0.95, 0);
         add(geometry.lathe([[0.6, 0], [0.45, 2.2], [1.6, 2.6], [1.7, 2.8], [0.3, 2.8], [0.25, 3.6]], 40), paint('#d8cfbf', 0.6), 0, 0.3, 0);
         add(geometry.sphere(0.45, 32, 16), paint('#d4a640', 0.25, 0.9), 0, 4.3, 0);
-        // The houses round the road, their fronts to the square, windows in rows.
+        // The houses round the road, their fronts to the square, windows in rows. Every house shares
+        // one wall block, stretched to its height, one cornice and one pane: meshes of one shape and
+        // one material are drawn together.
         const walls = ['#e8d7b9', '#d99a74', '#c8d3c0', '#e6c27a', '#b9c7d9'].map((c) => paint(c, 0.85)), cornice = paint('#f4efe6', 0.7), glass = paint('#2b3647', 0.15, 0.6);
-        const pane = geometry.box(1.3, 1.7, 0.2);
+        const pane = geometry.box(1.3, 1.7, 0.2), block = geometry.box(12.4, 1, 10), ledge = geometry.box(12.8, 0.6, 10.6);
         for (const { side, slot, high, hue } of TOWN) {
           const angle = (side * Math.PI) / 2, along = (slot - 1.5) * 13, out = 42;
           const [ax, az] = [Math.cos(angle), Math.sin(angle)], at = (a, o, y) => [a * -az + o * ax, y, a * ax + o * az];
           // Turned so its width runs along the road and its front faces the square.
           const facing = -angle - Math.PI / 2;
-          add(geometry.box(12.4, high, 10), walls[hue], ...at(along, out, high / 2)).rotation.set(0, facing, 0);
-          add(geometry.box(12.8, 0.6, 10.6), cornice, ...at(along, out, high + 0.3)).rotation.set(0, facing, 0);
+          const house = add(block, walls[hue], ...at(along, out, high / 2));
+          house.rotation.set(0, facing, 0);
+          house.scale.set(1, high, 1);
+          add(ledge, cornice, ...at(along, out, high + 0.3)).rotation.set(0, facing, 0);
           for (let floor = 0; floor < high / 3 - 1; floor++)
             for (let k = 0; k < 4; k++) add(pane, glass, ...at(along + (k - 1.5) * 2.8, out - 5, 3.4 + floor * 3)).rotation.set(0, facing, 0);
         }
@@ -163,42 +167,53 @@
         add(geometry.cylinder(2.2, 2.2, 0.3, 48).rotateX(Math.PI / 2), paint('#f7f2e6', 0.4), -35, 21.5, -31.5);
         // Trees, benches and lamps round the square.
         const leaf = paint('#4c7a34', 0.9), bark = paint('#5b4331'), wood = paint('#8a5a3a', 0.7), iron = paint('#2a2d33', 0.5, 0.6);
+        const trunk = geometry.cylinder(0.25, 0.35, 3, 8), crown = geometry.sphere(2.6, 20, 14), seat = geometry.box(2.4, 0.15, 0.7), post = geometry.cylinder(0.08, 0.1, 4.2, 8);
+        const lantern = geometry.box(0.5, 0.7, 0.5), glow = material.meshStandard({ color: '#fff0c8', emissive: '#ffcf70', emissiveIntensity: 1.5 });
         for (let k = 0; k < 8; k++) {
           const a = (k / 8) * Math.PI * 2 + Math.PI / 8, x = Math.cos(a) * 15, z = Math.sin(a) * 15;
-          add(geometry.cylinder(0.25, 0.35, 3, 8), bark, x, 1.8, z);
-          add(geometry.sphere(2.6, 20, 14), leaf, x, 5, z).scale.set(1, 0.85, 1);
-          const bench = add(geometry.box(2.4, 0.15, 0.7), wood, Math.cos(a + 0.4) * 11, 0.75, Math.sin(a + 0.4) * 11);
+          add(trunk, bark, x, 1.8, z);
+          add(crown, leaf, x, 5, z).scale.set(1, 0.85, 1);
+          const bench = add(seat, wood, Math.cos(a + 0.4) * 11, 0.75, Math.sin(a + 0.4) * 11);
           bench.rotation.set(0, -a - 0.4 + Math.PI / 2, 0);
-          add(geometry.cylinder(0.08, 0.1, 4.2, 8), iron, Math.cos(a - 0.4) * 19, 2.4, Math.sin(a - 0.4) * 19);
-          add(geometry.box(0.5, 0.7, 0.5), material.meshStandard({ color: '#fff0c8', emissive: '#ffcf70', emissiveIntensity: 1.5 }), Math.cos(a - 0.4) * 19, 4.7, Math.sin(a - 0.4) * 19);
+          add(post, iron, Math.cos(a - 0.4) * 19, 2.4, Math.sin(a - 0.4) * 19);
+          add(lantern, glow, Math.cos(a - 0.4) * 19, 4.7, Math.sin(a - 0.4) * 19);
         }
         // The red car and its four wheels, each wheel turning about its own axle.
-        const car = object.group(), red = paint('#c8202c', 0.3, 0.4);
+        const car = object.group(), red = paint('#c8202c', 0.3, 0.4), tyre = geometry.cylinder(0.4, 0.4, 0.3, 20).rotateZ(Math.PI / 2), rubber = paint('#1b1c1f', 0.8);
         car.add(object.mesh(geometry.box(1.9, 0.7, 4.2).translate(0, 0.75, 0), red), object.mesh(geometry.box(1.6, 0.6, 2.2).translate(0, 1.4, -0.3), paint('#2b3240', 0.2, 0.5)));
         const wheels = [[-0.95, 1.35], [0.95, 1.35], [-0.95, -1.35], [0.95, -1.35]].map(([x, z]) => {
-          const wheel = object.mesh(geometry.cylinder(0.4, 0.4, 0.3, 20).rotateZ(Math.PI / 2), paint('#1b1c1f', 0.8));
+          const wheel = object.mesh(tyre, rubber);
           wheel.position.set(x, 0.45, z);
           car.add(wheel);
           return wheel;
         });
         world.scene.add(car);
-        // The balloon: twelve gores in two colours turned on a lathe, and its basket.
+        // The balloon: one gore turned on a lathe, laid twelve times round in two colours, and its
+        // basket.
         const balloon = object.group(), envelope = [[0.9, 0], ...Array.from({ length: 13 }, (_, k) => [4.2 * Math.sin(Math.PI * (0.12 + (0.88 * k) / 12)), 1.2 + (k / 12) * 9])];
-        for (let k = 0; k < 12; k++) balloon.add(object.mesh(geometry.lathe(envelope, 4, (k * Math.PI) / 6, Math.PI / 6), paint(k % 2 ? '#f2c14e' : '#d1495b', 0.6)));
+        const gore = geometry.lathe(envelope, 4, 0, Math.PI / 6), stripes = [paint('#d1495b', 0.6), paint('#f2c14e', 0.6)];
+        for (let k = 0; k < 12; k++) {
+          const piece = object.mesh(gore, stripes[k % 2]);
+          piece.rotation.y = (k * Math.PI) / 6;
+          balloon.add(piece);
+        }
         balloon.add(object.mesh(geometry.box(1.2, 1, 1.2).translate(0, -1.2, 0), wood));
         world.scene.add(balloon);
         // The cameras themselves: a mount, a turret that pans and a head that tilts. A lens never
         // sees its own housing: its head is hidden in its own world.
-        const white = paint('#eef0f2', 0.4, 0.1), lens = paint('#15181d', 0.1, 0.7);
+        const white = paint('#eef0f2', 0.4, 0.1), lens = paint('#15181d', 0.1, 0.7), led = material.meshStandard({ color: '#ff3030', emissive: '#ff2020', emissiveIntensity: 2 });
+        const parts = {
+          mount: geometry.box(0.3, 0.3, 0.3), neck: geometry.cylinder(0.08, 0.08, 0.35, 8).translate(0, 0.17, 0), shell: geometry.box(0.38, 0.32, 0.8),
+          hood: geometry.box(0.46, 0.05, 0.95).translate(0, 0.19, 0.05), glass: geometry.cylinder(0.12, 0.12, 0.1, 16).rotateX(Math.PI / 2).translate(0, 0, 0.42), light: geometry.sphere(0.035, 8, 6).translate(0.13, -0.08, 0.41),
+        };
         const units = FEEDS.map(({ at, pole }, k) => {
           if (pole) add(geometry.cylinder(0.12, 0.16, at[1], 10), iron, at[0], at[1] / 2, at[2]);
-          else add(geometry.box(0.3, 0.3, 0.3), iron, at[0], at[1] + 0.1, at[2]);
+          else add(parts.mount, iron, at[0], at[1] + 0.1, at[2]);
           const turret = object.group(), head = object.group();
           turret.position.set(...at);
           head.position.y = 0.35;
-          turret.add(object.mesh(geometry.cylinder(0.08, 0.08, 0.35, 8).translate(0, 0.17, 0), iron), head);
-          head.add(object.mesh(geometry.box(0.38, 0.32, 0.8), white), object.mesh(geometry.box(0.46, 0.05, 0.95).translate(0, 0.19, 0.05), white), object.mesh(geometry.cylinder(0.12, 0.12, 0.1, 16).rotateX(Math.PI / 2).translate(0, 0, 0.42), lens));
-          head.add(object.mesh(geometry.sphere(0.035, 8, 6).translate(0.13, -0.08, 0.41), material.meshStandard({ color: '#ff3030', emissive: '#ff2020', emissiveIntensity: 2 })));
+          turret.add(object.mesh(parts.neck, iron), head);
+          head.add(object.mesh(parts.shell, white), object.mesh(parts.hood, white), object.mesh(parts.glass, lens), object.mesh(parts.light, led));
           turret.visible = k !== own;
           world.scene.add(turret);
           return { turret, head };
@@ -267,10 +282,14 @@
       }
 
       // One world per feed; each poses its copy of the square from the shared state, then its lens.
+      // The feed in front — the big one, or the first on the wall — draws at the display's rate and
+      // resolution; the others, as a real monitor wall does, about twelve times a second at half
+      // the resolution, which spares most of the six worlds' work.
+      let lead = 0;
       const worlds = FEEDS.map((_, k) => {
         const world = createWorld(k ? `cam${k + 1}` : 'view');
         const scene = build(world, k);
-        world.onFrame(() => {
+        world.beforeFrame(() => {
           advance();
           scene.car.position.set(state.car.x, 0.1, state.car.z);
           scene.car.rotation.set(0, state.car.yaw, 0);
@@ -284,10 +303,26 @@
           world.camera.fov = fov;
           world.camera.position.set(at[0], at[1] + 0.35, at[2]);
           world.camera.lookAt(at[0] + Math.sin(yaw) * Math.cos(pitch), at[1] + 0.35 + Math.sin(pitch), at[2] + Math.cos(yaw) * Math.cos(pitch));
-          world.invalidate();
         });
+        let pending = 0;
+        world.onFrame(() => {
+          clearTimeout(pending);
+          if (k === lead) world.invalidate();
+          else pending = setTimeout(() => world.invalidate(), 1000 / 12);
+        });
+        world.invalidate();
         return world;
       });
+      const follow = (k) => {
+        lead = k;
+        // A feed drawn twelve times a second has no steady history to smooth over: it goes
+        // without temporal antialiasing, which would smear what moves between its frames.
+        worlds.forEach((world, j) => {
+          world.renderScale = j === lead ? 'auto' : 0.5;
+          world.temporalAntialiasing = j === lead;
+        });
+      };
+      follow(0);
 
       // A click puts a feed on the big screen; a click on the big one brings the wall back.
       cells.forEach(({ cell }) =>
@@ -295,6 +330,7 @@
           const again = cell.classList.contains('big') && document.body.classList.contains('focus');
           cells.forEach((other) => other.cell.classList.toggle('big', other.cell === cell && !again));
           document.body.classList.toggle('focus', !again);
+          follow(again ? 0 : cells.findIndex((other) => other.cell === cell));
         }),
       );
       // The opening: the feeds come on one after the other, like a wall of monitors warming up.

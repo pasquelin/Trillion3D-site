@@ -21,7 +21,7 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, math, texture } from '../runtime/engine.js';
+      import { createWorld, effect, geometry, material, object, light, math, texture } from '../runtime/engine.js';
       import { controls, readout, words } from '../runtime/kit.js';
       const say = words();
 
@@ -94,6 +94,8 @@
       world.controls.minDistance = 3;
       world.controls.maxDistance = 14;
       world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
+      // A light glow: the screens' picture spills a little onto their bezels and the floor.
+      world.effects.add(effect.bloom({ intensity: 0.05 }));
 
       let source = null, painted = true;
       async function useCamera() {

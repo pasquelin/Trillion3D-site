@@ -9,7 +9,7 @@
       body {
         margin: 0;
         height: 100%;
-        background: #243247;
+        background: #2b3b55;
       }
       canvas {
         display: block;
@@ -35,23 +35,51 @@
       <a href="https://creativecommons.org/publicdomain/zero/1.0/">CC0</a>.
     </p>
     <script type="module">
-      import { createWorld, animation, light, math } from '../runtime/engine.js';
+      import {
+        createWorld,
+        animation,
+        effect,
+        geometry,
+        light,
+        material,
+        math,
+        object,
+      } from '../runtime/engine.js';
       import { controls } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
-      world.scene.background = math.color('#243247');
-      const sun = light.directional({ intensity: 3, castShadow: true });
+      const sky = math.color('#2b3b55');
+      world.scene.background = sky;
+      const sun = light.directional({ intensity: 3, color: '#fff1dc', castShadow: true });
       sun.position.set(5, 8, 4);
-      world.scene.add(sun, light.hemisphere({ intensity: 1.3 }));
+      world.scene.add(
+        sun,
+        light.hemisphere({ intensity: 1.3, color: '#cfe0ff', groundColor: '#5a4a3c' }),
+      );
       const requested = Number(new URL(location.href).searchParams.get('count') ?? 1);
       const count = [1, 10, 100].includes(requested) ? requested : 1;
       const columns = Math.ceil(Math.sqrt(count));
+      const middle = Math.ceil(count / columns) - 1;
+      // A stage under the models: a wide disc that takes the sun's shadows, its rim lost in fog.
+      const radius = columns * 2 + 6;
+      const stage = object.mesh(
+        geometry.cylinder(radius, radius, 0.1, 96),
+        material.meshStandard({ color: '#5d6b80', roughness: 0.95 }),
+      );
+      stage.position.set(0, -0.05, middle);
+      // It takes shadows and casts none.
+      stage.castShadow = false;
+      world.scene.add(stage);
+      const reach = columns * 2.7 + 3;
+      world.scene.fog = { color: sky, near: reach, far: reach + radius };
+      world.effects.add(effect.bloom({ intensity: 0.06 }));
       const actions = [];
       for (let i = 0; i < count; i++) {
         const model = await world.scene.load(
           '../assets/examples/animated-morph-cube/cache/native/full/manifest.json',
         );
-        model.position.set(((i % columns) - (columns - 1) / 2) * 2, 0, Math.floor(i / columns) * 2);
+        // The cube is two units wide about its centre: lifted by one, it rests on the stage.
+        model.position.set(((i % columns) - (columns - 1) / 2) * 2, 1, Math.floor(i / columns) * 2);
         const clip = model.animations[0];
         if (!clip) throw new Error('The compiled sample must retain its animation');
         actions.push(
@@ -63,7 +91,7 @@
         );
       }
       world.camera.position.set(columns * 1.4, columns * 0.8 + 1.5, columns * 2.2 + 2);
-      world.controls.target.set(0, 0.8, Math.ceil(count / columns) - 1);
+      world.controls.target.set(0, 1, middle);
       controls(
         { playing: true },
         ({ playing }) => {

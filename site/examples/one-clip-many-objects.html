@@ -75,9 +75,10 @@
       const TIERS = [[7, 0.5, 12], [8.5, 1.1, 16], [10, 1.7, 20], [11.5, 2.3, 24]];
       const fans = [];
       TIERS.forEach(([radius, top, seats], tier) => {
-        const blocks = 36;
+        // The 36 blocks of a tier are one shape: built once, every block wears it.
+        const blocks = 36, shape = geometry.box((radius + 0.75) * 2 * Math.sin(Math.PI / blocks) * 1.01, top, 1.5);
         for (let b = 0; b < blocks; b++) {
-          const a = (b / blocks) * Math.PI * 2, block = object.mesh(geometry.box((radius + 0.75) * 2 * Math.sin(Math.PI / blocks) * 1.01, top, 1.5), stone[(b + tier) % 2]);
+          const a = (b / blocks) * Math.PI * 2, block = object.mesh(shape, stone[(b + tier) % 2]);
           block.position.set(Math.sin(a) * (radius + 0.75), top / 2, Math.cos(a) * (radius + 0.75));
           block.rotation.set(0, a, 0);
           world.scene.add(block);

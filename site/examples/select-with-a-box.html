@@ -65,11 +65,12 @@
       const lawn = object.mesh(geometry.cylinder(60, 60, 0.2, 96), grass);
       lawn.position.y = -0.35;
       world.scene.add(lawn, plaza);
-      const ROWS = 5, COLUMNS = 9, pieces = [];
+      // Every plinth wears the one block shape and the one stone: the 45 are drawn together.
+      const ROWS = 5, COLUMNS = 9, pieces = [], block = geometry.box(1.6, 1, 1.6);
       for (let row = 0; row < ROWS; row++)
         for (let column = 0; column < COLUMNS; column++) {
           const x = (column - (COLUMNS - 1) / 2) * 3.2, z = (row - (ROWS - 1) / 2) * 4.2, k = row * COLUMNS + column;
-          const plinth = object.mesh(geometry.box(1.6, 1, 1.6), plinthStone);
+          const plinth = object.mesh(block, plinthStone);
           plinth.position.set(x, 0.5, z);
           const piece = object.mesh(SHAPES[(k * 3 + row) % SHAPES.length], GLAZES[(k * 5 + row * 2) % GLAZES.length]);
           piece.position.set(x, 1.75, z);
@@ -94,11 +95,13 @@
       world.controls.maxDistance = 60;
 
       // Where a world point lands on the page, in CSS pixels: the camera's own frame, then its
-      // field of view. Null when the point is behind the eye.
-      const eye = math.vector3(), inverse = math.quaternion(), corner = math.vector3();
+      // field of view. Null when the point is behind the eye. The page box and the camera's
+      // inverse turn are read once per preview, not once per corner.
+      const eye = math.vector3(), inverse = math.quaternion(), corner = math.vector3(), bounds = math.box3();
+      let box = null;
       function onScreen(point) {
-        const { camera } = world, box = world.canvas.getBoundingClientRect();
-        eye.copy(point).sub(camera.position).applyQuaternion(inverse.copy(camera.quaternion).invert());
+        const { camera } = world;
+        eye.copy(point).sub(camera.position).applyQuaternion(inverse);
         const depth = -eye.z, half = Math.tan(math.degToRad(camera.fov / 2)) * depth;
         if (depth <= camera.near) return null;
         return [box.left + (0.5 + eye.x / (2 * half * (box.width / box.height))) * box.width, box.top + (0.5 - eye.y / (2 * half)) * box.height];
@@ -106,7 +109,8 @@
       // A piece's bounds on screen: its box in the world, the eight corners projected, and the
       // rectangle round them. A piece is caught when that rectangle meets the one drawn.
       function screenBounds({ piece }) {
-        const bounds = piece.localBounds().clone().applyMatrix4(piece.matrixWorld), rect = [Infinity, Infinity, -Infinity, -Infinity];
+        bounds.copy(piece.localBounds()).applyMatrix4(piece.matrixWorld);
+        const rect = [Infinity, Infinity, -Infinity, -Infinity];
         for (let k = 0; k < 8; k++) {
           corner.set(k & 1 ? bounds.max.x : bounds.min.x, k & 2 ? bounds.max.y : bounds.min.y, k & 4 ? bounds.max.z : bounds.min.z);
           const at = onScreen(corner);
@@ -126,6 +130,8 @@
       };
       function preview(rect, mode, commit) {
         let total = 0;
+        box = world.canvas.getBoundingClientRect();
+        inverse.copy(world.camera.quaternion).invert();
         for (const entry of pieces) {
           const screen = screenBounds(entry), inside = screen !== null && meets(screen, rect);
           const on = mode === 'add' ? entry.selected || inside : mode === 'remove' ? entry.selected && !inside : inside;

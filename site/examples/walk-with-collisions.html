@@ -9,7 +9,7 @@
       body {
         margin: 0;
         height: 100%;
-        background: #1c2430;
+        background: #bcd3e6;
       }
       canvas {
         display: block;
@@ -21,7 +21,7 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, math } from '../runtime/engine.js';
+      import { createWorld, geometry, material, object, light, math, texture } from '../runtime/engine.js';
       import { controls, physicsReadouts, readout } from '../runtime/kit.js';
 
       // The engine's character, with the physics on: its body is the physics' own. It climbs
@@ -30,7 +30,9 @@
       // A click locks the mouse to look; W A S D walk (Z Q S D on AZERTY), Shift sprints,
       // Space jumps, Escape frees the mouse.
       const world = createWorld('view', { controls: 'character', physics: true });
-      world.scene.background = math.color('#bcd3e6');
+      const sky = math.color('#bcd3e6');
+      world.scene.background = sky;
+      world.scene.fog = { color: sky, near: 18, far: 45 };
       world.camera.far = 200;
       world.camera.position.set(0, world.controls.eyeHeight, 9);
       world.camera.lookAt(0, 1, 0);
@@ -47,14 +49,25 @@
         world.scene.add(block);
         return block;
       };
-      fixed([40, 1, 40], [0, -0.5, 0], '#8f9ba8');
+      // Paving painted on a canvas, two slabs a side, tiled ten times across: two-metre slabs.
+      const sheet = document.createElement('canvas');
+      sheet.width = sheet.height = 128;
+      const pen = sheet.getContext('2d');
+      pen.fillStyle = '#8e887c';
+      pen.fillRect(0, 0, 128, 128);
+      for (const [x, y, colour] of [[0, 0, '#b3ac9f'], [64, 64, '#b3ac9f'], [64, 0, '#a59e91'], [0, 64, '#a59e91']])
+        (pen.fillStyle = colour), pen.fillRect(x + 2, y + 2, 60, 60);
+      const paving = texture.canvas(sheet);
+      paving.wrap = 'repeat';
+      paving.repeat.set(10, 10);
+      fixed([40, 1, 40], [0, -0.5, 0], material.meshStandard({ map: paving, roughness: 0.9, physics: 'stone' }));
       // Stairs of 0.2 m risers, each under the knee height the character steps up, to a landing.
       for (let k = 0; k < 5; k++)
-        fixed([3, 0.2 * (k + 1), 0.4], [-7, 0.1 * (k + 1), 2 - k * 0.4], '#c7b89a');
-      fixed([3, 1, 3], [-7, 0.5, -1.3], '#c7b89a');
+        fixed([3, 0.2 * (k + 1), 0.4], [-7, 0.1 * (k + 1), 2 - k * 0.4], '#d0a77a');
+      fixed([3, 1, 3], [-7, 0.5, -1.3], '#d0a77a');
       // A ramp of 20°, gentler than the steepest floor the character stands on.
       const RAMP = math.degToRad(20);
-      fixed([3, 0.2, 6], [7, Math.sin(RAMP) * 3 - 0.1, -1], '#a8b8a0', [RAMP, 0, 0]);
+      fixed([3, 0.2, 6], [7, Math.sin(RAMP) * 3 - 0.1, -1], '#7fa37a', [RAMP, 0, 0]);
       // A patch of ice, 2 cm thick: a rubber sole grips it five times less than stone, so a jog
       // let go on it slides almost 4 m, and a start from rest takes seconds.
       const ice = material.meshStandard({ color: '#d4ecf7', roughness: 0.15, physics: 'ice' });
@@ -85,11 +98,11 @@
       };
       stack();
 
-      const sun = light.directional({ intensity: 3, castShadow: true });
+      const sun = light.directional({ intensity: 3, color: '#fff1dc', castShadow: true });
       sun.position.set(6, 14, 8);
       world.scene.add(
         sun,
-        light.hemisphere({ intensity: 1.1, color: '#ffffff', groundColor: '#8a9099' }),
+        light.hemisphere({ intensity: 1.1, color: '#dceaff', groundColor: '#8f7f6a' }),
       );
 
       const settings = controls(
