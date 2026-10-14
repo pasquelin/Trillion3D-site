@@ -18,7 +18,7 @@ interface WrittenFields {
 }
 
 /** The name a row is keyed by in a translation: `options.renderer`, `add`, without type or `?`. */
-const rowKey = (name: string) => name.replace(/[?(].*$/, '')
+export const rowKey = (name: string) => name.replace(/[?(].*$/, '')
 
 const LINES = ['summary', 'description', 'valuesTitle'] as const
 const ROWS = ['parameters', 'members', 'values'] as const
@@ -44,7 +44,7 @@ export function referenceTexts(
   return [...lines, ...(returns ? [['returns', returns] as [string, string]] : []), ...rows]
 }
 
-export const translateRows = <Row extends { name: string; desc: string }>(
+const translateRows = <Row extends { name: string; desc: string }>(
   rows: Row[],
   table: Record<string, string> | undefined,
 ) => rows.map((row) => ({ ...row, desc: table?.[rowKey(row.name)] ?? row.desc }))
