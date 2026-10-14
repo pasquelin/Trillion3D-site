@@ -35,7 +35,7 @@ export const EDITOR_GUIDES: PortalEntry[] = [
     example: `const gizmo = controls.transform(world).attach(crate);
 gizmo.setMode('rotate');
 gizmo.snap = { rotate: Math.PI / 12 };
-gizmo.addEventListener('dragEnd', () => history.push(crate.quaternion.clone()));`,
+gizmo.addEventListener('dragEnd', () => undoSteps.push(crate.quaternion.clone()));`,
   },
   {
     ...GUIDE,

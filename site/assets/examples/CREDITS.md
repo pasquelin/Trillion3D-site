@@ -32,7 +32,7 @@ scene of the lessons.
 
 ## Scenes modelled in code
 
-Ten scenes are modelled in code for their example and released under
+Eleven scenes are modelled in code for their example and released under
 [CC0](https://creativecommons.org/publicdomain/zero/1.0/): nothing in them was taken from another
 work. Each has a writer under `scripts/docs/examples/`, seeded so the same code writes the same
 bytes on every machine, and is rebuilt, source and cache, by

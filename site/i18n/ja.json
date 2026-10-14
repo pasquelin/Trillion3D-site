@@ -521,7 +521,8 @@
     "meaning": "はたらき",
     "details": "詳細",
     "live": "ここで動いています",
-    "liveHint": "コントロールを動かしてみよう。この値は、このブラウザで実際に動いているエンジンの関数から来ています。"
+    "liveHint": "コントロールを動かしてみよう。この値は、このブラウザで実際に動いているエンジンの関数から来ています。",
+    "examples": "これを使う例"
   },
   "kind": {
     "Function": "関数",
@@ -1105,7 +1106,7 @@
     "measurement-entry": {
       "title": "計測用のエントリーポイント",
       "description": "対照実装や内部セッションに、名前でアクセスできる場所。公開されている`trillion3d`のエントリーからは、決してアクセスできない。",
-      "html": "<p>ページが<code>trillion3d</code>をインポートするとき、対照実装や内部セッションが見えることはない。<code>createWorld</code>はWebGPUで描画し、マシンがWebGPUを提供しない場合は名前を示して拒否する。ベンチと証明では、それでも対照実装に名前をつける必要がある。素のThree.js、<code>THREE.LOD</code>、内部の<code>openMeasuredWorld</code>セッションなどだ。それだけを担うのが、計測専用の別のエントリーポイント<code>packages/sdk-browser/src/measurement/measurement.ts</code>である。</p>\n<p>ここでは、公開エントリーが再エクスポートするものすべてに加えて、ホストが決して必要としないものも再エクスポートしている: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code>(世界が自分自身に対して開く内部セッション)、ページのファクトリー<code>webgpuPagesEngine</code>、そして<code>replicateInstances</code>のような計測専用のヘルパーだ。これらはどれも公開される世界には届かず、アプリケーションからインポートされることもない。</p>"
+      "html": "<p>ページが<code>trillion3d</code>をインポートするとき、対照実装や内部セッションが見えることはない。<code>createWorld</code>はWebGPUで描画し、マシンがWebGPUを提供しない場合は名前を示して拒否する。ベンチと証明では、それでも対照実装に名前をつける必要がある。素のThree.js、<code>THREE.LOD</code>、内部の<code>openMeasuredWorld</code>セッションなどだ。それだけを担うのが、計測専用の別のエントリーポイント<code>packages/sdk-browser/src/measurement/measurement.ts</code>である。</p>\n<p>ここでは、公開エントリーが再エクスポートするものすべてに加えて、ホストが決して必要としないものも再エクスポートしている: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code>(世界が自分自身に対して開く内部セッション)、ページのファクトリー<code>webgpuPagesEngine</code>、そして<code>attachParticles</code>のような計測専用のヘルパーだ。これらはどれも公開される世界には届かず、アプリケーションからインポートされることもない。</p>"
     },
     "createWorldJob": {
       "title": "取り消せるジョブとしての世界の読み込み",
@@ -1350,9 +1351,6 @@
     },
     "updateNodeMatrixWorld": {
       "description": "そのノードとそのサブツリー全体を、親から順に処理する。あるノードが処理対象になるのは、自動更新であるか、マークされているか、`force`が指定されている場合だ。訪問済みノードのスタンプは`2 · traversal + reached`なので、1回の読み取りだけで、子ノードは自分がそのサブツリーに含まれるか、そして親から何を渡されるかがわかる。2つ目の形式は、求められれば、ルートから祖先もたどる。"
-    },
-    "nodeWorldPosition": {
-      "description": "ワールド行列の読み取り: 平行移動列; その分解による回転とスケール(負の行列式は`x`だけが単独で運ぶ); そして方向として正規化された3列目 — `cameraForward`の場合は反転される(カメラとライトはそれぞれの`−z`方向を向く)。`nodeWorldMirrorsFaces`は、ワールド行列が向きを反転させるときにtrueになり、そのとき描画は表と裏の面を入れかえる; これは更新なしにそのまま読み取られ、ゼロまたはNaNの行列式は何も反転させない。"
     },
     "lookAtNode": {
       "description": "`node`をワールド座標の点`(x, y, z)`へ向ける。`viewer`は、それぞれの`−z`方向を向くカメラやライトの場合はtrue、`+z`方向を提示するオブジェクトの場合はfalseになる。`up`はそのノードの上方向で、既定では`(0, 1, 0)`。祖先とそのノード自身が先に更新される。"

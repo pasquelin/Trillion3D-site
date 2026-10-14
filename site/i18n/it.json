@@ -521,7 +521,8 @@
     "meaning": "Cosa fa",
     "details": "Dettagli",
     "live": "Viene eseguito qui, dal vivo",
-    "liveHint": "Muovi i controlli: questi valori provengono dalla funzione del motore eseguita in questo browser."
+    "liveHint": "Muovi i controlli: questi valori provengono dalla funzione del motore eseguita in questo browser.",
+    "examples": "Esempi che lo usano"
   },
   "kind": {
     "Function": "Funzione",
@@ -1105,7 +1106,7 @@
     "measurement-entry": {
       "title": "Il punto di ingresso di misurazione",
       "description": "Dove un testimone o una sessione interna possono ancora essere nominati — mai attraverso il punto di ingresso pubblicato `trillion3d`.",
-      "html": "<p>Una pagina importa <code>trillion3d</code> e non vede mai un testimone o una sessione interna: <code>createWorld</code> disegna con WebGPU, oppure viene rifiutato per nome se la macchina non ne offre. Il banco e i test devono comunque nominare un testimone — Three.js puro, <code>THREE.LOD</code>, la sessione interna <code>openMeasuredWorld</code> — ed è questo l'unico compito del punto di ingresso di misurazione a parte, <code>packages/sdk-browser/src/measurement/measurement.ts</code>.</p>\n<p>Riesporta tutto ciò che esporta il punto di ingresso pubblicato, più ciò di cui un host non ha mai bisogno: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (la sessione interna che un mondo apre su di sé), la factory delle pagine <code>webgpuPagesEngine</code> e helper solo di misurazione come <code>replicateInstances</code>. Nulla di tutto ciò raggiunge un mondo pubblicato, e nessuna applicazione lo importa.</p>"
+      "html": "<p>Una pagina importa <code>trillion3d</code> e non vede mai un testimone o una sessione interna: <code>createWorld</code> disegna con WebGPU, oppure viene rifiutato per nome se la macchina non ne offre. Il banco e i test devono comunque nominare un testimone — Three.js puro, <code>THREE.LOD</code>, la sessione interna <code>openMeasuredWorld</code> — ed è questo l'unico compito del punto di ingresso di misurazione a parte, <code>packages/sdk-browser/src/measurement/measurement.ts</code>.</p>\n<p>Riesporta tutto ciò che esporta il punto di ingresso pubblicato, più ciò di cui un host non ha mai bisogno: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (la sessione interna che un mondo apre su di sé), la factory delle pagine <code>webgpuPagesEngine</code> e helper solo di misurazione come <code>attachParticles</code>. Nulla di tutto ciò raggiunge un mondo pubblicato, e nessuna applicazione lo importa.</p>"
     },
     "createWorldJob": {
       "title": "Un caricamento di mondo come compito annullabile",
@@ -1350,9 +1351,6 @@
     },
     "updateNodeMatrixWorld": {
       "description": "Il nodo e tutto il suo sottoalbero, genitori prima. Un nodo viene raggiunto se è ad aggiornamento automatico, se è marcato, o se `force`. Il marcatore di un nodo visitato è `2 · traversal + reached`, così una lettura dice a un figlio se è nel sottoalbero e cosa gli trasmette il genitore. La seconda forma attraversa anche gli antenati dalla radice, quando richiesto."
-    },
-    "nodeWorldPosition": {
-      "description": "Letture della matrice del mondo: la colonna di traslazione; la rotazione e la scala della sua scomposizione, un determinante negativo portato solo da `x`; la terza colonna normalizzata come direzione, invertita quando `cameraForward` — una camera e una luce guardano verso il loro `−z`. `nodeWorldMirrorsFaces` è vero quando la matrice del mondo inverte l'orientamento, e il disegno scambia allora le sue facce anteriore e posteriore; viene letto così com'è, senza aggiornare, e un determinante nullo o NaN non inverte nulla."
     },
     "lookAtNode": {
       "description": "Ruota `node` verso il punto del mondo `(x, y, z)`. `viewer` è vero per una camera o una luce, che guardano verso il loro `−z`, falso per un oggetto, che presenta il suo `+z`. `up` è l'alto del nodo, `(0, 1, 0)` per impostazione predefinita. Gli antenati e il nodo vengono aggiornati prima."

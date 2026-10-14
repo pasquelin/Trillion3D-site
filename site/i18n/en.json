@@ -521,7 +521,8 @@
     "meaning": "What it does",
     "details": "Details",
     "live": "It runs, here",
-    "liveHint": "Move the controls: these values come from the engine function running in this browser."
+    "liveHint": "Move the controls: these values come from the engine function running in this browser.",
+    "examples": "Examples that use it"
   },
   "kind": {
     "Function": "Function",
@@ -1105,7 +1106,7 @@
     "measurement-entry": {
       "title": "The measurement entry point",
       "description": "Where a witness or an internal session is still nameable — never through the published `trillion3d` entry.",
-      "html": "<p>A page imports <code>trillion3d</code> and never sees a witness or an internal session: <code>createWorld</code> draws with WebGPU, or is refused by name if the machine grants none. The bench and the proofs still need to name a witness — bare Three.js, <code>THREE.LOD</code>, the internal <code>openMeasuredWorld</code> session — and that is the one job of the separate measurement entry point, <code>packages/sdk-browser/src/measurement/measurement.ts</code>.</p>\n<p>It re-exports everything the published entry does, plus what a host never needs: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (the internal session a world opens on itself), the pages factory <code>webgpuPagesEngine</code>, and measurement-only helpers such as <code>replicateInstances</code>. None of it reaches a published world, and none of it is imported by an application.</p>"
+      "html": "<p>A page imports <code>trillion3d</code> and never sees a witness or an internal session: <code>createWorld</code> draws with WebGPU, or is refused by name if the machine grants none. The bench and the proofs still need to name a witness — bare Three.js, <code>THREE.LOD</code>, the internal <code>openMeasuredWorld</code> session — and that is the one job of the separate measurement entry point, <code>packages/sdk-browser/src/measurement/measurement.ts</code>.</p>\n<p>It re-exports everything the published entry does, plus what a host never needs: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (the internal session a world opens on itself), the pages factory <code>webgpuPagesEngine</code>, and measurement-only helpers such as <code>attachParticles</code>. None of it reaches a published world, and none of it is imported by an application.</p>"
     },
     "createWorldJob": {
       "title": "A world load as a cancellable job",
@@ -1350,9 +1351,6 @@
     },
     "updateNodeMatrixWorld": {
       "description": "The node and its whole subtree, parents first. A node is reached if it updates automatically, if it is marked, or if `force`. The stamp of a visited node is `2 · traversal + reached`, so one read tells a child whether it is in the subtree and what its parent passes it. The second form also walks the ancestors from the root, when asked."
-    },
-    "nodeWorldPosition": {
-      "description": "Reads of the world matrix: the translation column; the rotation and scale from its decomposition, a negative determinant carried by `x` alone; the third column normalised as a direction, flipped when `cameraForward` — a camera and a light look toward their `−z`. `nodeWorldMirrorsFaces` is true when the world matrix reverses orientation, and the draw then swaps its front and back faces; it reads as-is, without update, and a zero or NaN determinant reverses nothing."
     },
     "lookAtNode": {
       "description": "Turns `node` toward the world point `(x, y, z)`. `viewer` is true for a camera or a light, which look toward their `−z`, false for an object, which presents its `+z`. `up` is the node's up, `(0, 1, 0)` by default. Ancestors and the node are updated first."
