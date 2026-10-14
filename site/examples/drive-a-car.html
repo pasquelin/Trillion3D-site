@@ -38,19 +38,19 @@
       // vehicle constraint, with its engine, gearbox, differentials, suspension and anti-roll bars;
       // `world.controls` 'vehicle' drives the one you pick with the keyboard.
       const world = createWorld('view', { physics: true });
-      world.scene.background = math.color('#bcd3e6');
-      // Haze over the valley: the far cliffs pale into the sky. The fog is light, exposed and
-      // tone-mapped like a surface, the background is not: this is the radiance the display
-      // curve shows as #bcd3e6.
-      world.scene.fog = { color: math.color([0.36, 0.664, 1.168]), near: 50, far: 260 };
+      world.scene.background = math.color('#a4cbec');
+      // A light haze: the far side of the valley pales a little toward the sky. The fog is light, exposed
+      // and tone-mapped like a surface, the background is not: this is the radiance the display
+      // curve shows as #a4cbec.
+      world.scene.fog = { color: math.color([0.194, 0.557, 1.466]), near: 90, far: 400 };
       world.camera.far = 400;
       await world.scene.load('../assets/examples/terrain/cache/native/full/manifest.json');
 
-      const sun = light.directional({ intensity: 3.2, castShadow: true });
-      sun.position.set(40, 70, 25);
+      const sun = light.directional({ color: '#ffe2b8', intensity: 3, castShadow: true });
+      sun.position.set(50, 55, 30);
       world.scene.add(
         sun,
-        light.hemisphere({ intensity: 1.1, color: '#ffffff', groundColor: '#6d7a5a' }),
+        light.hemisphere({ intensity: 0.5, color: '#cfe2ff', groundColor: '#6d7a5a' }),
       );
 
       // Sandstone cliffs around the 128 m valley, so no drive ends off its edge.
@@ -76,8 +76,9 @@
         { geometry, material, object, math, vehicle },
         { above: 60 },
       );
+      // The car is chased from higher and farther back than the kit's eye: the valley shows round it.
       const fleet = {
-        car: { ...car(), start: [0, 20] },
+        car: { ...car(), eye: [0, 6.5, 13], start: [0, 20] },
         motorcycle: { ...motorcycle(), start: [-8, 22] },
         tracked: { ...tracked(), start: [12, 28] },
       };

@@ -9,7 +9,7 @@
       body {
         margin: 0;
         height: 100%;
-        background: #b9d4dc;
+        background: #a8cfe6;
       }
       canvas {
         display: block;
@@ -26,11 +26,11 @@
       import { controls, readout } from '../runtime/kit.js';
 
       const world = createWorld('view');
-      // An early evening haze down the canal: the far bridge pales, the lit windows carry. The
-      // fog is light, exposed and tone-mapped like a surface, the background is not: this is the
-      // radiance the display curve shows as #c8c4cf.
-      world.scene.background = math.color('#c8c4cf');
-      world.scene.fog = { color: math.color([0.531, 0.49, 0.62]), density: 0.012 };
+      // A light haze down the canal: the far bridge pales into the sky. The fog is light, exposed
+      // and tone-mapped like a surface, the background is not: this is the radiance the display
+      // curve shows as #a8cfe6.
+      world.scene.background = math.color('#a8cfe6');
+      world.scene.fog = { color: math.color([0.223, 0.607, 1.168]), density: 0.005 };
       const paint = (color, roughness = 0.75, metalness = 0) =>
         material.meshStandard({ color, roughness, metalness });
       const stone = paint('#b8aa91', 0.95);
@@ -85,18 +85,18 @@
         for (const x of [-4, -2, 2, 4]) put(railShape, iron, [x, 3.85, z]);
       }
       world.scene.add(
-        light.hemisphere({ color: '#c9d3ee', groundColor: '#5b5548', intensity: 1.2 }),
+        light.hemisphere({ color: '#d9efff', groundColor: '#5b5548', intensity: 1.4 }),
         light.directional({
-          color: '#ffbf85',
-          intensity: 2.6,
-          position: [-18, 11, 15],
+          color: '#ffd9a8',
+          intensity: 3,
+          position: [-16, 16, 15],
           castShadow: true,
         }),
       );
 
       const DURATION = 12;
       world.camera.position.set(0, 4.6, 39);
-      world.camera.lookAt(0, 3.3, -50);
+      world.camera.lookAt(0, 1.6, -50);
       world.scene.add(world.camera); // a scene descendant is advanced by the world's animation loop
       const mixer = animation.createMixer(world.camera);
       const journey = animation.clip('canal dolly', DURATION, [

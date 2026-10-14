@@ -28,11 +28,11 @@
       const world = createWorld('view', { controls: 'orbit', physics: true });
       world.camera.far = 2000;
 
-      // Golden hour: one warm haze for the sky and the air, so the far sea melts into it at the
+      // A low sun under a clear sky: one pale haze for the sky and the air, so the far sea melts into it at the
       // horizon. A linear display curve keeps the fog's colour the sky's.
-      const haze = math.color('#e9a978');
+      const haze = math.color('#a9c4dc');
       world.scene.background = haze;
-      world.scene.fog = { color: haze, density: 0.0045 };
+      world.scene.fog = { color: haze, density: 0.002 };
       world.toneMapping = 'linear';
 
       // One grid laid flat at the water's rest level, its rows fine around the boats and wider
@@ -55,7 +55,7 @@
         }
       const grid = geometry.createBuffer({ position: buffer.float32(position, 3), normal: buffer.float32(normal, 3), index: buffer.uint32(index, 1) });
       // Glossy deep water: the low sun draws a glittering path on it toward the camera.
-      const sea = object.mesh(grid, material.meshStandard({ color: '#123f58', roughness: 0.16 }));
+      const sea = object.mesh(grid, material.meshStandard({ color: '#0d4f73', roughness: 0.16 }));
       sea.castShadow = false;
       sea.receiveShadow = true;
       world.scene.add(sea);
@@ -107,12 +107,12 @@
 
       // A low sun, behind the boats: its light gilds their edges and lies in a path on the water.
       const sun = light.directional({ castShadow: true });
-      world.scene.add(sun, light.hemisphere({ intensity: 0.7, color: '#f6c99a', groundColor: '#16324a' }));
+      world.scene.add(sun, light.hemisphere({ intensity: 0.7, color: '#c4d8ee', groundColor: '#16324a' }));
       // A faint glow around what shines: the buoy's lamp and the sun's glints on the water.
       world.effects.add(effect.bloom({ intensity: 0.06 }));
 
-      world.camera.position.set(9, 4, 16);
-      world.controls.target.set(0, 0.5, -1);
+      world.camera.position.set(-2, 3.6, 11);
+      world.controls.target.set(0.5, 0.6, -2);
       world.controls.minDistance = 5;
       world.controls.maxDistance = 70;
       world.controls.maxPolarAngle = Math.PI / 2 - 0.08;

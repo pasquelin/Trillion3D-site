@@ -28,7 +28,7 @@
       const sky = math.color('#9cc8f0');
       world.scene.background = sky;
       // A thin haze of the sky's colour: the far shore pales, and the island gains its depth.
-      world.scene.fog = { color: sky, density: 0.0035 };
+      world.scene.fog = { color: sky, density: 0.0015 };
 
       // Smooth noise on a grid of random values, summed over four octaves: the lie of the land.
       const noise = valueNoise({ math });
@@ -211,7 +211,7 @@
 
       const sun = light.directional({ color: '#ffd29a', intensity: 3.2, castShadow: true });
       world.scene.add(sun, light.hemisphere({ color: '#bcd8ff', groundColor: '#5a4a38', intensity: 0.75 }));
-      world.camera.position.set(38, 36, 46);
+      world.camera.position.set(-29, 64, 50);
       world.camera.lookAt(0, 8, 0);
       world.controls.target.set(0, 8, 0);
       world.controls.minDistance = 12;
