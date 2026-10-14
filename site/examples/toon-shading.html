@@ -62,6 +62,24 @@
         return holder;
       }
       const random = seeded(21);
+      // Every shape is built once and worn by every part that has it: the parts sharing one shape
+      // and one paint are drawn together. A tree's trunk and a cloud's puffs, of many sizes, are
+      // one shape each, scaled.
+      const SHAPES = {
+        hill: geometry.sphere(1, 32, 16),
+        walls: [1, 1.5].map((tall) => geometry.box(1.6, tall, 1.4).translate(0, tall / 2, 0)),
+        roof: geometry.cone(1.35, 0.9, 4).rotateY(Math.PI / 4).translate(0, 0.45, 0),
+        chimney: geometry.box(0.25, 0.6, 0.25),
+        door: geometry.box(0.4, 0.62, 0.06),
+        trunk: geometry.cylinder(0.12, 0.16, 1, 8).translate(0, 0.5, 0),
+        crown: geometry.cone(0.8, 1.2, 10).translate(0, 0.6, 0),
+        crownTop: geometry.cone(0.55, 0.9, 10).translate(0, 0.45, 0),
+        blade: geometry.box(0.34, 1.8, 0.05).translate(0.12, 1.05, 0),
+        fleece: geometry.sphere(0.32, 16, 10),
+        head: geometry.sphere(0.15, 12, 8),
+        leg: geometry.cylinder(0.05, 0.05, 0.22, 6),
+        puff: geometry.sphere(1, 16, 10),
+      };
 
       // The island: a sea to the horizon, a beach, a grass top and three soft hills.
       part(geometry.cylinder(60, 60, 0.2, 96), 'sea', 60, [0, -0.5, 0], world.scene, false);
@@ -70,7 +88,7 @@
       part(geometry.cylinder(9.2, 9.6, 0.5, 64), 'grass', 9, [0, 0.1, 0]);
       const HILLS = [[-5, -4, 3.2, 1.6], [4.5, -5, 2.6, 1.1], [-6, 3.5, 2.2, 0.8]];
       for (const [x, z, r, h] of HILLS) {
-        const hill = part(geometry.sphere(1, 32, 16), 'meadow', r, [x, 0.35, z]);
+        const hill = part(SHAPES.hill, 'meadow', r, [x, 0.35, z]);
         hill.scale.set(r, h, r);
       }
 
@@ -81,10 +99,10 @@
         const house = object.group(), tall = 1 + (k % 2) * 0.5;
         house.position.set(x, 0.35, z);
         house.rotation.set(0, Math.atan2(-x, -z), 0);
-        part(geometry.box(1.6, tall, 1.4).translate(0, tall / 2, 0), k % 2 ? 'brick' : 'wall', 0.8, [0, 0, 0], house);
-        part(geometry.cone(1.35, 0.9, 4).rotateY(Math.PI / 4).translate(0, 0.45, 0), k % 3 ? 'roof' : 'roofBlue', 0.8, [0, tall, 0], house);
-        part(geometry.box(0.25, 0.6, 0.25), 'brick', 0.2, [0.45, tall + 0.5, -0.3], house);
-        part(geometry.box(0.4, 0.62, 0.06), 'wood', 0.3, [0, 0.31, 0.71], house, false);
+        part(SHAPES.walls[k % 2], k % 2 ? 'brick' : 'wall', 0.8, [0, 0, 0], house);
+        part(SHAPES.roof, k % 3 ? 'roof' : 'roofBlue', 0.8, [0, tall, 0], house);
+        part(SHAPES.chimney, 'brick', 0.2, [0.45, tall + 0.5, -0.3], house);
+        part(SHAPES.door, 'wood', 0.3, [0, 0.31, 0.71], house, false);
         world.scene.add(house);
         pop.push({ holder: house, delay: 0.2 + k * 0.18 });
       });
@@ -99,9 +117,9 @@
         if (!free(x, z)) continue;
         const tree = object.group(), tall = 0.8 + random() * 0.6;
         tree.position.set(x, 0.35, z);
-        part(geometry.cylinder(0.12, 0.16, tall, 8).translate(0, tall / 2, 0), 'wood', 0.15, [0, 0, 0], tree);
-        part(geometry.cone(0.8, 1.2, 10).translate(0, 0.6, 0), 'leaf', 0.7, [0, tall - 0.1, 0], tree);
-        part(geometry.cone(0.55, 0.9, 10).translate(0, 0.45, 0), 'leafLight', 0.5, [0, tall + 0.6, 0], tree);
+        part(SHAPES.trunk, 'wood', 0.15, [0, 0, 0], tree).scale.set(1, tall, 1);
+        part(SHAPES.crown, 'leaf', 0.7, [0, tall - 0.1, 0], tree);
+        part(SHAPES.crownTop, 'leafLight', 0.5, [0, tall + 0.6, 0], tree);
         world.scene.add(tree);
         pop.push({ holder: tree, delay: 0.9 + planted * 0.06 });
         planted++;
@@ -120,7 +138,7 @@
       for (let blade = 0; blade < 4; blade++) {
         const arm = object.group();
         arm.rotation.set(0, 0, (blade * Math.PI) / 2);
-        part(geometry.box(0.34, 1.8, 0.05).translate(0.12, 1.05, 0), 'blade', 0.3, [0, 0, 0], arm);
+        part(SHAPES.blade, 'blade', 0.3, [0, 0, 0], arm);
         hub.add(arm);
       }
       world.scene.add(mill);
@@ -134,11 +152,11 @@
         while (!free(x, z) || Math.hypot(x, z) > 8.6);
         one.position.set(x, 0.35, z);
         one.rotation.set(0, random() * Math.PI * 2, 0);
-        const body = part(geometry.sphere(0.32, 16, 10), 'white', 0.32, [0, 0.36, 0], one);
+        const body = part(SHAPES.fleece, 'white', 0.32, [0, 0.36, 0], one);
         body.scale.set(1.3, 1, 1);
-        part(geometry.sphere(0.15, 12, 8), 'dark', 0.15, [0.42, 0.46, 0], one);
+        part(SHAPES.head, 'dark', 0.15, [0.42, 0.46, 0], one);
         for (const [x, z] of [[0.2, 0.14], [0.2, -0.14], [-0.2, 0.14], [-0.2, -0.14]])
-          part(geometry.cylinder(0.05, 0.05, 0.22, 6), 'dark', 0.06, [x, 0.1, z], one, false);
+          part(SHAPES.leg, 'dark', 0.06, [x, 0.1, z], one, false);
         world.scene.add(one);
         return { one, beat: 1.4 + random(), phase: random() * 6 };
       });
@@ -156,7 +174,7 @@
         cloud.position.set(Math.cos(angle) * reach, 8 + random() * 3, Math.sin(angle) * reach);
         for (let puff = 0; puff < 4; puff++) {
           const size = 0.7 + random() * 0.6;
-          part(geometry.sphere(size, 16, 10), 'white', size, [(puff - 1.5) * 0.9, random() * 0.4, (random() - 0.5) * 0.8], cloud, false);
+          part(SHAPES.puff, 'white', size, [(puff - 1.5) * 0.9, random() * 0.4, (random() - 0.5) * 0.8], cloud, false).scale.setScalar(size);
         }
         sky.add(cloud);
       }
