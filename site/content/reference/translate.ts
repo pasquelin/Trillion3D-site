@@ -44,7 +44,7 @@ export function referenceTexts(
   return [...lines, ...(returns ? [['returns', returns] as [string, string]] : []), ...rows]
 }
 
-const translateRows = <Row extends { name: string; desc: string }>(
+export const translateRows = <Row extends { name: string; desc: string }>(
   rows: Row[],
   table: Record<string, string> | undefined,
 ) => rows.map((row) => ({ ...row, desc: table?.[rowKey(row.name)] ?? row.desc }))
