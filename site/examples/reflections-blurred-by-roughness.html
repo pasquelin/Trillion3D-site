@@ -38,11 +38,12 @@
       // At the end of each lane a neon tube of its own colour, washing the back wall with it, and
       // across them all a white globe that steps from lane to lane: the same light, seen in seven
       // grades of blur.
+      const laneX = (k) => (k - 3) * 1.75;
       const lane = geometry.box(1.6, 0.04, 16), tube = geometry.cylinder(0.06, 0.06, 3.2, 16);
       const lanes = ['#ff3d6e', '#ff8a3d', '#ffd23d', '#6cff5a', '#3de0ff', '#5a7bff', '#c45aff'].map((colour, k) => {
-        put(object.mesh(tube, material.meshStandard({ color: '#000000', emissive: colour, emissiveIntensity: 9 })), (k - 3) * 1.75, 1.7, -8.6)
+        put(object.mesh(tube, material.meshStandard({ color: '#000000', emissive: colour, emissiveIntensity: 9 })), laneX(k), 1.7, -8.6)
           .add(light.point({ color: colour, intensity: 7, distance: 5 }));
-        return put(object.mesh(lane, material.meshStandard()), (k - 3) * 1.75, 0, -1).material;
+        return put(object.mesh(lane, material.meshStandard()), laneX(k), 0, -1).material;
       });
       const globe = put(object.mesh(geometry.sphere(0.32, 48, 24), material.meshStandard({ color: '#000000', emissive: '#fff4e6', emissiveIntensity: 14 })), 0, 1.1, -6);
       globe.add(light.point({ color: '#fff4e6', intensity: 10, distance: 9 }));
@@ -68,14 +69,15 @@
         world.invalidate();
       }, world);
       // The globe steps from lane to lane and rests over each a while: still, its blurred image
-      // settles (the engine smooths it over the last images); moving, it shimmers.
-      const stops = [3, 4, 5, 6, 5, 4, 3, 2, 1, 0, 1, 2], rest = 2.4, move = 0.8;
+      // settles (the engine smooths it over the last images); moving, it shimmers. The opening rest
+      // is the longest: the first image is seen settled.
+      const stops = [3, 4, 5, 6, 5, 4, 3, 2, 1, 0, 1, 2], rest = 2.4, move = 0.8, cycle = rest + move;
       let time = -6;
       world.onFrame(({ delta }) => {
         time += Math.min(delta, 0.05);
-        const at = Math.max(time, 0), step = Math.floor(at / (rest + move)), into = Math.max(0, at - step * (rest + move) - rest) / move;
+        const at = Math.max(time, 0), step = Math.floor(at / cycle);
         const from = stops[step % stops.length], to = stops[(step + 1) % stops.length];
-        globe.position.set((math.lerp(from, to, ease.smooth(into)) - 3) * 1.75, 1.1, -6);
+        globe.position.set(laneX(math.lerp(from, to, ease.smooth(((at % cycle) - rest) / move))), 1.1, -6);
         world.invalidate();
       });
     </script>
