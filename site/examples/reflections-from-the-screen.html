@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Screen reflections</title>
+    <meta name="thumbnail" content="4" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #1b2236;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, effect, geometry, light, material, math, object } from '../runtime/engine.js';
+      import { controls, seeded } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      const dusk = math.color('#1b2236');
+      world.scene.background = dusk;
+      world.scene.fog = { color: dusk, density: 0.018 };
+      const next = seeded(11);
+      const put = (mesh, x, y, z, parent = world.scene) => (mesh.position.set(x, y, z), parent.add(mesh), mesh);
+
+      // A street after the rain. The engine reflects a smooth surface by tracing each ray through
+      // the image it has just drawn: what the screen shows, the wet road shows. A lamp that leaves
+      // the frame leaves the road too — tilt the view down and watch.
+      const tarmac = material.meshStandard({ color: '#121317' });
+      put(object.mesh(geometry.box(80, 0.2, 10), tarmac), 0, -0.1, 0);
+      const kerb = geometry.box(80, 0.3, 3), concrete = material.meshStandard({ color: '#3a3a40', roughness: 0.8 });
+      for (const z of [-6.5, 6.5]) put(object.mesh(kerb, concrete), 0, 0.05, z);
+      // Puddles: thin, near-perfect mirrors lying on the road, sharp wherever the tarmac blurs.
+      const puddle = geometry.cylinder(1, 1, 0.01, 40), water = material.meshStandard({ color: '#0a0b0e', roughness: 0.02 });
+      for (let k = 0; k < 14; k++)
+        put(object.mesh(puddle, water), -30 + k * 4.6 + next() * 2, 0.005, -3.5 + next() * 7).scale.set(0.6 + next() * 1.4, 1, 0.4 + next() * 0.6);
+
+      // Facades on both sides, their windows lit or dark at random, warm ones mirrored in the road.
+      const brick = material.meshStandard({ color: '#24252b', roughness: 0.9 }), pane = geometry.plane(0.9, 1.3), house = geometry.box(1, 1, 6);
+      const lit = material.meshStandard({ color: '#000000', emissive: '#ffb86a', emissiveIntensity: 3 });
+      const dark = material.meshStandard({ color: '#0d1016', roughness: 0.1 });
+      for (const side of [-1, 1])
+        for (let x = -36; x < 36; ) {
+          const width = 6 + Math.floor(next() * 5), height = 7 + Math.floor(next() * 4) * 3;
+          put(object.mesh(house, brick), x + width / 2, height / 2, side * 11).scale.set(width - 0.3, height, 1);
+          for (let floor = 3; floor < height - 1; floor += 3)
+            for (let column = 1.2; column < width - 0.8; column += 1.8)
+              put(object.mesh(pane, next() < 0.45 ? lit : dark), x + column, floor, side * 7.99).rotation.set(0, side > 0 ? Math.PI : 0, 0);
+          x += width;
+        }
+
+      // Street lamps along the far pavement, sodium-orange.
+      const post = geometry.cylinder(0.07, 0.1, 4.6, 12), iron = material.meshStandard({ color: '#202328', metalness: 0.8, roughness: 0.4 });
+      const globe = geometry.sphere(0.28, 24, 12), sodium = material.meshStandard({ color: '#000000', emissive: '#ffb04a', emissiveIntensity: 12 });
+      for (let x = -30; x <= 30; x += 12) {
+        put(object.mesh(post, iron), x, 2.5, -5.6);
+        put(object.mesh(globe, sodium), x, 4.9, -5.6).add(light.point({ color: '#ffb04a', intensity: 16, distance: 13 }));
+      }
+
+      // Cars, two lanes each way, with headlights that pool on the road ahead of them and red
+      // tail lights: lights that move, and their streaks across the wet road with them.
+      const body = geometry.box(4.2, 0.8, 1.8), cabin = geometry.box(2.2, 0.6, 1.6), lamp = geometry.box(0.06, 0.16, 0.34);
+      const paint = material.meshStandard({ color: '#1d2129', metalness: 0.6, roughness: 0.3 });
+      const head = material.meshStandard({ color: '#000000', emissive: '#fff3e0', emissiveIntensity: 30 });
+      const tail = material.meshStandard({ color: '#000000', emissive: '#ff2414', emissiveIntensity: 14 });
+      const cars = [[-2.2, 1, 0], [-2.2, 1, 40], [2.2, -1, 15], [2.2, -1, 55]].map(([z, way, start]) => {
+        const car = object.group();
+        put(object.mesh(body, paint), 0, 0.5, 0, car);
+        put(object.mesh(cabin, paint), -0.3, 1.2, 0, car);
+        car.add(light.point({ position: [3.4, 0.6, 0], color: '#fff3e0', intensity: 6, distance: 9 }));
+        for (const side of [-0.6, 0.6]) {
+          put(object.mesh(lamp, head), 2.11, 0.6, side, car);
+          put(object.mesh(lamp, tail), -2.11, 0.65, side, car);
+        }
+        put(car, 0, 0, z).rotation.y = way > 0 ? 0 : Math.PI;
+        return { car, way, start };
+      });
+      world.scene.add(light.hemisphere({ color: '#5a6a9a', groundColor: '#1a1410', intensity: 0.3 }));
+      world.effects.add(effect.bloom({ intensity: 0.08 }));
+
+      // The view stays between the facades: no drag goes through a wall.
+      world.camera.position.set(-2.5, 1.7, 4);
+      world.camera.lookAt(5, 1.4, -1.5);
+      world.controls.target.set(5, 1.4, -1.5);
+      world.controls.minDistance = 3;
+      world.controls.maxDistance = 9.4;
+      world.controls.enablePan = false;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.04;
+
+      // Dry tarmac is too rough for the screen to be traced; wet, it turns towards a mirror.
+      let traffic = true;
+      controls({ wet: [0, 1, 0.8, 0.01], traffic: true }, (values) => {
+        tarmac.roughness = math.lerp(0.85, 0.08, values.wet);
+        traffic = values.traffic;
+        world.invalidate();
+      }, world);
+      let time = 0;
+      world.onFrame(({ delta }) => {
+        if (!traffic) return;
+        time += Math.min(delta, 0.05);
+        for (const { car, way, start } of cars) car.position.x = way * (((start + time * 9) % 80) - 40);
+        world.invalidate();
+      });
+    </script>
+  </body>
+</html>
