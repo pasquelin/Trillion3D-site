@@ -23,8 +23,8 @@
     <script type="module">
       // `material.lineDashed` cuts its line into `dashSize` dashes and `gapSize` gaps, measured
       // along the line from its first vertex.
-      import { createWorld, geometry, material, object, light, math, buffer } from '../runtime/engine.js';
-      import { controls, readout } from '../runtime/kit.js';
+      import { createWorld, effect, geometry, material, object, light, math, buffer } from '../runtime/engine.js';
+      import { controls, readout, seeded } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
       world.scene.background = math.color('#05060c');
@@ -99,6 +99,14 @@
       const comet = object.mesh(geometry.sphere(0.08, 16, 8), material.meshBasic({ color: '#e8ffff' }));
       const sun = object.mesh(geometry.sphere(0.9, 64, 32), material.meshStandard({ color: '#000000', emissive: '#ffb347', emissiveIntensity: 4 }));
       world.scene.add(comet, sun, light.point({ color: '#fff0d8', intensity: 90, distance: 40 }), light.ambient({ color: '#3a4460', intensity: 0.25 }));
+      // Far stars round the chart, a shell of points in one object, and a soft glow round the sun.
+      const sky = [], next = seeded(3);
+      for (let k = 0; k < 1200; k++) {
+        const y = next() * 2 - 1, around = next() * Math.PI * 2, ring = Math.sqrt(1 - y * y);
+        sky.push(ring * Math.cos(around) * 90, y * 90, ring * Math.sin(around) * 90);
+      }
+      world.scene.add(object.points(geometry.createBuffer({ position: buffer.float32(new Float32Array(sky), 3) }), material.points({ color: '#cfd8ff', size: 0.3 })));
+      world.effects.add(effect.bloom({ intensity: 0.08 }));
 
       // Seen from fifty degrees above the plane, the chart fills the view to its edges.
       world.camera.position.set(0, 11, 9);

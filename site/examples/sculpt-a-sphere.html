@@ -1,0 +1,214 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Sculpt a sphere</title>
+    <meta name="thumbnail" content="3" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #1a1918;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, geometry, material, object, light, math, buffer } from '../runtime/engine.js';
+      import { controls } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#1a1918');
+
+      // The clay: a sphere with every vertex shared. `geometry.sphere` repeats the vertices of its
+      // seam and its poles for the texture's wrap; a brush that moved one copy and not the other
+      // would tear the surface open. So its positions are welded, one vertex per place, and the
+      // triangles are pointed at the welded ones.
+      const source = geometry.sphere(1, 160, 80), from = source.attributes.position.array;
+      const welded = new Map(), unit = [], remap = [];
+      for (let v = 0; v < from.length / 3; v++) {
+        const key = [0, 1, 2].map((axis) => Math.round(from[v * 3 + axis] * 1e5)).join();
+        if (!welded.has(key)) {
+          welded.set(key, unit.length / 3);
+          unit.push(from[v * 3], from[v * 3 + 1], from[v * 3 + 2]);
+        }
+        remap.push(welded.get(key));
+      }
+      const position = buffer.float32(Float32Array.from(unit), 3);
+      const shape = geometry.createBuffer({ position, index: buffer.uint32(Array.from(source.index.array, (v) => remap[v])) });
+      // Rewritten under the brush frame after frame: uploaded in place, never cut into new pages.
+      // It carries no normals: the world averages them from the faces at every rewrite, into
+      // lists it already holds, so the light follows each dent the brush makes.
+      shape.usage = 'dynamic';
+      const CENTRE = [0, 1.25, 0];
+      const clayPaint = material.meshStandard({ color: '#c0704e', roughness: 0.62 });
+      const clay = object.mesh(shape, clayPaint);
+      clay.position.set(...CENTRE);
+      clay.castShadow = clay.receiveShadow = true;
+
+      // A turned plinth and a pale studio floor.
+      const plinth = object.mesh(geometry.cylinder(0.7, 0.85, 0.24, 64), material.meshStandard({ color: '#3a3633', roughness: 0.4 }));
+      plinth.position.y = 0.12;
+      const floor = object.mesh(geometry.cylinder(9, 9, 0.1, 96), material.meshStandard({ color: '#8d8780', roughness: 0.9 }));
+      floor.position.y = -0.05;
+      world.scene.add(clay, plinth, floor);
+
+      // THE SOFTBOX: a rectangle light up on the left, drawn as a white panel; it wraps soft
+      // highlights round every dent. A warm low lamp casts the shadow; a cool sky fills.
+      const box = object.group();
+      box.position.set(-3, 3.6, 2.4);
+      box.lookAt(...CENTRE);
+      const softbox = light.rectArea({ color: '#fff4e8', width: 2.4, height: 1.6, intensity: 9 });
+      softbox.rotation.set(0, Math.PI, 0);
+      const panel = object.mesh(geometry.plane(2.4, 1.6), material.meshBasic({ color: '#fff4e8' }));
+      panel.castShadow = false;
+      box.add(softbox, panel);
+      world.scene.add(
+        box,
+        light.directional({ color: '#ffd7a8', intensity: 1.4, position: [4, 5, 3], target: CENTRE, castShadow: true }),
+        light.hemisphere({ color: '#b8c8ff', groundColor: '#4a4038', intensity: 0.45 }),
+      );
+      world.camera.position.set(1.1, 2.0, 3.7);
+      world.camera.lookAt(...CENTRE);
+      world.controls.target.set(...CENTRE);
+      world.controls.minDistance = 2.2;
+      world.controls.maxDistance = 9;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
+
+      // The brush's footprint: a ring of thick line laid flat on the surface under the pointer,
+      // lifted a little off it so a rounded surface does not swallow half of it.
+      const circle = Array.from({ length: 64 }, (_, k) => [Math.cos((k / 64) * Math.PI * 2), Math.sin((k / 64) * Math.PI * 2), 0]).flat();
+      const ring = object.lineLoop(
+        geometry.createBuffer({ position: buffer.float32(new Float32Array(circle), 3) }),
+        material.line({ color: '#fff8e0', linewidth: 2 }),
+      );
+      ring.visible = false;
+      world.scene.add(ring);
+
+      const ui = controls({
+        tool: ['raise', 'carve'],
+        brush: [0.1, 0.6, 0.28, 0.01],
+        strength: [0.1, 1, 0.45, 0.05],
+        mirror: true,
+        clay: '#c0704e',
+        reset: () => {
+          position.array.set(unit);
+          position.needsUpdate = true;
+          moved = true;
+          world.invalidate();
+        },
+      }, (values) => {
+        clayPaint.color.set(values.clay);
+        ring.scale.set(values.brush, values.brush, values.brush);
+        world.invalidate();
+      }, world);
+
+      // A stroke: every vertex within the brush moves along the normal of the face under the
+      // pointer, the most at the centre and nothing at the rim. With `mirror`, each half of the
+      // clay is worked by the stroke as seen in its own half: the stroke, and its reflection
+      // across x = 0, each vertex moved once, so the two halves stay exact mirror images.
+      const p = position.array;
+      // `push` is how far the centre moves, outwards when positive.
+      function press(hit, push, r = ui.brush, mirror = ui.mirror) {
+        const at = [hit.point.x - CENTRE[0], hit.point.y - CENTRE[1], hit.point.z - CENTRE[2]], n = hit.normal;
+        for (let v = 0; v < p.length; v += 3) {
+          const side = mirror && p[v] * at[0] < 0 ? -1 : 1;
+          const d2 = (p[v] - at[0] * side) ** 2 + (p[v + 1] - at[1]) ** 2 + (p[v + 2] - at[2]) ** 2;
+          if (d2 >= r * r) continue;
+          const fall = (1 - d2 / (r * r)) ** 2 * push;
+          p[v] += n.x * side * fall;
+          p[v + 1] += n.y * fall;
+          p[v + 2] += n.z * fall;
+          // Never through the middle, never out of reach.
+          const length = Math.hypot(p[v], p[v + 1], p[v + 2]), kept = math.clamp(length, 0.3, 1.9) / length;
+          p[v] *= kept;
+          p[v + 1] *= kept;
+          p[v + 2] *= kept;
+        }
+        position.needsUpdate = true;
+      }
+
+      // The clay opens already worked, a head roughed out with the mirror on: a crown, a chin, a
+      // brow, sockets, a nose, cheeks, a mouth and ears, each one press, some with a brush wider
+      // than the panel offers. `reset` gives back the plain sphere.
+      const strokes = [
+        // [x, y, z on the sphere, brush, push]
+        [0, 1, 0.1, 0.95, 0.1],
+        [0, -0.7, 0.7, 0.45, 0.14],
+        [0.28, 0.3, 0.92, 0.26, 0.07],
+        [0.3, 0.14, 0.95, 0.22, -0.14],
+        [0, 0.12, 1, 0.16, 0.08],
+        [0, -0.04, 1, 0.22, 0.16],
+        [0.45, -0.15, 0.88, 0.32, 0.06],
+        [0, -0.36, 0.93, 0.08, -0.05],
+        [0.07, -0.35, 0.93, 0.08, -0.05],
+        [0.14, -0.33, 0.93, 0.08, -0.04],
+        [0, -0.45, 0.9, 0.14, 0.04],
+        [0.97, 0.05, -0.15, 0.26, 0.2],
+      ];
+      for (const [x, y, z, r, push] of strokes) {
+        const length = Math.hypot(x, y, z), normal = { x: x / length, y: y / length, z: z / length };
+        const point = { x: CENTRE[0] + normal.x, y: CENTRE[1] + normal.y, z: CENTRE[2] + normal.z };
+        press({ point, normal }, push, r, true);
+      }
+
+      // Pressing on the clay sculpts and holds the camera still; pressing beside it turns the
+      // camera as usual.
+      let pointer = null, moved = false, sculpting = null, hit = null;
+      // The ring under the pointer, on the surface as it is now.
+      function aimRing() {
+        hit = aim();
+        ring.visible = !!hit;
+        if (!hit) return;
+        const { point, normal } = hit;
+        ring.position.set(point.x + normal.x * 0.02, point.y + normal.y * 0.02, point.z + normal.z * 0.02);
+        ring.lookAt(point.x + normal.x, point.y + normal.y, point.z + normal.z);
+      }
+      const aim = () => pointer && world.raycast(pointer, { objects: [clay] });
+      const follow = (event) => {
+        pointer = event.type === 'pointerleave' ? null : { x: event.offsetX, y: event.offsetY };
+        moved = true;
+        world.invalidate();
+      };
+      for (const name of ['pointermove', 'pointerleave']) world.canvas.addEventListener(name, follow);
+      world.canvas.addEventListener('pointerdown', (event) => {
+        follow(event);
+        if (event.button !== 0 || sculpting) return;
+        aimRing();
+        moved = false;
+        if (!hit) return;
+        sculpting = { id: event.pointerId, controls: world.controls.enabled };
+        world.controls.enabled = false;
+        world.canvas.setPointerCapture(event.pointerId);
+      });
+      const lift = (event) => {
+        if (!sculpting || event.pointerId !== sculpting.id) return;
+        world.controls.enabled = sculpting.controls;
+        sculpting = null;
+      };
+      for (const name of ['pointerup', 'pointercancel', 'lostpointercapture']) world.canvas.addEventListener(name, lift);
+
+      // A frame after the pointer moved, the ring follows the surface under it. While a press is
+      // held, every frame works the clay there, so a brush held still builds up, and the ray is
+      // cast again at the surface the stroke has just moved — the first ray at a changed shape
+      // measures it anew, the cost of sculpting what the ray hits.
+      world.onFrame(({ delta }) => {
+        if (moved || sculpting) {
+          moved = false;
+          aimRing();
+        }
+        if (sculpting && hit) {
+          press(hit, (ui.tool === 'raise' ? 1 : -1) * ui.strength * Math.min(delta, 0.05) * 0.6);
+          world.invalidate();
+        }
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>A voxel painter</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #efe3d1;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, geometry, material, object, light, helper, math } from '../runtime/engine.js';
+      import { controls, perFrame } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#efe3d1');
+
+      // A board of 20 × 20 one-metre cells, its grid drawn on top. The grid is a helper: rays
+      // pass through it and stop on the board or on a voxel.
+      const SIDE = 20, HALF = SIDE / 2, TALLEST = 14;
+      const board = object.mesh(geometry.box(SIDE + 0.6, 0.4, SIDE + 0.6), material.meshStandard({ color: '#e2cba6', roughness: 0.85 }));
+      board.position.y = -0.2;
+      board.receiveShadow = true;
+      const grid = helper.grid(SIDE, SIDE, '#b99b74', '#cdb38f');
+      grid.position.y = 0.003;
+      const voxels = object.group();
+      world.scene.add(board, grid, voxels);
+
+      // Every voxel is the same box; every voxel of one colour wears the same material. Meshes that
+      // share both are drawn together, so a thousand voxels of five colours cost a few draws.
+      const cube = geometry.box(1, 1, 1);
+      const paints = new Map();
+      const paint = (hex) => {
+        if (!paints.has(hex)) paints.set(hex, material.meshStandard({ color: hex, roughness: 0.6 }));
+        return paints.get(hex);
+      };
+      const key = (x, y, z) => `${x},${y},${z}`;
+      const cells = new Map();
+      const onBoard = (x, y, z) => x >= -HALF && x < HALF && z >= -HALF && z < HALF && y >= 0 && y < TALLEST;
+      const place = (x, y, z, hex) => {
+        const cell = key(x, y, z);
+        if (cells.has(cell) || !onBoard(x, y, z)) return;
+        const voxel = object.mesh(cube, paint(hex));
+        voxel.position.set(x + 0.5, y + 0.5, z + 0.5);
+        voxel.receiveShadow = true;
+        voxel.userData.cell = cell;
+        cells.set(cell, voxel);
+        voxels.add(voxel);
+      };
+      const erase = (voxel) => {
+        cells.delete(voxel.userData.cell);
+        voxels.remove(voxel);
+      };
+
+      // A cottage under its roof, a tree and a path to start from.
+      const cottage = () => {
+        for (let x = -3; x <= 1; x++)
+          for (let z = -3; z <= 0; z++)
+            for (let y = 0; y < 3; y++) {
+              const wall = x === -3 || x === 1 || z === -3 || z === 0;
+              const door = x === -1 && z === 0 && y < 2;
+              const pane = y === 1 && ((x === 1 && z === -2) || (x === -2 && z === 0));
+              if (wall && !door && !pane) place(x, y, z, y === 0 ? '#c9b79c' : '#f4e7cf');
+            }
+        for (let step = 0; step < 3; step++)
+          for (let x = -4 + step; x <= 2 - step; x++)
+            for (let z = -4; z <= 1; z++) place(x, 3 + step, z, '#c4553b');
+        for (let y = 0; y < 3; y++) place(4, y, -2, '#7a4e2d');
+        for (let x = 2; x <= 6; x++)
+          for (let y = 3; y <= 5; y++)
+            for (let z = -4; z <= 0; z++)
+              if (Math.hypot(x - 4, (y - 4) * 1.2, z + 2) < 2.3) place(x, y, z, (x + y + z) % 3 ? '#6b9a4b' : '#86b35a');
+        for (let z = 1; z <= 6; z++) place(z > 3 ? 0 : -1, 0, z, '#b8a184');
+      };
+      cottage();
+
+      // The ghost: where the next voxel goes, in the brush's colour, or a red box round the voxel
+      // a click would take away. It casts no shadow and no ray ever stops on it.
+      const ghostPaint = material.meshStandard({ transparent: true, opacity: 0.45, roughness: 0.6 });
+      const ghost = object.mesh(cube, ghostPaint);
+      ghost.castShadow = false;
+      ghost.visible = false;
+      world.scene.add(ghost);
+
+      const ui = controls({
+        colour: '#3f88c5',
+        erase: false,
+        clear: () => {
+          for (const voxel of [...cells.values()]) erase(voxel);
+          world.invalidate();
+        },
+      }, () => world.invalidate(), world);
+
+      // What a click at a canvas point would do: the ray stops on the board or a voxel; a new voxel
+      // takes the cell half a metre out along the face's normal, an erased one is the voxel hit.
+      const aim = (at, removing) => {
+        const hit = world.raycast(at, { objects: [board, voxels] });
+        if (!hit) return null;
+        if (removing) return hit.object.parent === voxels ? { voxel: hit.object } : null;
+        const cell = ['x', 'y', 'z'].map((axis) => Math.floor(hit.point[axis] + hit.normal[axis] * 0.5));
+        return onBoard(...cell) ? { cell } : null;
+      };
+
+      // The ghost follows the pointer, one ray a frame, and hides while a button turns the view. It
+      // is aimed again after every drawn frame too: a zoom, a new colour or the erase switch moves
+      // it under a still pointer.
+      const pointer = { x: 0, y: 0, shift: false, inside: false };
+      // The world draws again only when the ghost moved, changed colour or came and went.
+      let shown = '';
+      const hover = perFrame(() => {
+        const target = pointer.inside ? aim(pointer, ui.erase || pointer.shift) : null;
+        const at = target?.voxel ? target.voxel.position.toArray() : target?.cell.map((v) => v + 0.5);
+        const colour = target?.voxel ? '#e0453a' : ui.colour;
+        const now = at ? `${at} ${colour}` : '';
+        if (now === shown) return;
+        shown = now;
+        ghost.visible = Boolean(at);
+        if (at) {
+          ghost.position.set(...at);
+          ghost.scale.setScalar(target.voxel ? 1.06 : 1);
+          ghostPaint.color.set(colour);
+        }
+        world.invalidate();
+      }, requestAnimationFrame);
+      world.canvas.addEventListener('pointermove', (event) => {
+        Object.assign(pointer, { x: event.offsetX, y: event.offsetY, shift: event.shiftKey, inside: !event.buttons });
+        hover();
+      });
+      world.canvas.addEventListener('pointerleave', () => {
+        pointer.inside = false;
+        hover();
+      });
+      world.onFrame(() => hover());
+      for (const type of ['keydown', 'keyup'])
+        addEventListener(type, (event) => {
+          pointer.shift = event.shiftKey;
+          hover();
+        });
+
+      // A click paints, a drag turns the view: the press counts as a click only when the pointer
+      // left it by three pixels at most, as on the other picking pages. Shift, or the erase
+      // switch, takes a voxel away.
+      let down = null;
+      world.canvas.addEventListener('pointerdown', (event) => (down = event.button === 0 ? [event.offsetX, event.offsetY] : null));
+      world.canvas.addEventListener('pointercancel', () => (down = null));
+      world.canvas.addEventListener('pointerup', (event) => {
+        const press = down;
+        down = null;
+        if (!press || Math.hypot(event.offsetX - press[0], event.offsetY - press[1]) > 3) return;
+        const target = aim({ x: event.offsetX, y: event.offsetY }, ui.erase || event.shiftKey);
+        if (target?.voxel) erase(target.voxel);
+        else if (target) place(...target.cell, ui.colour);
+        world.invalidate();
+        pointer.inside = true;
+        hover();
+      });
+
+      // Late-afternoon sun with a wide disk, so the shadows soften with distance from what casts
+      // them; a pale sky and the warm board bounce fill them in.
+      world.scene.add(
+        light.directional({ color: '#ffe0b5', intensity: 3.2, position: [9, 15, 7], castShadow: true, angularRadius: 0.05 }),
+        light.hemisphere({ color: '#d4e3ff', groundColor: '#c9a47a', intensity: 1.1 }),
+      );
+      world.camera.position.set(11, 10, 14);
+      world.camera.lookAt(0, 1.5, 0);
+      world.controls.target.set(0, 1.5, 0);
+      world.controls.minDistance = 6;
+      world.controls.maxDistance = 40;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.08;
+      world.invalidate();
+      addEventListener('pagehide', () => world.dispose(), { once: true });
+    </script>
+  </body>
+</html>

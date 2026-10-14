@@ -86,6 +86,29 @@ export class SceneGltf {
     return index
   }
 
+  /**
+   * A node drawing `mesh` once per pose (`EXT_mesh_gpu_instancing`): flat translations, rotation
+   * quaternions and scales, three, four and three values a pose. The file holds the mesh once and
+   * the poses as three accessors; the compiler expands each pose into a node of its own.
+   */
+  instances(
+    name: string,
+    mesh: number,
+    translations: number[],
+    rotations: number[],
+    scales: number[],
+    root = false,
+  ) {
+    const used = (this.document.extensionsUsed ??= [])
+    if (!used.includes('EXT_mesh_gpu_instancing')) used.push('EXT_mesh_gpu_instancing')
+    const attributes = {
+      TRANSLATION: this.pack.accessor(translations, 3, true),
+      ROTATION: this.pack.accessor(rotations, 4, true),
+      SCALE: this.pack.accessor(scales, 3, true),
+    }
+    return this.node({ name, mesh, extensions: { EXT_mesh_gpu_instancing: { attributes } } }, root)
+  }
+
   /** Writes `<name>.gltf` and `<name>.bin` into `directory`. */
   async write(directory: string, name: string) {
     await mkdir(directory, { recursive: true })
@@ -95,9 +118,13 @@ export class SceneGltf {
   }
 }
 
-/** A turn of `angle` radians about +Y, as the quaternion a node's `rotation` takes, rounded. */
-export const yaw = (angle: number) =>
+/** A turn of `angle` radians about the unit `axis`, as the quaternion a node's `rotation` takes,
+ *  rounded. */
+export const turn = (axis: readonly [number, number, number], angle: number) =>
   Array.from(
-    axisAngleQuaternion(new Float64Array(4), [0, 1, 0], angle),
+    axisAngleQuaternion(new Float64Array(4), axis, angle),
     (value) => Math.round(snap(value) * 1e6) / 1e6,
   )
+
+/** A turn of `angle` radians about +Y. */
+export const yaw = (angle: number) => turn([0, 1, 0], angle)

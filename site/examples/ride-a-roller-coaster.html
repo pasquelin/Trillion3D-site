@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <title>Roller coaster ride</title>
-    <meta name="thumbnail" content="9" />
+    <meta name="thumbnail" content="0.3" />
     <style>
       html,
       body {
@@ -27,6 +27,11 @@
 
       const world = createWorld('view', { controls: 'orbit', physics: true });
       world.scene.background = math.color('#f3c28c');
+      // A golden haze: clear over the park, it swallows half the far mountains' light and all of
+      // the plain beyond. The fog's colour is light, exposed and tone-mapped like a surface's,
+      // while the background is shown as written: this radiance is the one the display curve
+      // shows as the sky's #f3c28c, so the horizon has no seam.
+      world.scene.fog = { color: math.color([1.354, 0.435, 0.158]), near: 120, far: 900 };
       world.camera.far = 1500;
       const random = seeded(23);
 
@@ -117,8 +122,14 @@
       }
 
       // A pose anywhere along the track: the two samples around it, blended; past the last one,
-      // the span that closes the track back to the first.
-      function poseAt(track, distance) {
+      // the span that closes the track back to the first. Written into `out`, so the cars and the
+      // rider reuse their own pose every frame instead of building new ones.
+      const pose = () => ({ p: [0, 0, 0], t: [0, 0, 0], u: [0, 0, 0], bend: 0 });
+      const normalise = (v) => {
+        const length = Math.hypot(v[0], v[1], v[2]) || 1;
+        for (let i = 0; i < 3; i++) v[i] /= length;
+      };
+      function poseAt(track, distance, out = pose()) {
         const { samples, total } = track, s = ((distance % total) + total) % total;
         let low = 0, high = samples.length - 1;
         const closing = s >= samples[high].s;
@@ -127,24 +138,50 @@
           if (samples[middle].s <= s) low = middle;
           else high = middle;
         }
-        const [a, b] = closing ? [samples[high], samples[0]] : [samples[low], samples[high]];
+        const a = closing ? samples[high] : samples[low], b = closing ? samples[0] : samples[high];
         const k = (s - a.s) / ((closing ? total : b.s) - a.s || 1);
-        return { p: mix({ math }, a.p, b.p, k), t: unit(mix({ math }, a.t, b.t, k)), u: unit(mix({ math }, a.u, b.u, k)), bend: math.lerp(a.bend, b.bend, k) };
+        for (let i = 0; i < 3; i++) {
+          out.p[i] = math.lerp(a.p[i], b.p[i], k);
+          out.t[i] = math.lerp(a.t[i], b.t[i], k);
+          out.u[i] = math.lerp(a.u[i], b.u[i], k);
+        }
+        normalise(out.t);
+        normalise(out.u);
+        out.bend = math.lerp(a.bend, b.bend, k);
+        return out;
       }
 
       // Where a point on the track lies along it: the nearest sample, then the segment beside it.
-      function along(track, point) {
-        const { samples, total } = track, n = samples.length, far = (p) => Math.hypot(...plus(p, point, -1));
-        let near = 0;
-        samples.forEach(({ p }, k) => far(p) < far(samples[near].p) && (near = k));
-        let best = { gap: Infinity, s: 0 };
-        for (const from of [(near + n - 1) % n, near]) {
-          const a = samples[from], span = plus(samples[(from + 1) % n].p, a.p, -1), length = Math.hypot(...span);
-          const k = math.clamp(dot(plus(point, a.p, -1), span) / (length * length), 0, 1);
-          const gap = far(plus(a.p, span, k));
-          if (gap < best.gap) best = { gap, s: (a.s + k * length) % total };
+      // The train moves a few samples a frame at most, so once found the nearest sample is looked
+      // for only around the last one; a new track, or a train found far from it, is searched whole.
+      const WINDOW = 16;
+      function along(track, { x, y, z }) {
+        const { samples, total } = track, n = samples.length;
+        const gap = (p) => (p[0] - x) ** 2 + (p[1] - y) ** 2 + (p[2] - z) ** 2;
+        const closest = (from, to) => {
+          let near = (from + n) % n;
+          for (let j = from + 1; j <= to; j++) {
+            const k = (j + n) % n;
+            if (gap(samples[k].p) < gap(samples[near].p)) near = k;
+          }
+          return near;
+        };
+        let near = track.nearest === undefined ? closest(0, n - 1) : closest(track.nearest - WINDOW, track.nearest + WINDOW);
+        // Lost — a long stalled frame let the train run past the window —: search it all again.
+        if (gap(samples[near].p) > 1) near = closest(0, n - 1);
+        track.nearest = near;
+        let best = Infinity, s = 0;
+        for (let j = n - 1; j <= n; j++) {
+          const a = samples[(near + j) % n], b = samples[(near + j + 1) % n].p;
+          const sx = b[0] - a.p[0], sy = b[1] - a.p[1], sz = b[2] - a.p[2], length = Math.hypot(sx, sy, sz);
+          const k = math.clamp(((x - a.p[0]) * sx + (y - a.p[1]) * sy + (z - a.p[2]) * sz) / (length * length), 0, 1);
+          const off = (a.p[0] + sx * k - x) ** 2 + (a.p[1] + sy * k - y) ** 2 + (a.p[2] + sz * k - z) ** 2;
+          if (off < best) {
+            best = off;
+            s = (a.s + k * length) % total;
+          }
         }
-        return best.s;
+        return s;
       }
 
       // The ride: the train is one body held on the track by a path joint and pulled by gravity.
@@ -228,7 +265,7 @@
       let track = null, plan = null, rail = null;
       function rebuild(loops) {
         // The train keeps its place along the track and its speed when the loops change.
-        const s = track ? along(track, where()) : START, speed = train.physics.velocity.length();
+        const s = track ? along(track, train.position) : START, speed = train.physics.velocity.length();
         track = layout(loops);
         const railList = { position: [], normal: [], index: [] }, spineList = { position: [], normal: [], index: [] }, tieList = { position: [], normal: [], index: [] };
         for (const across of [-0.55, 0.55]) sweep(railList, track.samples, across, 0, 0.075, 10);
@@ -302,11 +339,11 @@
       const train = object.mesh(geometry.box(0.01, 0.01, 0.01), red);
       train.physics = { type: 'dynamic', mass: MASS, shape: { type: 'sphere', radius: reach }, damping: { linear: LOSS } };
       world.scene.add(train);
-      const where = () => [train.position.x, train.position.y, train.position.z];
 
       // The park: grass, a station, a lake, a Ferris wheel, trees clear of the track, far hills.
+      // The grass runs on past the hills, until the haze has taken it.
       const paint = (color, roughness = 0.9, metalness = 0) => material.meshStandard({ color, roughness, metalness });
-      const grass = object.mesh(geometry.box(900, 0.4, 900), paint('#6c9440'));
+      const grass = object.mesh(geometry.box(2400, 0.4, 2400), paint('#6c9440'));
       grass.position.y = -0.2;
       const lake = object.mesh(geometry.cylinder(26, 26, 0.1, 64), material.meshStandard({ color: '#3f7fb8', roughness: 0.08, metalness: 0.2 }));
       lake.position.set(50, 0.02, 44);
@@ -408,22 +445,23 @@
       // first car while the train waits at the station, then the chain takes it up. The frame
       // reads where the simulation left the train and gives its motor what that stretch drives.
       let laps = 0, last = START;
+      const carPoses = cars.map(pose), riderPose = pose();
       world.onFrame(({ delta }) => {
         const step = Math.min(delta, 0.05);
         wait -= step;
-        const s = along(track, where()), speed = train.physics.velocity.length(), half = track.total / 2;
+        const s = along(track, train.position), speed = train.physics.velocity.length(), half = track.total / 2;
         laps += s < last - half ? 1 : s > last + half ? -1 : 0;
         last = s;
         const travel = laps * track.total + s, motor = plan.motorAt(s, wait > 0);
         if (motor !== rail.motor) rail.motor = motor;
-        cars.forEach((car, k) => seatCar(car, poseAt(track, s - k * GAP)));
+        cars.forEach((car, k) => seatCar(car, poseAt(track, s - k * GAP, carPoses[k])));
         wheel.rotation.set(0, 0, (travel / 600) * Math.PI);
         gondolas.forEach((cabin, k) => {
           const a = (k / 16) * Math.PI * 2 + (travel / 600) * Math.PI;
           cabin.position.set(hub[0] + Math.cos(a) * 20, hub[1] + Math.sin(a) * 20, hub[2]);
         });
         // The rider sits in the front row of the first car: nothing of the train stands ahead.
-        const rider = poseAt(track, s);
+        const rider = poseAt(track, s, riderPose);
         speedShown(`${Math.round(speed * 3.6)} km/h`);
         felt(`${((speed * speed * rider.bend + G * rider.u[1]) / G).toFixed(1)} g`);
         if (!held) look = look.map((value) => value * Math.exp(-step * 3));

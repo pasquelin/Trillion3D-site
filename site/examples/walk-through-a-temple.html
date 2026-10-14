@@ -77,7 +77,7 @@
     <div id="dot" class="layer" data-example-overlay data-hud></div>
     <div id="veil" class="layer" data-example-overlay></div>
     <script type="module">
-      import { createWorld, geometry, material, object, light, math } from '../runtime/engine.js';
+      import { createWorld, effect, geometry, material, object, light, math } from '../runtime/engine.js';
       import { announce, brownNoise, controls, mix, play, sineHash, whiteNoise, words } from '../runtime/kit.js';
       const say = words();
 
@@ -190,7 +190,13 @@
       const PACE = { walkSpeed: world.controls.walkSpeed, sprintSpeed: world.controls.sprintSpeed };
 
       const matte = (color, roughness = 0.9, metalness = 0) => material.meshStandard({ color, roughness, metalness });
-      const glowing = (emissive, emissiveIntensity) => material.meshStandard({ color: '#000000', emissive, emissiveIntensity });
+      // What glows only gives light: none of it casts a shadow (`put` reads this set).
+      const glows = new Set();
+      const glowing = (emissive, emissiveIntensity) => {
+        const matter = material.meshStandard({ color: '#000000', emissive, emissiveIntensity });
+        glows.add(matter);
+        return matter;
+      };
       // The temple is stone and its bands bronze: their matter is what the soles grip on, so a
       // stop glides a little on the stone (`physics`, the physics materials' friction).
       const rock = (color, roughness) => material.meshStandard({ color, roughness, metalness: 0, physics: 'stone' });
@@ -199,6 +205,7 @@
       function put(shape, matter, at, parent = world.scene) {
         const mesh = object.mesh(shape, matter);
         mesh.position.set(...at);
+        mesh.castShadow = !glows.has(matter);
         parent.add(mesh);
         return mesh;
       }
@@ -319,6 +326,11 @@
       // runner's own among them — and a sky and lava fill from the hemisphere.
       world.scene.add(light.directional({ intensity: 2.6, color: '#ffab66', position: [6, 9, 30], castShadow: true }));
       world.scene.add(light.hemisphere({ color: '#6a5a8c', groundColor: '#ff7a40', intensity: 0.7 }));
+      // A warm haze rises off the lava: thick at its surface, gone a few metres up, so the course
+      // stays clear while the pit below it glows. The bloom spreads the brightest of it — lava,
+      // cracks, embers, flames, gems — into the air around them.
+      world.scene.fog = { color: math.color('#b04a24'), density: 0.04, heightFalloff: 0.5, baseHeight: PIT };
+      world.effects.add(effect.bloom({ intensity: 0.06 }));
 
       // ── The body. A head and two arms ride on the camera; the head is a one-sided shell the eye
       // sits inside, so the eye sees none of it while the sun still draws its shadow. The arms

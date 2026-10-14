@@ -21,21 +21,23 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light } from '../runtime/engine.js';
+      import { createWorld, geometry, material, object, light, math } from '../runtime/engine.js';
       import { controls } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#171d28');
       const slab = object.mesh(geometry.box(7.5, 0.3, 7.5), material.meshStandard({ color: '#1b1d22', roughness: 0.9 }));
       slab.position.y = -0.15;
       world.scene.add(slab);
 
       // Twenty-five spheres, one material each: `metalness` grows with the column, `roughness`
-      // with the row. Same colour, same light: only those two numbers differ.
-      const spheres = [];
+      // with the row. Same colour, same light: only those two numbers differ. One ball is built
+      // and every sphere wears it.
+      const ball = geometry.sphere(0.55, 64, 32), spheres = [];
       for (let row = 0; row < 5; row++)
         for (let column = 0; column < 5; column++) {
           const matter = material.meshStandard({ roughness: 0.05 + (row / 4) * 0.9, metalness: column / 4 });
-          const sphere = object.mesh(geometry.sphere(0.55, 64, 32), matter);
+          const sphere = object.mesh(ball, matter);
           sphere.position.set((column - 2) * 1.35, 0.55, (row - 2) * 1.35);
           world.scene.add(sphere);
           spheres.push(matter);
@@ -50,6 +52,24 @@
         world.scene.add(lamp);
         return lamp;
       });
+
+      // A metal has no colour of its own to show: it mirrors what is round it. The engine draws no
+      // reflected surroundings, so the studio gives the metals real lights to mirror: three
+      // softboxes (`rectArea`, each facing down its own −z) above, left and right, their glowing
+      // faces drawn where they hang. Chrome shows them as sharp windows, brushed metal as soft
+      // streaks; the clay only takes their light.
+      const glow = material.meshBasic({ color: '#fff6ea' }), pane = geometry.plane(1, 1);
+      for (const [width, height, at] of [[6, 1.4, [0, 5.2, 2.2]], [1, 4, [-6, 2.4, 0.6]], [1, 4, [6, 2.4, 0.6]]]) {
+        const softbox = light.rectArea({ color: '#fff6ea', intensity: 5, width, height, position: at });
+        softbox.lookAt(0, 0.5, 0);
+        // A mesh turns its +z to what it looks at, a light its −z: both face the spheres.
+        const face = object.mesh(pane, glow);
+        face.scale.set(width, height, 1);
+        face.position.set(...at);
+        face.lookAt(0, 0.5, 0);
+        face.castShadow = false;
+        world.scene.add(softbox, face);
+      }
       world.camera.position.set(0, 4.3, 6.6);
       world.camera.lookAt(0, 0, 0.4);
       world.controls.target.set(0, 0, 0.4);

@@ -1,0 +1,114 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Thick lines</title>
+    <meta name="thumbnail" content="4" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #04050b;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, effect, geometry, material, object, math, buffer } from '../runtime/engine.js';
+      import { controls } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#04050b');
+
+      // A line has no width in the world: each of its segments is a quad that the engine widens
+      // on screen to the material's `linewidth`, counted in CSS pixels. Near or far, a line of
+      // 8 draws 8 pixels wide; the grid below keeps its single pixel whatever the slider says.
+      const grid = [];
+      for (let k = -10; k <= 10; k++) grid.push(k, -2, -10, k, -2, 10, -10, -2, k, 10, -2, k);
+      world.scene.add(object.lineSegments(
+        geometry.createBuffer({ position: buffer.float32(new Float32Array(grid), 3) }),
+        material.line({ color: '#18213d', linewidth: 1 }),
+      ));
+
+      // The strands: each a torus knot, wound twice round and seven times through, on a tube of
+      // its own radius. The engine cuts a line into the quads it draws from the positions it is
+      // first given, and a line whose positions are written again stops drawing: each strand is
+      // wound once, and a new count winds new strands.
+      const SEGMENTS = 720, TURNS = 2, LOOPS = 7;
+      const COLOURS = ['#3df2ff', '#38a8ff', '#6f6bff', '#b25cff', '#ff4fd8', '#ff5a7a', '#ff9a3d', '#ffd84a'];
+      const inks = COLOURS.map((color) => material.line({ color }));
+      const braid = object.group();
+      world.scene.add(braid);
+      let strands = [];
+      function knot(index, count) {
+        const p = new Float32Array((SEGMENTS + 1) * 3);
+        const tube = 0.35 + (0.75 * index) / Math.max(1, count - 1);
+        const offset = (index / count) * Math.PI * 2;
+        for (let s = 0; s <= SEGMENTS; s++) {
+          const t = (s / SEGMENTS) * Math.PI * 2;
+          const swing = LOOPS * t + offset, radius = 2.1 + tube * Math.cos(swing);
+          p[s * 3] = radius * Math.cos(TURNS * t);
+          p[s * 3 + 1] = tube * Math.sin(swing);
+          p[s * 3 + 2] = radius * Math.sin(TURNS * t);
+        }
+        return object.line(geometry.createBuffer({ position: buffer.float32(p, 3) }), inks[index]);
+      }
+      function wind(count) {
+        for (const line of strands) {
+          braid.remove(line);
+          line.geometry.dispose();
+        }
+        strands = Array.from({ length: count }, (_, index) => knot(index, count));
+        braid.add(...strands);
+      }
+      // The strands slide through one another: turned about the knot's axis by `a`, a strand is
+      // the same knot with its swing shifted by LOOPS / TURNS times `a`. Each turns at its own
+      // pace, every other one the other way, and the braid turns as a whole.
+      const slide = () =>
+        strands.forEach((line, index) => line.rotation.set(0, (index % 2 ? 1 : -0.6) * (TURNS / LOOPS) * phase, 0));
+
+      world.camera.position.set(0, 3.2, 6.8);
+      world.camera.lookAt(0, -0.2, 0);
+      world.controls.target.set(0, -0.2, 0);
+      world.controls.minDistance = 3;
+      world.controls.maxDistance = 18;
+
+      // The glow is a bloom in the world's effect chain: the strands are no brighter than their
+      // colour, the bloom spreads a little of that light round each one.
+      const glow = effect.bloom({ intensity: 0.08, radius: 1.2 });
+      world.effects.add(glow);
+      let phase = 0, turn = 0;
+      const ui = controls({
+        width: [1, 16, 6, 0.5],
+        strands: [1, COLOURS.length, 5, 1],
+        drift: [0, 2, 0.6, 0.05],
+        glow: [0, 0.3, 0.08, 0.01],
+        spin: true,
+      }, (values) => {
+        for (const ink of inks) ink.linewidth = values.width;
+        if (values.strands !== strands.length) {
+          wind(values.strands);
+          slide();
+        }
+        glow.intensity = values.glow;
+        world.invalidate();
+      }, world);
+
+      world.onFrame(({ delta }) => {
+        const step = Math.min(delta, 0.05);
+        if (!ui.drift && !ui.spin) return;
+        phase += step * ui.drift;
+        if (ui.drift) slide();
+        if (ui.spin) braid.rotation.set(0, (turn += step * 0.15), 0);
+        world.invalidate();
+      });
+    </script>
+  </body>
+</html>

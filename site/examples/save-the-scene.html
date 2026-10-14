@@ -8,7 +8,7 @@
       body {
         margin: 0;
         height: 100%;
-        background: #171d28;
+        background: #1d2430;
       }
       canvas {
         display: block;
@@ -20,32 +20,39 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, helper } from '../runtime/engine.js';
+      import { createWorld, geometry, material, object, light, helper, math } from '../runtime/engine.js';
       import { controls, readout, words } from '../runtime/kit.js';
       const say = words();
 
       const world = createWorld('view', { controls: 'orbit', physics: true });
-      world.scene.add(light.directional({ intensity: 3, position: [3, 5, 4] }), light.ambient({ intensity: 0.3 }));
+      world.scene.background = math.color('#2b3a55');
+      // A sun whose shadow follows the tower down, and a sky that fills the shade.
+      world.scene.add(
+        light.directional({ intensity: 3, color: '#fff1dc', position: [-1.5, 4.5, 4], castShadow: true }),
+        light.hemisphere({ intensity: 1.1, color: '#c9dbff', groundColor: '#6b5440' }),
+      );
       // Each size is written once and every height is read from it: the ground's top is at 0,
       // the lowest block sits on it and each block on the one below, in contact, never inside.
       const GROUND = [12, 0.2, 12], BLOCK = [1, 0.5, 1], BLOCK_KG = 20;
-      const ground = object.mesh(geometry.box(...GROUND), material.meshStandard({ color: '#3a4556', physics: 'stone' }));
+      const ground = object.mesh(geometry.box(...GROUND), material.meshStandard({ color: '#b8a488', roughness: 0.85, physics: 'stone' }));
       ground.position.y = -GROUND[1] / 2;
       ground.physics = 'static';
       // The grid is a helper mark, a hair over the ground: it is not saved, and stays through `fromJSON`.
       const grid = helper.grid(GROUND[0], GROUND[0]);
       grid.position.y = 0.002;
       world.scene.add(ground, grid);
+      // The four blocks share one shape: the file writes it once.
+      const brick = geometry.box(...BLOCK);
       ['#e0663c', '#3c8ce0', '#5fbf6a', '#d8b43c'].forEach((colour, i) => {
-        const block = object.mesh(geometry.box(...BLOCK), material.meshStandard({ color: colour, physics: 'wood' }));
+        const block = object.mesh(brick, material.meshStandard({ color: colour, physics: 'wood' }));
         block.position.y = BLOCK[1] / 2 + i * BLOCK[1];
         block.rotation.y = i * 0.3;
         block.physics = { type: 'dynamic', mass: BLOCK_KG };
         world.scene.add(block);
       });
-      world.camera.position.set(3, 3, 4);
-      world.camera.lookAt(0, 1, 0);
-      world.controls.target.set(0, 1, 0);
+      world.camera.position.set(2.6, 1.9, 3.3);
+      world.controls.target.set(0, 0.85, 0);
+      world.camera.lookAt(world.controls.target);
 
       // `toJSON` writes the scene as plain JSON — shapes by the call that built them, materials by
       // their values, each body as it was declared; `fromJSON` builds it again.

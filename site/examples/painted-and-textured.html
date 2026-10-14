@@ -9,7 +9,7 @@
       body {
         margin: 0;
         height: 100%;
-        background: #171d28;
+        background: #2e2a27;
       }
       canvas {
         display: block;
@@ -21,7 +21,7 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, texture } from '../runtime/engine.js';
+      import { createWorld, geometry, material, object, light, texture, math } from '../runtime/engine.js';
       import { controls } from '../runtime/kit.js';
 
       // A picture drawn on a canvas: checks of two colours, `count` by `count`.
@@ -39,15 +39,18 @@
       const checks = texture.canvas(board);
 
       const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#2e2a27');
       const slab = object.mesh(geometry.box(7, 0.3, 5), material.meshStandard({ color: '#2a2f3a', roughness: 0.85 }));
       slab.position.y = -0.15;
       world.scene.add(slab);
-      // The same three shapes twice: painted with one colour, then wrapped in the picture.
+      // The same three shapes twice, built once and worn by both rows: painted with one colour,
+      // then wrapped in the picture.
+      const SHAPES = [[geometry.sphere(0.7, 64, 32), -2, 0.7], [geometry.box(1.2, 1.2, 1.2), 0, 0.6], [geometry.torusKnot(0.42, 0.16, 160, 24), 2, 0.75]];
       const painted = material.meshStandard({ color: '#e0663c', roughness: 0.4 });
       const textured = material.meshStandard({ map: checks, roughness: 0.5 });
       const shapes = [];
       for (const [row, matter] of [[-1.1, painted], [1.1, textured]]) {
-        for (const [shape, x, y] of [[geometry.sphere(0.7, 64, 32), -2, 0.7], [geometry.box(1.2, 1.2, 1.2), 0, 0.6], [geometry.torusKnot(0.42, 0.16, 160, 24), 2, 0.75]]) {
+        for (const [shape, x, y] of SHAPES) {
           const mesh = object.mesh(shape, matter);
           mesh.position.set(x, y, row);
           world.scene.add(mesh);

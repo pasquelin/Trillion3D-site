@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Shadows through glass</title>
+    <meta name="thumbnail" content="3" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #9ec3e6;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, geometry, material, object, light, math } from '../runtime/engine.js';
+      import { controls, seeded } from '../runtime/kit.js';
+
+      // A stone room with a stained-glass window, the sun low behind it. Each pane is coloured
+      // glass: blended, see-through, glowing with the sun behind it (`emissive`) and asking for its
+      // shadow (`transparentShadow`). The shadow pass lets through what the glass does not catch:
+      // the floor is lit under the panes, the less the more they catch, and dark under the lead.
+      // Light tinted by the glass it crosses is not drawn by the engine yet: the patch on the
+      // floor keeps the sun's colour.
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#9ec3e6');
+      const stone = material.meshStandard({ color: '#d8d0c2', roughness: 0.9 });
+      const put = (shape, matter, x, y, z) => {
+        const mesh = object.mesh(shape, matter);
+        mesh.position.set(x, y, z);
+        world.scene.add(mesh);
+      };
+      put(geometry.box(12.6, 0.2, 12), stone, 0, -0.1, 6);
+      // The wall, in four pieces round the opening: two metres wide, three high; a side wall to
+      // the left and right and a ceiling, so the sun comes in by the window alone.
+      const side = geometry.box(5, 6, 0.3);
+      put(side, stone, -3.5, 3, 0);
+      put(side, stone, 3.5, 3, 0);
+      const flank = geometry.box(0.3, 6, 12);
+      put(flank, stone, -6.15, 3, 6);
+      put(flank, stone, 6.15, 3, 6);
+      put(geometry.box(12.6, 0.3, 12.3), stone, 0, 6.15, 6);
+      put(geometry.box(2, 1.2, 0.3), stone, 0, 0.6, 0);
+      put(geometry.box(2, 1.8, 0.3), stone, 0, 5.1, 0);
+
+      // Four by six panes in six colours: one geometry and six materials, so the panes of a colour
+      // are drawn together. Opacity is how much of the light the glass catches; the rest lands on
+      // the floor.
+      const COLOURS = ['#e0141e', '#1450ff', '#ffc400', '#00b04a', '#9a1cff', '#ff6a00'];
+      const glasses = COLOURS.map((color) =>
+        material.meshStandard({ color, emissive: color, emissiveIntensity: 1.4, roughness: 0.05, transparent: true, opacity: 0.6, depthWrite: false, transparentShadow: true }),
+      );
+      const pane = geometry.box(0.5, 0.5, 0.03), next = seeded(11);
+      for (let row = 0; row < 6; row++)
+        for (let column = 0; column < 4; column++) {
+          // Mirrored about the middle, as a glazier lays out a window.
+          const mirror = column < 2 ? column : 3 - column;
+          const colour = (row * 2 + mirror + Math.floor(next() * 2)) % COLOURS.length;
+          put(pane, glasses[colour], -0.75 + column * 0.5, 1.45 + row * 0.5, 0);
+        }
+      // The lead between the panes: thin dark bars that cast their own lines of shadow.
+      const lead = material.meshStandard({ color: '#2b2a2e', roughness: 0.6 });
+      const upright = geometry.box(0.04, 3, 0.06), crossbar = geometry.box(2, 0.04, 0.06);
+      for (let k = 0; k <= 4; k++) put(upright, lead, -1 + k * 0.5, 2.7, 0);
+      for (let k = 0; k <= 6; k++) put(crossbar, lead, 0, 1.2 + k * 0.5, 0);
+
+      // A white column and ball in the light, to catch the lines of the lead on a curved surface.
+      put(geometry.box(0.5, 1.1, 0.5), stone, -0.6, 0.55, 2.4);
+      put(geometry.sphere(0.35, 48, 24), material.meshStandard({ color: '#f4f1ea', roughness: 0.35 }), -0.6, 1.45, 2.4);
+
+      // The sun behind the wall; the room is lit by the sky alone, dim, so the patches stand out.
+      const sun = light.directional({ intensity: 10, color: '#fff3df', castShadow: true });
+      world.scene.add(sun, light.hemisphere({ color: '#bcd4ff', groundColor: '#6b5f50', intensity: 0.4 }));
+      world.camera.position.set(2.4, 2.4, 8.4);
+      world.controls.target.set(-0.6, 1.3, 3);
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
+
+      // The sun's height places the patch; with swing on, the sun moves slowly across the sky.
+      let time = 0;
+      const ui = controls(
+        { sunHeight: [20, 60, 35, 1], swing: true, opacity: [0.2, 1, 0.6, 0.05] },
+        (values, key) => {
+          if (key === 'opacity') for (const glass of glasses) glass.opacity = values.opacity;
+          world.invalidate();
+        },
+        world,
+      );
+      // Placed ahead of each frame, so the frame a slider asks for is drawn with the sun it set.
+      world.beforeFrame(({ delta }) => {
+        if (ui.swing) time += Math.min(delta, 0.05);
+        const bearing = math.degToRad(25 * Math.sin(time * 0.3));
+        const rise = math.degToRad(ui.sunHeight);
+        sun.position.set(Math.sin(bearing) * 10, Math.tan(rise) * 10, -Math.cos(bearing) * 10);
+        if (ui.swing) world.invalidate();
+      });
+    </script>
+  </body>
+</html>

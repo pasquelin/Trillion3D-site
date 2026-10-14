@@ -21,7 +21,7 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, buffer, math } from '../runtime/engine.js';
+      import { createWorld, geometry, material, object, light, buffer, math, effect } from '../runtime/engine.js';
       import { controls, readout } from '../runtime/kit.js';
 
       // A star-cut gem written corner by corner: a rim that zig-zags between an outer and an inner
@@ -74,19 +74,23 @@
       }
 
       const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#1f2633');
       const plinth = object.mesh(geometry.cylinder(3.2, 3.4, 0.4, 96), material.meshStandard({ color: '#2b2f3a', roughness: 0.35, metalness: 0.2 }));
       plinth.position.y = -0.2;
       world.scene.add(plinth);
 
-      // One geometry, drawn nine times: the big gem in the middle and a ring of small ones.
-      const heart = material.meshStandard({ color: '#3fb6ff', roughness: 0.12, metalness: 0.1 });
+      // One geometry, drawn nine times: the big gem in the middle and a ring of small ones, each a
+      // polished stone in its own colour. Each flat facet catches the lamps at its own angle: the
+      // facets are what sparkle.
+      const stone = (color) => material.meshStandard({ color, roughness: 0.12, metalness: 0.1 });
+      const heart = stone('#3fb6ff');
       const big = object.mesh(gem(6, 0.55, 1.2, true), heart);
       big.position.y = 1.9;
       big.scale.setScalar(1.1);
       world.scene.add(big);
       const ring = Array.from({ length: 8 }, (_, index) => {
         const colour = math.color().setHSL(index / 8, 0.75, 0.55);
-        const small = object.mesh(big.geometry, material.meshStandard({ color: colour, roughness: 0.15, metalness: 0.1 }));
+        const small = object.mesh(big.geometry, stone(colour));
         small.scale.setScalar(0.34);
         world.scene.add(small);
         return small;
@@ -96,6 +100,8 @@
       world.scene.add(light.point({ intensity: 40, color: '#ff7aa8', position: [-4, 2.5, -2], distance: 14 }));
       world.scene.add(light.point({ intensity: 40, color: '#5ad1ff', position: [4, 1.5, -3], distance: 14 }));
       world.scene.add(light.hemisphere({ color: '#8fa8d8', groundColor: '#2a1f1a', intensity: 0.6 }));
+      // The glints are much brighter than the rest: a light bloom lets them shine.
+      world.effects.add(effect.bloom({ intensity: 0.06 }));
       world.camera.position.set(0, 2.9, 7.6);
       world.camera.lookAt(0, 1.2, 0);
       world.controls.target.set(0, 1.2, 0);

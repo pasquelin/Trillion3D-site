@@ -9,7 +9,7 @@
       body {
         margin: 0;
         height: 100%;
-        background: #171d28;
+        background: #2b2a33;
       }
       canvas {
         display: block;
@@ -25,6 +25,7 @@
       import { controls } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#2b2a33');
       const oak = material.meshStandard({ color: '#a8703c', roughness: 0.55 });
       const plaster = material.meshStandard({ color: '#d9d3c7', roughness: 0.85 });
       const base = object.mesh(geometry.cylinder(2.2, 2.2, 0.3, 64), plaster);
@@ -34,12 +35,14 @@
       world.scene.add(base, column);
 
       // One step — a tread and its baluster — as a group; each copy is raised one riser higher and
-      // turned a little further round the column.
+      // turned a little further round the column. The copies share the step's two shapes and its
+      // wood, so the 72 parts are drawn together.
+      const treadShape = geometry.box(1.25, 0.18, 0.3), balusterShape = geometry.box(0.05, 1, 0.05);
       function step() {
         const group = object.group();
-        const tread = object.mesh(geometry.box(1.25, 0.18, 0.3), oak);
+        const tread = object.mesh(treadShape, oak);
         tread.position.x = 0.2 + 1.25 / 2;
-        const baluster = object.mesh(geometry.box(0.05, 1, 0.05), oak);
+        const baluster = object.mesh(balusterShape, oak);
         baluster.position.set(1.38, 0.5, 0);
         group.add(tread, baluster);
         return group;

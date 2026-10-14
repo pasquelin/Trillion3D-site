@@ -313,6 +313,9 @@
             const lossy = FORMATS.filter((format) => format.lossy);
             const blobs = await Promise.all(lossy.map((format) => format.file(format.sheet, values.quality)));
             const fresh = await Promise.all(blobs.map(load));
+            // A fresh texture only carries its picture to the easel's own: it is given back
+            // once read, and at once when a later change has overtaken it.
+            for (const one of fresh) one.dispose();
             if (ask !== asked) return;
             lossy.forEach((format, k) => {
               format.blob = blobs[k];
