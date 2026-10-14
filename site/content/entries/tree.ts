@@ -21,7 +21,7 @@ export const TREE: EntryNote[] = [
   },
   {
     id: 'nodeWorldPosition',
-    replaces: 'getWorldPosition, getWorldQuaternion, getWorldScale, getWorldDirection',
+    replaces: 'getWorldPosition, getWorldQuaternion, getWorldDirection',
   },
   {
     id: 'lookAtNode',

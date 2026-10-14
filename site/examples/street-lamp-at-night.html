@@ -29,7 +29,7 @@
     <canvas id="view"></canvas>
     <p data-words="credit"></p>
     <script type="module">
-      import { createWorld, light, math } from '../runtime/engine.js';
+      import { createWorld, effect, light, math } from '../runtime/engine.js';
       import { controls } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
@@ -52,20 +52,24 @@
       // The camera turns around the middle of the square, never farther than the nearest wall,
       // never below its eye level nor above the roofs: no drag shows the back of a wall. Panning,
       // which would carry the middle along, is off.
-      world.controls.target.set(0.75, 1.6, 1);
+      world.controls.target.set(0.75, 2.2, 1);
       world.controls.maxDistance = 3.6;
       world.controls.minPolarAngle = 0.5;
       world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
       world.controls.enablePan = false;
-      world.camera.position.set(2.15, 2.5, 4.1);
-      world.camera.lookAt(0.75, 1.6, 1);
+      world.camera.position.set(2.55, 2.45, 4);
+      world.camera.lookAt(world.controls.target);
 
       // `world.bounce` adds the light the surfaces send back, traced against the compiled model.
+      // At night a soft glow spreads the globe's and the lit panes' light into the dark air.
+      const glow = effect.bloom({ intensity: 0.07 });
       let spin = false;
       controls({ night: true, bounce: true, spin: false, sun: [-80, 80, 30, 1], lamp: '#ffb866' }, (values) => {
         spin = values.spin;
         sun.visible = !values.night;
         lamp.visible = shopLight.visible = values.night;
+        world.effects.remove(glow);
+        if (values.night) world.effects.add(glow);
         lamp.color.set(values.lamp);
         const turn = math.degToRad(values.sun);
         sun.position.set(Math.sin(turn) * 15, 11, Math.cos(turn) * 15);
@@ -73,7 +77,7 @@
         sky.color.set(values.night ? '#3a4c80' : '#bcd4ff');
         world.scene.background = math.color(values.night ? '#0b1020' : '#8fb4e0');
         world.bounce = values.bounce;
-        world.exposure = values.night ? 1.6 : 1;
+        world.exposure = values.night ? 0.6 : 1;
         world.invalidate();
       }, world);
       // Turn the compiled parent under fixed lights: bounce and far shadows follow its world pose.

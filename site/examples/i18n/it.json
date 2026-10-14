@@ -1,9 +1,7 @@
 {
   "brushed-metal": {
-    "banner": "Ruota intorno ai riflessi spazzolati. Cambiane forza e direzione.",
+    "banner": "Ruota intorno ai riflessi dell'acciaio. Cambiane la ruvidità.",
     "controls": {
-      "anisotropy": "Forza spazzolatura",
-      "direction": "Direzione spazzolatura",
       "roughness": "Ruvidità",
       "spin": "Rotazione"
     }
@@ -338,7 +336,7 @@
     "banner": "Trascina per guardarti intorno. Fai brillare e lampeggiare il neon.",
     "controls": {
       "star": "Stella",
-      "wave": "Onda",
+      "word": "Parola",
       "glow": "Bagliore",
       "pulse": "Pulsare",
       "exposure": "Esposizione",
@@ -660,7 +658,8 @@
       "wax": "Cera"
     },
     "readouts": {
-      "piecesWax": "Pezzi di cera"
+      "piecesWax": "Pezzi di cera",
+      "framesCooked": "Fotogrammi calcolati"
     }
   },
   "bricks-with-a-normal-map": {
@@ -1424,7 +1423,7 @@
     }
   },
   "move-rotate-scale-gizmo": {
-    "banner": "Trascina una maniglia per spostare, ruotare o ingrandire l'oggetto. Trascina accanto per guardarti intorno.",
+    "banner": "Fai clic su un oggetto per mettergli le maniglie. Trascina una maniglia per spostarlo, ruotarlo o ingrandirlo. Trascina accanto per guardarti intorno.",
     "controls": {
       "mode": "Modalità",
       "axes": "Assi",
@@ -2393,7 +2392,7 @@
     }
   },
   "drag-a-crate": {
-    "banner": "Trascina la cassa sul pavimento. Attiva lo scatto per posizionarla a passi di mezzo metro.",
+    "banner": "Trascina una cassa, un barile o una palla sul pavimento. Attiva lo scatto per posizionarli a passi di mezzo metro.",
     "controls": {
       "snap": "Scatto",
       "home": "Inizio"
@@ -2451,9 +2450,10 @@
   },
   "additive-poses": {
     "controls": {
-      "playing": "Riproduci"
+      "playing": "Riproduci",
+      "weight": "Peso"
     },
-    "banner": "Trascina per orbitare intorno alla scena. Metti in pausa o riprendi l’animazione con Riproduci."
+    "banner": "Trascina per orbitare intorno alla scena. Peso regola quanto ondeggiare si aggiunge sopra la camminata; metti in pausa o riprendi con Riproduci."
   },
   "move-a-hierarchy-by-name": {
     "banner": "Guarda cinque gruppi con nome percorrere una sequenza riproducibile. Cambia la sorgente per scrivere le stesse pose a mano.",
@@ -2475,5 +2475,219 @@
   },
   "choose-your-quality": {
     "banner": "Scegli una qualità, una risoluzione e una vista. Tieni un'impostazione come A, un'altra come B, e premi C per passare dall'una all'altra."
+  },
+  "a-polished-floor": {
+    "banner": "Trascina per girare nella sala. Schiarisci il pavimento: il suo specchio affonda nel suo stesso colore.",
+    "controls": {
+      "floor": "Pavimento",
+      "turn": "Rotazione"
+    }
+  },
+  "reflections-blurred-by-roughness": {
+    "banner": "Trascina per guardarti intorno. Alza la rugosità: i riflessi si sfocano corsia dopo corsia e svaniscono da 0,6.",
+    "controls": {
+      "roughness": "Rugosità",
+      "metal": "Metallo"
+    }
+  },
+  "reflections-from-the-screen": {
+    "banner": "Trascina per guardarti intorno. Inclina la vista verso il basso: un lampione che esce dallo schermo esce anche dalla strada bagnata.",
+    "controls": {
+      "wet": "Bagnato",
+      "traffic": "Traffico"
+    }
+  },
+  "instanced-gltf": {
+    "banner": "Trascina per girare intorno alla valle. Scorri per scendere tra gli alberi.",
+    "controls": {
+      "sunHeight": "Altezza del sole",
+      "mist": "Foschia",
+      "drift": "Deriva"
+    },
+    "readouts": {
+      "nodesFile": "Nodi nel file",
+      "objectsCooked": "Oggetti dopo la cottura",
+      "trianglesDrawn": "Triangoli disegnati"
+    },
+    "words": {
+      "credit": "Valle e alberi modellati nel codice per questo esempio, CC0 — vedi assets/examples/CREDITS.md",
+      "nodesPoses": "{nodes} nodi, {poses} pose",
+      "notCounted": "non contato qui"
+    }
+  },
+  "an-ocean": {
+    "banner": "Trascina per guardarti intorno. Alza il moto ondoso, allunga le onde e abbassa il sole.",
+    "controls": {
+      "swell": "Moto ondoso",
+      "wavelength": "Lunghezza d’onda",
+      "sun": "Altezza del sole"
+    }
+  },
+  "a-raging-sea": {
+    "banner": "Trascina per guardare la tempesta. Alza le onde e il vento; il faro spazza il mare.",
+    "controls": {
+      "height": "Altezza delle onde",
+      "wind": "Vento"
+    }
+  },
+  "tone-mapping-compared": {
+    "banner": "Trascina per guardarti intorno. Scegli una curva e guarda cosa conserva ognuna del tramonto, del pavimento al sole e delle lampade.",
+    "controls": {
+      "toneMapping": "Mappatura dei toni",
+      "exposure": "Esposizione",
+      "lamps": "Lampade"
+    },
+    "choices": {
+      "toneMapping": {
+        "aces": "aces",
+        "agx": "agx",
+        "neutral": "neutro",
+        "reinhard": "reinhard",
+        "cineon": "cineon",
+        "linear": "lineare"
+      }
+    }
+  },
+  "render-small-show-sharp": {
+    "banner": "Trascina per guardare la gabbia. Abbassa la scala di rendering: si disegnano molti meno pixel e l’immagine resta nitida.",
+    "controls": {
+      "scale": "Scala di rendering",
+      "smoothing": "Ammorbidimento",
+      "circle": "Gira intorno"
+    },
+    "readouts": {
+      "pixels": "Pixel disegnati"
+    }
+  },
+  "thick-lines": {
+    "banner": "Trascina per girare intorno. Ogni filo è una linea la cui larghezza si conta in pixel dello schermo: allargali, aggiungi fili, lasciali scorrere.",
+    "controls": {
+      "width": "Larghezza",
+      "strands": "Fili",
+      "drift": "Deriva",
+      "glow": "Bagliore",
+      "spin": "Rotazione"
+    }
+  },
+  "sculpt-a-sphere": {
+    "banner": "Trascina sull'argilla per sollevarla, o scavala con l'altro strumento; trascina accanto per girare intorno.",
+    "controls": {
+      "tool": "Strumento",
+      "brush": "Pennello",
+      "strength": "Forza",
+      "mirror": "Specchio",
+      "clay": "Argilla",
+      "reset": "Azzera"
+    },
+    "choices": {
+      "tool": {
+        "raise": "solleva",
+        "carve": "scava"
+      }
+    }
+  },
+  "hover-over-triangles": {
+    "banner": "Passa sopra il nodo: il triangolo sotto il puntatore si illumina, poi si raffredda lasciando una scia.",
+    "controls": {
+      "trail": "Scia (s)",
+      "spin": "Rotazione"
+    },
+    "readouts": {
+      "triangle": "Triangolo"
+    }
+  },
+  "a-voxel-painter": {
+    "banner": "Fai clic sulla tavola o su una faccia per aggiungere un voxel; Maiusc-clic, o l'interruttore Cancella, per toglierne uno. Trascina per guardarti intorno.",
+    "controls": {
+      "colour": "Colore",
+      "erase": "Cancella",
+      "clear": "Cancella tutto"
+    }
+  },
+  "cooked-blocks-that-fall": {
+    "banner": "Ogni blocco di questo modello dichiara il proprio corpo, precalcolato con esso: ripristinati al caricamento, i blocchi cadono e si posano subito. Ricaricalo per rivederlo.",
+    "controls": {
+      "again": "Ancora",
+      "slowMotion": "Rallentatore"
+    },
+    "readouts": {
+      "bodies": "Corpi",
+      "step": "Passo"
+    }
+  },
+  "coloured-shadows-through-glass": {
+    "banner": "La luce del sole attraversa la vetrata e si posa sul pavimento. Sposta il sole o rendi il vetro più denso.",
+    "controls": {
+      "sunHeight": "Altezza del sole",
+      "swing": "Oscillazione",
+      "opacity": "Opacità"
+    }
+  },
+  "animation-from-the-file": {
+    "banner": "Trascina per guardarti intorno. La camminata viene dal file: cambia quanti camminano sull'anello e quanto in fretta, anche all'indietro.",
+    "controls": {
+      "walkers": "Camminatori",
+      "speed": "Velocità"
+    }
+  },
+  "reaching-with-ik": {
+    "banner": "Trascina per guardarti intorno. Ogni braccio si allunga verso la luce: lasciala seguire il suo percorso o guidala con il puntatore.",
+    "controls": {
+      "arms": "Bracci",
+      "follow": "Luce",
+      "speed": "Velocità",
+      "reach": "Presa"
+    },
+    "choices": {
+      "follow": {
+        "path": "il suo percorso",
+        "pointer": "il puntatore"
+      }
+    }
+  },
+  "a-character-of-points": {
+    "banner": "Trascina per guardarti intorno. Un ballerino di punti piegato da uno scheletro: cambia quanti punti ha e quanto veloce balla.",
+    "controls": {
+      "points": "Punti",
+      "speed": "Velocità",
+      "spin": "Rotazione"
+    }
+  },
+  "a-face-that-talks": {
+    "banner": "Trascina per girare intorno al busto. Labbra, bocca e denti condividono tre morph target, suonati sillaba per sillaba.",
+    "controls": {
+      "speed": "Velocità",
+      "paused": "In pausa"
+    }
+  },
+  "a-galloping-horse": {
+    "banner": "Trascina per guardarti intorno. Rallenta il galoppo per vedere ogni zoccolo posarsi a turno.",
+    "controls": {
+      "speed": "Velocità"
+    }
+  },
+  "a-herd-of-morphs": {
+    "banner": "Trascina per guardarti intorno. Una sola forma e un solo clip per tutta la mandria; ogni creatura salta con i propri pesi.",
+    "controls": {
+      "creatures": "Creature",
+      "speed": "Velocità"
+    }
+  },
+  "morph-and-skin-together": {
+    "banner": "Trascina per girare intorno alla pianta. Le ossa piegano ogni foglia mentre un morph target la arrotola: dosa l'arrotolamento, cambia il vento.",
+    "controls": {
+      "leaves": "Foglie",
+      "wind": "Vento",
+      "curl": "Arrotolamento"
+    }
+  },
+  "fog-on-the-ground": {
+    "banner": "Trascina per guardarti intorno. La nebbia riempie la valle e si dirada con l'altezza: cambia la sua densità, quanto in fretta si dirada e dove comincia.",
+    "controls": {
+      "density": "Densità",
+      "height": "Diradamento",
+      "base": "Base",
+      "colour": "Colore"
+    }
   }
 }

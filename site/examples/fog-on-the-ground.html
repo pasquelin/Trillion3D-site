@@ -1,0 +1,221 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Fog on the ground</title>
+    <meta name="thumbnail" content="3" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #cbd6d8;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import {
+        createWorld,
+        buffer,
+        geometry,
+        light,
+        material,
+        math,
+        object,
+      } from '../runtime/engine.js';
+      import { controls, seeded, valueNoise } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      // The fog's colour is light, tone-mapped with the scene, while the sky behind is shown as
+      // set: a linear display curve leaves both as they are, so the far fog meets the sky
+      // without a seam.
+      world.toneMapping = 'linear';
+
+      // A valley at dawn: a U-shaped floor along z between ridges, and noise for the hills on it.
+      const noise = valueNoise({ math });
+      const ground = (x, z) =>
+        Math.min(9, 0.035 * x * x) +
+        2.6 * noise(x * 0.06, z * 0.06, 0, 1) +
+        0.7 * noise(x * 0.2, z * 0.2, 0, 2);
+      const SIZE = 140,
+        CELLS = 180;
+      const at = [],
+        colours = [],
+        index = [];
+      const meadow = math.color('#6f8a4c'),
+        forest = math.color('#4a5d3a'),
+        rock = math.color('#8c8a80'),
+        mix = math.color();
+      for (let i = 0; i <= CELLS; i++)
+        for (let j = 0; j <= CELLS; j++) {
+          const x = (j / CELLS - 0.5) * SIZE,
+            z = (i / CELLS - 0.5) * SIZE,
+            y = ground(x, z);
+          at.push(x, y, z);
+          // The colour follows the height: meadow on the floor, forest on the slopes, rock above.
+          const t = math.clamp(y / 9, 0, 1);
+          mix.copy(meadow).lerp(forest, math.clamp(t * 2.5, 0, 1));
+          if (t > 0.6) mix.lerp(rock, (t - 0.6) / 0.4);
+          colours.push(mix.r, mix.g, mix.b);
+          if (i < CELLS && j < CELLS) {
+            const a = i * (CELLS + 1) + j,
+              b = a + CELLS + 1;
+            index.push(a, b, a + 1, b, b + 1, a + 1);
+          }
+        }
+      const land = geometry.createBuffer({
+        position: buffer.float32(at, 3),
+        color: buffer.float32(colours, 3),
+        index: buffer.uint32(index, 1),
+      });
+      land.computeVertexNormals();
+      world.scene.add(
+        object.mesh(land, material.meshStandard({ vertexColors: true, roughness: 0.95 })),
+      );
+
+      // Firs on the slopes, a few hundred of three shapes: the engine draws each shape once.
+      const random = seeded(9);
+      const bark = material.meshStandard({ color: '#4d3b2f', roughness: 0.9 });
+      const needles = [
+        material.meshStandard({ color: '#2f4a39', roughness: 0.9 }),
+        material.meshStandard({ color: '#3b5a3e', roughness: 0.9 }),
+      ];
+      const trunk = geometry.cylinder(0.12, 0.18, 1, 8),
+        crowns = [geometry.cone(1, 1.6, 10), geometry.cone(0.75, 1.4, 10)];
+      for (let planted = 0, tries = 0; planted < 700 && tries < 6000; tries++) {
+        const x = (random() - 0.5) * SIZE * 0.9,
+          z = (random() - 0.5) * SIZE * 0.9,
+          y = ground(x, z);
+        const hamlet = Math.abs(x) < 5 && Math.abs(z) < 10;
+        if (hamlet || y < 0.8 || y > 8 || noise(x * 0.12, z * 0.12, 0, 3) < -0.1) continue;
+        const size = 0.8 + random() * 0.9;
+        const tree = object.group();
+        tree.position.set(x, y - 0.1, z);
+        tree.scale.setScalar(size);
+        const stem = object.mesh(trunk, bark);
+        stem.position.y = 0.5;
+        tree.add(stem);
+        crowns.forEach((crown, tier) => {
+          const mesh = object.mesh(crown, needles[(planted + tier) % 2]);
+          mesh.position.y = 1.5 + tier * 0.9;
+          tree.add(mesh);
+        });
+        world.scene.add(tree);
+        planted++;
+      }
+
+      // A hamlet on the valley floor. Each roof is a four-sided cone turned to square its sides
+      // with the walls, then stretched by its holder: turned first, stretched after, it stays a
+      // rectangle over the house.
+      const plaster = material.meshStandard({ color: '#e2d6bf', roughness: 0.85 });
+      const tiles = material.meshStandard({ color: '#8d4f3d', roughness: 0.7 });
+      const lit = material.meshStandard({
+        color: '#ffd28a',
+        emissive: '#ff9a3c',
+        emissiveIntensity: 2.5,
+      });
+      const box = geometry.box(1, 1, 1),
+        pyramid = geometry.cone(Math.SQRT1_2, 1, 4);
+      for (const [x, z, width, depth, turn] of [
+        [-2.2, -6, 3, 2.2, 0.1],
+        [2.4, -3.5, 2.6, 2, -0.15],
+        [-2.6, 0.5, 3.4, 2.4, 0.05],
+        [2.2, 3.5, 2.4, 2, 0.2],
+        [-2, 7, 2.8, 2.2, -0.1],
+      ]) {
+        const house = object.group();
+        house.position.set(x, ground(x, z) - 0.05, z);
+        house.rotation.y = turn;
+        const walls = object.mesh(box, plaster);
+        // The walls go 0.6 m into the ground: a house on a slope shows no gap under it.
+        walls.scale.set(width, 2.4, depth);
+        walls.position.y = 0.6;
+        const holder = object.group();
+        holder.scale.set(width + 0.4, 1.3, depth + 0.4);
+        holder.position.y = 1.8 + 0.65;
+        const roof = object.mesh(pyramid, tiles);
+        roof.rotation.y = Math.PI / 4;
+        holder.add(roof);
+        house.add(walls, holder);
+        for (const side of [-1, 1]) {
+          const pane = object.mesh(box, lit);
+          pane.scale.set(0.45, 0.5, 0.05);
+          pane.position.set(side * width * 0.25, 1, depth / 2 + 0.01);
+          house.add(pane);
+        }
+        world.scene.add(house);
+      }
+      // Lanterns along the lane, each on its post, each a warm point light in the mist.
+      const iron = material.meshStandard({ color: '#2b2b2b', roughness: 0.5, metalness: 0.6 });
+      const flame = material.meshStandard({
+        color: '#000000',
+        emissive: '#ffb057',
+        emissiveIntensity: 8,
+      });
+      for (const z of [-4.5, 1.8, 5.5]) {
+        const y = ground(0.4, z);
+        const post = object.mesh(geometry.cylinder(0.05, 0.07, 2.2, 10), iron);
+        post.position.set(0.4, y + 1.1, z);
+        const bulb = object.mesh(geometry.sphere(0.14, 20, 14), flame);
+        bulb.position.set(0.4, y + 2.3, z);
+        world.scene.add(
+          post,
+          bulb,
+          light.point({
+            color: '#ffb057',
+            intensity: 14,
+            distance: 9,
+            position: [0.4, y + 2.3, z],
+          }),
+        );
+      }
+
+      // A low sun from the east, over the ridge, and the pale sky's light.
+      world.scene.add(
+        light.directional({
+          color: '#ffd2a6',
+          intensity: 2.8,
+          position: [40, 14, -10],
+          castShadow: true,
+        }),
+        light.hemisphere({ color: '#dbe7ee', groundColor: '#4f5a44', intensity: 0.9 }),
+      );
+      world.camera.position.set(2, 10, 26);
+      world.controls.target.set(0, 1.5, 0);
+      world.controls.minDistance = 6;
+      world.controls.maxDistance = 70;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.04;
+
+      // The fog is densest at `base` and thins out with height, `height` per metre: the valley
+      // fills with it while the ridges and the tall firs stand clear above.
+      const colour = math.color();
+      controls(
+        {
+          density: [0, 0.3, 0.08],
+          height: [0.05, 1, 0.35],
+          base: [-1, 4, 0],
+          colour: '#cbd6d8',
+        },
+        (values) => {
+          colour.set(values.colour);
+          world.scene.background = colour;
+          world.scene.fog = {
+            color: colour,
+            density: values.density,
+            heightFalloff: values.height,
+            baseHeight: values.base,
+          };
+          world.invalidate();
+        },
+        world,
+      );
+    </script>
+  </body>
+</html>

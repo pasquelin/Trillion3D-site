@@ -9,7 +9,7 @@
       body {
         margin: 0;
         height: 100%;
-        background: #b9d4dc;
+        background: #a8cfe6;
       }
       canvas {
         display: block;
@@ -26,7 +26,11 @@
       import { controls, readout } from '../runtime/kit.js';
 
       const world = createWorld('view');
-      world.scene.background = math.color('#b9d4dc');
+      // A light haze down the canal: the far bridge pales into the sky. The fog is light, exposed
+      // and tone-mapped like a surface, the background is not: this is the radiance the display
+      // curve shows as #a8cfe6.
+      world.scene.background = math.color('#a8cfe6');
+      world.scene.fog = { color: math.color([0.223, 0.607, 1.168]), density: 0.005 };
       const paint = (color, roughness = 0.75, metalness = 0) =>
         material.meshStandard({ color, roughness, metalness });
       const stone = paint('#b8aa91', 0.95);
@@ -36,7 +40,10 @@
       const leaf = paint('#497149', 1);
       const trunk = paint('#6c4930', 1);
       const iron = paint('#30363b', 0.45, 0.7);
-      const glass = paint('#d7c47c', 0.55);
+      // Lamps lit behind the windows: they glow in the shade of the quays.
+      const glass = material.meshStandard({ color: '#3a2c1e', roughness: 0.4, emissive: '#ffb35c', emissiveIntensity: 1.6 });
+      // Two warehouse heights, one shape each, shared by every front.
+      const fronts = [geometry.box(4.2, 4.2, 6.8), geometry.box(4.2, 5.2, 6.8)];
       const windowShape = geometry.box(0.65, 0.9, 0.08);
       const trunkShape = geometry.cylinder(0.14, 0.2, 2.2, 10);
       const crownShape = geometry.sphere(1.15, 16, 12);
@@ -57,7 +64,7 @@
         put(geometry.box(5, 0.35, 96), stone, [side * 8.7, 1.15, -4]);
         for (let z = 34; z >= -42; z -= 9) {
           const tall = (z / 9) & 1;
-          const building = put(geometry.box(4.2, 4.2 + tall, 6.8), tall ? brick : darkBrick, [
+          const building = put(fronts[tall], tall ? brick : darkBrick, [
             side * 9.2,
             3.3,
             z,
@@ -78,25 +85,26 @@
         for (const x of [-4, -2, 2, 4]) put(railShape, iron, [x, 3.85, z]);
       }
       world.scene.add(
-        light.hemisphere({ color: '#d9efff', groundColor: '#5b5548', intensity: 1.5 }),
+        light.hemisphere({ color: '#d9efff', groundColor: '#5b5548', intensity: 1.4 }),
         light.directional({
-          color: '#fff1d2',
-          intensity: 2.8,
-          position: [-12, 20, 15],
+          color: '#ffd9a8',
+          intensity: 3,
+          position: [-16, 16, 15],
           castShadow: true,
         }),
       );
 
       const DURATION = 12;
       world.camera.position.set(0, 4.6, 39);
-      world.camera.lookAt(0, 3.3, -50);
+      world.camera.lookAt(0, 1.6, -50);
       world.scene.add(world.camera); // a scene descendant is advanced by the world's animation loop
       const mixer = animation.createMixer(world.camera);
       const journey = animation.clip('canal dolly', DURATION, [
         animation.vectorTrack(
           '.position',
           [0, 3, 6, 9, 12],
-          [0, 4.6, 39, 0, 4.4, 21, 0, 4.8, 2, 0, 4.3, -19, 0, 4.6, -39],
+          // Drifting from one quay toward the other and back, so the fronts slide past in parallax.
+          [0, 4.6, 39, 1.5, 4.4, 21, -1.5, 4.8, 2, 1.2, 4.3, -19, 0, 4.6, -39],
         ),
       ]);
       const action = mixer.clipAction(journey);

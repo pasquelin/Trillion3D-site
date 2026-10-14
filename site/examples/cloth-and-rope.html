@@ -9,7 +9,7 @@
       body {
         margin: 0;
         height: 100%;
-        background: #1b222c;
+        background: #9cc3e6;
       }
       canvas {
         display: block;
@@ -21,13 +21,14 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, math, buffer } from '../runtime/engine.js';
+      import { createWorld, geometry, material, object, light, math, buffer, texture } from '../runtime/engine.js';
       import { controls, physicsReadouts, readout } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit', physics: true });
-      world.scene.background = math.color('#d9e4ee');
+      const sky = math.color('#9cc3e6');
+      world.scene.background = sky;
 
-      const floor = object.mesh(geometry.box(30, 1, 30), material.meshStandard({ color: '#9aa39b', physics: 'stone' }));
+      const floor = object.mesh(geometry.box(30, 1, 30), material.meshStandard({ color: '#7f9a6a', roughness: 0.95, physics: 'stone' }));
       floor.position.y = -0.5;
       floor.physics = 'static';
       floor.receiveShadow = true;
@@ -42,10 +43,32 @@
       const beam = object.mesh(geometry.box(5, 0.12, 0.12), wood);
       beam.position.set(2.5, 4.5, 0);
       beam.physics = 'static';
-      world.scene.add(pole, beam);
+      // The beam stands on a post at its far end, so the ropes hang from a gallows, not the air.
+      // The post stands behind the beam, clear of the ropes that start along it.
+      const post = object.mesh(geometry.box(0.14, 4.56, 0.14), wood);
+      post.position.set(5, 2.28, -0.13);
+      post.physics = 'static';
+      world.scene.add(pole, beam, post);
 
       const COLUMNS = 30, ROWS = 20;
-      const cloth = material.meshStandard({ color: '#c23b3b', roughness: 0.9, side: 'double' });
+      // The flag is painted once on a canvas: a red field, a cream band along the fly and a navy
+      // disc ringed in gold, so its folds read as it waves.
+      const banner = document.createElement('canvas');
+      banner.width = 384;
+      banner.height = 256;
+      const paint = banner.getContext('2d');
+      paint.fillStyle = '#c23b3b';
+      paint.fillRect(0, 0, 384, 256);
+      paint.fillStyle = '#f1e6c8';
+      paint.fillRect(312, 0, 40, 256);
+      paint.beginPath();
+      paint.arc(160, 128, 70, 0, Math.PI * 2);
+      paint.fillStyle = '#1f3566';
+      paint.fill();
+      paint.lineWidth = 12;
+      paint.strokeStyle = '#e2b13c';
+      paint.stroke();
+      const cloth = material.meshStandard({ map: texture.canvas(banner), roughness: 0.9, side: 'double' });
       // A plane's vertices run row by row from its bottom left corner: the first of each row is at the pole.
       const atPole = Array.from({ length: ROWS + 1 }, (_, row) => row * (COLUMNS + 1));
 
@@ -54,11 +77,16 @@
         const points = Array.from({ length: count }, (_, i) => [(i * length) / (count - 1), 0, 0]).flat();
         return geometry.createBuffer({ position: buffer.float32(new Float32Array(points), 3) });
       };
-      const rope = material.line({ color: '#2d2a26' });
+      // A pixel-thin line is lost against the sky: the ropes are drawn a few pixels wide.
+      const rope = material.line({ color: '#2d2a26', linewidth: 3 });
 
       let simulated = [];
       const hang = ({ stiff, stretch }) => {
-        for (const mesh of simulated) world.scene.remove(mesh);
+        // The former flag and ropes go, their shapes with them: each hang builds its own.
+        for (const mesh of simulated) {
+          world.scene.remove(mesh);
+          mesh.geometry.dispose();
+        }
         const flag = object.mesh(geometry.plane(3, 2, COLUMNS, ROWS), cloth);
         flag.position.set(-4 + 1.5, 3.8, 0);
         flag.physics = { type: 'cloth', pins: atPole, bend: stiff ? 0.001 : Infinity };
@@ -73,11 +101,13 @@
         world.scene.add(...simulated);
       };
 
-      const sun = light.directional({ intensity: 3, castShadow: true });
-      sun.position.set(6, 12, 8);
-      world.scene.add(sun, light.hemisphere({ intensity: 1.2, color: '#ffffff', groundColor: '#8d948c' }));
-      world.camera.position.set(2, 4, 11);
-      world.controls.target.set(0, 3, 0);
+      // A warm afternoon sun low on one side, a blue sky to fill the shade.
+      const sun = light.directional({ intensity: 3.4, color: '#ffe0b8', castShadow: true });
+      sun.position.set(8, 9, 7);
+      world.scene.add(sun, light.hemisphere({ intensity: 1.1, color: '#cfe2ff', groundColor: '#5f6b48' }));
+      world.scene.fog = { color: sky, near: 14, far: 30 };
+      world.camera.position.set(2, 2.3, 9.6);
+      world.controls.target.set(0.5, 2.9, 0);
 
       const settings = controls(
         {

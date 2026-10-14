@@ -21,13 +21,15 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, math } from '../runtime/engine.js';
+      import { createWorld, effect, geometry, material, object, light, math } from '../runtime/engine.js';
       import { controls } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#07080d');
 
-      // A dark floor and a grid of pale pillars to catch the light.
-      const floor = object.mesh(geometry.box(16, 0.2, 16), material.meshStandard({ color: '#3a3d45', roughness: 0.7 }));
+      // A dark, half-polished floor, where each lamp leaves a pool of its colour, and a grid of
+      // pale pillars to catch the light.
+      const floor = object.mesh(geometry.box(16, 0.2, 16), material.meshStandard({ color: '#3a3d45', roughness: 0.25 }));
       floor.position.y = -0.1;
       world.scene.add(floor);
       const chalk = material.meshStandard({ color: '#e8e4da', roughness: 0.5 });
@@ -46,11 +48,14 @@
 
       // Sixty-four lamps: each a point light and a small glowing bulb of its colour. The engine
       // sorts the lights into screen tiles, so each pixel only adds up the lamps that reach it.
-      // They fly above the tallest pillar (2 m), so every top catches their light.
+      // They fly above the tallest pillar (2 m), so every top catches their light. The bulbs share
+      // one shape; each has its own colour, and none casts a shadow: it is the light itself.
+      const ball = geometry.sphere(0.08, 16, 12);
       const lamps = Array.from({ length: 64 }, (_, index) => {
         const colour = math.color().setHSL((index * 0.618) % 1, 0.9, 0.55);
         const glow = light.point({ color: colour, intensity: 14, distance: 6, radius: 0.08 });
-        const bulb = object.mesh(geometry.sphere(0.08, 16, 12), material.meshStandard({ color: '#000000', emissive: colour, emissiveIntensity: 6 }));
+        const bulb = object.mesh(ball, material.meshStandard({ color: '#000000', emissive: colour, emissiveIntensity: 6 }));
+        bulb.castShadow = false;
         world.scene.add(glow, bulb);
         return { glow, bulb, phase: index * 2.39996, orbit: 1.5 + (index % 8) * 0.8 };
       });
@@ -58,6 +63,8 @@
       world.camera.lookAt(0, 0, 0);
       world.controls.target.set(0, 0, 0);
       world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
+      // A soft glow round each bulb, in its own colour.
+      world.effects.add(effect.bloom({ intensity: 0.08 }));
 
       const ui = controls({ lamps: [1, 64, 32, 1], speed: [0, 2, 0.6], power: [1, 40, 14], shadows: false }, (values) => {
         lamps.forEach(({ glow, bulb }, index) => {

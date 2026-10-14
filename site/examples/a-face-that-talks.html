@@ -1,0 +1,321 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>A face that talks</title>
+    <meta name="thumbnail" content="3" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #17121f;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import {
+        createWorld,
+        animation,
+        buffer,
+        effect,
+        geometry,
+        light,
+        material,
+        math,
+        object,
+      } from '../runtime/engine.js';
+      import { controls } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#17121f');
+      const skin = material.meshPhysical({
+        color: '#f0d3c4',
+        roughness: 0.42,
+        sheen: 0.4,
+        subsurfaceColor: '#ff8a72',
+      });
+
+      // The head is an ellipsoid; `surface` gives its front at (x, y), where the features sit.
+      const HEAD = [0.78, 1, 0.8];
+      const surface = (x, y) =>
+        HEAD[2] * Math.sqrt(Math.max(0, 1 - (x / HEAD[0]) ** 2 - (y / HEAD[1]) ** 2));
+      // The face turns on the neck: `face` is the pivot, `head` holds every feature above it.
+      const face = object.group();
+      face.position.y = -0.8;
+      const head = object.group();
+      head.position.y = 0.8;
+      face.add(head);
+      const skull = object.mesh(geometry.sphere(1, 64, 48), skin);
+      skull.scale.set(...HEAD);
+      const hair = object.mesh(
+        geometry.sphere(1, 64, 48),
+        material.meshPhysical({ color: '#3b1f3f', roughness: 0.35, clearcoat: 0.5, sheen: 0.6 }),
+      );
+      hair.scale.set(0.82, 1.02, 0.84);
+      hair.position.set(0, 0.14, -0.1);
+      const nose = object.mesh(geometry.sphere(0.07, 32, 24), skin);
+      nose.scale.set(0.8, 1.2, 1);
+      nose.position.set(0, -0.08, surface(0, -0.08) - 0.015);
+      head.add(skull, hair, nose);
+
+      // The mouth: three meshes — lips, the dark inside, the upper teeth — built from one rim
+      // and sharing three morph targets, the visemes `open`, `wide` and `round`. A weight of each
+      // reshapes the rim; one weights track per mesh keeps the three in step.
+      const VISEMES = ['open', 'wide', 'round'];
+      const MOUTH_Y = -0.42,
+        AROUND = 64,
+        TUBE = 10;
+      /** The rim at angle `a` for the weights `[open, wide, round]`: its point and the outward
+       *  direction in the face's plane. Every term is linear in the weights. */
+      function rim([open, wide, round], a) {
+        const c = Math.cos(a),
+          s = Math.sin(a);
+        const half = 0.17 * (1 + 0.22 * wide - 0.38 * round);
+        const up = 0.012 + 0.035 * open + 0.03 * round + 0.012 * wide;
+        const down = 0.012 + 0.1 * open + 0.045 * round + 0.03 * wide;
+        const x = half * c,
+          y = MOUTH_Y + (s > 0 ? up : down) * s + 0.035 * wide * c ** 4;
+        const z = surface(x, y) + 0.004 + 0.035 * round * (1 - c * c);
+        return { x, y, z, out: [c, s], up, down };
+      }
+      const lipsShape = (weights) => {
+        const at = [],
+          index = [];
+        for (let i = 0; i < AROUND; i++) {
+          const a = (i / AROUND) * Math.PI * 2;
+          const { x, y, z, out } = rim(weights, a);
+          const radius = 0.013 + 0.017 * Math.abs(Math.sin(a));
+          for (let j = 0; j < TUBE; j++) {
+            const b = (j / TUBE) * Math.PI * 2;
+            at.push(
+              x + Math.cos(b) * out[0] * radius,
+              y + Math.cos(b) * out[1] * radius,
+              z + 0.012 + Math.sin(b) * radius,
+            );
+            const next = (i + 1) % AROUND,
+              turn = (j + 1) % TUBE;
+            index.push(i * TUBE + j, next * TUBE + j, i * TUBE + turn);
+            index.push(next * TUBE + j, next * TUBE + turn, i * TUBE + turn);
+          }
+        }
+        return { at, index };
+      };
+      const innerShape = (weights) => {
+        const { up, down } = rim(weights, 0);
+        const y = MOUTH_Y + (up - down) / 2;
+        const at = [0, y, surface(0, y) + 0.002],
+          index = [];
+        for (let i = 0; i < AROUND; i++) {
+          const { x, y, z, out } = rim(weights, (i / AROUND) * Math.PI * 2);
+          at.push(x - out[0] * 0.008, y - out[1] * 0.008, z);
+          index.push(0, 1 + i, 1 + ((i + 1) % AROUND));
+        }
+        return { at, index };
+      };
+      // The teeth hang from the upper rim; their height is a share of the opening, so a closed
+      // mouth hides them behind the upper lip.
+      const teethShape = (weights) => {
+        const at = [],
+          index = [];
+        for (let i = 0; i <= 16; i++) {
+          const { x, y, z, out, up, down } = rim(weights, Math.PI * (0.18 + (0.64 * i) / 16));
+          const top = [x - out[0] * 0.012, y - out[1] * 0.012, z + 0.002];
+          at.push(...top, top[0], top[1] - 0.3 * (up + down), top[2]);
+          if (i) index.push(2 * i - 2, 2 * i, 2 * i - 1, 2 * i - 1, 2 * i, 2 * i + 1);
+        }
+        return { at, index };
+      };
+      /** A mesh of `build`'s rest shape, with a morph target — positions and normals — per
+       *  viseme. */
+      function morphed(name, build, paint) {
+        const shapes = [
+          [0, 0, 0],
+          [1, 0, 0],
+          [0, 1, 0],
+          [0, 0, 1],
+        ].map(build);
+        const shaped = ({ at }) => {
+          const made = geometry.createBuffer({
+            position: buffer.float32(at, 3),
+            index: buffer.uint16(shapes[0].index, 1),
+          });
+          made.computeVertexNormals();
+          return made;
+        };
+        const rest = shaped(shapes[0]);
+        const targets = shapes.slice(1).map(shaped);
+        rest.morphAttributes.position = targets.map((target, rank) => {
+          const position = target.getAttribute('position');
+          position.name = VISEMES[rank];
+          return position;
+        });
+        rest.morphAttributes.normal = targets.map((target) => target.getAttribute('normal'));
+        const mesh = object.mesh(rest, paint);
+        mesh.name = name;
+        head.add(mesh);
+        return mesh;
+      }
+      const lipPaint = material.meshPhysical({ color: '#c25b67', roughness: 0.3, clearcoat: 0.6 });
+      morphed('lips', lipsShape, lipPaint);
+      morphed('inner', innerShape, material.meshStandard({ color: '#2a0910', side: 'double' }));
+      morphed('teeth', teethShape, material.meshStandard({ color: '#f7f2ea', side: 'double' }));
+
+      // The eyes turn in their sockets; the lids, domes a little larger, close over them.
+      const iris = material.meshStandard({
+        color: '#0d5d74',
+        emissive: '#2ec8ff',
+        emissiveIntensity: 1.4,
+      });
+      const ink = material.meshStandard({ color: '#05070c', roughness: 0.2 });
+      const spark = material.meshStandard({
+        color: '#000000',
+        emissive: '#ffffff',
+        emissiveIntensity: 4,
+      });
+      const white = material.meshPhysical({ color: '#fbf8f4', roughness: 0.12, clearcoat: 1 });
+      const dome = geometry.lathe(
+        Array.from({ length: 13 }, (_, i) => {
+          const angle = (i / 12) * (Math.PI / 2);
+          return [Math.sin(angle) * 0.13, Math.cos(angle) * 0.13];
+        }),
+        48,
+      );
+      const lidSkin = material.meshPhysical({
+        color: '#ecc9b8',
+        roughness: 0.45,
+        sheen: 0.4,
+        side: 'double',
+      });
+      const browShape = geometry.capsule(0.017, 0.14, 6, 12),
+        browPaint = material.meshStandard({ color: '#2d1830', roughness: 0.6 });
+      const brows = object.group();
+      brows.name = 'brows';
+      head.add(brows);
+      for (const side of [-1, 1]) {
+        const tag = side > 0 ? 'L' : 'R';
+        const at = [side * 0.27, 0.2, surface(0.27, 0.2) - 0.075];
+        const eye = object.group();
+        eye.name = `eye${tag}`;
+        eye.position.set(...at);
+        const ball = object.mesh(geometry.sphere(0.11, 48, 32), white);
+        const disc = object.mesh(geometry.sphere(0.062, 32, 24), iris);
+        disc.scale.z = 0.4;
+        disc.position.z = 0.09;
+        const pupil = object.mesh(geometry.sphere(0.03, 24, 16), ink);
+        pupil.scale.z = 0.4;
+        pupil.position.z = 0.108;
+        const glint = object.mesh(geometry.sphere(0.011, 12, 8), spark);
+        glint.position.set(-0.02, 0.022, 0.112);
+        eye.add(ball, disc, pupil, glint);
+        const lid = object.group();
+        lid.name = `lid${tag}`;
+        lid.position.set(...at);
+        lid.rotation.x = -0.62;
+        lid.add(object.mesh(dome, lidSkin));
+        const brow = object.mesh(browShape, browPaint);
+        brow.rotation.z = Math.PI / 2 + side * 0.12;
+        brow.position.set(side * 0.27, 0.38, surface(0.27, 0.38) + 0.005);
+        brows.add(brow);
+        head.add(eye, lid);
+      }
+
+      // The bust and its pedestal.
+      const neck = object.mesh(geometry.cylinder(0.27, 0.32, 0.8, 48), skin);
+      neck.position.y = -1;
+      const shoulders = object.mesh(
+        geometry.sphere(1, 64, 32),
+        material.meshPhysical({ color: '#2b3b5c', roughness: 0.5, sheen: 0.8 }),
+      );
+      shoulders.scale.set(1.25, 0.42, 0.62);
+      shoulders.position.y = -1.48;
+      const plinth = object.mesh(
+        geometry.cylinder(0.95, 1.05, 0.5, 64),
+        material.meshStandard({ color: '#3a2f46', roughness: 0.25, metalness: 0.5 }),
+      );
+      plinth.position.y = -2.05;
+      world.scene.add(face, neck, shoulders, plinth);
+      world.scene.add(
+        light.directional({
+          color: '#ffd9bd',
+          intensity: 3.2,
+          position: [-3, 4, 5],
+          castShadow: true,
+        }),
+        light.directional({ color: '#7fb4ff', intensity: 2.2, position: [3.5, 2, -4] }),
+        light.hemisphere({ color: '#c8c2ff', groundColor: '#2a1a33', intensity: 0.6 }),
+      );
+      world.effects.add(effect.bloom({ intensity: 0.05, radius: 0.8 }));
+
+      // Four seconds of speech: the visemes keyed syllable by syllable, a blink, a glance aside,
+      // the brows on the stressed words and the head nodding along. The clip loops.
+      const syllables = [
+        [0, 0, 0, 0], [0.25, 0, 0, 0], [0.36, 0.7, 0.1, 0], [0.48, 0.2, 0.5, 0],
+        [0.6, 0.05, 0.8, 0], [0.74, 0.3, 0, 0.9], [0.9, 0, 0, 0.2], [1, 0.8, 0.2, 0],
+        [1.12, 0.1, 0, 0], [1.26, 0.5, 0.6, 0], [1.4, 0.2, 0, 0.7], [1.55, 0.9, 0, 0.1],
+        [1.72, 0, 0, 0], [2.2, 0, 0.3, 0], [2.35, 0.6, 0.4, 0], [2.48, 0.1, 0, 0.8],
+        [2.62, 0.7, 0.1, 0], [2.76, 0, 0, 0], [2.9, 0.4, 0.7, 0], [3.05, 0.1, 0.1, 0.6],
+        [3.2, 0.75, 0, 0], [3.38, 0, 0.6, 0], [3.9, 0, 0.6, 0], [4, 0, 0, 0],
+      ];
+      const visemes = (name) =>
+        animation.weightsTrack(
+          `${name}.morphTargetInfluences`,
+          syllables.map(([time]) => time),
+          syllables.flatMap(([, ...weights]) => weights),
+        );
+      const keyed = (path, pairs) =>
+        animation.numberTrack(
+          path,
+          pairs.map(([time]) => time),
+          pairs.map(([, value]) => value),
+        );
+      const blink = [
+        [0, -0.62], [1.75, -0.62], [1.83, 1.45], [1.95, -0.62],
+        [3.5, -0.62], [3.58, 1.45], [3.7, -0.62], [4, -0.62],
+      ];
+      const glance = [
+        [0, 0], [0.9, 0], [1, 0.2], [2, 0.2], [2.1, -0.14], [3, -0.14], [3.1, 0], [4, 0],
+      ];
+      const raise = [
+        [0, 0], [1.4, 0], [1.5, 0.03], [1.7, 0], [3.1, 0], [3.2, 0.035], [3.45, 0], [4, 0],
+      ];
+      const nod = [[0, 0], [0.4, 0.05], [1, -0.03], [1.6, 0.06], [2.4, 0], [3.2, 0.05], [4, 0]];
+      const speech = animation.clip('speech', 4, [
+        ...['lips', 'inner', 'teeth'].map(visemes),
+        ...['lidL', 'lidR'].map((lid) => keyed(`${lid}.rotation.x`, blink)),
+        ...['eyeL', 'eyeR'].map((eye) => keyed(`${eye}.rotation.y`, glance)),
+        keyed('brows.position.y', raise),
+        keyed('.rotation.x', nod),
+        keyed('.rotation.y', [[0, 0], [1, 0.12], [2, -0.06], [3, 0.1], [4, 0]]),
+        keyed('.rotation.z', [[0, 0], [2, 0.04], [4, 0]]),
+      ]);
+      const action = animation.createMixer(face).play(speech);
+
+      world.camera.position.set(1.2, 0.25, 3.6);
+      world.controls.target.set(0, -0.15, 0);
+      world.controls.minDistance = 2.2;
+      world.controls.maxDistance = 7;
+      controls(
+        { speed: [0.25, 2, 1, 0.05], paused: false },
+        (values) => {
+          action.timeScale = values.speed;
+          // Paused, the action stops and is posed again where it stood: the face holds its
+          // syllable and the world draws no more frames for it. Played, it goes on from there.
+          if (values.paused) {
+            const at = action.time;
+            action.stop().seek(at);
+          } else action.play();
+          world.invalidate();
+        },
+        world,
+      );
+    </script>
+  </body>
+</html>

@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <title>Ten thousand bodies</title>
-    <meta name="thumbnail" content="0.95" />
+    <meta name="thumbnail" content="1.9" />
     <style>
       html,
       body {
@@ -28,8 +28,11 @@
       // simulated by Jolt in a worker. The panel shows what it costs, live, on both threads.
       const world = createWorld('view', { controls: 'orbit', physics: true });
       world.scene.background = math.color('#1d2430');
+      // The floor's far edge fades into the dark. The fog is light, exposed and tone-mapped like a
+      // surface, the background is not: this is the radiance the display curve shows as #1d2430.
+      world.scene.fog = { color: math.color([0.027, 0.035, 0.05]), near: 90, far: 220 };
       world.camera.far = 600;
-      const floor = object.mesh(geometry.box(120, 2, 120), material.meshStandard({ color: '#56606e', physics: 'stone' }));
+      const floor = object.mesh(geometry.box(120, 2, 120), material.meshStandard({ color: '#a7815f', roughness: 0.85, physics: 'stone' }));
       floor.position.y = -1;
       floor.physics = 'static';
       world.scene.add(floor);
@@ -39,9 +42,9 @@
       let boxes = [];
       const fill = (count) => {
         for (const box of boxes) world.scene.remove(box);
-        const next = seeded(11), side = Math.ceil(Math.sqrt(count / 10));
+        const next = seeded(11), side = Math.ceil(Math.sqrt(count / 40));
         boxes = Array.from({ length: count }, (_, i) => {
-          const box = object.mesh(crate, paints[i % 4]);
+          const box = object.mesh(crate, paints[Math.floor(next() * paints.length)]);
           const layer = Math.floor(i / (side * side)), cell = i % (side * side);
           box.position.set((cell % side - side / 2) * 1.6 + next() * 0.4, 4 + layer * 1.6, (Math.floor(cell / side) - side / 2) * 1.6 + next() * 0.4);
           box.rotation.set(next(), next(), next());
@@ -51,9 +54,10 @@
         world.scene.add(...boxes);
       };
 
-      world.scene.add(light.directional({ intensity: 2.5, position: [30, 60, 20] }), light.hemisphere({ intensity: 1.2, color: '#ffffff', groundColor: '#404855' }));
-      world.camera.position.set(60, 45, 60);
-      world.controls.target.set(0, 0, 0);
+      // The sun casts: every box throws its shadow on the floor and on the boxes under it.
+      world.scene.add(light.directional({ intensity: 2.5, position: [30, 60, 20], castShadow: true }), light.hemisphere({ intensity: 1.2, color: '#ffffff', groundColor: '#5a4636' }));
+      world.camera.position.set(34, 15, 44);
+      world.controls.target.set(0, 8, 0);
 
       const settings = controls({ count: ['10000', '5000', '1000'], again: () => fill(Number(settings.count)) }, ({ count }, key) => {
         if (key === 'count' || key === undefined) fill(Number(count));

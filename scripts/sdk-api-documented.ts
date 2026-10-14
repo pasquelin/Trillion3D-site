@@ -28,15 +28,6 @@ export const DOCUMENTED_GAPS: ExportRow[] = [
   gap('ColumnKind', 'type', 'packages/sdk-core/src/manifest/binaryFormat.ts', 'core', ENUMS),
   gap('EngineCamera', 'type', 'packages/sdk-browser/src/camera/engineCamera.ts', 'browser', CAMERA),
   gap('HostCamera', 'type', 'packages/sdk-browser/src/camera/world.ts', 'browser', CAMERA),
-  gap(
-    'PATH_EXPLORE_EVERY',
-    'value',
-    'packages/sdk-core/src/runtime/path/governor.ts',
-    'core',
-    ENUMS,
-  ),
-  gap('PATH_MIN_SAMPLES', 'value', 'packages/sdk-core/src/runtime/path/governor.ts', 'core', ENUMS),
-  gap('PATH_SWITCH_RUNS', 'value', 'packages/sdk-core/src/runtime/path/governor.ts', 'core', ENUMS),
   gap('SINGULAR_DETERMINANT', 'value', 'packages/math/src/matrix/singular.ts', 'core', MATRIX),
   gap('adjugateFactor', 'value', 'packages/math/src/matrix/singular.ts', 'core', MATRIX),
   gap(

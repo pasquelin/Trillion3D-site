@@ -25,13 +25,17 @@
       import { controls, readout, tour, words } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
-      world.scene.background = math.color('#91b7d1');
+      // Late afternoon: a warm sky, and a haze that swallows the meadow round the garden. The fog
+      // is light, exposed and tone-mapped like a surface, the background is not: this is the
+      // radiance the display curve shows as #f0b27a.
+      world.scene.background = math.color('#f0b27a');
+      world.scene.fog = { color: math.color([1.141, 0.331, 0.125]), near: 30, far: 140 };
       const paint = (color, roughness = 0.8) => material.meshStandard({ color, roughness });
-      const grass = paint('#668c4d', 0.95),
+      const grass = paint('#5d8c3a', 0.95),
         stone = paint('#c4b89d', 0.9);
       const wood = paint('#70472d'),
-        leaves = paint('#47723f', 0.9),
-        water = paint('#4f91ad', 0.25);
+        leaves = paint('#3f7a35', 0.9),
+        water = material.meshStandard({ color: '#2a7aa3', roughness: 0.08, metalness: 0.1 });
       const put = (shape, matter, position, turn = 0) => {
         const mesh = object.mesh(shape, matter);
         mesh.position.set(...position);
@@ -40,7 +44,8 @@
         return mesh;
       };
 
-      const ground = put(geometry.box(42, 0.3, 34), grass, [0, -0.15, 0]);
+      // The garden's lawn runs on as a meadow until the haze has taken it.
+      const ground = put(geometry.box(400, 0.3, 400), grass, [0, -0.15, 0]);
       // The lowest surface: nothing under it would show its shadow.
       ground.receiveShadow = true;
       ground.castShadow = false;
@@ -69,7 +74,7 @@
 
       const pavilion = object.group();
       pavilion.position.set(8, 0, -7);
-      const roof = object.mesh(geometry.cone(4.2, 1.8, 8), paint('#a64737', 0.75));
+      const roof = object.mesh(geometry.cone(4.2, 1.8, 8), paint('#b8402c', 0.75));
       roof.position.y = 4.7;
       pavilion.add(roof);
       const postShape = geometry.cylinder(0.16, 0.2, 4, 12);
@@ -99,12 +104,12 @@
       world.scene.add(bridge);
       world.scene.add(
         light.directional({
-          color: '#fff0cf',
-          intensity: 3.2,
-          position: [-9, 14, 8],
+          color: '#ffc48a',
+          intensity: 3.4,
+          position: [-14, 9, 10],
           castShadow: true,
         }),
-        light.hemisphere({ color: '#b6d3ed', groundColor: '#4f603e', intensity: 1 }),
+        light.hemisphere({ color: '#a9b8e0', groundColor: '#4f603e', intensity: 1 }),
       );
 
       world.camera.position.set(18, 9, 20);

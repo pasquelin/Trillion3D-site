@@ -64,6 +64,9 @@ export interface GltfDocument {
   images?: { uri: string }[]
   textures?: { sampler: number; source: number }[]
   samplers?: { magFilter: number; minFilter: number; wrapS: number; wrapT: number }[]
+  /** The document's physics: the `KHR_physics_rigid_bodies` matters, `KHR_implicit_shapes`. */
+  extensions?: Record<string, unknown>
+  extensionsUsed?: string[]
 }
 
 export interface GltfNode {
@@ -75,4 +78,7 @@ export interface GltfNode {
   children?: number[]
   /** What the compiler reads beside the node: a soft body's `physics` options. */
   extras?: { physics?: PhysicsOption }
+  /** What the node declares: a rigid body (`KHR_physics_rigid_bodies`), its motion and its
+   *  collider, or its mesh drawn once per pose (`EXT_mesh_gpu_instancing`). */
+  extensions?: Record<string, unknown>
 }

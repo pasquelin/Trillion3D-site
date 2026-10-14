@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <title>A cooked flag</title>
-    <meta name="thumbnail" content="3" />
+    <meta name="thumbnail" content="1.6" />
     <style>
       html,
       body {
@@ -29,23 +29,45 @@
     <canvas id="view"></canvas>
     <p data-words="credit"></p>
     <script type="module">
-      import { createWorld, light, math } from '../runtime/engine.js';
+      import { createWorld, geometry, light, material, math, object } from '../runtime/engine.js';
       import { controls, physicsReadouts } from '../runtime/kit.js';
 
       // A compiled model: the flag's node declares a cloth pinned along the pole, and the compiler
       // cooked its soft-body settings with the model. Once the physics is on, the flag is restored
-      // from them — nothing is built on the page — and sags from its pole from the first step.
+      // from them — no cloth is built on the page — and sags from its pole from the first step.
       const world = createWorld('view', { controls: 'orbit', physics: true });
-      world.scene.background = math.color('#cfe0ee');
+      // A summer afternoon around the lawn: a meadow out to a hazy horizon, a few trees, and a
+      // haze that fades the far side into the sky.
+      world.scene.background = math.color('#a4cbec');
+      // The fog is light, exposed and tone-mapped like a surface, the background is not: this is
+      // the radiance the display curve shows as #a4cbec.
+      world.scene.fog = { color: math.color([0.194, 0.557, 1.466]), density: 0.008, heightFalloff: 0.3, baseHeight: 0 };
       const MODEL = '../assets/examples/flag/cache/native/full/manifest.json';
       let model = await world.scene.load(MODEL),
         reloading = false;
 
-      const sun = light.directional({ intensity: 3, castShadow: true });
+      // The meadow lies a hair under the model's lawn; the trees share one trunk and one crown.
+      const meadow = object.mesh(geometry.box(300, 0.1, 300), material.meshStandard({ color: '#9bb685', roughness: 0.9 }));
+      meadow.position.y = -0.06;
+      const trunk = geometry.cylinder(0.12, 0.18, 1.6, 10), crown = geometry.sphere(1, 20, 12);
+      const bark = material.meshStandard({ color: '#5a4030', roughness: 0.9 });
+      const leaves = material.meshStandard({ color: '#4d6e34', roughness: 0.85 });
+      for (const [x, z, size] of [[-7, -9, 1.4], [-3, -14, 1.8], [4, -12, 1.5], [9, -7, 1.2], [13, -16, 2], [-12, -4, 1.6]]) {
+        const tree = object.group();
+        tree.position.set(x, 0, z);
+        tree.scale.setScalar(size);
+        const stem = object.mesh(trunk, bark), top = object.mesh(crown, leaves);
+        stem.position.y = 0.8;
+        top.position.y = 2.1;
+        top.scale.set(1, 1.25, 1);
+        tree.add(stem, top);
+        world.scene.add(tree);
+      }
+      const sun = light.directional({ intensity: 3, color: '#fff1dc', castShadow: true });
       sun.position.set(6, 12, 8);
-      world.scene.add(sun, light.hemisphere({ intensity: 1.2, color: '#ffffff', groundColor: '#6d7a5a' }));
-      world.camera.position.set(1.5, 3.2, 5);
-      world.controls.target.set(0.8, 2.9, 0);
+      world.scene.add(meadow, sun, light.hemisphere({ intensity: 0.6, color: '#e4efff', groundColor: '#5f6e45' }));
+      world.camera.position.set(2.1, 2.9, 3.9);
+      world.controls.target.set(0.7, 2.6, 0);
 
       controls(
         {

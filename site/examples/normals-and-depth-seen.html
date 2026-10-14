@@ -78,14 +78,14 @@
         lintel.rotation.set(0, mid, 0);
       }
 
-      // A lit glass pane before the knot keeps its own material in every view: over the normal or
+      // A lit glass pane before the torus keeps its own material in every view: over the normal or
       // depth view it still takes the film curve, and the view seen through it stays as stored.
       const pane = object.mesh(
-        geometry.box(4.2, 3.4, 0.06),
+        geometry.box(2.2, 2.6, 0.06),
         material.meshStandard({ color: '#9fd4ff', roughness: 0.1, transparent: true, opacity: 0.4, depthWrite: false }),
       );
-      pane.position.set(4.4, 2.4, 5.9);
-      pane.rotation.set(0, Math.atan2(9, 12), 0);
+      pane.position.set(6.6, 1.9, 5.6);
+      pane.rotation.set(0, Math.atan2(2.4, 6.4), 0);
       world.scene.add(pane);
 
       // A warm low key for long shadows, a cool sky fill so no face goes black, and a rim.
@@ -96,7 +96,7 @@
       );
       world.camera.near = 0.5;
       world.camera.position.set(4, 16, 30);
-      world.controls.target.set(0, 1.8, 0);
+      world.controls.target.set(0, 1.2, 0);
       world.controls.update();
       world.controls.minDistance = 6;
       world.controls.maxDistance = 30;
@@ -130,7 +130,7 @@
 
       // The opening: the camera glides down from high above to the court. A press or a wheel on
       // the canvas hands the camera to the viewer at once.
-      const FROM = [4, 16, 30], TO = [9, 4.8, 12];
+      const FROM = [4, 16, 30], TO = [8.4, 4.2, 11];
       opening(world, (time) => {
         const t = ease.out(time / 3.2);
         world.camera.position.set(...mix({ math }, FROM, TO, t));
@@ -142,11 +142,17 @@
         if (ui.spin) turn += step;
         knot.rotation.set(0, turn * 0.5, 0);
         for (const { mesh, speed, tilt } of turners) mesh.rotation.set(tilt, turn * speed, 0);
+        // A frame is asked for only while the pieces turn, or once more when the depth view's far
+        // plane follows a camera the viewer moved; a still court asks for none.
+        let moved = ui.spin;
         if (view === 'depth') {
           const far = world.camera.position.distanceTo(centre) + radius;
-          if (Math.abs(far - world.camera.far) > far * 0.01) world.camera.far = far;
+          if (Math.abs(far - world.camera.far) > far * 0.01) {
+            world.camera.far = far;
+            moved = true;
+          }
         }
-        world.invalidate();
+        if (moved) world.invalidate();
       });
     </script>
   </body>

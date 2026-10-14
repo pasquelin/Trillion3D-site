@@ -346,7 +346,8 @@
       "a-dolly-along-the-canal": "Kanal boyunca kamera kaydırma",
       "a-folder-merged-into-one-scene": "Tek sahnede birleştirilen klasör",
       "drag-a-crate": "Bir sandığı sürükleme",
-      "move-a-hierarchy-by-name": "Bir hiyerarşiyi adıyla taşı"
+      "move-a-hierarchy-by-name": "Bir hiyerarşiyi adıyla taşı",
+      "cooked-blocks-that-fall": "Önceden hesaplanmış bloklar düşüyor"
     },
     "missing": {
       "thick-lines": "geniş çizgiler",
@@ -390,7 +391,6 @@
       "wide-gamut-colour": "geniş renk gamlı çıktı",
       "energy-conservation-test": "ortam aydınlatması (IBL)",
       "contact-shadow-under-a-car": "dokuya render",
-      "coloured-shadows-through-glass": "gölge düşüren saydam nesneler",
       "shadows-in-the-corners": "ekran uzayında ortam gölgelemesi",
       "contact-shadows-from-the-screen": "ekran uzayında izleme",
       "light-that-bounces": "genel API'de yansıyan ışık",
@@ -411,7 +411,6 @@
       "voxel-models": "diğer kaynak içe aktarıcılar: VOX",
       "cad-and-building-models": "diğer kaynak içe aktarıcılar: 3DM, IFC",
       "a-toolpath-in-lines": "diğer kaynak içe aktarıcılar: G-code",
-      "instanced-gltf": "diğer glTF uzantıları: GPU instancing",
       "gltf-material-variants": "diğer glTF uzantıları: malzeme varyantları",
       "compressed-mesh-input": "diğer glTF uzantıları: Draco, meshopt, nicemleme",
       "a-medical-scan": "hacimsel render",
@@ -430,8 +429,6 @@
       "a-mirror-on-the-wall": "dokuya render: düz ayna",
       "a-polished-floor": "ekran uzayında yansımalar",
       "reflections-from-the-screen": "ekran uzayında yansımalar",
-      "an-ocean": "dokuya render: su yansıması ve kırılması",
-      "a-raging-sea": "özel shader'lı malzemeler",
       "fog-that-scatters-light": "hacimsel sis ve ışık hüzmeleri",
       "a-cloud-in-a-box": "hacimsel render",
       "a-fire-in-a-volume": "hacimsel render",
@@ -524,7 +521,8 @@
     "meaning": "Ne yapar",
     "details": "Ayrıntılar",
     "live": "Şu anda çalışıyor",
-    "liveHint": "Kontrolleri hareket ettirin: bu değerler, bu tarayıcıda çalışan motor fonksiyonundan geliyor."
+    "liveHint": "Kontrolleri hareket ettirin: bu değerler, bu tarayıcıda çalışan motor fonksiyonundan geliyor.",
+    "examples": "Bunu kullanan örnekler"
   },
   "kind": {
     "Function": "Fonksiyon",
@@ -1108,7 +1106,7 @@
     "measurement-entry": {
       "title": "Ölçüm giriş noktası",
       "description": "Bir tanığın ya da dahili bir oturumun hâlâ adlandırılabildiği yer — asla yayımlanmış `trillion3d` girişi üzerinden değil.",
-      "html": "<p>Bir sayfa <code>trillion3d</code>'yi içe aktarır ve hiçbir zaman bir tanık ya da dahili bir oturum görmez: <code>createWorld</code> WebGPU ile çizer, makine hiçbirini sağlamıyorsa adıyla reddedilir. Bench ve kanıtların yine de bir tanık adlandırması gerekir — saf Three.js, <code>THREE.LOD</code>, dahili <code>openMeasuredWorld</code> oturumu — ve bu, ayrı ölçüm giriş noktasının, <code>packages/sdk-browser/src/measurement/measurement.ts</code>'in tek işidir.</p>\n<p>Yayımlanmış girişin dışa aktardığı her şeyi yeniden dışa aktarır, ayrıca bir host'un hiç ihtiyaç duymadığı şeyleri de: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (bir dünyanın kendi üzerinde açtığı dahili oturum), sayfa fabrikası <code>webgpuPagesEngine</code> ve <code>replicateInstances</code> gibi yalnızca ölçüme ait yardımcılar. Bunların hiçbiri yayımlanmış bir dünyaya ulaşmaz ve hiçbiri bir uygulama tarafından içe aktarılmaz.</p>"
+      "html": "<p>Bir sayfa <code>trillion3d</code>'yi içe aktarır ve hiçbir zaman bir tanık ya da dahili bir oturum görmez: <code>createWorld</code> WebGPU ile çizer, makine hiçbirini sağlamıyorsa adıyla reddedilir. Bench ve kanıtların yine de bir tanık adlandırması gerekir — saf Three.js, <code>THREE.LOD</code>, dahili <code>openMeasuredWorld</code> oturumu — ve bu, ayrı ölçüm giriş noktasının, <code>packages/sdk-browser/src/measurement/measurement.ts</code>'in tek işidir.</p>\n<p>Yayımlanmış girişin dışa aktardığı her şeyi yeniden dışa aktarır, ayrıca bir host'un hiç ihtiyaç duymadığı şeyleri de: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (bir dünyanın kendi üzerinde açtığı dahili oturum), sayfa fabrikası <code>webgpuPagesEngine</code> ve <code>attachParticles</code> gibi yalnızca ölçüme ait yardımcılar. Bunların hiçbiri yayımlanmış bir dünyaya ulaşmaz ve hiçbiri bir uygulama tarafından içe aktarılmaz.</p>"
     },
     "createWorldJob": {
       "title": "İptal edilebilir bir görev olarak dünya yükleme",
@@ -1175,21 +1173,6 @@
         "Yüksek kalite — `pixelError: 1`, maksimum anizotropi.",
         "Dengeli — `pixelError: 4`.",
         "Adaptif — `pixelError: 2`, `adaptivePixelError(base, speed, radius)` ile kamera hızıyla artar; sabit bir görünüm tabanı korur."
-      ]
-    },
-    "ScreenErrorVariant": {
-      "description": "Kesitin eşikle karşılaştırdığı cluster hatasının hangi izdüşümü olduğu. Tüm sayfa için modül durumu, CPU metriği tarafından okunur ve seçim shader'ı derlendiğinde onun içine gömülür; bir bench'in her tarafı kendi sayfasında çalışır. Formülün herkese açık kaynağı: Karis, Stubbe ve Wihlidal, SIGGRAPH 2021, \"Advances in Real-Time Rendering in Games\".",
-      "values": [
-        "Bizimki (varsayılan): hatayı asla düşük tahmin etmeyen bir sınır.",
-        "Karşılaştırma bench'i için yayımlanmış formül."
-      ]
-    },
-    "MathPathMode": {
-      "description": "Bir yığının hangi yolda çalıştığı. `auto` ölçümle karar verir: regülatör her tarafta eleman başına nanosaniyenin hareketli medyanını tutar ve o üstünlükte bir seri çalıştırmadan sonra geçiş yapar, JS referans ve yedek yol olarak kalır. `MATH_PATH_CONTRACT`, yayımlanan raporu sürümler.",
-      "values": [
-        "Ölçümle karar (varsayılan).",
-        "Bir kampanya için dayatılmış JavaScript yolu.",
-        "O işlem için varsa dayatılmış WebAssembly çekirdeği."
       ]
     },
     "JobStatus": {
@@ -1369,23 +1352,8 @@
     "updateNodeMatrixWorld": {
       "description": "Düğüm ve tüm alt ağacı, önce ebeveynler. Bir düğüme, otomatik güncelleniyorsa, işaretliyse, ya da `force` verilmişse ulaşılır. Ziyaret edilen bir düğümün zaman damgası `2 · traversal + reached`'tir, bu yüzden tek bir okuma, bir çocuğa alt ağaçta olup olmadığını ve ebeveyninin ona ne geçirdiğini söyler. İkinci biçim, istendiğinde, atalar arasında kökten de dolaşır."
     },
-    "nodeWorldPosition": {
-      "description": "Dünya matrisinden okumalar: öteleme sütunu; negatif bir determinantın yalnızca `x` tarafından taşındığı, kendi ayrıştırmasından dönüş ve ölçek; `cameraForward` olduğunda ters çevrilen, bir yön olarak normalize edilmiş üçüncü sütun — bir kamera ve bir ışık kendi `−z`'lerine doğru bakar. `nodeWorldMirrorsFaces`, dünya matrisi yönelimi ters çevirdiğinde doğrudur, ve çizim o zaman ön ve arka yüzlerini değiştirir; olduğu gibi okur, güncellemeden, ve sıfır ya da NaN bir determinant hiçbir şeyi ters çevirmez."
-    },
     "lookAtNode": {
       "description": "`node`'u dünya noktası `(x, y, z)`'ye doğru çevirir. `viewer`, kendi `−z`'sine doğru bakan bir kamera ya da ışık için doğrudur, kendi `+z`'sini sunan bir nesne için yanlıştır. `up`, varsayılanı `(0, 1, 0)` olan düğümün yukarısıdır. Atalar ve düğüm önce güncellenir."
-    },
-    "multiplyMatrix4Batch": {
-      "description": "`n` çarpım `out[i] = a[i] · b[i]`, üç taraf da on altı sayılık alt görünümler olarak verilir. Alt görünümler bir kez oluşturulur, asla kare başına değil; bir WebAssembly çekirdeği aynı formülü terim terim tekrarlar, ve regülatör hangi yolun daha hızlı ölçüldüğünü seçer."
-    },
-    "boxTransformBatch": {
-      "description": "`n` matrisle dönüştürülen `n` kutu: `out[i] = boxTransform(boxes[i], mats[i])`. `out` ve `boxes` eleman başına altı sayı taşır, `mats` on altılık bir alt görünüm."
-    },
-    "hierarchyUpdateBatch": {
-      "description": "Tek bir geçişte güncellenen tüm bir hiyerarşi: ebeveynler çocuklardan önce sıralanmış `n` düğüm, her biri kendi yerel matrisini oluşturur, sonra bunu ebeveyninin dünya matrisiyle çarpar — `packages/sdk-core/src/world/transform-tree/update.ts`'in dolaşımı, doğrusal tamponlar üzerinde aynı sırada aynı iki formül. `parents[i]`, zaten güncellenmiş bir düğümü indekslemek **zorundadır**, dolayısıyla kesinlikle `i`'den küçük olmalıdır; `HIERARCHY_ROOT` nöbetçisi dahil, başka herhangi bir değer, düğümü, dünya matrisi kendi yerel matrisi olan bir köke dönüştürür. Kural her iki yolda da özdeştir: ne kadar düşmanca olursa olsun hiçbir girdi onları ayrıştıramaz. `local`, her eleman için yeniden kullanılan tek bir taslak matristir."
-    },
-    "createPathGovernor": {
-      "description": "Adlandırılmış her işlem için JS ile WebAssembly arasında karar veren şey: eleman başına nanosaniyenin hareketli medyanları, yalnızca o üstünlükte beş ardışık çalıştırmadan sonra bir geçiş, ve medyanını güncellemek için diğer yolu tekrarlayan ellide bir çalıştırma. Beşten az örnekte hiçbir şeye karar verilmez — tek bir değer medyanı oluştururdu. `metrics()`, her işlem için `path`, `jsNsPerElement`, `wasmNsPerElement`, geçiş sayısını ve ölçümün dayandığı saat çözünürlüğünü yayımlar."
     },
     "frustumKeepsBoxBatch": {
       "description": "Bir frustum'un yirmi dört float'ına karşı altı sayılık (önce min sonra max) `n` kutu: `kept[i]`, kutu kesiştiğinde ya da tamamen içindeyken 1'dir, ve korunan sayı döndürülür — `frustumExcludesBox`'ın tersi, referansın yanıt verdiği kutupluluk. Küre yığını, `sphereFromBounds`'ın yaptığı gibi, kutu başına `SPHERE_VALUES` sayı, merkez sonra köşeye kadar yarıçap yazar. İki döngü de `packages/math/src/batch/culling.ts`'de yaşar."
@@ -1421,6 +1389,19 @@
       "title": "Bir sahneyi kaydetmek ve açmak",
       "description": "`scene.toJSON(camera)` sahneyi düz, sürümlü JSON olarak yazar; `scene.fromJSON(json, camera)` onu yeniden kurar.",
       "html": "<p>Şekiller onları kuran çağrıyla, malzemeler değerleriyle, yüklenmiş modeller adresleriyle — asla gömülmeden — saklanır, <code>helper</code> işaretleri ise hiç saklanmaz. Başka bir biçim sürümü adıyla reddedilir. <a href=\"#/tr/examples/save-the-scene\">Save the scene</a> içinde görün.</p>"
+    },
+    "PlacementLink": {
+      "members": {
+        "rows": "Bağlı satırın ait olduğu yerleşim satırları.",
+        "index": "Satırın bu satırlar içindeki sırası.",
+        "local": "Ağının ebeveyne göre yerel matrisi: on altı sayı."
+      }
+    },
+    "SceneLightStore": {
+      "members": {
+        "shadowedLocals": "Gölge düşüren ışıklardan kaçının güneş değil yerel ışık olduğu.",
+        "rects": "Kaç ışığın dikdörtgen olduğu."
+      }
     }
   },
   "canvas": {
@@ -1450,8 +1431,6 @@
       "high": "yüksek",
       "balanced": "dengeli",
       "adaptive": "adaptif",
-      "switches": "geçişler",
-      "arbitration": "hakemlik",
       "box 0": "kutu 0",
       "box 1": "kutu 1",
       "box 2": "kutu 2",
@@ -1491,8 +1470,6 @@
       "saturation": "doygunluk",
       "lightness": "parlaklık",
       "scalar": "skaler",
-      "nodes in the batch": "yığındaki düğümler",
-      "products in the batch": "yığındaki çarpımlar",
       "boxes in the batch": "yığındaki kutular",
       "boxes tested": "test edilen kutular",
       "kept by the frustum": "frustum tarafından tutuldu",
@@ -1509,12 +1486,6 @@
       "cone half-angle (rad)": "koni yarı açısı (rad)",
       "cone axis, heading (rad)": "koni ekseni, yön (rad)",
       "viewer distance": "izleyici mesafesi",
-      "JS nanoseconds per element": "eleman başına JS nanosaniyesi",
-      "Wasm nanoseconds per element": "eleman başına Wasm nanosaniyesi",
-      "executions observed": "gözlenen çalıştırmalar",
-      "contract version": "sözleşme sürümü",
-      "path chosen": "seçilen yol",
-      "not decided yet": "henüz karar verilmedi",
       "read and never written": "okunur, asla yazılmaz",
       "the constant itself, read from the engine": "motordan okunan sabitin kendisi",
       "reversed depth, infinite far plane": "ters çevrilmiş derinlik, sonsuz uzak düzlem",
@@ -1529,8 +1500,6 @@
       "its forward direction": "onun ileri yönü",
       "under the root": "kökün altında",
       "reparented to the world": "dünyaya yeniden ebeveynlendi",
-      "allocations during the call": "çağrı sırasındaki tahsisler",
-      "largest difference on the last element": "son elemandaki en büyük fark",
       "this frame": "bu kare",
       "a box beyond the declared far plane": "bildirilen uzak düzlemin ötesindeki bir kutu",
       "a box three metres ahead": "üç metre ileride bir kutu",
@@ -1554,11 +1523,6 @@
       "the unit box carried by that matrix": "o matris tarafından taşınan birim kutu",
       "the union of the eight transformed corners, never the eight of the result": "sekiz dönüştürülmüş köşenin birleşimi, asla sonucun sekiz köşesi değil",
       "one buffer holds many matrices; no view is sliced per frame": "bir tampon birçok matris tutar; kare başına hiçbir görünüm dilimlenmez",
-      "one chain of nodes, parents before children, in one call": "tek bir çağrıda, ebeveynler çocuklardan önce, tek bir düğüm zinciri",
-      "none: the buffers are the caller’s": "hiçbiri: tamponlar çağıranındır",
-      "the unit function stays the oracle; the WebAssembly kernel repeats it term by term": "birim fonksiyon oracle olarak kalır; WebAssembly çekirdeği onu terim terim tekrarlar",
-      "the governor, after those executions": "o çalıştırmalardan sonra regülatör",
-      "the kernel leads by enough, for long enough, to be worth the switch": "çekirdek, geçişe değecek kadar uzun süre yeterince önde",
       "the reads of one node": "bir düğümün okumaları",
       "the sign alone decides, with no square root: the exact clip test": "yalnızca işaret karar verir, karekök olmadan: tam kesim testi",
       "the subtraction happens in double; only the write rounds": "çıkarma double'da gerçekleşir; yalnızca yazma yuvarlar",
@@ -1595,7 +1559,6 @@
       "the child, before and after the root moves": "kök hareket etmeden önce ve sonra çocuk",
       "the child, attached then detached": "önce eklenen sonra ayrılan çocuk",
       "matrices do not move until the next update, like the reference `add`": "referansın `add`'i gibi, matrisler bir sonraki güncellemeye kadar hareket etmez",
-      "the batch against the unit function it repeats": "tekrarladığı birim fonksiyona karşı yığın",
       "frame.view — the inverse of the camera world matrix": "frame.view — kameranın dünya matrisinin tersi",
       "DIAGNOSTICS — the engine says which modes it can produce, and why not": "DIAGNOSTICS — motor hangi modları üretebileceğini, ve neden üretemediğini söyler",
       "LOD_QUALITY, as the engine holds it": "LOD_QUALITY, motorun tuttuğu şekliyle",
@@ -1605,7 +1568,6 @@
       "singular: the adjugate as-is, so the flattened surface keeps a normal": "tekil: adjoint olduğu gibi, böylece düzleştirilmiş yüzey bir normal korur",
       "no finite scale: nine zeros": "sonlu ölçek yok: dokuz sıfır",
       "rejected: every normal of that cluster faces away from the viewer": "elendi: o cluster'ın her normali izleyiciden uzağa bakıyor",
-      "JS keeps the work: under five samples, or the lead is not a burst": "JS işi elinde tutar: beşten az örnek, ya da üstünlük tutarlı değil",
       "nodeWorldDirection (object, +z)": "nodeWorldDirection (object, +z)",
       "nodeWorldDirection (viewer, −z)": "nodeWorldDirection (viewer, −z)",
       "root": "kök",
@@ -1635,7 +1597,6 @@
       "column 1": "sütun 1",
       "column 2": "sütun 2",
       "out = a, aliased": "out = a, takma adlı",
-      "clock resolution the measurement rests on (ms)": "ölçümün dayandığı saat çözünürlüğü (ms)",
       "decomposeMatrix4 of that matrix — the round trip": "o matrisin decomposeMatrix4'ü — gidiş-dönüş",
       "depth against distance: it falls from 1 at the near plane toward 0 at infinity": "mesafeye karşı derinlik: yakın düzlemde 1'den sonsuzda 0'a düşer",
       "depth at the near plane (0.1 m)": "yakın düzlemdeki derinlik (0,1 m)",
@@ -1651,7 +1612,6 @@
       "rotation of A (rad)": "A'nın dönüşü (rad)",
       "the direction (1, 0, 0) under that matrix": "o matris altındaki (1, 0, 0) yönü",
       "the identity written at offset 16 of one large buffer": "büyük bir tamponun 16 ofsetine yazılan birim matris",
-      "x of the last node — the sum 0 + 1 + … + (n − 1)": "son düğümün x'i — 0 + 1 + … + (n − 1) toplamı",
       "transformHomogeneousPoint — four components": "transformHomogeneousPoint — dört bileşen",
       "matrixAtRenderOrigin — the same matrix, applied at the origin": "matrixAtRenderOrigin — başlangıç noktasında uygulanan aynı matris",
       "viewToRenderOrigin — the view without its translation": "viewToRenderOrigin — ötelemesi olmayan görünüm",
@@ -1666,10 +1626,7 @@
       "surface": "yüzey",
       "target": "hedef",
       "viewer": "izleyici",
-      "expected": "beklenen",
-      "orientation": "yönelim",
-      "products": "çarpımlar",
-      "nodes": "düğümler"
+      "orientation": "yönelim"
     },
     "patterns": {
       "singular": "determinant {{value}}: on altı sıfır — determinantı test edin, asla çıktıyı değil"

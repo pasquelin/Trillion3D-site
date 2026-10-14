@@ -21,50 +21,92 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, math, texture } from '../runtime/engine.js';
-      import { controls } from '../runtime/kit.js';
+      import { createWorld, geometry, material, object, light, math, texture, effect } from '../runtime/engine.js';
+      import { controls, sineHash } from '../runtime/kit.js';
 
-      // The normal map of a brick wall: courses of bricks, every second one offset by half a brick,
-      // each brick a slab standing out of the mortar. Each pixel stores which way that relief faces:
-      // red leans right, green leans up the picture, whose first row is its top.
-      function brickNormals(rows, columns, size = 512) {
-        const height = (u, v) => {
-          const course = Math.floor(v * rows), shift = course % 2 ? 0.5 / columns : 0;
-          const x = ((u + shift) * columns) % 1, y = (v * rows) % 1, mortar = 0.08;
-          const inside = Math.min(x, 1 - x, (y * columns) / rows, ((1 - y) * columns) / rows);
-          return inside < mortar ? 0 : Math.min(1, (inside - mortar) / 0.06);
-        };
-        const step = 1 / size, pixels = new Uint8Array(size * size * 4);
-        for (let py = 0; py < size; py++)
-          for (let px = 0; px < size; px++) {
-            const u = px / size, v = py / size;
-            const dx = (height(u + step, v) - height(u - step, v)) * 4, dy = (height(u, v + step) - height(u, v - step)) * 4;
-            const length = Math.hypot(dx, dy, 1);
-            [0.5 - dx / length / 2, 0.5 - dy / length / 2, 0.5 + 1 / length / 2, 1].forEach((value, channel) => {
-              pixels[(py * size + px) * 4 + channel] = Math.round(math.clamp(value, 0, 1) * 255);
-            });
-          }
-        return texture.data(pixels, size, size, 'rgba');
+      // A brick wall drawn as pictures: courses of bricks, every second one offset by half a
+      // brick, each brick a slab standing out of the mortar. One pass reads, for every pixel, how
+      // high the relief stands there and which brick it belongs to; the three pictures the
+      // material reads are all painted from it, so they always line up.
+      const ROWS = 12, COLUMNS = 8, SIZE = 512, PIXELS = SIZE * SIZE;
+      const relief = new Float32Array(PIXELS), tone = new Float32Array(PIXELS), wear = new Float32Array(PIXELS), grain = new Float32Array(PIXELS);
+      for (let at = 0; at < PIXELS; at++) {
+        const u = (at % SIZE) / SIZE, v = Math.floor(at / SIZE) / SIZE;
+        const course = Math.floor(v * ROWS), shift = course % 2 ? 0.5 / COLUMNS : 0;
+        const x = ((u + shift) * COLUMNS) % 1, y = (v * ROWS) % 1, mortar = 0.08;
+        const inside = Math.min(x, 1 - x, (y * COLUMNS) / ROWS, ((1 - y) * COLUMNS) / ROWS);
+        const brick = course * COLUMNS + (Math.floor((u + shift) * COLUMNS) % COLUMNS);
+        relief[at] = inside < mortar ? 0 : Math.min(1, (inside - mortar) / 0.06);
+        // `sineHash`: a number from 0 to 1 that looks random but is the same at every visit.
+        tone[at] = 0.7 + 0.45 * sineHash(brick, 0);
+        wear[at] = 0.12 + 0.18 * sineHash(brick, 1);
+        grain[at] = 0.92 + 0.16 * sineHash(at, 2);
       }
+      const picture = (paint, pixels = new Uint8Array(PIXELS * 4)) => {
+        for (let at = 0; at < PIXELS; at++) {
+          paint(at, pixels, at * 4);
+          pixels[at * 4 + 3] = 255;
+        }
+        return pixels;
+      };
+
+      // The normal map: each pixel stores which way the relief faces there — red leans right,
+      // green leans up the picture, whose first row is its top.
+      const height = (px, py) => relief[math.clamp(py, 0, SIZE - 1) * SIZE + math.clamp(px, 0, SIZE - 1)];
+      const normals = texture.data(picture((at, pixels, rgba) => {
+        const px = at % SIZE, py = Math.floor(at / SIZE);
+        const dx = (height(px + 1, py) - height(px - 1, py)) * 4, dy = (height(px, py + 1) - height(px, py - 1)) * 4;
+        const length = Math.hypot(dx, dy, 1);
+        [0.5 - dx / length / 2, 0.5 - dy / length / 2, 0.5 + 1 / length / 2].forEach((value, channel) => {
+          pixels[rgba + channel] = Math.round(math.clamp(value, 0, 1) * 255);
+        });
+      }), SIZE, SIZE, 'rgba');
+      // The roughness map: the mortar is matte, a brick's face a little smoother, worn unevenly.
+      const roughness = texture.data(picture((at, pixels, rgba) => {
+        pixels.fill(Math.round(255 * (0.95 - relief[at] * wear[at])), rgba, rgba + 3);
+      }), SIZE, SIZE, 'rgba');
+      // The colour map: grey mortar, and every brick its own tint of the chosen colour, with a
+      // grain. It is a colour picture (`srgb`); painted again when the colour changes.
+      const albedo = texture.data(new Uint8Array(PIXELS * 4), SIZE, SIZE, 'rgba');
+      albedo.colorSpace = 'srgb';
+      const MORTAR = [150, 146, 140];
+      function paintBricks(colour) {
+        const hex = math.color(colour).getHex(), base = [16, 8, 0].map((shift) => (hex >> shift) & 255);
+        picture((at, pixels, rgba) => {
+          for (let channel = 0; channel < 3; channel++) {
+            const mortar = MORTAR[channel], brick = base[channel] * tone[at];
+            pixels[rgba + channel] = math.clamp(Math.round((mortar + (brick - mortar) * relief[at]) * grain[at]), 0, 255);
+          }
+        }, albedo.image.data);
+        albedo.needsUpdate = true;
+      }
+
       const world = createWorld('view', { controls: 'orbit' });
-      const bricks = material.meshStandard({ color: '#a4533a', roughness: 0.85, normalMap: brickNormals(12, 8) });
+      world.scene.background = math.color('#171d28');
+      const bricks = material.meshStandard({ map: albedo, roughnessMap: roughness, normalMap: normals });
       // A wall 20 cm thick, its front face at z = 0: seen from any side, it stays a wall.
       const wall = object.mesh(geometry.box(6, 3, 0.2), bricks);
       wall.position.set(0, 1.5, -0.1);
       const floor = object.mesh(geometry.box(7, 0.2, 4.5), material.meshStandard({ color: '#55534f', roughness: 0.9 }));
       floor.position.set(0, -0.1, 0.75);
       world.scene.add(wall, floor);
-      // A lamp close to the wall, sliding along it: its light grazes the bricks.
+      // A lamp close to the wall, sliding along it: its light grazes the bricks. Its bulb is drawn
+      // too, glowing, and a light bloom lets it shine.
       const lamp = light.point({ intensity: 14, color: '#ffc27a', distance: 8, radius: 0.05 });
+      const filament = material.meshStandard({ color: '#000000', emissive: '#ffc27a', emissiveIntensity: 6 });
+      const bulb = object.mesh(geometry.sphere(0.05, 24, 16), filament);
+      lamp.add(bulb);
       world.scene.add(lamp, light.ambient({ intensity: 0.35, color: '#8fb4ff' }));
+      world.effects.add(effect.bloom({ intensity: 0.06 }));
       world.camera.position.set(1.2, 1.7, 5.2);
       world.camera.lookAt(0, 1.4, 0);
       world.controls.target.set(0, 1.4, 0);
       world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
 
-      const ui = controls({ sweep: true, lamp: [-3, 3, -1.2], colour: '#ffc27a', bricks: '#a4533a' }, (values) => {
+      const ui = controls({ sweep: true, lamp: [-3, 3, -1.2], colour: '#ffc27a', bricks: '#a4533a' }, (values, key) => {
         lamp.color.set(values.colour);
-        bricks.color.set(values.bricks);
+        filament.emissive.set(values.colour);
+        if (key === undefined || key === 'bricks') paintBricks(values.bricks);
         lamp.position.set(values.lamp, 1.8, 0.35);
         world.invalidate();
       }, world);

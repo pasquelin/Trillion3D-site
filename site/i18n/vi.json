@@ -71,7 +71,8 @@
     "meaning": "Tác dụng",
     "details": "Chi tiết",
     "live": "Chạy trực tiếp, ngay tại đây",
-    "liveHint": "Kéo các nút điều khiển: những giá trị này đến từ hàm của bộ máy đang chạy thật trong trình duyệt này."
+    "liveHint": "Kéo các nút điều khiển: những giá trị này đến từ hàm của bộ máy đang chạy thật trong trình duyệt này.",
+    "examples": "Các ví dụ dùng nó"
   },
   "kind": {
     "Function": "Hàm",
@@ -655,7 +656,7 @@
     "measurement-entry": {
       "title": "Điểm vào dành cho đo lường",
       "description": "Nơi một mẫu đối chứng hay một phiên nội bộ vẫn còn được gọi tên — không bao giờ qua điểm vào `trillion3d` đã công bố.",
-      "html": "<p>Một trang import <code>trillion3d</code> và không bao giờ thấy một mẫu đối chứng hay một phiên nội bộ nào: <code>createWorld</code> vẽ bằng WebGPU, hoặc bị từ chối đích danh nếu máy không cấp WebGPU. Bộ đo hiệu năng và các bằng chứng vẫn cần gọi tên một mẫu đối chứng — Three.js thuần túy, <code>THREE.LOD</code>, phiên nội bộ <code>openMeasuredWorld</code> — và đó là nhiệm vụ duy nhất của điểm vào đo lường riêng biệt, <code>packages/sdk-browser/src/measurement/measurement.ts</code>.</p>\n<p>Nó xuất lại mọi thứ mà điểm vào đã công bố xuất ra, cộng thêm những gì một host không bao giờ cần: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (phiên nội bộ mà một thế giới mở trên chính nó), nhà máy trang <code>webgpuPagesEngine</code>, và các hàm hỗ trợ chỉ dành cho đo lường như <code>replicateInstances</code>. Không thứ nào đến được một thế giới đã công bố, và không ứng dụng nào import chúng.</p>"
+      "html": "<p>Một trang import <code>trillion3d</code> và không bao giờ thấy một mẫu đối chứng hay một phiên nội bộ nào: <code>createWorld</code> vẽ bằng WebGPU, hoặc bị từ chối đích danh nếu máy không cấp WebGPU. Bộ đo hiệu năng và các bằng chứng vẫn cần gọi tên một mẫu đối chứng — Three.js thuần túy, <code>THREE.LOD</code>, phiên nội bộ <code>openMeasuredWorld</code> — và đó là nhiệm vụ duy nhất của điểm vào đo lường riêng biệt, <code>packages/sdk-browser/src/measurement/measurement.ts</code>.</p>\n<p>Nó xuất lại mọi thứ mà điểm vào đã công bố xuất ra, cộng thêm những gì một host không bao giờ cần: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (phiên nội bộ mà một thế giới mở trên chính nó), nhà máy trang <code>webgpuPagesEngine</code>, và các hàm hỗ trợ chỉ dành cho đo lường như <code>attachParticles</code>. Không thứ nào đến được một thế giới đã công bố, và không ứng dụng nào import chúng.</p>"
     },
     "createWorldJob": {
       "title": "Tải một thế giới như một công việc có thể hủy",
@@ -722,21 +723,6 @@
         "Chất lượng cao — `pixelError: 1`, dị hướng tối đa.",
         "Cân bằng — `pixelError: 4`.",
         "Thích ứng — `pixelError: 2`, được nâng lên theo tốc độ camera bởi `adaptivePixelError(base, speed, radius)`; một góc nhìn đứng yên giữ nguyên giá trị nền."
-      ]
-    },
-    "ScreenErrorVariant": {
-      "description": "Phép chiếu nào của sai số cụm được phép cắt đem so với ngưỡng. Trạng thái của module cho toàn bộ trang, được thước đo CPU đọc và được chèn thẳng vào shader chọn lựa khi biên dịch; mỗi bên của một bộ đo hiệu năng chạy trên trang riêng của nó. Nguồn công bố công khai của công thức: Karis, Stubbe và Wihlidal, SIGGRAPH 2021, \"Advances in Real-Time Rendering in Games\".",
-      "values": [
-        "Của chúng tôi (mặc định): một giới hạn không bao giờ đánh giá thấp sai số.",
-        "Công thức đã công bố, dùng cho bộ đo hiệu năng so sánh."
-      ]
-    },
-    "MathPathMode": {
-      "description": "Con đường nào mà một lô được chạy trên. `auto` phân xử bằng đo lường: bộ điều phối giữ một trung vị trượt của số nano giây trên mỗi phần tử ở mỗi bên và chuyển đổi sau một chuỗi thực thi có độ chênh lệch đó, với JS luôn là mốc tham chiếu và phương án dự phòng. `MATH_PATH_CONTRACT` gắn phiên bản cho báo cáo đã công bố.",
-      "values": [
-        "Phân xử bằng đo lường (mặc định).",
-        "Con đường JavaScript được áp đặt, dùng cho một chiến dịch.",
-        "Nhân WebAssembly được áp đặt, khi có một nhân tồn tại cho phép toán đó."
       ]
     },
     "JobStatus": {
@@ -916,23 +902,8 @@
     "updateNodeMatrixWorld": {
       "description": "Node đó và toàn bộ cây con của nó, cha trước con sau. Một node được tiếp cận nếu nó tự cập nhật, nếu nó được đánh dấu, hoặc nếu có `force`. Con dấu của một node được ghé thăm là `2 · traversal + reached`, nên chỉ một lần đọc là đủ cho một node con biết nó có nằm trong cây con đó không và cha nó truyền lại gì. Dạng thứ hai còn duyệt qua các tổ tiên từ gốc, khi được yêu cầu."
     },
-    "nodeWorldPosition": {
-      "description": "Các phép đọc ma trận thế giới: cột tịnh tiến; góc xoay và tỉ lệ từ việc phân rã nó, một định thức âm được mang bởi `x` mà thôi. Cột thứ ba được chuẩn hóa như một hướng, bị đảo ngược khi có `cameraForward` — một camera và một nguồn sáng nhìn về phía `−z` của chúng. `nodeWorldMirrorsFaces` là đúng khi ma trận thế giới đảo ngược hướng, và khi đó phép vẽ hoán đổi mặt trước và mặt sau của nó; giá trị này được đọc nguyên trạng, không cập nhật, và một định thức bằng không hoặc NaN sẽ không đảo ngược gì cả."
-    },
     "lookAtNode": {
       "description": "Xoay `node` hướng về điểm thế giới `(x, y, z)`. `viewer` là đúng cho một camera hoặc một nguồn sáng, những thứ nhìn về phía `−z` của chúng, sai cho một vật thể, thứ hướng `+z` của nó ra ngoài. `up` là hướng lên của node, `(0, 1, 0)` theo mặc định. Các tổ tiên và node đó được cập nhật trước."
-    },
-    "multiplyMatrix4Batch": {
-      "description": "`n` tích số `out[i] = a[i] · b[i]`, cả ba phía đều được cho dưới dạng sub-view mười sáu con số. Các sub-view được dựng một lần, không bao giờ mỗi khung hình; một nhân WebAssembly lặp lại đúng công thức đó từng số hạng một và bộ điều phối chọn con đường nào được đo là nhanh hơn."
-    },
-    "boxTransformBatch": {
-      "description": "`n` hộp được biến đổi bởi `n` ma trận: `out[i] = boxTransform(boxes[i], mats[i])`. `out` và `boxes` mang sáu con số mỗi phần tử, `mats` là một sub-view mười sáu con số."
-    },
-    "hierarchyUpdateBatch": {
-      "description": "Toàn bộ một cây phân cấp được cập nhật trong một chặng duy nhất: `n` node được sắp xếp cha trước con, mỗi node dựng ma trận cục bộ của mình rồi nhân với ma trận thế giới của cha nó — quá trình duyệt của `packages/sdk-core/src/world/transform-tree/update.ts`, cùng hai công thức đó theo cùng thứ tự đó, trên các bộ đệm phẳng. `parents[i]` **bắt buộc** phải chỉ tới một node đã được cập nhật, do đó phải nhỏ hơn hẳn `i`; bất kỳ giá trị nào khác — kể cả giá trị đặc biệt `HIERARCHY_ROOT` — biến node đó thành một gốc mà ma trận thế giới của nó chính là ma trận cục bộ của nó. Quy tắc này giống hệt nhau trên cả hai con đường: không đầu vào nào, dù khắc nghiệt tới đâu, có thể khiến chúng khác nhau. `local` là một ma trận nháp duy nhất, được dùng lại cho mỗi phần tử."
-    },
-    "createPathGovernor": {
-      "description": "Cái quyết định giữa JS và WebAssembly, cho từng phép toán được đặt tên: các trung vị trượt của số nano giây trên mỗi phần tử, một lần chuyển đổi chỉ sau năm lần thực thi liên tiếp có độ chênh lệch đó, và một trong năm mươi lần thực thi sẽ chạy lại con đường kia để làm mới trung vị của nó. Dưới năm mẫu thì không có gì được quyết định cả — chỉ một giá trị duy nhất sẽ tạo thành trung vị. `metrics()` công bố, cho mỗi phép toán, `path`, `jsNsPerElement`, `wasmNsPerElement`, số lần chuyển đổi, và độ phân giải đồng hồ mà phép đo đó dựa vào."
     },
     "frustumKeepsBoxBatch": {
       "description": "`n` hộp gồm sáu con số (min rồi tới max) so với hai mươi bốn số thực của một khối nhìn: `kept[i]` bằng 1 khi hộp đó giao cắt hoặc nằm bên trong, và số lượng được giữ lại sẽ được trả về — `frustumExcludesBox` đảo ngược, đúng cực tính mà mốc tham chiếu trả lời. Lô hình cầu ghi ra `SPHERE_VALUES` con số mỗi hộp, tâm rồi tới bán kính tới góc, giống như `sphereFromBounds` làm. Cả hai vòng lặp đều nằm trong `packages/math/src/batch/culling.ts`."
@@ -968,6 +939,19 @@
       "title": "Lưu và mở một cảnh",
       "description": "`scene.toJSON(camera)` ghi cảnh thành JSON đơn giản có phiên bản; `scene.fromJSON(json, camera)` dựng lại nó.",
       "html": "<p>Hình khối được lưu bằng lệnh gọi đã tạo ra chúng, vật liệu bằng giá trị của chúng, mô hình đã nạp bằng địa chỉ của chúng — không bao giờ chép vào trong — còn các dấu <code>helper</code> thì hoàn toàn không được lưu. Một phiên bản định dạng khác bị từ chối kèm theo tên. Xem nó trong <a href=\"#/vi/examples/save-the-scene\">Lưu cảnh</a>.</p>"
+    },
+    "PlacementLink": {
+      "members": {
+        "rows": "Các hàng đặt chỗ mà hàng được liên kết thuộc về.",
+        "index": "Thứ hạng của hàng trong các hàng đó.",
+        "local": "Ma trận cục bộ của lưới, tương đối với cha: mười sáu số."
+      }
+    },
+    "SceneLightStore": {
+      "members": {
+        "shadowedLocals": "Số đèn đổ bóng là đèn cục bộ chứ không phải mặt trời.",
+        "rects": "Số đèn là hình chữ nhật."
+      }
     }
   },
   "canvas": {
@@ -997,8 +981,6 @@
       "high": "cao",
       "balanced": "cân bằng",
       "adaptive": "thích ứng",
-      "switches": "lần chuyển đổi",
-      "arbitration": "phân xử",
       "box 0": "hộp 0",
       "box 1": "hộp 1",
       "box 2": "hộp 2",
@@ -1038,8 +1020,6 @@
       "saturation": "độ bão hòa",
       "lightness": "độ sáng",
       "scalar": "số vô hướng",
-      "nodes in the batch": "số node trong lô",
-      "products in the batch": "số tích trong lô",
       "boxes in the batch": "số hộp trong lô",
       "boxes tested": "số hộp được kiểm tra",
       "kept by the frustum": "được khối nhìn giữ lại",
@@ -1056,12 +1036,6 @@
       "cone half-angle (rad)": "nửa góc của hình nón (rad)",
       "cone axis, heading (rad)": "trục hình nón, hướng (rad)",
       "viewer distance": "khoảng cách của người quan sát",
-      "JS nanoseconds per element": "số nano giây JS mỗi phần tử",
-      "Wasm nanoseconds per element": "số nano giây Wasm mỗi phần tử",
-      "executions observed": "số lần thực thi quan sát được",
-      "contract version": "phiên bản hợp đồng",
-      "path chosen": "con đường được chọn",
-      "not decided yet": "chưa được quyết định",
       "read and never written": "chỉ đọc, không bao giờ ghi",
       "the constant itself, read from the engine": "chính hằng số đó, đọc từ bộ máy",
       "reversed depth, infinite far plane": "độ sâu đảo ngược, mặt phẳng xa vô hạn",
@@ -1076,8 +1050,6 @@
       "its forward direction": "hướng phía trước của nó",
       "under the root": "dưới gốc",
       "reparented to the world": "đổi cha thành thế giới",
-      "allocations during the call": "số lần cấp phát trong lệnh gọi",
-      "largest difference on the last element": "chênh lệch lớn nhất ở phần tử cuối cùng",
       "this frame": "khung hình này",
       "a box beyond the declared far plane": "một hộp vượt ra ngoài mặt phẳng xa đã khai báo",
       "a box three metres ahead": "một hộp cách ba mét phía trước",
@@ -1101,11 +1073,6 @@
       "the unit box carried by that matrix": "hộp đơn vị được mang bởi ma trận đó",
       "the union of the eight transformed corners, never the eight of the result": "hợp của tám góc đã biến đổi, không bao giờ là tám góc của kết quả",
       "one buffer holds many matrices; no view is sliced per frame": "một bộ đệm chứa nhiều ma trận; không có view nào bị cắt riêng mỗi khung hình",
-      "one chain of nodes, parents before children, in one call": "một chuỗi node, cha trước con sau, trong một lệnh gọi duy nhất",
-      "none: the buffers are the caller’s": "không có gì cả: các bộ đệm là của người gọi hàm",
-      "the unit function stays the oracle; the WebAssembly kernel repeats it term by term": "hàm đơn vị vẫn là mốc chuẩn; nhân WebAssembly lặp lại nó từng số hạng một",
-      "the governor, after those executions": "bộ điều phối, sau những lần thực thi đó",
-      "the kernel leads by enough, for long enough, to be worth the switch": "nhân đó dẫn trước đủ nhiều, đủ lâu, để đáng chuyển đổi",
       "the reads of one node": "các phép đọc của một node",
       "the sign alone decides, with no square root: the exact clip test": "chỉ riêng dấu đã đủ quyết định, không cần căn bậc hai: phép kiểm tra clip chính xác",
       "the subtraction happens in double; only the write rounds": "phép trừ diễn ra ở độ chính xác kép; chỉ việc ghi mới làm tròn",
@@ -1142,7 +1109,6 @@
       "the child, before and after the root moves": "node con, trước và sau khi gốc di chuyển",
       "the child, attached then detached": "node con, được gắn rồi được gỡ ra",
       "matrices do not move until the next update, like the reference `add`": "các ma trận không di chuyển cho tới lần cập nhật tiếp theo, giống như `add` của mốc tham chiếu",
-      "the batch against the unit function it repeats": "lô đó so với hàm đơn vị mà nó lặp lại",
       "frame.view — the inverse of the camera world matrix": "frame.view — nghịch đảo của ma trận thế giới của camera",
       "DIAGNOSTICS — the engine says which modes it can produce, and why not": "DIAGNOSTICS — bộ máy cho biết chế độ nào nó tạo ra được, và vì sao không",
       "LOD_QUALITY, as the engine holds it": "LOD_QUALITY, đúng như bộ máy đang lưu giữ",
@@ -1152,7 +1118,6 @@
       "singular: the adjugate as-is, so the flattened surface keeps a normal": "suy biến: ma trận phụ hợp giữ nguyên, nên bề mặt bị làm phẳng vẫn giữ được một pháp tuyến",
       "no finite scale: nine zeros": "không có tỉ lệ hữu hạn: chín số không",
       "rejected: every normal of that cluster faces away from the viewer": "bị loại bỏ: mọi pháp tuyến của cụm đó đều hướng ra xa người quan sát",
-      "JS keeps the work: under five samples, or the lead is not a burst": "JS giữ lấy công việc đó: khi dưới năm mẫu, hoặc khi độ dẫn trước không phải một chuỗi liên tục",
       "nodeWorldDirection (object, +z)": "nodeWorldDirection (vật thể, +z)",
       "nodeWorldDirection (viewer, −z)": "nodeWorldDirection (người quan sát, −z)",
       "root": "gốc",
@@ -1182,7 +1147,6 @@
       "column 1": "cột 1",
       "column 2": "cột 2",
       "out = a, aliased": "out = a, dùng chung bộ đệm",
-      "clock resolution the measurement rests on (ms)": "độ phân giải đồng hồ mà phép đo dựa vào (ms)",
       "decomposeMatrix4 of that matrix — the round trip": "decomposeMatrix4 của ma trận đó — vòng đi và về",
       "depth against distance: it falls from 1 at the near plane toward 0 at infinity": "độ sâu theo khoảng cách: giảm từ 1 ở mặt phẳng gần xuống 0 ở vô hạn",
       "depth at the near plane (0.1 m)": "độ sâu ở mặt phẳng gần (0,1 m)",
@@ -1198,7 +1162,6 @@
       "rotation of A (rad)": "góc xoay của A (rad)",
       "the direction (1, 0, 0) under that matrix": "hướng (1, 0, 0) dưới ma trận đó",
       "the identity written at offset 16 of one large buffer": "ma trận đơn vị được ghi tại độ lệch 16 của một bộ đệm lớn",
-      "x of the last node — the sum 0 + 1 + … + (n − 1)": "x của node cuối cùng — tổng 0 + 1 + … + (n − 1)",
       "transformHomogeneousPoint — four components": "transformHomogeneousPoint — bốn thành phần",
       "matrixAtRenderOrigin — the same matrix, applied at the origin": "matrixAtRenderOrigin — cùng ma trận đó, áp dụng tại gốc tọa độ",
       "viewToRenderOrigin — the view without its translation": "viewToRenderOrigin — view không có phần tịnh tiến",
@@ -1213,10 +1176,7 @@
       "surface": "bề mặt",
       "target": "mục tiêu",
       "viewer": "người quan sát",
-      "expected": "kỳ vọng",
-      "orientation": "hướng",
-      "products": "tích số",
-      "nodes": "node"
+      "orientation": "hướng"
     },
     "patterns": {
       "singular": "định thức {{value}}: mười sáu số không — hãy kiểm tra định thức, không bao giờ kiểm tra kết quả đầu ra"
@@ -1531,7 +1491,8 @@
       "a-dolly-along-the-canal": "Máy quay trượt dọc kênh",
       "a-folder-merged-into-one-scene": "Thư mục được gộp thành một cảnh",
       "drag-a-crate": "Kéo thùng hàng",
-      "move-a-hierarchy-by-name": "Di chuyển hệ thống phân cấp theo tên"
+      "move-a-hierarchy-by-name": "Di chuyển hệ thống phân cấp theo tên",
+      "cooked-blocks-that-fall": "Những khối tính sẵn rơi xuống"
     },
     "missing": {
       "thick-lines": "đường rộng",
@@ -1575,7 +1536,6 @@
       "wide-gamut-colour": "đầu ra wide-gamut",
       "energy-conservation-test": "chiếu sáng môi trường (IBL)",
       "contact-shadow-under-a-car": "dựng hình vào kết cấu",
-      "coloured-shadows-through-glass": "vật đổ bóng trong suốt",
       "shadows-in-the-corners": "che khuất môi trường screen-space",
       "contact-shadows-from-the-screen": "dò tia screen-space",
       "light-that-bounces": "chiếu sáng dội lại trong API công khai",
@@ -1596,7 +1556,6 @@
       "voxel-models": "trình nhập nguồn khác: VOX",
       "cad-and-building-models": "trình nhập nguồn khác: 3DM, IFC",
       "a-toolpath-in-lines": "trình nhập nguồn khác: G-code",
-      "instanced-gltf": "phần mở rộng glTF khác: instancing GPU",
       "gltf-material-variants": "phần mở rộng glTF khác: biến thể vật liệu",
       "compressed-mesh-input": "phần mở rộng glTF khác: Draco, meshopt, lượng tử hóa",
       "a-medical-scan": "dựng hình thể tích",
@@ -1615,8 +1574,6 @@
       "a-mirror-on-the-wall": "dựng hình vào kết cấu: gương phẳng",
       "a-polished-floor": "phản chiếu screen-space",
       "reflections-from-the-screen": "phản chiếu screen-space",
-      "an-ocean": "dựng hình vào kết cấu: phản chiếu và khúc xạ nước",
-      "a-raging-sea": "vật liệu shader tùy chỉnh",
       "fog-that-scatters-light": "sương mù thể tích và tia sáng",
       "a-cloud-in-a-box": "dựng hình thể tích",
       "a-fire-in-a-volume": "dựng hình thể tích",

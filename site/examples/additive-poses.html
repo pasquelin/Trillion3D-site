@@ -9,106 +9,134 @@
       body {
         margin: 0;
         height: 100%;
-        background: #253b42;
+        background: #8fb4d8;
       }
       canvas {
         display: block;
         width: 100%;
         height: 100%;
       }
+      p {
+        position: absolute;
+        bottom: 0;
+        margin: 0.5rem;
+        color: white;
+        font: 12px system-ui;
+      }
+      a {
+        color: inherit;
+      }
     </style>
   </head>
   <body>
     <canvas id="view"></canvas>
+    <p>
+      CesiumMan © 2017 Cesium —
+      <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+      <a
+        href="https://github.com/KhronosGroup/glTF-Sample-Assets/blob/main/LICENSES/LicenseRef-LegalMark-Cesium.txt"
+        >Cesium logo notice</a
+      >.
+    </p>
     <script type="module">
       import {
         createWorld,
         animation,
-        buffer,
+        effect,
         geometry,
-        object,
-        material,
         light,
+        material,
         math,
+        object,
       } from '../runtime/engine.js';
       import { controls } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
-      world.scene.background = math.color('#253b42');
-      const tree = object.group();
-      const bones = Array.from({ length: 3 }, (_, index) => {
-        const bone = object.group();
-        bone.name = `branch${index}`;
-        bone.position.y = index ? 1.5 : 0;
-        return bone;
-      });
-      tree.add(bones[0]);
-      bones[0].add(bones[1]);
-      bones[1].add(bones[2]);
-      const skeleton = animation.skeleton(bones);
-      const shapes = [
-        [geometry.cylinder(0.13, 0.24, 3.5, 12, 16).translate(0, 1.75, 0), '#76543b'],
-        [geometry.cone(1.2, 3.4, 20, 20).translate(0, 3.3, 0), '#52a87c'],
-      ];
-      for (const [shape, color] of shapes) {
-        const positions = shape.getAttribute('position');
-        const joints = new Uint16Array(positions.count * 4),
-          weights = new Float32Array(positions.count * 4);
-        for (let v = 0; v < positions.count; v++) {
-          const height = math.clamp(positions.getY(v) / 1.5, 0, 2);
-          const low = Math.floor(height),
-            high = Math.min(2, low + 1),
-            mix = height - low;
-          joints.set([low, high, 0, 0], v * 4);
-          weights.set([1 - mix, mix, 0, 0], v * 4);
-        }
-        shape.setAttribute('skinIndex', buffer.uint16(joints, 4));
-        shape.setAttribute('skinWeight', buffer.float32(weights, 4));
-        const mesh = object.mesh(shape, material.meshStandard({ color, roughness: 0.9 }));
-        mesh.skeleton = skeleton;
-        mesh.castShadow = true;
-        tree.add(mesh);
-      }
-      world.scene.add(tree);
-      const mixer = animation.createMixer(tree);
-      const breeze = mixer
-        .clipAction(animation.windClip(bones, { angle: 0.08, frequency: 0.3 }))
-        .play();
-      const gust = mixer.clipAction(
-        animation.windClip(bones, { direction: [0, 1], angle: 0.17, frequency: 0.7 }),
+      const sky = math.color('#8fb4d8');
+      world.scene.background = sky;
+      // A stage that takes his shadow, its rim lost in a fog of the sky's colour.
+      world.scene.fog = { color: sky, near: 6, far: 13 };
+      world.effects.add(effect.bloom({ intensity: 0.06 }));
+      const stage = object.mesh(
+        geometry.cylinder(8, 8, 0.1, 96),
+        material.meshStandard({ color: '#8f7a68', roughness: 0.95 }),
       );
-      gust.blendMode = 'additive';
-      gust.weight = 0.6;
-      gust.play();
-      const sun = light.directional({ intensity: 3, castShadow: true });
-      sun.position.set(4, 8, 6);
-      world.scene.add(sun, light.hemisphere({ intensity: 1.2 }));
-      world.camera.position.set(6, 4, 8);
-      world.controls.target.set(0, 2.3, 0);
+      stage.position.y = -0.05;
+      // It takes shadows and casts none.
+      stage.castShadow = false;
+      // A warm key from the side and a cool sky to fill: the figure reads against both.
+      const sun = light.directional({ intensity: 3.4, color: '#ffd9ae', castShadow: true });
+      sun.position.set(4, 6, 4);
+      world.scene.add(
+        stage,
+        sun,
+        light.hemisphere({ intensity: 1.1, color: '#cfe4ff', groundColor: '#6b4c34' }),
+      );
+
+      // The base: the file's walk, played as it is.
+      const model = await world.scene.load(
+        '../assets/examples/cesium-man/cache/native/full/manifest.json',
+      );
+      const walk = model.animations[0];
+      if (!walk) throw new Error('The compiled sample must retain its animation');
+      const mixer = animation.createMixer(model);
+      const base = mixer.clipAction(walk).play();
+
+      // The layer: a clip of the spine and the neck alone, keyed by hand. An additive action adds
+      // how far each key turns from its first one on top of the walk: a slouch and a sway from
+      // side to side the walk never had. Both bones turn about their own axes, `y` across the
+      // body (a lean forward), `z` along the way it faces (a roll to the side).
+      const turn = (lean, roll) => math.quaternion().setFromEuler(math.euler(0, lean, roll)).toArray();
+      const track = ([bone, lean, roll]) => {
+        if (!model.getObjectByName(bone)) throw new Error(`The sample must keep the bone ${bone}`);
+        const poses = [turn(0, 0), turn(lean, roll), turn(lean, 0), turn(lean, -roll), turn(0, 0)];
+        return animation.quaternionTrack(`${bone}.quaternion`, [0, 1, 2, 3, 4], poses.flat());
+      };
+      const sway = animation.clip('sway', 4, [
+        ['Skeleton_torso_joint_2', 0.3, 0.22],
+        // The head comes back up a little, so the gaze stays ahead.
+        ['Skeleton_neck_joint_1', -0.15, -0.1],
+      ].map(track));
+      const layer = mixer.clipAction(sway);
+      layer.blendMode = 'additive';
+      layer.play();
+
+      world.camera.position.set(1.7, 1.3, 1.9);
+      world.controls.target.set(0, 0.85, 0);
+      // Both actions posed together at their times: one sampled alone would leave the other's
+      // bones out, and an additive layer alone adds its sway to the rest pose, not to the walk.
+      const pose = () => {
+        for (const action of [base, layer]) action.playingNow = true;
+        mixer.update(0);
+        for (const action of [base, layer]) action.playingNow = false;
+        world.invalidate();
+      };
       controls(
-        { playing: true },
-        ({ playing }) => {
-          for (const action of [breeze, gust]) {
-            if (playing) action.play();
-            else {
-              const time = action.time;
-              action.stop().seek(time);
-            }
+        { playing: true, weight: [0, 1, 0.8, 0.05] },
+        ({ playing, weight }) => {
+          // At 0 the walk plays alone; at 1 the whole sway lies on top of it.
+          layer.weight = weight;
+          if (playing) {
+            base.play();
+            layer.play();
+            world.invalidate();
+            return;
           }
-          world.invalidate();
+          const times = [base.time, layer.time];
+          base.stop();
+          layer.stop();
+          [base.time, layer.time] = times;
+          pose();
         },
         world,
       );
       globalThis.deformationCase = {
         world,
         setTime(seconds) {
-          breeze.stop();
-          gust.stop();
-          breeze.playingNow = gust.playingNow = true;
-          breeze.time = gust.time = seconds;
-          mixer.update(0);
-          breeze.playingNow = gust.playingNow = false;
-          world.invalidate();
+          base.stop();
+          layer.stop();
+          base.time = layer.time = seconds;
+          pose();
         },
       };
     </script>

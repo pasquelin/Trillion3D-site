@@ -71,7 +71,8 @@
     "meaning": "ما الذي يفعله",
     "details": "التفاصيل",
     "live": "يعمل، هنا الآن",
-    "liveHint": "حرّك عناصر التحكّم: هذه القيم قادمة من دالة المحرك التي تعمل فعليًا في هذا المتصفح."
+    "liveHint": "حرّك عناصر التحكّم: هذه القيم قادمة من دالة المحرك التي تعمل فعليًا في هذا المتصفح.",
+    "examples": "أمثلة تستخدمه"
   },
   "kind": {
     "Function": "دالة",
@@ -655,7 +656,7 @@
     "measurement-entry": {
       "title": "نقطة دخول القياس",
       "description": "المكان الذي لا تزال فيه يمكن تسمية عيّنة أو جلسة داخلية — أبدًا عبر نقطة الدخول المنشورة `trillion3d`.",
-      "html": "<p>تستورد الصفحة <code>trillion3d</code> ولا ترى أبدًا عيّنة أو جلسة داخلية: يرسم <code>createWorld</code> بواسطة WebGPU، أو يُرفض باسمه إن لم يمنحه الجهاز. لا يزال المقياس والبراهين بحاجة لتسمية عيّنة — Three.js الأصلية، أو <code>THREE.LOD</code>، أو جلسة <code>openMeasuredWorld</code> الداخلية — وتلك هي المهمة الوحيدة لنقطة دخول القياس المنفصلة، <code>packages/sdk-browser/src/measurement/measurement.ts</code>.</p>\n<p>تعيد تصدير كل ما تصدّره نقطة الدخول المنشورة، إضافةً إلى ما لا يحتاجه المضيف أبدًا: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (الجلسة الداخلية التي يفتحها العالم على نفسه)، ومصنع الصفحات <code>webgpuPagesEngine</code>، ومساعدات خاصة بالقياس فقط مثل <code>replicateInstances</code>. لا شيء منها يصل إلى عالم منشور، ولا يستوردها أي تطبيق.</p>"
+      "html": "<p>تستورد الصفحة <code>trillion3d</code> ولا ترى أبدًا عيّنة أو جلسة داخلية: يرسم <code>createWorld</code> بواسطة WebGPU، أو يُرفض باسمه إن لم يمنحه الجهاز. لا يزال المقياس والبراهين بحاجة لتسمية عيّنة — Three.js الأصلية، أو <code>THREE.LOD</code>، أو جلسة <code>openMeasuredWorld</code> الداخلية — وتلك هي المهمة الوحيدة لنقطة دخول القياس المنفصلة، <code>packages/sdk-browser/src/measurement/measurement.ts</code>.</p>\n<p>تعيد تصدير كل ما تصدّره نقطة الدخول المنشورة، إضافةً إلى ما لا يحتاجه المضيف أبدًا: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (الجلسة الداخلية التي يفتحها العالم على نفسه)، ومصنع الصفحات <code>webgpuPagesEngine</code>، ومساعدات خاصة بالقياس فقط مثل <code>attachParticles</code>. لا شيء منها يصل إلى عالم منشور، ولا يستوردها أي تطبيق.</p>"
     },
     "createWorldJob": {
       "title": "تحميل عالم كعمل قابل للإلغاء",
@@ -722,21 +723,6 @@
         "جودة عالية — `pixelError: 1`، أقصى تباين اتجاهي.",
         "متوازن — `pixelError: 4`.",
         "تكيّفي — `pixelError: 2`، يُرفع مع سرعة الكاميرا بواسطة `adaptivePixelError(base, speed, radius)`؛ يحتفظ العرض الثابت بالقيمة الأساسية."
-      ]
-    },
-    "ScreenErrorVariant": {
-      "description": "أي إسقاط لخطأ العنقود تقارنه القَطعة بالعتبة. حالة وحدة لكامل الصفحة، يقرأها مقياس المعالج وتُدرَج مباشرة في مظلّل الاختيار عند ترجمته؛ يعمل كل طرف من المقياس المرجعي على صفحته الخاصة. المصدر العلني للصيغة: Karis وStubbe وWihlidal، SIGGRAPH 2021، \"Advances in Real-Time Rendering in Games\".",
-      "values": [
-        "الخاص بنا (الافتراضي): حدّ لا يُقلّل من تقدير الخطأ أبدًا.",
-        "الصيغة المنشورة، لمقياس المقارنة."
-      ]
-    },
-    "MathPathMode": {
-      "description": "على أي مسار تعمل دفعة. يحسم `auto` عبر القياس: يحتفظ المنظّم بوسيط متحرّك للنانوثانية لكل عنصر على كل جانب، ويبدّل بعد سلسلة تنفيذات بتلك الأفضلية، وتبقى JavaScript المرجع والخيار الاحتياطي. تمنح `MATH_PATH_CONTRACT` إصدارًا للتقرير المنشور.",
-      "values": [
-        "حسم عبر القياس (الافتراضي).",
-        "مسار JavaScript مفروض، لحملة ما.",
-        "نواة WebAssembly مفروضة، حين توجد واحدة لتلك العملية."
       ]
     },
     "JobStatus": {
@@ -916,23 +902,8 @@
     "updateNodeMatrixWorld": {
       "description": "تلك العقدة وشجرتها الفرعية بأكملها، الآباء أولًا. تُبلَغ عقدة ما إن كانت تُحدَّث تلقائيًا، أو كانت معلَّمة، أو عند `force`. طابع عقدة زُيرت هو `2 · traversal + reached`، فتخبر قراءة واحدة طفلًا ما إن كان ضمن تلك الشجرة الفرعية وماذا يمرّر له أصله. يجول الشكل الثاني أيضًا في الأسلاف من الجذر، عند الطلب."
     },
-    "nodeWorldPosition": {
-      "description": "قراءات مصفوفة العالم: عمود الانتقال؛ والدوران والمقياس من تفكيكها، ويحمل المحدِّد السالب المحور `x` وحده. يُطبَّع العمود الثالث كاتجاه، ويُعكَس عند `cameraForward` — تنظر كاميرا وضوء نحو `−z` الخاص بهما. `nodeWorldMirrorsFaces` صحيح عندما تعكس مصفوفة العالم الاتجاه، ويبدّل الرسم حينها وجهيه الأمامي والخلفي؛ يُقرأ هذا كما هو، دون تحديث، ولا يعكس محدِّد صفري أو NaN شيئًا."
-    },
     "lookAtNode": {
       "description": "يدير `node` نحو النقطة العالمية `(x, y, z)`. `viewer` صحيح لكاميرا أو ضوء، ينظران نحو `−z` الخاص بهما، وخاطئ لجسم، يعرض `+z` الخاص به. `up` هو الاتجاه العلوي للعقدة، وهو `(0, 1, 0)` افتراضيًا. تُحدَّث الأسلاف والعقدة أولًا."
-    },
-    "multiplyMatrix4Batch": {
-      "description": "`n` من الجداءات `out[i] = a[i] · b[i]`، وتُعطى الأطراف الثلاثة كرؤى فرعية بستة عشر رقمًا. تُبنى الرؤى الفرعية مرة واحدة، لا أبدًا لكل إطار؛ وتعيد نواة WebAssembly الصيغة نفسها حدًّا بحدّ، ويختار المنظّم المسار الذي يُقاس أنه أسرع."
-    },
-    "boxTransformBatch": {
-      "description": "`n` من الصناديق محوَّلة بـ `n` من المصفوفات: `out[i] = boxTransform(boxes[i], mats[i])`. يحمل `out` و`boxes` ستة أرقام لكل عنصر، و`mats` رؤية فرعية بستة عشر رقمًا."
-    },
-    "hierarchyUpdateBatch": {
-      "description": "تسلسل هرمي كامل محدَّث في مرحلة واحدة: `n` من العقد مرتَّبة الآباء قبل الأبناء، كل واحدة تبني مصفوفتها المحلية ثم تضربها في مصفوفة عالم أصلها — جولة `packages/sdk-core/src/world/transform-tree/update.ts`، الصيغتان نفساهما بالترتيب نفسه، على مخازن مؤقتة مسطَّحة. **يجب** أن يشير `parents[i]` إلى عقدة محدَّثة بالفعل، ولذا يجب أن يكون أصغر بشكل صارم من `i`؛ وأي قيمة أخرى — بما في ذلك القيمة الخاصة `HIERARCHY_ROOT` — تجعل تلك العقدة جذرًا مصفوفة عالمها هي مصفوفتها المحلية نفسها. القاعدة متطابقة على كلا المسارين: لا يمكن لأي مُدخل، مهما كان قاسيًا، أن يجعلهما يتباعدان. `local` هي مصفوفة مؤقّتة واحدة، يُعاد استخدامها لكل عنصر."
-    },
-    "createPathGovernor": {
-      "description": "ما يحسم بين JavaScript وWebAssembly، لكل عملية مسمّاة: وسائط متحرّكة للنانوثانية لكل عنصر، وتبديل واحد فقط بعد خمسة تنفيذات متتالية بتلك الأفضلية، وواحد من كل خمسين تنفيذًا يعيد تشغيل المسار الآخر لتحديث وسيطه. دون خمس عيّنات لا يُحسَم شيء — قيمة واحدة فقط ستكوّن الوسيط. تنشر `metrics()`، لكل عملية، `path` و`jsNsPerElement` و`wasmNsPerElement`، وعدد التبديلات، ودقّة الساعة التي يرتكز عليها القياس."
     },
     "frustumKeepsBoxBatch": {
       "description": "`n` من الصناديق بستة أرقام (min ثم max) مقابل أربعة وعشرين عددًا عائمًا لمخروط منظوري: `kept[i]` يساوي 1 عندما يتقاطع الصندوق أو يقع داخلًا، ويُعاد العدد المحتفَظ به — `frustumExcludesBox` معكوسة، القطبية نفسها التي يجيب بها المرجع. تكتب دفعة الكرات `SPHERE_VALUES` رقمًا لكل صندوق، مركزًا ثم نصف قطر إلى الزاوية، كما تفعل `sphereFromBounds`. تعيش الحلقتان في `packages/math/src/batch/culling.ts`."
@@ -968,6 +939,19 @@
       "title": "احفظ مشهدًا وافتحه",
       "description": "يكتب `scene.toJSON(camera)` المشهد بصيغة JSON بسيطة ذات إصدار؛ ويبنيه `scene.fromJSON(json, camera)` من جديد.",
       "html": "<p>تُخزَّن الأشكال بالاستدعاء الذي بناها، والمواد بقيمها، والنماذج المحمّلة بعنوانها — ولا تُنسخ داخله أبدًا — أما علامات <code>helper</code> فلا تُخزَّن إطلاقًا. ويُرفض إصدار آخر من الصيغة مع ذكر اسمه. شاهده في <a href=\"#/en/examples/save-the-scene\">حفظ المشهد</a>.</p>"
+    },
+    "PlacementLink": {
+      "members": {
+        "rows": "صفوف التموضع التي ينتمي إليها الصف المرتبط.",
+        "index": "رتبة الصف ضمن تلك الصفوف.",
+        "local": "المصفوفة المحلية لشبكته بالنسبة إلى الأب: ستة عشر رقمًا."
+      }
+    },
+    "SceneLightStore": {
+      "members": {
+        "shadowedLocals": "عدد الأضواء التي تُلقي ظلًا وهي أضواء محلية لا شموس.",
+        "rects": "عدد الأضواء التي هي مستطيلات."
+      }
     }
   },
   "canvas": {
@@ -997,8 +981,6 @@
       "high": "عالية",
       "balanced": "متوازنة",
       "adaptive": "تكيّفية",
-      "switches": "تبديلات",
-      "arbitration": "حسم",
       "box 0": "الصندوق 0",
       "box 1": "الصندوق 1",
       "box 2": "الصندوق 2",
@@ -1038,8 +1020,6 @@
       "saturation": "التشبّع",
       "lightness": "الإضاءة",
       "scalar": "عدد قياسي",
-      "nodes in the batch": "عقد في الدفعة",
-      "products in the batch": "جداءات في الدفعة",
       "boxes in the batch": "صناديق في الدفعة",
       "boxes tested": "صناديق مُختبَرة",
       "kept by the frustum": "احتفظ بها المخروط",
@@ -1056,12 +1036,6 @@
       "cone half-angle (rad)": "نصف زاوية المخروط (راديان)",
       "cone axis, heading (rad)": "محور المخروط، الاتجاه (راديان)",
       "viewer distance": "بُعد الناظر",
-      "JS nanoseconds per element": "نانوثانية JavaScript لكل عنصر",
-      "Wasm nanoseconds per element": "نانوثانية WebAssembly لكل عنصر",
-      "executions observed": "تنفيذات مُلاحَظة",
-      "contract version": "إصدار العقد",
-      "path chosen": "المسار المختار",
-      "not decided yet": "لم يُحسَم بعد",
       "read and never written": "يُقرأ ولا يُكتب أبدًا",
       "the constant itself, read from the engine": "الثابت نفسه، مقروءًا من المحرك",
       "reversed depth, infinite far plane": "عمق معكوس، مستوى بعيد لا نهائي",
@@ -1076,8 +1050,6 @@
       "its forward direction": "اتجاهه الأمامي",
       "under the root": "تحت الجذر",
       "reparented to the world": "أعيد تعيين أصله إلى العالم",
-      "allocations during the call": "تخصيصات أثناء الاستدعاء",
-      "largest difference on the last element": "أكبر فرق في العنصر الأخير",
       "this frame": "هذا الإطار",
       "a box beyond the declared far plane": "صندوق يتجاوز المستوى البعيد المعلَن",
       "a box three metres ahead": "صندوق على بُعد ثلاثة أمتار أمامًا",
@@ -1101,11 +1073,6 @@
       "the unit box carried by that matrix": "صندوق الوحدة المنقول بتلك المصفوفة",
       "the union of the eight transformed corners, never the eight of the result": "اتحاد الزوايا الثمانية المحوَّلة، لا أبدًا الثمانية للنتيجة",
       "one buffer holds many matrices; no view is sliced per frame": "مخزن مؤقت واحد يحمل مصفوفات عديدة؛ لا تُقطَع أي رؤية لكل إطار",
-      "one chain of nodes, parents before children, in one call": "سلسلة واحدة من العقد، الآباء قبل الأبناء، في استدعاء واحد",
-      "none: the buffers are the caller’s": "لا شيء: المخازن المؤقتة ملك المستدعي",
-      "the unit function stays the oracle; the WebAssembly kernel repeats it term by term": "تبقى دالة الوحدة المرجع؛ وتعيدها نواة WebAssembly حدًّا بحدّ",
-      "the governor, after those executions": "المنظّم، بعد تلك التنفيذات",
-      "the kernel leads by enough, for long enough, to be worth the switch": "تتقدّم النواة بما يكفي، ولوقت كافٍ، ليستحقّ التبديل",
       "the reads of one node": "قراءات عقدة واحدة",
       "the sign alone decides, with no square root: the exact clip test": "الإشارة وحدها تحسم، دون جذر تربيعي: اختبار القصّ الدقيق",
       "the subtraction happens in double; only the write rounds": "يحدث الطرح بدقّة مزدوجة؛ الكتابة وحدها تقرّب",
@@ -1142,7 +1109,6 @@
       "the child, before and after the root moves": "الابن، قبل تحرّك الجذر وبعده",
       "the child, attached then detached": "الابن، مُلحَق ثم مفصول",
       "matrices do not move until the next update, like the reference `add`": "لا تتحرك المصفوفات حتى التحديث التالي، مثل `add` المرجعية",
-      "the batch against the unit function it repeats": "الدفعة مقابل دالة الوحدة التي تعيدها",
       "frame.view — the inverse of the camera world matrix": "frame.view — معكوس مصفوفة عالم الكاميرا",
       "DIAGNOSTICS — the engine says which modes it can produce, and why not": "DIAGNOSTICS — يذكر المحرك أي الأنماط يستطيع إنتاجه، ولماذا لا",
       "LOD_QUALITY, as the engine holds it": "LOD_QUALITY، كما يحتفظ بها المحرك",
@@ -1152,7 +1118,6 @@
       "singular: the adjugate as-is, so the flattened surface keeps a normal": "مفردة: المرافق المتمم كما هو، فيحتفظ السطح المسطَّح باتجاه عمودي",
       "no finite scale: nine zeros": "لا مقياس منتهٍ: تسعة أصفار",
       "rejected: every normal of that cluster faces away from the viewer": "مرفوض: كل اتجاه عمودي لذلك العنقود يبتعد عن الناظر",
-      "JS keeps the work: under five samples, or the lead is not a burst": "تحتفظ JavaScript بالعمل: دون خمس عيّنات، أو حين لا تكون الأفضلية متتالية",
       "nodeWorldDirection (object, +z)": "nodeWorldDirection (جسم، +z)",
       "nodeWorldDirection (viewer, −z)": "nodeWorldDirection (ناظر، −z)",
       "root": "الجذر",
@@ -1182,7 +1147,6 @@
       "column 1": "العمود 1",
       "column 2": "العمود 2",
       "out = a, aliased": "out = a، المخزن نفسه",
-      "clock resolution the measurement rests on (ms)": "دقّة الساعة التي يرتكز عليها القياس (ms)",
       "decomposeMatrix4 of that matrix — the round trip": "decomposeMatrix4 لتلك المصفوفة — الرحلة ذهابًا وإيابًا",
       "depth against distance: it falls from 1 at the near plane toward 0 at infinity": "العمق مقابل المسافة: يهبط من 1 عند المستوى القريب نحو 0 عند اللانهاية",
       "depth at the near plane (0.1 m)": "العمق عند المستوى القريب (0.1 م)",
@@ -1198,7 +1162,6 @@
       "rotation of A (rad)": "دوران A (راديان)",
       "the direction (1, 0, 0) under that matrix": "الاتجاه (1, 0, 0) تحت تلك المصفوفة",
       "the identity written at offset 16 of one large buffer": "الهوية مكتوبة عند الإزاحة 16 من مخزن مؤقت كبير",
-      "x of the last node — the sum 0 + 1 + … + (n − 1)": "x للعقدة الأخيرة — المجموع 0 + 1 + … + (n − 1)",
       "transformHomogeneousPoint — four components": "transformHomogeneousPoint — أربعة مكوّنات",
       "matrixAtRenderOrigin — the same matrix, applied at the origin": "matrixAtRenderOrigin — المصفوفة نفسها، مطبَّقة عند نقطة الأصل",
       "viewToRenderOrigin — the view without its translation": "viewToRenderOrigin — العرض دون انتقاله",
@@ -1213,10 +1176,7 @@
       "surface": "السطح",
       "target": "الهدف",
       "viewer": "الناظر",
-      "expected": "المتوقَّع",
-      "orientation": "الاتجاه",
-      "products": "الجداءات",
-      "nodes": "العقد"
+      "orientation": "الاتجاه"
     },
     "patterns": {
       "singular": "المحدِّد {{value}}: ستة عشر صفرًا — اختبر المحدِّد، لا الناتج أبدًا"
@@ -1531,7 +1491,8 @@
       "a-dolly-along-the-canal": "حركة كاميرا على طول القناة",
       "a-folder-merged-into-one-scene": "مجلد مدمج في مشهد واحد",
       "drag-a-crate": "سحب صندوق",
-      "move-a-hierarchy-by-name": "تحريك تسلسل هرمي بالاسم"
+      "move-a-hierarchy-by-name": "تحريك تسلسل هرمي بالاسم",
+      "cooked-blocks-that-fall": "كتل مُعدّة مسبقًا تسقط"
     },
     "missing": {
       "thick-lines": "خطوط عريضة",
@@ -1575,7 +1536,6 @@
       "wide-gamut-colour": "إخراج بألوان واسعة النطاق",
       "energy-conservation-test": "إضاءة البيئة (IBL)",
       "contact-shadow-under-a-car": "الرسم إلى نسيج",
-      "coloured-shadows-through-glass": "أجسام تُلقي ظلالًا شفافة",
       "shadows-in-the-corners": "الحجب المحيطي بفضاء الشاشة",
       "contact-shadows-from-the-screen": "التتبع بفضاء الشاشة",
       "light-that-bounces": "الإضاءة المرتدة في الواجهة العامة",
@@ -1596,7 +1556,6 @@
       "voxel-models": "مستوردات مصدر أخرى: VOX",
       "cad-and-building-models": "مستوردات مصدر أخرى: 3DM, IFC",
       "a-toolpath-in-lines": "مستوردات مصدر أخرى: G-code",
-      "instanced-gltf": "امتدادات glTF أخرى: النسخ عبر GPU",
       "gltf-material-variants": "امتدادات glTF أخرى: متغيّرات المواد",
       "compressed-mesh-input": "امتدادات glTF أخرى: Draco وmeshopt والتكميم",
       "a-medical-scan": "رسم الحجوم",
@@ -1615,8 +1574,6 @@
       "a-mirror-on-the-wall": "الرسم إلى نسيج: مرآة مسطحة",
       "a-polished-floor": "انعكاسات بفضاء الشاشة",
       "reflections-from-the-screen": "انعكاسات بفضاء الشاشة",
-      "an-ocean": "الرسم إلى نسيج: انعكاس وانكسار الماء",
-      "a-raging-sea": "مواد بتظليل مخصّص",
       "fog-that-scatters-light": "ضباب حجمي وأعمدة ضوء",
       "a-cloud-in-a-box": "رسم الحجوم",
       "a-fire-in-a-volume": "رسم الحجوم",

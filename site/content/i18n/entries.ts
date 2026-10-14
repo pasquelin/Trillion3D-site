@@ -4,14 +4,16 @@ import type { ReferenceText } from '../reference/translate.ts'
 import type { Locale } from '../locale.ts'
 import type { PortalEntry } from '../model.ts'
 
-/** A written entry's words in one language; `values` gives each named word's meaning, in order. */
-interface WrittenText {
+/** A written entry's words in one language; `values` gives each named word's meaning, in order,
+ *  `members` each member row's meaning by its name, where the engine's declaration says none. */
+export interface WrittenText {
   title?: string
   summary?: string
   description?: string
   html?: string
   valuesTitle?: string
   values?: string[]
+  members?: Record<string, string>
 }
 
 /** An entry before its words: what no language changes. Its text is the language's `written`
@@ -31,9 +33,13 @@ export function localizeEntries(
 ): PortalEntry[] {
   const written: Record<string, WrittenText | undefined> = dictionaryOf(locale).written
   return frames.map(({ valueNames, ...frame }) => {
-    const { values, ...lines } = written[frame.id] ?? {}
+    const { values, members, ...lines } = written[frame.id] ?? {}
+    const text = reference[frame.id]
     const entry = {
-      ...translateReference({ description: '', ...frame }, reference[frame.id]),
+      ...translateReference(
+        { description: '', ...frame },
+        members ? { ...text, members: { ...text?.members, ...members } } : text,
+      ),
       ...lines,
     }
     if (valueNames && values)

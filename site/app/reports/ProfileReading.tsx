@@ -23,6 +23,11 @@ interface ProfileReadingProps {
 }
 
 /** One reading's CPU and GPU charts, with its exact values and conditions folded below. */
+/** Whether the record's maths batch read a coarse clock: a field the engine's report format no
+ *  longer declares, which the campaigns published before still carry. */
+const coarseClock = (r: ReportRecord) =>
+  (r.data as { mathBatch?: { clockCoarse?: boolean } }).mathBatch?.clockCoarse === true
+
 export function ProfileReading({ record: r, report, locale, filters }: ProfileReadingProps) {
   const [clock, setClock] = useState('cpu')
   const t = useWords(locale)
@@ -68,7 +73,7 @@ export function ProfileReading({ record: r, report, locale, filters }: ProfileRe
             <>
               {id === 'cpu' && <p>{t('profile.cpuNote')}</p>}
               {id === 'cpu' && r.data.frameHeld && <p>{t('profile.reused')}</p>}
-              {id === 'cpu' && r.data.mathBatch?.clockCoarse && <p>{t('profile.coarseClock')}</p>}
+              {id === 'cpu' && coarseClock(r) && <p>{t('profile.coarseClock')}</p>}
               {id === 'gpu' && <p>{t('profile.gpuNote')}</p>}
               {rows.length ? (
                 <BarChart

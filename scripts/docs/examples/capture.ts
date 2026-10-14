@@ -23,7 +23,7 @@ export function thumbnailDelay(html: string): number {
 /**
  * The examples that legitimately draw under the proof's tenth (#527), each with the share it
  * must still reach and why: every other example keeps the tenth. The shares sit under the ones
- * measured on 2026-09-24, and for the three skinned scenes at half those measured on 2026-10-04:
+ * measured on 2026-09-24, and for the skinned figure at half the one measured on 2026-10-04:
  * a blank or a refused render never reaches them.
  */
 const SPARSE: Record<string, number> = {
@@ -31,10 +31,6 @@ const SPARSE: Record<string, number> = {
   'a-staircase-from-one-step': 0.04,
   // One skinned figure walking alone in the middle of a plain sky.
   'a-character-that-walks': 0.006,
-  // Ten small figures walking far off in a plain sky.
-  'a-crowd-of-characters': 0.01,
-  // One small skinned tree swaying alone in a plain sky.
-  'additive-poses': 0.02,
 }
 
 /** The share of its canvas an example must draw: a tenth, or its declared share. */
@@ -92,7 +88,9 @@ export async function openExample(
   slowMs = 0,
 ) {
   const least = share ?? leastDrawn(entry.id)
-  const page = await browser.newPage({ viewport })
+  // In English whatever the machine's language: a page that writes words into its render (labels,
+  // a slider's ends) shows them in the gallery's own language.
+  const page = await browser.newPage({ viewport, locale: 'en-US' })
   const errors: string[] = [],
     requests: string[] = []
   const heard = (error: string) => declaredError(entry.id, error) || errors.push(error)

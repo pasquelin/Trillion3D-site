@@ -21,7 +21,7 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, math } from '../runtime/engine.js';
+      import { createWorld, geometry, material, object, light, math, effect } from '../runtime/engine.js';
       import { controls, pointerOnPlane } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
@@ -41,6 +41,12 @@
           world.scene.add(mesh);
           cubes.push(mesh);
         }
+      // A dark glossy floor under the grid takes the cubes' shadows and the sun's sheen, and a
+      // soft glow spreads round the brightest faces.
+      const ground = object.mesh(geometry.box(SIDE * GAP + 6, 0.2, SIDE * GAP + 6), material.meshStandard({ color: '#10141c', roughness: 0.18, metalness: 0.4 }));
+      ground.position.y = -0.1;
+      world.scene.add(ground);
+      world.effects.add(effect.bloom({ intensity: 0.06 }));
       world.scene.add(light.directional({ intensity: 2.5, color: '#fff3e6', position: [8, 12, 6], castShadow: true }));
       world.scene.add(light.directional({ intensity: 0.5, color: '#7aa2ff', position: [-8, 5, -6] }));
       world.camera.position.set(3, 10, 15);
@@ -59,14 +65,19 @@
         world.invalidate();
       }, world);
 
-      // Every frame each cube's height reads the distance to the last stone dropped. At speed
-      // zero the grid is shaped once more after a change, then asks for no new frame.
+      // Each cube's distance to the last stone dropped, measured again only when a stone falls.
+      const distances = new Float32Array(cubes.length);
+      const measure = () => cubes.forEach((mesh, k) => (distances[k] = Math.hypot(mesh.position.x - stone[0], mesh.position.z - stone[1])));
+      measure();
+
+      // Every frame each cube's height reads its distance to the stone. At speed zero the grid is
+      // shaped once more after a change, then asks for no new frame.
       world.onFrame(({ delta }) => {
         if (resting) return;
         resting = !ui.speed;
         time += delta * ui.speed;
-        for (const mesh of cubes) {
-          const distance = Math.hypot(mesh.position.x - stone[0], mesh.position.z - stone[1]);
+        for (let k = 0; k < cubes.length; k++) {
+          const mesh = cubes[k], distance = distances[k];
           const wave = Math.sin(distance * ui.ripples - time * 4) * Math.exp(-distance * 0.12);
           mesh.scale.y = 0.2 + ui.height * (1 + wave);
           mesh.position.y = mesh.scale.y / 2;
@@ -79,6 +90,7 @@
         const floor = pointerOnPlane(world, event);
         if (!floor) return;
         stone = floor;
+        measure();
         time = 0;
         resting = false;
         world.invalidate();

@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>A herd of morphs</title>
+    <meta name="thumbnail" content="3" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #bfe0ee;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import {
+        createWorld,
+        animation,
+        buffer,
+        geometry,
+        light,
+        material,
+        math,
+        object,
+      } from '../runtime/engine.js';
+      import { controls, seeded } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      const sky = math.color('#bfe0ee');
+      world.scene.background = sky;
+      world.scene.fog = { color: sky, near: 25, far: 70 };
+
+      // One body for the whole herd: a ball with two morph targets, squashed flat on landing and
+      // stretched tall in the air. Each target moves a point by a formula, so any point of the
+      // surface — an eye's anchor — moves exactly as the vertices around it do.
+      const RADIUS = 0.35;
+      const squash = ([x, y, z]) => [x * 1.3, Math.max(y * 0.6, -RADIUS * 0.5), z * 1.3];
+      const stretch = ([x, y, z]) => [x * 0.84, y * 1.35, z * 0.84];
+      const body = geometry.sphere(RADIUS, 48, 32);
+      const rest = body.getAttribute('position');
+      const targets = [squash, stretch].map((shape, rank) => {
+        const at = new Float32Array(rest.count * 3);
+        for (let i = 0; i < rest.count; i++)
+          at.set(shape([rest.getX(i), rest.getY(i), rest.getZ(i)]), i * 3);
+        const target = buffer.float32(at, 3);
+        target.name = rank ? 'stretch' : 'squash';
+        return target;
+      });
+      body.morphAttributes.position = targets;
+
+      // One hop of one second, sampled from its curves: the body's height (the ball's centre,
+      // its bottom on the ground when it lands squashed or leaves stretched), the two weights,
+      // and each eye's anchor carried by the same weights.
+      const HOP = 1,
+        STEPS = 24;
+      const times = Array.from({ length: STEPS + 1 }, (_, i) => (i / STEPS) * HOP);
+      function pose(t) {
+        // Squashed on the ground until 0.12 s, in the air until 0.88 s, squashed again.
+        const air = math.clamp((t - 0.12) / 0.76, 0, 1);
+        const flying = air > 0 && air < 1;
+        const landing = Math.max(0, 1 - Math.min(t, HOP - t) / 0.12);
+        const wSquash = flying ? 0 : 0.35 + 0.65 * landing;
+        const wStretch = flying ? 0.8 * (1 - Math.sin(Math.PI * air)) ** 2 : 0;
+        const bottom = RADIUS * (1 - 0.5 * wSquash + 0.35 * wStretch);
+        return { wSquash, wStretch, y: bottom + 1.2 * Math.sin(Math.PI * air) };
+      }
+      const anchor = (point, { wSquash, wStretch }) => {
+        const a = squash(point),
+          b = stretch(point);
+        return point.map((v, i) => v + wSquash * (a[i] - v) + wStretch * (b[i] - v));
+      };
+      const eyeRest = (side) => {
+        const [x, y] = [side * 0.13, 0.1];
+        return [x, y, Math.sqrt(RADIUS ** 2 - x * x - y * y)];
+      };
+      const poses = times.map(pose);
+      const hop = animation.clip('hop', HOP, [
+        animation.numberTrack(
+          '.position.y',
+          times,
+          poses.map(({ y }) => y),
+        ),
+        animation.weightsTrack(
+          'body.morphTargetInfluences',
+          times,
+          poses.flatMap(({ wSquash, wStretch }) => [wSquash, wStretch]),
+        ),
+        ...[1, -1].map((side) =>
+          animation.vectorTrack(
+            `${side > 0 ? 'eyeL' : 'eyeR'}.position`,
+            times,
+            poses.flatMap((at) => anchor(eyeRest(side), at)),
+          ),
+        ),
+      ]);
+
+      // The herd: up to four hundred, each its own mixer and its own weights, all sharing the
+      // geometry, five paints and the eyes' two meshes.
+      const paints = ['#ff8fa3', '#ffd166', '#7bdcb5', '#8ecbff', '#c3a6ff'].map((color) =>
+        material.meshPhysical({ color, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.2 }),
+      );
+      const eyeShape = geometry.sphere(0.06, 20, 14),
+        pupilShape = geometry.sphere(0.032, 16, 12);
+      const eyeWhite = material.meshStandard({ color: '#ffffff', roughness: 0.15 }),
+        eyeInk = material.meshStandard({ color: '#151a22', roughness: 0.2 });
+      const random = seeded(5);
+      const MOST = 400;
+      const herd = Array.from({ length: MOST }, (_, index) => {
+        const root = object.group();
+        const radius = 0.62 * Math.sqrt(index + 0.5) + (random() - 0.5) * 0.2;
+        const angle = index * 2.399963 + (random() - 0.5) * 0.3;
+        root.position.set(Math.cos(angle) * radius, 0, Math.sin(angle) * radius);
+        root.rotation.y = (random() - 0.5) * 1.2;
+        const blob = object.mesh(body, paints[index % paints.length]);
+        blob.name = 'body';
+        root.add(blob);
+        for (const side of [1, -1]) {
+          const eye = object.mesh(eyeShape, eyeWhite);
+          eye.name = side > 0 ? 'eyeL' : 'eyeR';
+          eye.position.set(...eyeRest(side));
+          const pupil = object.mesh(pupilShape, eyeInk);
+          pupil.position.z = 0.04;
+          eye.add(pupil);
+          root.add(eye);
+        }
+        world.scene.add(root);
+        const action = animation.createMixer(root).clipAction(hop);
+        return { root, action, start: random() * HOP, pace: 0.8 + random() * 0.4 };
+      });
+
+      // A meadow: grass blades and a few stones, all of one shape each.
+      const meadow = object.mesh(
+        geometry.cylinder(40, 40, 0.2, 96),
+        material.meshStandard({ color: '#8fc46b', roughness: 0.95 }),
+      );
+      meadow.position.y = -0.1;
+      world.scene.add(meadow);
+      const blade = geometry.cone(0.035, 0.3, 5);
+      const greens = ['#5f9e45', '#79b553', '#4f8a3a'].map((color) =>
+        material.meshStandard({ color, roughness: 0.9 }),
+      );
+      for (let i = 0; i < 1800; i++) {
+        const radius = 2 + Math.sqrt(random()) * 26,
+          angle = random() * Math.PI * 2;
+        const grass = object.mesh(blade, greens[i % greens.length]);
+        grass.position.set(Math.cos(angle) * radius, 0.15, Math.sin(angle) * radius);
+        grass.rotation.set((random() - 0.5) * 0.4, 0, (random() - 0.5) * 0.4);
+        grass.scale.setScalar(0.6 + random() * 0.9);
+        world.scene.add(grass);
+      }
+      world.scene.add(
+        light.directional({
+          color: '#fff1d6',
+          intensity: 3.2,
+          position: [-6, 10, 7],
+          castShadow: true,
+        }),
+        light.hemisphere({ color: '#cfe8ff', groundColor: '#5d7d43', intensity: 1 }),
+      );
+      world.camera.position.set(2.2, 3.4, 8.2);
+      world.controls.target.set(0, 0.6, 0);
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
+      world.controls.maxDistance = 40;
+
+      // Hidden creatures stop playing: a herd of ten costs ten mixers, not four hundred.
+      controls(
+        { creatures: [10, MOST, 150, 10], speed: [0, 2, 1] },
+        (values) => {
+          herd.forEach(({ root, action, start, pace }, index) => {
+            const shown = index < values.creatures;
+            if (shown && !action.playingNow) action.play().seek(start);
+            if (!shown && action.playingNow) action.stop();
+            root.visible = shown;
+            action.timeScale = pace * values.speed;
+          });
+          world.invalidate();
+        },
+        world,
+      );
+    </script>
+  </body>
+</html>

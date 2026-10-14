@@ -346,7 +346,8 @@
       "a-dolly-along-the-canal": "A dolly along the canal",
       "a-folder-merged-into-one-scene": "A folder merged into one scene",
       "drag-a-crate": "Drag a crate",
-      "move-a-hierarchy-by-name": "Move a hierarchy by name"
+      "move-a-hierarchy-by-name": "Move a hierarchy by name",
+      "cooked-blocks-that-fall": "Cooked blocks that fall"
     },
     "missing": {
       "thick-lines": "wide lines",
@@ -390,7 +391,6 @@
       "wide-gamut-colour": "wide-gamut output",
       "energy-conservation-test": "environment lighting (IBL)",
       "contact-shadow-under-a-car": "render to texture",
-      "coloured-shadows-through-glass": "transparent shadow casters",
       "shadows-in-the-corners": "screen-space ambient occlusion",
       "contact-shadows-from-the-screen": "screen-space tracing",
       "light-that-bounces": "bounce lighting in the public API",
@@ -411,7 +411,6 @@
       "voxel-models": "more source importers: VOX",
       "cad-and-building-models": "more source importers: 3DM, IFC",
       "a-toolpath-in-lines": "more source importers: G-code",
-      "instanced-gltf": "more glTF extensions: GPU instancing",
       "gltf-material-variants": "more glTF extensions: material variants",
       "compressed-mesh-input": "more glTF extensions: Draco, meshopt, quantisation",
       "a-medical-scan": "volume rendering",
@@ -430,8 +429,6 @@
       "a-mirror-on-the-wall": "render to texture: planar mirror",
       "a-polished-floor": "screen-space reflections",
       "reflections-from-the-screen": "screen-space reflections",
-      "an-ocean": "render to texture: water reflection and refraction",
-      "a-raging-sea": "custom shader materials",
       "fog-that-scatters-light": "volumetric fog and light shafts",
       "a-cloud-in-a-box": "volume rendering",
       "a-fire-in-a-volume": "volume rendering",
@@ -524,7 +521,8 @@
     "meaning": "What it does",
     "details": "Details",
     "live": "It runs, here",
-    "liveHint": "Move the controls: these values come from the engine function running in this browser."
+    "liveHint": "Move the controls: these values come from the engine function running in this browser.",
+    "examples": "Examples that use it"
   },
   "kind": {
     "Function": "Function",
@@ -1108,7 +1106,7 @@
     "measurement-entry": {
       "title": "The measurement entry point",
       "description": "Where a witness or an internal session is still nameable — never through the published `trillion3d` entry.",
-      "html": "<p>A page imports <code>trillion3d</code> and never sees a witness or an internal session: <code>createWorld</code> draws with WebGPU, or is refused by name if the machine grants none. The bench and the proofs still need to name a witness — bare Three.js, <code>THREE.LOD</code>, the internal <code>openMeasuredWorld</code> session — and that is the one job of the separate measurement entry point, <code>packages/sdk-browser/src/measurement/measurement.ts</code>.</p>\n<p>It re-exports everything the published entry does, plus what a host never needs: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (the internal session a world opens on itself), the pages factory <code>webgpuPagesEngine</code>, and measurement-only helpers such as <code>replicateInstances</code>. None of it reaches a published world, and none of it is imported by an application.</p>"
+      "html": "<p>A page imports <code>trillion3d</code> and never sees a witness or an internal session: <code>createWorld</code> draws with WebGPU, or is refused by name if the machine grants none. The bench and the proofs still need to name a witness — bare Three.js, <code>THREE.LOD</code>, the internal <code>openMeasuredWorld</code> session — and that is the one job of the separate measurement entry point, <code>packages/sdk-browser/src/measurement/measurement.ts</code>.</p>\n<p>It re-exports everything the published entry does, plus what a host never needs: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (the internal session a world opens on itself), the pages factory <code>webgpuPagesEngine</code>, and measurement-only helpers such as <code>attachParticles</code>. None of it reaches a published world, and none of it is imported by an application.</p>"
     },
     "createWorldJob": {
       "title": "A world load as a cancellable job",
@@ -1175,21 +1173,6 @@
         "High quality — `pixelError: 1`, maximum anisotropy.",
         "Balanced — `pixelError: 4`.",
         "Adaptive — `pixelError: 2`, raised with camera speed by `adaptivePixelError(base, speed, radius)`; a still view keeps the base."
-      ]
-    },
-    "ScreenErrorVariant": {
-      "description": "Which projection of the cluster error the cut compares to the threshold. Module state for the whole page, read by the CPU metric and inlined into the selection shader when it is compiled; each side of a bench runs in its own page. Public source of the formula: Karis, Stubbe and Wihlidal, SIGGRAPH 2021, \"Advances in Real-Time Rendering in Games\".",
-      "values": [
-        "Ours (the default): a bound that never under-estimates the error.",
-        "The published formula, for the comparison bench."
-      ]
-    },
-    "MathPathMode": {
-      "description": "Which path a batch runs on. `auto` arbitrates by measurement: the governor keeps a sliding median of nanoseconds per element on each side and switches after a burst of executions at that lead, JS staying the reference and the fallback. `MATH_PATH_CONTRACT` versions the published report.",
-      "values": [
-        "Arbitration by measurement (the default).",
-        "The JavaScript path imposed, for a campaign.",
-        "The WebAssembly kernel imposed, when one exists for that operation."
       ]
     },
     "JobStatus": {
@@ -1369,23 +1352,8 @@
     "updateNodeMatrixWorld": {
       "description": "The node and its whole subtree, parents first. A node is reached if it updates automatically, if it is marked, or if `force`. The stamp of a visited node is `2 · traversal + reached`, so one read tells a child whether it is in the subtree and what its parent passes it. The second form also walks the ancestors from the root, when asked."
     },
-    "nodeWorldPosition": {
-      "description": "Reads of the world matrix: the translation column; the rotation and scale from its decomposition, a negative determinant carried by `x` alone; the third column normalised as a direction, flipped when `cameraForward` — a camera and a light look toward their `−z`. `nodeWorldMirrorsFaces` is true when the world matrix reverses orientation, and the draw then swaps its front and back faces; it reads as-is, without update, and a zero or NaN determinant reverses nothing."
-    },
     "lookAtNode": {
       "description": "Turns `node` toward the world point `(x, y, z)`. `viewer` is true for a camera or a light, which look toward their `−z`, false for an object, which presents its `+z`. `up` is the node's up, `(0, 1, 0)` by default. Ancestors and the node are updated first."
-    },
-    "multiplyMatrix4Batch": {
-      "description": "`n` products `out[i] = a[i] · b[i]`, all three sides given as sub-views of sixteen numbers. The sub-views are built once, never per frame; a WebAssembly kernel repeats the same formula term by term and the governor picks whichever path is measured faster."
-    },
-    "boxTransformBatch": {
-      "description": "`n` boxes transformed by `n` matrices: `out[i] = boxTransform(boxes[i], mats[i])`. `out` and `boxes` carry six numbers per element, `mats` a sub-view of sixteen."
-    },
-    "hierarchyUpdateBatch": {
-      "description": "A full hierarchy updated in one pass: `n` nodes ordered parents before children, each composing its local matrix then multiplying it by its parent's world matrix — the traversal of `packages/sdk-core/src/world/transform-tree/update.ts`, the same two formulas in the same order, on flat buffers. `parents[i]` **must** index an already updated node, hence strictly less than `i`; any other value — the `HIERARCHY_ROOT` sentinel included — makes the node a root whose world matrix is its local matrix. The rule is identical on both paths: no input, however hostile, can make them diverge. `local` is one scratch matrix, reused by every element."
-    },
-    "createPathGovernor": {
-      "description": "What arbitrates JS against WebAssembly, per named operation: sliding medians of nanoseconds per element, a switch only after five consecutive executions at that lead, and one execution in fifty replaying the other path to refresh its median. Under five samples nothing is decided — a single value would make the median. `metrics()` publishes, per operation, `path`, `jsNsPerElement`, `wasmNsPerElement`, the switch count, and the clock resolution the measurement rests on."
     },
     "frustumKeepsBoxBatch": {
       "description": "`n` boxes of six numbers (min then max) against the twenty-four floats of a frustum: `kept[i]` is 1 where the box intersects or sits inside, and the count kept is returned — `frustumExcludesBox` negated, the polarity the reference answers in. The sphere batch writes `SPHERE_VALUES` numbers per box, centre then radius to the corner, as `sphereFromBounds` does. Both loops live in `packages/math/src/batch/culling.ts`."
@@ -1421,6 +1389,19 @@
       "title": "Save and open a scene",
       "description": "`scene.toJSON(camera)` writes the scene as plain versioned JSON; `scene.fromJSON(json, camera)` builds it again.",
       "html": "<p>Shapes are stored by the call that built them, materials by their values, loaded models by their address — never inlined — and <code>helper</code> marks not at all. Another format version is refused by name. See it in <a href=\"#/en/examples/save-the-scene\">Save the scene</a>.</p>"
+    },
+    "PlacementLink": {
+      "members": {
+        "rows": "The placement rows the linked row belongs to.",
+        "index": "The row's rank in those rows.",
+        "local": "Its mesh's local matrix, relative to the parent: sixteen numbers."
+      }
+    },
+    "SceneLightStore": {
+      "members": {
+        "shadowedLocals": "How many shadow-casting lights are local lights rather than suns.",
+        "rects": "How many lights are rectangles."
+      }
     }
   },
   "canvas": {
@@ -1450,8 +1431,6 @@
       "high": "high",
       "balanced": "balanced",
       "adaptive": "adaptive",
-      "switches": "switches",
-      "arbitration": "arbitration",
       "box 0": "box 0",
       "box 1": "box 1",
       "box 2": "box 2",
@@ -1491,8 +1470,6 @@
       "saturation": "saturation",
       "lightness": "lightness",
       "scalar": "scalar",
-      "nodes in the batch": "nodes in the batch",
-      "products in the batch": "products in the batch",
       "boxes in the batch": "boxes in the batch",
       "boxes tested": "boxes tested",
       "kept by the frustum": "kept by the frustum",
@@ -1509,12 +1486,6 @@
       "cone half-angle (rad)": "cone half-angle (rad)",
       "cone axis, heading (rad)": "cone axis, heading (rad)",
       "viewer distance": "viewer distance",
-      "JS nanoseconds per element": "JS nanoseconds per element",
-      "Wasm nanoseconds per element": "Wasm nanoseconds per element",
-      "executions observed": "executions observed",
-      "contract version": "contract version",
-      "path chosen": "path chosen",
-      "not decided yet": "not decided yet",
       "read and never written": "read and never written",
       "the constant itself, read from the engine": "the constant itself, read from the engine",
       "reversed depth, infinite far plane": "reversed depth, infinite far plane",
@@ -1529,8 +1500,6 @@
       "its forward direction": "its forward direction",
       "under the root": "under the root",
       "reparented to the world": "reparented to the world",
-      "allocations during the call": "allocations during the call",
-      "largest difference on the last element": "largest difference on the last element",
       "this frame": "this frame",
       "a box beyond the declared far plane": "a box beyond the declared far plane",
       "a box three metres ahead": "a box three metres ahead",
@@ -1554,11 +1523,6 @@
       "the unit box carried by that matrix": "the unit box carried by that matrix",
       "the union of the eight transformed corners, never the eight of the result": "the union of the eight transformed corners, never the eight of the result",
       "one buffer holds many matrices; no view is sliced per frame": "one buffer holds many matrices; no view is sliced per frame",
-      "one chain of nodes, parents before children, in one call": "one chain of nodes, parents before children, in one call",
-      "none: the buffers are the caller’s": "none: the buffers are the caller's",
-      "the unit function stays the oracle; the WebAssembly kernel repeats it term by term": "the unit function stays the oracle; the WebAssembly kernel repeats it term by term",
-      "the governor, after those executions": "the governor, after those executions",
-      "the kernel leads by enough, for long enough, to be worth the switch": "the kernel leads by enough, for long enough, to be worth the switch",
       "the reads of one node": "the reads of one node",
       "the sign alone decides, with no square root: the exact clip test": "the sign alone decides, with no square root: the exact clip test",
       "the subtraction happens in double; only the write rounds": "the subtraction happens in double; only the write rounds",
@@ -1595,7 +1559,6 @@
       "the child, before and after the root moves": "the child, before and after the root moves",
       "the child, attached then detached": "the child, attached then detached",
       "matrices do not move until the next update, like the reference `add`": "matrices do not move until the next update, like the reference `add`",
-      "the batch against the unit function it repeats": "the batch against the unit function it repeats",
       "frame.view — the inverse of the camera world matrix": "frame.view — the inverse of the camera world matrix",
       "DIAGNOSTICS — the engine says which modes it can produce, and why not": "DIAGNOSTICS — the engine says which modes it can produce, and why not",
       "LOD_QUALITY, as the engine holds it": "LOD_QUALITY, as the engine holds it",
@@ -1605,7 +1568,6 @@
       "singular: the adjugate as-is, so the flattened surface keeps a normal": "singular: the adjugate as-is, so the flattened surface keeps a normal",
       "no finite scale: nine zeros": "no finite scale: nine zeros",
       "rejected: every normal of that cluster faces away from the viewer": "rejected: every normal of that cluster faces away from the viewer",
-      "JS keeps the work: under five samples, or the lead is not a burst": "JS keeps the work: under five samples, or the lead is not a burst",
       "nodeWorldDirection (object, +z)": "nodeWorldDirection (object, +z)",
       "nodeWorldDirection (viewer, −z)": "nodeWorldDirection (viewer, −z)",
       "root": "root",
@@ -1635,7 +1597,6 @@
       "column 1": "column 1",
       "column 2": "column 2",
       "out = a, aliased": "out = a, aliased",
-      "clock resolution the measurement rests on (ms)": "clock resolution the measurement rests on (ms)",
       "decomposeMatrix4 of that matrix — the round trip": "decomposeMatrix4 of that matrix — the round trip",
       "depth against distance: it falls from 1 at the near plane toward 0 at infinity": "depth against distance: it falls from 1 at the near plane toward 0 at infinity",
       "depth at the near plane (0.1 m)": "depth at the near plane (0.1 m)",
@@ -1651,7 +1612,6 @@
       "rotation of A (rad)": "rotation of A (rad)",
       "the direction (1, 0, 0) under that matrix": "the direction (1, 0, 0) under that matrix",
       "the identity written at offset 16 of one large buffer": "the identity written at offset 16 of one large buffer",
-      "x of the last node — the sum 0 + 1 + … + (n − 1)": "x of the last node — the sum 0 + 1 + … + (n − 1)",
       "transformHomogeneousPoint — four components": "transformHomogeneousPoint — four components",
       "matrixAtRenderOrigin — the same matrix, applied at the origin": "matrixAtRenderOrigin — the same matrix, applied at the origin",
       "viewToRenderOrigin — the view without its translation": "viewToRenderOrigin — the view without its translation",
@@ -1666,10 +1626,7 @@
       "surface": "surface",
       "target": "target",
       "viewer": "viewer",
-      "expected": "expected",
-      "orientation": "orientation",
-      "products": "products",
-      "nodes": "nodes"
+      "orientation": "orientation"
     },
     "patterns": {
       "singular": "determinant {{value}}: sixteen zeros — test the determinant, never the output"

@@ -346,7 +346,8 @@
       "a-dolly-along-the-canal": "運河沿いのカメラドリー",
       "a-folder-merged-into-one-scene": "1つのシーンに統合したフォルダー",
       "drag-a-crate": "木箱をドラッグ",
-      "move-a-hierarchy-by-name": "名前で階層を動かす"
+      "move-a-hierarchy-by-name": "名前で階層を動かす",
+      "cooked-blocks-that-fall": "事前計算されたブロックが落ちる"
     },
     "missing": {
       "thick-lines": "太い線",
@@ -390,7 +391,6 @@
       "wide-gamut-colour": "広色域の出力",
       "energy-conservation-test": "環境光(IBL)",
       "contact-shadow-under-a-car": "テクスチャへの描画",
-      "coloured-shadows-through-glass": "影を落とす透明な物体",
       "shadows-in-the-corners": "スクリーン空間のアンビエントオクルージョン",
       "contact-shadows-from-the-screen": "スクリーン空間のトレース",
       "light-that-bounces": "公開APIでの間接光",
@@ -411,7 +411,6 @@
       "voxel-models": "その他の読み込み形式:VOX",
       "cad-and-building-models": "その他の読み込み形式:3DM、IFC",
       "a-toolpath-in-lines": "その他の読み込み形式:Gコード",
-      "instanced-gltf": "その他のglTF拡張:GPUインスタンシング",
       "gltf-material-variants": "その他のglTF拡張:マテリアルバリアント",
       "compressed-mesh-input": "その他のglTF拡張:Draco、meshopt、量子化",
       "a-medical-scan": "ボリュームレンダリング",
@@ -430,8 +429,6 @@
       "a-mirror-on-the-wall": "テクスチャへの描画:平面鏡",
       "a-polished-floor": "スクリーン空間の反射",
       "reflections-from-the-screen": "スクリーン空間の反射",
-      "an-ocean": "テクスチャへの描画:水の反射と屈折",
-      "a-raging-sea": "自作シェーダーのマテリアル",
       "fog-that-scatters-light": "ボリューム霧と光の筋",
       "a-cloud-in-a-box": "ボリュームレンダリング",
       "a-fire-in-a-volume": "ボリュームレンダリング",
@@ -524,7 +521,8 @@
     "meaning": "はたらき",
     "details": "詳細",
     "live": "ここで動いています",
-    "liveHint": "コントロールを動かしてみよう。この値は、このブラウザで実際に動いているエンジンの関数から来ています。"
+    "liveHint": "コントロールを動かしてみよう。この値は、このブラウザで実際に動いているエンジンの関数から来ています。",
+    "examples": "これを使う例"
   },
   "kind": {
     "Function": "関数",
@@ -1108,7 +1106,7 @@
     "measurement-entry": {
       "title": "計測用のエントリーポイント",
       "description": "対照実装や内部セッションに、名前でアクセスできる場所。公開されている`trillion3d`のエントリーからは、決してアクセスできない。",
-      "html": "<p>ページが<code>trillion3d</code>をインポートするとき、対照実装や内部セッションが見えることはない。<code>createWorld</code>はWebGPUで描画し、マシンがWebGPUを提供しない場合は名前を示して拒否する。ベンチと証明では、それでも対照実装に名前をつける必要がある。素のThree.js、<code>THREE.LOD</code>、内部の<code>openMeasuredWorld</code>セッションなどだ。それだけを担うのが、計測専用の別のエントリーポイント<code>packages/sdk-browser/src/measurement/measurement.ts</code>である。</p>\n<p>ここでは、公開エントリーが再エクスポートするものすべてに加えて、ホストが決して必要としないものも再エクスポートしている: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code>(世界が自分自身に対して開く内部セッション)、ページのファクトリー<code>webgpuPagesEngine</code>、そして<code>replicateInstances</code>のような計測専用のヘルパーだ。これらはどれも公開される世界には届かず、アプリケーションからインポートされることもない。</p>"
+      "html": "<p>ページが<code>trillion3d</code>をインポートするとき、対照実装や内部セッションが見えることはない。<code>createWorld</code>はWebGPUで描画し、マシンがWebGPUを提供しない場合は名前を示して拒否する。ベンチと証明では、それでも対照実装に名前をつける必要がある。素のThree.js、<code>THREE.LOD</code>、内部の<code>openMeasuredWorld</code>セッションなどだ。それだけを担うのが、計測専用の別のエントリーポイント<code>packages/sdk-browser/src/measurement/measurement.ts</code>である。</p>\n<p>ここでは、公開エントリーが再エクスポートするものすべてに加えて、ホストが決して必要としないものも再エクスポートしている: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code>(世界が自分自身に対して開く内部セッション)、ページのファクトリー<code>webgpuPagesEngine</code>、そして<code>attachParticles</code>のような計測専用のヘルパーだ。これらはどれも公開される世界には届かず、アプリケーションからインポートされることもない。</p>"
     },
     "createWorldJob": {
       "title": "取り消せるジョブとしての世界の読み込み",
@@ -1175,21 +1173,6 @@
         "高品質 — `pixelError: 1`、最大の異方性。",
         "バランス — `pixelError: 4`。",
         "適応型 — `pixelError: 2`、`adaptivePixelError(base, speed, radius)`によりカメラの速度に応じて上がる。静止したビューでは基準値のまま。"
-      ]
-    },
-    "ScreenErrorVariant": {
-      "description": "クラスター誤差のどの投影をカットがしきい値と比較するか。ページ全体で共有されるモジュール状態で、CPU側の指標が読み、シェーダーがコンパイルされる際に選択シェーダーに埋め込まれる。ベンチの両側はそれぞれ自分のページで実行される。式の公開元: Karis, Stubbe, Wihlidal, SIGGRAPH 2021, \"Advances in Real-Time Rendering in Games\"。",
-      "values": [
-        "こちら側(デフォルト): 誤差を決して過小評価しない上界。",
-        "公開されている式。比較ベンチ用。"
-      ]
-    },
-    "MathPathMode": {
-      "description": "どのパスでバッチを実行するか。`auto`は計測によって裁定する: ガバナーは各側で要素あたりのナノ秒の移動中央値を保持し、その優位が一続きの実行の後に切りかわる。JSが基準であり、フォールバックでもある。`MATH_PATH_CONTRACT`が公開レポートのバージョンを管理する。",
-      "values": [
-        "計測による裁定(デフォルト)。",
-        "キャンペーン用に強制されたJavaScriptパス。",
-        "その演算にWebAssemblyカーネルが存在する場合に強制されるWebAssemblyパス。"
       ]
     },
     "JobStatus": {
@@ -1369,23 +1352,8 @@
     "updateNodeMatrixWorld": {
       "description": "そのノードとそのサブツリー全体を、親から順に処理する。あるノードが処理対象になるのは、自動更新であるか、マークされているか、`force`が指定されている場合だ。訪問済みノードのスタンプは`2 · traversal + reached`なので、1回の読み取りだけで、子ノードは自分がそのサブツリーに含まれるか、そして親から何を渡されるかがわかる。2つ目の形式は、求められれば、ルートから祖先もたどる。"
     },
-    "nodeWorldPosition": {
-      "description": "ワールド行列の読み取り: 平行移動列; その分解による回転とスケール(負の行列式は`x`だけが単独で運ぶ); そして方向として正規化された3列目 — `cameraForward`の場合は反転される(カメラとライトはそれぞれの`−z`方向を向く)。`nodeWorldMirrorsFaces`は、ワールド行列が向きを反転させるときにtrueになり、そのとき描画は表と裏の面を入れかえる; これは更新なしにそのまま読み取られ、ゼロまたはNaNの行列式は何も反転させない。"
-    },
     "lookAtNode": {
       "description": "`node`をワールド座標の点`(x, y, z)`へ向ける。`viewer`は、それぞれの`−z`方向を向くカメラやライトの場合はtrue、`+z`方向を提示するオブジェクトの場合はfalseになる。`up`はそのノードの上方向で、既定では`(0, 1, 0)`。祖先とそのノード自身が先に更新される。"
-    },
-    "multiplyMatrix4Batch": {
-      "description": "`n`個の積`out[i] = a[i] · b[i]`。3つの側すべてが、16個の数値のサブビューとして与えられる。サブビューはフレームごとではなく一度だけ作られる; WebAssemblyカーネルが同じ式を項ごとに繰り返し、ガバナーが計測の結果より速い方を選ぶ。"
-    },
-    "boxTransformBatch": {
-      "description": "`n`個の行列で変換された`n`個のボックス: `out[i] = boxTransform(boxes[i], mats[i])`。`out`と`boxes`は要素あたり6個の数値、`mats`は16個のサブビューを持つ。"
-    },
-    "hierarchyUpdateBatch": {
-      "description": "階層全体を一度のパスで更新する: `n`個のノードを親が子より先になるよう並べ、それぞれがローカル行列を合成してから親のワールド行列と掛け合わせる — これは`packages/sdk-core/src/world/transform-tree/update.ts`の走査と同じ、平坦なバッファ上での同じ2つの式・同じ順序だ。`parents[i]`は**必ず**すでに更新済みのノードを指さねばならず、つまり厳密に`i`より小さくなければならない; それ以外の値(`HIERARCHY_ROOT`の番人値を含む)は、そのノードをルートにし、そのワールド行列はローカル行列と同じになる。このルールはどちらの経路でも同一だ: どんな入力であっても、両者を食い違わせることはできない。`local`は1つの作業用行列で、すべての要素で使い回される。"
-    },
-    "createPathGovernor": {
-      "description": "名前つきの演算ごとに、JSとWebAssemblyのどちらを裁定するか: 要素あたりのナノ秒の移動中央値、その優位が5回連続の実行の後にのみ切りかわるという規則、そして50回に1回、もう一方のパスを再実行して中央値を更新する。5サンプル未満では何も決まらない — 単一の値が中央値になってしまうからだ。`metrics()`は演算ごとに`path`、`jsNsPerElement`、`wasmNsPerElement`、切りかえの回数、そして計測の基礎になる時計の分解能を公開する。"
     },
     "frustumKeepsBoxBatch": {
       "description": "6個の数値(最小値、最大値)からなる`n`個のボックスを、フラスタムの24個の浮動小数点数と比較する: `kept[i]`は、ボックスが交差するか内側にある場合に1になり、保持された件数が返される — `frustumExcludesBox`を反転したもので、参照実装が答える極性と同じだ。球のバッチは、ボックスごとに`SPHERE_VALUES`個の数値(中心、そして頂点までの半径)を、`sphereFromBounds`と同じように書き込む。どちらのループも`packages/math/src/batch/culling.ts`にある。"
@@ -1421,6 +1389,19 @@
       "title": "シーンを保存して開く",
       "description": "`scene.toJSON(camera)` はシーンをプレーンでバージョン付きの JSON として書き出し、`scene.fromJSON(json, camera)` がそれを再構築します。",
       "html": "<p>形状はそれを作った呼び出しで、マテリアルはその値で、読み込まれたモデルはそのアドレスで保存され(埋め込まれることはありません)、<code>helper</code> の目印はまったく保存されません。別のフォーマットバージョンは名前を挙げて拒否されます。<a href=\"#/ja/examples/save-the-scene\">Save the scene</a> で確認できます。</p>"
+    },
+    "PlacementLink": {
+      "members": {
+        "rows": "リンクされた行が属する配置行。",
+        "index": "それらの行の中での、その行の順位。",
+        "local": "そのメッシュの、親に対するローカル行列：16 個の数値。"
+      }
+    },
+    "SceneLightStore": {
+      "members": {
+        "shadowedLocals": "影を落とすライトのうち、太陽ではなくローカルライトである数。",
+        "rects": "矩形であるライトの数。"
+      }
     }
   },
   "canvas": {
@@ -1450,8 +1431,6 @@
       "high": "高",
       "balanced": "バランス",
       "adaptive": "適応",
-      "switches": "切りかえ回数",
-      "arbitration": "裁定",
       "box 0": "ボックス0",
       "box 1": "ボックス1",
       "box 2": "ボックス2",
@@ -1491,8 +1470,6 @@
       "saturation": "彩度",
       "lightness": "明度",
       "scalar": "スカラー",
-      "nodes in the batch": "バッチ内のノード数",
-      "products in the batch": "バッチ内の積の数",
       "boxes in the batch": "バッチ内のボックス数",
       "boxes tested": "テストされたボックス数",
       "kept by the frustum": "フラスタムに保持された数",
@@ -1509,12 +1486,6 @@
       "cone half-angle (rad)": "円錐の半頂角 (rad)",
       "cone axis, heading (rad)": "円錐軸の向き (rad)",
       "viewer distance": "視点からの距離",
-      "JS nanoseconds per element": "JSの要素あたりナノ秒",
-      "Wasm nanoseconds per element": "Wasmの要素あたりナノ秒",
-      "executions observed": "観測された実行回数",
-      "contract version": "契約バージョン",
-      "path chosen": "選ばれたパス",
-      "not decided yet": "まだ決まっていない",
       "read and never written": "読み取り専用で書き込まれない",
       "the constant itself, read from the engine": "エンジンから読み取った定数そのもの",
       "reversed depth, infinite far plane": "反転された深度、無限遠の遠平面",
@@ -1529,8 +1500,6 @@
       "its forward direction": "その前方方向",
       "under the root": "ルートの下",
       "reparented to the world": "ワールドへ付け替え",
-      "allocations during the call": "呼び出し中の確保回数",
-      "largest difference on the last element": "最後の要素での最大差",
       "this frame": "このフレーム",
       "a box beyond the declared far plane": "宣言された遠平面より奥のボックス",
       "a box three metres ahead": "3メートル先のボックス",
@@ -1554,11 +1523,6 @@
       "the unit box carried by that matrix": "その行列で運ばれた単位ボックス",
       "the union of the eight transformed corners, never the eight of the result": "変換後の8頂点の統合であり、結果の8頂点そのものではない",
       "one buffer holds many matrices; no view is sliced per frame": "1つのバッファが多数の行列を保持し、フレームごとにビューを切り出すことはない",
-      "one chain of nodes, parents before children, in one call": "親を子より先にした1本のノードの連鎖を、1回の呼び出しで",
-      "none: the buffers are the caller’s": "なし: バッファは呼び出し元のもの",
-      "the unit function stays the oracle; the WebAssembly kernel repeats it term by term": "単体関数がオラクルであり続け、WebAssemblyカーネルはそれを項ごとに繰り返す",
-      "the governor, after those executions": "それらの実行の後のガバナー",
-      "the kernel leads by enough, for long enough, to be worth the switch": "カーネルが、切りかえに値するだけ十分に、十分長く優位を保っている",
       "the reads of one node": "1つのノードの読み取り",
       "the sign alone decides, with no square root: the exact clip test": "符号だけで決まり、平方根は使わない: 正確なクリップテスト",
       "the subtraction happens in double; only the write rounds": "引き算は倍精度で行われ、丸められるのは書き込み時だけ",
@@ -1595,7 +1559,6 @@
       "the child, before and after the root moves": "ルートが動く前後の子ノード",
       "the child, attached then detached": "付け替えてから切り離した子ノード",
       "matrices do not move until the next update, like the reference `add`": "参照実装の`add`と同じく、行列は次の更新まで動かない",
-      "the batch against the unit function it repeats": "それが繰り返す単体関数に対するバッチ",
       "frame.view — the inverse of the camera world matrix": "frame.view — カメラのワールド行列の逆行列",
       "DIAGNOSTICS — the engine says which modes it can produce, and why not": "DIAGNOSTICS — エンジンがどのモードを生成できるか、できない場合はなぜかを示す",
       "LOD_QUALITY, as the engine holds it": "エンジンが保持しているLOD_QUALITY",
@@ -1605,7 +1568,6 @@
       "singular: the adjugate as-is, so the flattened surface keeps a normal": "特異: 余因子行列をそのまま使うので、つぶれた表面も法線を保つ",
       "no finite scale: nine zeros": "有限なスケールがない: 9個のゼロ",
       "rejected: every normal of that cluster faces away from the viewer": "棄却: そのクラスターのすべての法線が視点の反対を向いている",
-      "JS keeps the work: under five samples, or the lead is not a burst": "JSが処理を担当し続ける: サンプル5未満、あるいは優位が一続きではない場合",
       "nodeWorldDirection (object, +z)": "nodeWorldDirection (オブジェクト, +z)",
       "nodeWorldDirection (viewer, −z)": "nodeWorldDirection (視点, −z)",
       "root": "ルート",
@@ -1635,7 +1597,6 @@
       "column 1": "列1",
       "column 2": "列2",
       "out = a, aliased": "out = a、エイリアス",
-      "clock resolution the measurement rests on (ms)": "計測の基礎になる時計の分解能 (ms)",
       "decomposeMatrix4 of that matrix — the round trip": "その行列のdecomposeMatrix4 — 往復",
       "depth against distance: it falls from 1 at the near plane toward 0 at infinity": "距離に対する深度: 近平面の1から無限遠の0へと落ちていく",
       "depth at the near plane (0.1 m)": "近平面 (0.1m) での深度",
@@ -1651,7 +1612,6 @@
       "rotation of A (rad)": "Aの回転 (rad)",
       "the direction (1, 0, 0) under that matrix": "その行列のもとでの方向(1, 0, 0)",
       "the identity written at offset 16 of one large buffer": "1つの大きなバッファのオフセット16に書き込まれた単位行列",
-      "x of the last node — the sum 0 + 1 + … + (n − 1)": "最後のノードのx — 0 + 1 + … + (n − 1)の和",
       "transformHomogeneousPoint — four components": "transformHomogeneousPoint — 4成分",
       "matrixAtRenderOrigin — the same matrix, applied at the origin": "matrixAtRenderOrigin — 原点に適用された同じ行列",
       "viewToRenderOrigin — the view without its translation": "viewToRenderOrigin — 平行移動を除いたビュー",
@@ -1666,10 +1626,7 @@
       "surface": "表面",
       "target": "ターゲット",
       "viewer": "視点",
-      "expected": "期待値",
-      "orientation": "向き",
-      "products": "積",
-      "nodes": "ノード"
+      "orientation": "向き"
     },
     "patterns": {
       "singular": "行列式 {{value}}: 16個のゼロ — 出力ではなく行列式を検査すること"

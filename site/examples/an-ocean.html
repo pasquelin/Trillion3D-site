@@ -1,0 +1,149 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>An ocean</title>
+    <meta name="thumbnail" content="4" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #171d28;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, geometry, material, object, light, effect, buffer, joint, math } from '../runtime/engine.js';
+      import { controls } from '../runtime/kit.js';
+
+      // The sea is the physics' water: the waves that float the boat are the very ones drawn.
+      const world = createWorld('view', { controls: 'orbit', physics: true });
+      world.camera.far = 2000;
+
+      // A low sun under a clear sky: one pale haze for the sky and the air, so the far sea melts into it at the
+      // horizon. A linear display curve keeps the fog's colour the sky's.
+      const haze = math.color('#a9c4dc');
+      world.scene.background = haze;
+      world.scene.fog = { color: haze, density: 0.002 };
+      world.toneMapping = 'linear';
+
+      // One grid laid flat at the water's rest level, its rows fine around the boats and wider
+      // toward the horizon (each step a share of its distance), so the near waves keep their
+      // shape and the far ones cost little. Lying on the rest plane, it is the water's own: the
+      // GPU carries each of its points where the waves put it, every frame.
+      const ROWS = 400, REACH = 1500, GROWTH = 4.8;
+      const stretch = (u) => (Math.sign(u) * REACH * (Math.exp(GROWTH * Math.abs(u)) - 1)) / (Math.exp(GROWTH) - 1);
+      const position = new Float32Array((ROWS + 1) ** 2 * 3), normal = new Float32Array(position.length), index = new Uint32Array(ROWS * ROWS * 6);
+      for (let row = 0, at = 0; row <= ROWS; row++)
+        for (let column = 0; column <= ROWS; column++, at += 3) {
+          position[at] = stretch((2 * column) / ROWS - 1);
+          position[at + 2] = stretch((2 * row) / ROWS - 1);
+          normal[at + 1] = 1;
+        }
+      for (let row = 0, at = 0; row < ROWS; row++)
+        for (let column = 0; column < ROWS; column++, at += 6) {
+          const a = row * (ROWS + 1) + column, b = a + ROWS + 1;
+          index.set([a, b, a + 1, a + 1, b, b + 1], at);
+        }
+      const grid = geometry.createBuffer({ position: buffer.float32(position, 3), normal: buffer.float32(normal, 3), index: buffer.uint32(index, 1) });
+      // Glossy deep water: the low sun draws a glittering path on it toward the camera.
+      const sea = object.mesh(grid, material.meshStandard({ color: '#0d4f73', roughness: 0.16 }));
+      sea.castShadow = false;
+      sea.receiveShadow = true;
+      world.scene.add(sea);
+
+      // A long swell from the open sea and the shorter waves the breeze raises across it.
+      const SWELL = [
+        { direction: [1, 0.25], wavelength: 44, amplitude: 0.55, steepness: 0.3 },
+        { direction: [0.75, 0.65], wavelength: 23, amplitude: 0.28, steepness: 0.25 },
+        { direction: [1, -0.5], wavelength: 13, amplitude: 0.13, steepness: 0.2 },
+        { direction: [0.3, 1], wavelength: 7.5, amplitude: 0.06, steepness: 0.15 },
+        { direction: [-0.4, 1], wavelength: 4.3, amplitude: 0.03, steepness: 0.1 },
+      ];
+
+      // What floats is lighter than the water it displaces (kg/m³ against the water's 1000).
+      const paint = (color, roughness = 0.5) => material.meshStandard({ color, roughness });
+      const part = (shape, matter, x, y, z) => {
+        const mesh = object.mesh(shape, matter);
+        mesh.position.set(x, y, z);
+        return mesh;
+      };
+      // A moored body: a rope from `anchor` on it to the sea bed 30 m below, a little slack, then
+      // stretching like a spring — it rides the waves and swings back over its anchor.
+      const moor = (body, anchor) => {
+        world.scene.add(body);
+        world.physics.add(joint.distance(body, null, { anchor, anchorB: [anchor[0], -30, anchor[2]], limits: { max: 31 }, spring: { frequency: 0.25, damping: 0.6 } }));
+      };
+
+      // A fishing boat: the hull holds the body; its wheelhouse, mast and lamp are drawn children.
+      const boat = object.mesh(geometry.box(5.2, 1.2, 2.1), material.meshStandard({ color: '#e8e1cf', roughness: 0.6, physics: 'wood', density: 380 }));
+      boat.physics = 'dynamic';
+      boat.position.set(-3, 0.3, -6);
+      boat.add(
+        part(geometry.box(5.3, 0.2, 2.2), paint('#2c5d86'), 0, 0.5, 0),
+        part(geometry.box(1.6, 1.2, 1.5), paint('#b9472f'), -0.9, 1.2, 0),
+        part(geometry.cylinder(0.06, 0.07, 4.5, 12), paint('#5b4632', 0.8), 1, 2.8, 0),
+      );
+      moor(boat, [-0.4, 0, -6]);
+
+      // A channel buoy: a red float, its cage, and a lamp that flashes twice every four seconds.
+      const buoy = object.mesh(geometry.cylinder(0.7, 0.9, 1.4, 32), material.meshStandard({ color: '#c8372d', roughness: 0.45, physics: 'wood', density: 250 }));
+      buoy.physics = 'dynamic';
+      buoy.position.set(4, 0.5, 2);
+      const lamp = material.meshStandard({ color: '#000000', emissive: '#ffb347', emissiveIntensity: 0 });
+      buoy.add(
+        part(geometry.cone(0.55, 1.5, 4, 1, true), paint('#a52e26'), 0, 1.45, 0),
+        part(geometry.cylinder(0.12, 0.12, 0.3, 16), lamp, 0, 2.35, 0),
+      );
+      moor(buoy, [4, -0.2, 2]);
+
+      // A low sun, behind the boats: its light gilds their edges and lies in a path on the water.
+      const sun = light.directional({ castShadow: true });
+      world.scene.add(sun, light.hemisphere({ intensity: 0.7, color: '#c4d8ee', groundColor: '#16324a' }));
+      // A faint glow around what shines: the buoy's lamp and the sun's glints on the water.
+      world.effects.add(effect.bloom({ intensity: 0.06 }));
+
+      world.camera.position.set(-2, 3.6, 11);
+      world.controls.target.set(0.5, 0.6, -2);
+      world.controls.minDistance = 5;
+      world.controls.maxDistance = 70;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.08;
+
+      // Set again, the waves would start over: each goes on from the phase it has reached —
+      // everywhere for a new swell, around the boats for a new wavelength.
+      controls({ swell: [0, 2.5, 1, 0.05], wavelength: [0.5, 2, 1, 0.05], sun: [1, 25, 6, 0.5] }, (values) => {
+        const now = world.physics.waterSurface?.wavesNow();
+        world.physics.water = {
+          level: 0,
+          waves: SWELL.map((wave, i) => ({
+            ...wave,
+            wavelength: wave.wavelength * values.wavelength,
+            amplitude: wave.amplitude * values.swell * values.wavelength,
+            phase: now?.[i].phase ?? 0,
+          })),
+        };
+        // The lower the sun, the redder and the weaker its light.
+        const height = math.degToRad(values.sun);
+        sun.position.set(-40 * Math.cos(height), 100 * Math.sin(height), -100 * Math.cos(height));
+        sun.color.set('#ff8a3d').lerp(math.color('#ffe2b8'), values.sun / 25);
+        sun.intensity = 2 + values.sun / 10;
+      }, world);
+
+      // Two short flashes, then dark; the lamp asks for its frames even on a flat calm.
+      world.onFrame(({ time }) => {
+        const beat = time % 4;
+        const shine = beat < 0.25 || (beat > 0.6 && beat < 0.85) ? 14 : 0;
+        if (shine !== lamp.emissiveIntensity) lamp.emissiveIntensity = shine;
+        world.invalidate();
+      });
+    </script>
+  </body>
+</html>

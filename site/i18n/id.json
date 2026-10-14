@@ -71,7 +71,8 @@
     "meaning": "Fungsinya",
     "details": "Rincian",
     "live": "Berjalan, di sini",
-    "liveHint": "Gerakkan kendalinya: nilai ini datang dari fungsi mesin yang berjalan di browser ini."
+    "liveHint": "Gerakkan kendalinya: nilai ini datang dari fungsi mesin yang berjalan di browser ini.",
+    "examples": "Contoh yang menggunakannya"
   },
   "kind": {
     "Function": "Fungsi",
@@ -655,7 +656,7 @@
     "measurement-entry": {
       "title": "Titik masuk pengukuran",
       "description": "Tempat sebuah saksi atau sesi internal masih bisa disebut namanya — tidak pernah lewat titik masuk `trillion3d` yang diterbitkan.",
-      "html": "<p>Sebuah halaman meng-import <code>trillion3d</code> dan tidak pernah melihat saksi atau sesi internal: <code>createWorld</code> menggambar dengan WebGPU, atau ditolak dengan menyebut namanya bila mesin tidak menyediakannya. Bench dan bukti masih perlu menyebut nama sebuah saksi — Three.js polos, <code>THREE.LOD</code>, sesi internal <code>openMeasuredWorld</code> — dan itulah satu-satunya tugas titik masuk pengukuran yang terpisah, <code>packages/sdk-browser/src/measurement/measurement.ts</code>.</p>\n<p>Titik masuk ini mengekspor ulang semua yang diekspor titik masuk yang diterbitkan, ditambah apa yang tidak pernah dibutuhkan sebuah host: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (sesi internal yang dibuka sebuah dunia pada dirinya sendiri), pabrik halaman <code>webgpuPagesEngine</code>, dan pembantu khusus pengukuran seperti <code>replicateInstances</code>. Tidak satu pun sampai ke dunia yang diterbitkan, dan tidak satu pun di-import oleh aplikasi.</p>"
+      "html": "<p>Sebuah halaman meng-import <code>trillion3d</code> dan tidak pernah melihat saksi atau sesi internal: <code>createWorld</code> menggambar dengan WebGPU, atau ditolak dengan menyebut namanya bila mesin tidak menyediakannya. Bench dan bukti masih perlu menyebut nama sebuah saksi — Three.js polos, <code>THREE.LOD</code>, sesi internal <code>openMeasuredWorld</code> — dan itulah satu-satunya tugas titik masuk pengukuran yang terpisah, <code>packages/sdk-browser/src/measurement/measurement.ts</code>.</p>\n<p>Titik masuk ini mengekspor ulang semua yang diekspor titik masuk yang diterbitkan, ditambah apa yang tidak pernah dibutuhkan sebuah host: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (sesi internal yang dibuka sebuah dunia pada dirinya sendiri), pabrik halaman <code>webgpuPagesEngine</code>, dan pembantu khusus pengukuran seperti <code>attachParticles</code>. Tidak satu pun sampai ke dunia yang diterbitkan, dan tidak satu pun di-import oleh aplikasi.</p>"
     },
     "createWorldJob": {
       "title": "Pemuatan dunia sebagai pekerjaan yang bisa dibatalkan",
@@ -722,21 +723,6 @@
         "Kualitas tinggi — `pixelError: 1`, anisotropi maksimum.",
         "Seimbang — `pixelError: 4`.",
         "Adaptif — `pixelError: 2`, dinaikkan sesuai kecepatan kamera oleh `adaptivePixelError(base, speed, radius)`; tampilan yang diam menyimpan nilai dasarnya."
-      ]
-    },
-    "ScreenErrorVariant": {
-      "description": "Proyeksi mana dari galat cluster yang dibandingkan potongan dengan ambang batasnya. Status modul untuk seluruh halaman, dibaca oleh metrik CPU dan disisipkan ke dalam shader pemilihan saat dikompilasi; tiap sisi sebuah bench berjalan di halamannya sendiri. Sumber rumus yang dipublikasikan: Karis, Stubbe dan Wihlidal, SIGGRAPH 2021, \"Advances in Real-Time Rendering in Games\".",
-      "values": [
-        "Milik kami (bawaan): sebuah batas yang tidak pernah meremehkan galatnya.",
-        "Rumus yang dipublikasikan, untuk bench pembanding."
-      ]
-    },
-    "MathPathMode": {
-      "description": "Jalur mana yang dipakai sebuah batch. `auto` memutuskan lewat pengukuran: pengatur menyimpan median bergerak nanodetik per elemen di tiap sisi dan berpindah setelah serangkaian eksekusi dengan keunggulan itu, JS tetap jadi acuan dan cadangannya. `MATH_PATH_CONTRACT` memberi versi pada laporan yang diterbitkan.",
-      "values": [
-        "Keputusan lewat pengukuran (bawaan).",
-        "Jalur JavaScript dipaksakan, untuk sebuah kampanye.",
-        "Kernel WebAssembly dipaksakan, saat ada satu untuk operasi itu."
       ]
     },
     "JobStatus": {
@@ -916,23 +902,8 @@
     "updateNodeMatrixWorld": {
       "description": "Node itu dan seluruh subtree-nya, induk lebih dulu. Sebuah node terjangkau kalau ia diperbarui otomatis, kalau ia ditandai, atau kalau `force`. Stempel sebuah node yang dikunjungi adalah `2 · traversal + reached`, jadi satu pembacaan memberi tahu seorang anak apakah ia ada di subtree itu dan apa yang diteruskan induknya. Bentuk keduanya juga menjelajahi leluhurnya dari root, kalau diminta."
     },
-    "nodeWorldPosition": {
-      "description": "Pembacaan matriks dunia: kolom translasinya; rotasi dan skalanya dari penguraiannya, sebuah determinan negatif dibawa oleh `x` saja. Kolom ketiganya dinormalisasi sebagai sebuah arah, dibalik saat `cameraForward` — sebuah kamera dan sebuah cahaya melihat ke arah `−z`-nya. `nodeWorldMirrorsFaces` benar saat matriks dunia membalik orientasi, dan gambarnya lalu menukar sisi depan dan belakangnya; ini dibaca apa adanya, tanpa pembaruan, dan sebuah determinan nol atau NaN tidak membalik apa pun."
-    },
     "lookAtNode": {
       "description": "Memutar `node` ke arah titik dunia `(x, y, z)`. `viewer` benar untuk sebuah kamera atau cahaya, yang melihat ke arah `−z`-nya, salah untuk sebuah objek, yang menghadapkan `+z`-nya. `up` adalah arah atas node-nya, `(0, 1, 0)` secara bawaan. Leluhur dan node-nya diperbarui lebih dulu."
-    },
-    "multiplyMatrix4Batch": {
-      "description": "`n` hasil kali `out[i] = a[i] · b[i]`, ketiga sisinya diberikan sebagai sub-view enam belas angka. Sub-view-nya dibangun sekali, tidak pernah per bingkai; sebuah kernel WebAssembly mengulang rumus yang sama suku demi suku dan pengaturnya memilih jalur mana pun yang terukur lebih cepat."
-    },
-    "boxTransformBatch": {
-      "description": "`n` kotak ditransformasi oleh `n` matriks: `out[i] = boxTransform(boxes[i], mats[i])`. `out` dan `boxes` membawa enam angka per elemen, `mats` sebuah sub-view enam belas angka."
-    },
-    "hierarchyUpdateBatch": {
-      "description": "Sebuah hierarki penuh diperbarui dalam satu tahap: `n` node diurutkan induk sebelum anak, masing-masing menyusun matriks lokalnya lalu mengalikannya dengan matriks dunia induknya — penjelajahan `packages/sdk-core/src/world/transform-tree/update.ts`, kedua rumus yang sama dalam urutan yang sama, pada buffer datar. `parents[i]` **harus** menunjuk sebuah node yang sudah diperbarui, karena itu harus lebih kecil ketat dari `i`; nilai lain apa pun — termasuk sentinel `HIERARCHY_ROOT` — menjadikan node itu sebuah root yang matriks dunianya adalah matriks lokalnya. Aturannya identik di kedua jalur: tidak ada masukan, sekeras apa pun, yang bisa membuat keduanya berbeda. `local` adalah satu matriks sementara, dipakai ulang tiap elemen."
-    },
-    "createPathGovernor": {
-      "description": "Apa yang memutuskan antara JS dan WebAssembly, per operasi bernama: median bergerak nanodetik per elemen, sebuah perpindahan hanya setelah lima eksekusi berturut-turut dengan keunggulan itu, dan satu dari lima puluh eksekusi memutar ulang jalur yang lain untuk menyegarkan mediannya. Di bawah lima sampel tidak ada yang diputuskan — satu nilai saja akan membuat mediannya. `metrics()` menerbitkan, untuk tiap operasi, `path`, `jsNsPerElement`, `wasmNsPerElement`, jumlah perpindahannya, dan resolusi jam yang jadi dasar pengukurannya."
     },
     "frustumKeepsBoxBatch": {
       "description": "`n` kotak enam angka (min lalu max) terhadap dua puluh empat float sebuah frustum: `kept[i]` adalah 1 saat kotaknya berpotongan atau berada di dalam, dan jumlah yang disimpan dikembalikan — `frustumExcludesBox` dibalik, polaritas yang dijawab acuannya. Batch bolanya menulis `SPHERE_VALUES` angka per kotak, pusat lalu radius ke sudutnya, seperti dilakukan `sphereFromBounds`. Kedua loop-nya ada di `packages/math/src/batch/culling.ts`."
@@ -968,6 +939,19 @@
       "title": "Menyimpan dan membuka scene",
       "description": "`scene.toJSON(camera)` menulis scene sebagai JSON sederhana berversi; `scene.fromJSON(json, camera)` membangunnya kembali.",
       "html": "<p>Bentuk disimpan lewat panggilan yang membangunnya, material lewat nilainya, model yang dimuat lewat alamatnya — tidak pernah disalin ke dalam — dan penanda <code>helper</code> tidak disimpan sama sekali. Versi format lain ditolak dengan menyebut namanya. Lihat di <a href=\"#/en/examples/save-the-scene\">Menyimpan scene</a>.</p>"
+    },
+    "PlacementLink": {
+      "members": {
+        "rows": "Baris penempatan tempat baris yang ditautkan berada.",
+        "index": "Peringkat baris itu di dalam baris-baris tersebut.",
+        "local": "Matriks lokal mesh-nya, relatif terhadap induk: enam belas angka."
+      }
+    },
+    "SceneLightStore": {
+      "members": {
+        "shadowedLocals": "Berapa banyak lampu yang menghasilkan bayangan berupa lampu lokal, bukan matahari.",
+        "rects": "Berapa banyak lampu yang berupa persegi panjang."
+      }
     }
   },
   "canvas": {
@@ -997,8 +981,6 @@
       "high": "tinggi",
       "balanced": "seimbang",
       "adaptive": "adaptif",
-      "switches": "perpindahan",
-      "arbitration": "keputusan",
       "box 0": "kotak 0",
       "box 1": "kotak 1",
       "box 2": "kotak 2",
@@ -1038,8 +1020,6 @@
       "saturation": "saturasi",
       "lightness": "kecerahan",
       "scalar": "skalar",
-      "nodes in the batch": "node dalam batch",
-      "products in the batch": "hasil kali dalam batch",
       "boxes in the batch": "kotak dalam batch",
       "boxes tested": "kotak yang diuji",
       "kept by the frustum": "disimpan frustum",
@@ -1056,12 +1036,6 @@
       "cone half-angle (rad)": "setengah sudut kerucut (rad)",
       "cone axis, heading (rad)": "sumbu kerucut, arah (rad)",
       "viewer distance": "jarak pengamat",
-      "JS nanoseconds per element": "nanodetik JS per elemen",
-      "Wasm nanoseconds per element": "nanodetik Wasm per elemen",
-      "executions observed": "eksekusi teramati",
-      "contract version": "versi kontrak",
-      "path chosen": "jalur terpilih",
-      "not decided yet": "belum diputuskan",
       "read and never written": "dibaca dan tidak pernah ditulis",
       "the constant itself, read from the engine": "konstantanya sendiri, dibaca dari mesin",
       "reversed depth, infinite far plane": "kedalaman terbalik, bidang jauh tak berhingga",
@@ -1076,8 +1050,6 @@
       "its forward direction": "arah depannya",
       "under the root": "di bawah root",
       "reparented to the world": "dipindah induknya ke dunia",
-      "allocations during the call": "alokasi selama panggilan",
-      "largest difference on the last element": "selisih terbesar pada elemen terakhir",
       "this frame": "bingkai ini",
       "a box beyond the declared far plane": "sebuah kotak di luar bidang jauh yang dinyatakan",
       "a box three metres ahead": "sebuah kotak tiga meter di depan",
@@ -1101,11 +1073,6 @@
       "the unit box carried by that matrix": "kotak satuan yang dibawa matriks itu",
       "the union of the eight transformed corners, never the eight of the result": "gabungan kedelapan sudut yang ditransformasi, tidak pernah kedelapan sudut hasilnya",
       "one buffer holds many matrices; no view is sliced per frame": "satu buffer menyimpan banyak matriks; tidak ada view yang dipotong tiap bingkai",
-      "one chain of nodes, parents before children, in one call": "satu rantai node, induk sebelum anak, dalam satu panggilan",
-      "none: the buffers are the caller’s": "tidak ada: buffernya milik pemanggilnya",
-      "the unit function stays the oracle; the WebAssembly kernel repeats it term by term": "fungsi satuannya tetap jadi acuan; kernel WebAssembly mengulangnya suku demi suku",
-      "the governor, after those executions": "pengaturnya, setelah eksekusi-eksekusi itu",
-      "the kernel leads by enough, for long enough, to be worth the switch": "kernelnya unggul cukup lama dan cukup jauh untuk layak dipindahkan",
       "the reads of one node": "pembacaan satu node",
       "the sign alone decides, with no square root: the exact clip test": "tandanya saja yang memutuskan, tanpa akar kuadrat: uji clip yang pasti",
       "the subtraction happens in double; only the write rounds": "pengurangannya terjadi dalam presisi ganda; hanya penulisannya yang dibulatkan",
@@ -1142,7 +1109,6 @@
       "the child, before and after the root moves": "anaknya, sebelum dan sesudah root bergerak",
       "the child, attached then detached": "anaknya, dilekatkan lalu dilepas",
       "matrices do not move until the next update, like the reference `add`": "matriksnya tidak bergerak sampai pembaruan berikutnya, seperti `add` acuannya",
-      "the batch against the unit function it repeats": "batch-nya dibandingkan fungsi satuan yang diulangnya",
       "frame.view — the inverse of the camera world matrix": "frame.view — kebalikan matriks dunia kamera",
       "DIAGNOSTICS — the engine says which modes it can produce, and why not": "DIAGNOSTICS — mesinnya menyebutkan mode mana yang bisa dihasilkan, dan kenapa tidak",
       "LOD_QUALITY, as the engine holds it": "LOD_QUALITY, seperti disimpan mesinnya",
@@ -1152,7 +1118,6 @@
       "singular: the adjugate as-is, so the flattened surface keeps a normal": "singular: adjugate apa adanya, jadi permukaan yang diratakan tetap punya normal",
       "no finite scale: nine zeros": "tidak ada skala terhingga: sembilan nol",
       "rejected: every normal of that cluster faces away from the viewer": "ditolak: setiap normal cluster itu menghadap menjauhi pengamat",
-      "JS keeps the work: under five samples, or the lead is not a burst": "JS menyimpan pekerjaannya: di bawah lima sampel, atau keunggulannya tidak beruntun",
       "nodeWorldDirection (object, +z)": "nodeWorldDirection (objek, +z)",
       "nodeWorldDirection (viewer, −z)": "nodeWorldDirection (pengamat, −z)",
       "root": "root",
@@ -1182,7 +1147,6 @@
       "column 1": "kolom 1",
       "column 2": "kolom 2",
       "out = a, aliased": "out = a, buffer yang sama",
-      "clock resolution the measurement rests on (ms)": "resolusi jam yang jadi dasar pengukuran (ms)",
       "decomposeMatrix4 of that matrix — the round trip": "decomposeMatrix4 dari matriks itu — perjalanan pulang-pergi",
       "depth against distance: it falls from 1 at the near plane toward 0 at infinity": "kedalaman terhadap jarak: turun dari 1 di bidang dekat menuju 0 di tak berhingga",
       "depth at the near plane (0.1 m)": "kedalaman di bidang dekat (0,1 m)",
@@ -1198,7 +1162,6 @@
       "rotation of A (rad)": "rotasi A (rad)",
       "the direction (1, 0, 0) under that matrix": "arah (1, 0, 0) di bawah matriks itu",
       "the identity written at offset 16 of one large buffer": "identitas yang ditulis pada offset 16 sebuah buffer besar",
-      "x of the last node — the sum 0 + 1 + … + (n − 1)": "x node terakhir — jumlah 0 + 1 + … + (n − 1)",
       "transformHomogeneousPoint — four components": "transformHomogeneousPoint — empat komponen",
       "matrixAtRenderOrigin — the same matrix, applied at the origin": "matrixAtRenderOrigin — matriks yang sama, diterapkan di titik asal",
       "viewToRenderOrigin — the view without its translation": "viewToRenderOrigin — view tanpa translasinya",
@@ -1213,10 +1176,7 @@
       "surface": "permukaan",
       "target": "target",
       "viewer": "pengamat",
-      "expected": "diharapkan",
-      "orientation": "orientasi",
-      "products": "hasil kali",
-      "nodes": "node"
+      "orientation": "orientasi"
     },
     "patterns": {
       "singular": "determinan {{value}}: enam belas nol — uji determinannya, tidak pernah keluarannya"
@@ -1531,7 +1491,8 @@
       "a-dolly-along-the-canal": "Dolly kamera di sepanjang kanal",
       "a-folder-merged-into-one-scene": "Folder digabung menjadi satu adegan",
       "drag-a-crate": "Seret peti",
-      "move-a-hierarchy-by-name": "Memindahkan hierarki berdasarkan nama"
+      "move-a-hierarchy-by-name": "Memindahkan hierarki berdasarkan nama",
+      "cooked-blocks-that-fall": "Balok yang dihitung sebelumnya dan jatuh"
     },
     "missing": {
       "thick-lines": "garis lebar",
@@ -1575,7 +1536,6 @@
       "wide-gamut-colour": "output wide-gamut",
       "energy-conservation-test": "pencahayaan lingkungan (IBL)",
       "contact-shadow-under-a-car": "render ke tekstur",
-      "coloured-shadows-through-glass": "pelempar bayangan transparan",
       "shadows-in-the-corners": "occlusion ambien screen-space",
       "contact-shadows-from-the-screen": "tracing screen-space",
       "light-that-bounces": "pencahayaan pantulan di API publik",
@@ -1596,7 +1556,6 @@
       "voxel-models": "importer sumber lain: VOX",
       "cad-and-building-models": "importer sumber lain: 3DM, IFC",
       "a-toolpath-in-lines": "importer sumber lain: G-code",
-      "instanced-gltf": "ekstensi glTF lain: instancing GPU",
       "gltf-material-variants": "ekstensi glTF lain: varian material",
       "compressed-mesh-input": "ekstensi glTF lain: Draco, meshopt, kuantisasi",
       "a-medical-scan": "rendering volume",
@@ -1615,8 +1574,6 @@
       "a-mirror-on-the-wall": "render ke tekstur: cermin planar",
       "a-polished-floor": "pantulan screen-space",
       "reflections-from-the-screen": "pantulan screen-space",
-      "an-ocean": "render ke tekstur: pantulan dan pembiasan air",
-      "a-raging-sea": "material shader kustom",
       "fog-that-scatters-light": "kabut volumetrik dan berkas cahaya",
       "a-cloud-in-a-box": "rendering volume",
       "a-fire-in-a-volume": "rendering volume",

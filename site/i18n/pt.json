@@ -346,7 +346,8 @@
       "a-dolly-along-the-canal": "Um travelling ao longo do canal",
       "a-folder-merged-into-one-scene": "Uma pasta reunida numa cena",
       "drag-a-crate": "Arrastar uma caixa",
-      "move-a-hierarchy-by-name": "Mover uma hierarquia pelo nome"
+      "move-a-hierarchy-by-name": "Mover uma hierarquia pelo nome",
+      "cooked-blocks-that-fall": "Blocos pré-calculados que caem"
     },
     "missing": {
       "thick-lines": "linhas largas",
@@ -390,7 +391,6 @@
       "wide-gamut-colour": "saída de gama ampla",
       "energy-conservation-test": "iluminação por ambiente (IBL)",
       "contact-shadow-under-a-car": "renderização em textura",
-      "coloured-shadows-through-glass": "objetos transparentes que projetam sombra",
       "shadows-in-the-corners": "oclusão de ambiente em espaço de tela",
       "contact-shadows-from-the-screen": "traçado em espaço de tela",
       "light-that-bounces": "luz refletida na API pública",
@@ -411,7 +411,6 @@
       "voxel-models": "mais importadores de origem: VOX",
       "cad-and-building-models": "mais importadores de origem: 3DM, IFC",
       "a-toolpath-in-lines": "mais importadores de origem: G-code",
-      "instanced-gltf": "mais extensões glTF: instanciamento por GPU",
       "gltf-material-variants": "mais extensões glTF: variantes de material",
       "compressed-mesh-input": "mais extensões glTF: Draco, meshopt, quantização",
       "a-medical-scan": "renderização volumétrica",
@@ -430,8 +429,6 @@
       "a-mirror-on-the-wall": "renderização em textura: espelho plano",
       "a-polished-floor": "reflexos em espaço de tela",
       "reflections-from-the-screen": "reflexos em espaço de tela",
-      "an-ocean": "renderização em textura: reflexo e refração da água",
-      "a-raging-sea": "materiais com shader sob medida",
       "fog-that-scatters-light": "neblina volumétrica e raios de luz",
       "a-cloud-in-a-box": "renderização volumétrica",
       "a-fire-in-a-volume": "renderização volumétrica",
@@ -524,7 +521,8 @@
     "meaning": "O que faz",
     "details": "Detalhes",
     "live": "Está rodando, aqui",
-    "liveHint": "Mova os controles: esses valores vêm da função do motor rodando neste navegador."
+    "liveHint": "Mova os controles: esses valores vêm da função do motor rodando neste navegador.",
+    "examples": "Exemplos que o usam"
   },
   "kind": {
     "Function": "Função",
@@ -1108,7 +1106,7 @@
     "measurement-entry": {
       "title": "O ponto de entrada de medição",
       "description": "Onde uma testemunha ou uma sessão interna ainda podem ser nomeadas — nunca através do ponto de entrada publicado `trillion3d`.",
-      "html": "<p>Uma página importa <code>trillion3d</code> e nunca vê uma testemunha ou uma sessão interna: <code>createWorld</code> desenha com WebGPU, ou é recusado por nome se a máquina não conceder nenhum. O benchmark e as provas ainda precisam nomear uma testemunha — Three.js puro, <code>THREE.LOD</code>, a sessão interna <code>openMeasuredWorld</code> — e essa é a única função do ponto de entrada de medição separado, <code>packages/sdk-browser/src/measurement/measurement.ts</code>.</p>\n<p>Ele reexporta tudo o que o ponto de entrada publicado exporta, mais o que um host nunca precisa: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (a sessão interna que um mundo abre sobre si mesmo), a fábrica de páginas <code>webgpuPagesEngine</code> e auxiliares só de medição como <code>replicateInstances</code>. Nada disso chega a um mundo publicado, e nenhuma aplicação o importa.</p>"
+      "html": "<p>Uma página importa <code>trillion3d</code> e nunca vê uma testemunha ou uma sessão interna: <code>createWorld</code> desenha com WebGPU, ou é recusado por nome se a máquina não conceder nenhum. O benchmark e as provas ainda precisam nomear uma testemunha — Three.js puro, <code>THREE.LOD</code>, a sessão interna <code>openMeasuredWorld</code> — e essa é a única função do ponto de entrada de medição separado, <code>packages/sdk-browser/src/measurement/measurement.ts</code>.</p>\n<p>Ele reexporta tudo o que o ponto de entrada publicado exporta, mais o que um host nunca precisa: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (a sessão interna que um mundo abre sobre si mesmo), a fábrica de páginas <code>webgpuPagesEngine</code> e auxiliares só de medição como <code>attachParticles</code>. Nada disso chega a um mundo publicado, e nenhuma aplicação o importa.</p>"
     },
     "createWorldJob": {
       "title": "Um carregamento de mundo como job cancelável",
@@ -1175,21 +1173,6 @@
         "Alta qualidade — `pixelError: 1`, anisotropia máxima.",
         "Equilibrado — `pixelError: 4`.",
         "Adaptativo — `pixelError: 2`, aumentado com a velocidade da câmera por `adaptivePixelError(base, speed, radius)`; uma visão parada mantém a base."
-      ]
-    },
-    "ScreenErrorVariant": {
-      "description": "Qual projeção do erro do cluster o corte compara com o limiar. Estado do módulo para a página inteira, lido pela métrica de CPU e embutido no shader de seleção quando ele é compilado; cada lado de um benchmark roda em sua própria página. Fonte pública da fórmula: Karis, Stubbe e Wihlidal, SIGGRAPH 2021, \"Advances in Real-Time Rendering in Games\".",
-      "values": [
-        "A nossa (o padrão): um limite que nunca subestima o erro.",
-        "A fórmula publicada, para o benchmark de comparação."
-      ]
-    },
-    "MathPathMode": {
-      "description": "Qual caminho um lote executa. `auto` decide por medição: o regulador mantém uma mediana móvel de nanossegundos por elemento em cada lado e troca depois de uma sequência de execuções com essa vantagem, com o JS permanecendo a referência e o caminho de reserva. `MATH_PATH_CONTRACT` versiona o relatório publicado.",
-      "values": [
-        "Decisão por medição (o padrão).",
-        "O caminho JavaScript imposto, para uma campanha.",
-        "O kernel WebAssembly imposto, quando existe um para essa operação."
       ]
     },
     "JobStatus": {
@@ -1369,23 +1352,8 @@
     "updateNodeMatrixWorld": {
       "description": "O nó e toda a sua subárvore, pais primeiro. Um nó é alcançado se atualiza automaticamente, se está marcado, ou se `force`. A marca temporal de um nó visitado é `2 · traversal + reached`, então uma leitura diz a um filho se ele está na subárvore e o que seu pai lhe passa. A segunda forma também percorre os ancestrais a partir da raiz, quando solicitado."
     },
-    "nodeWorldPosition": {
-      "description": "Leituras da matriz de mundo: a coluna de translação; a rotação e a escala a partir de sua decomposição, com um determinante negativo carregado só pelo `x`; a terceira coluna normalizada como uma direção, invertida quando `cameraForward` — uma câmera e uma luz olham em direção ao seu `−z`. `nodeWorldMirrorsFaces` é verdadeiro quando a matriz de mundo inverte a orientação, e o desenho então troca suas faces da frente e de trás; ela lê como está, sem atualizar, e um determinante zero ou NaN não inverte nada."
-    },
     "lookAtNode": {
       "description": "Vira `node` em direção ao ponto do mundo `(x, y, z)`. `viewer` é verdadeiro para uma câmera ou uma luz, que olham em direção ao seu `−z`, falso para um objeto, que apresenta seu `+z`. `up` é o up do nó, `(0, 1, 0)` por padrão. Os ancestrais e o nó são atualizados primeiro."
-    },
-    "multiplyMatrix4Batch": {
-      "description": "`n` produtos `out[i] = a[i] · b[i]`, com os três lados dados como sub-views de dezesseis números. As sub-views são criadas uma vez, nunca por quadro; um kernel WebAssembly repete a mesma fórmula termo a termo e o regulador escolhe qual caminho é medido como mais rápido."
-    },
-    "boxTransformBatch": {
-      "description": "`n` caixas transformadas por `n` matrizes: `out[i] = boxTransform(boxes[i], mats[i])`. `out` e `boxes` carregam seis números por elemento, `mats` uma sub-view de dezesseis."
-    },
-    "hierarchyUpdateBatch": {
-      "description": "Uma hierarquia inteira atualizada em uma única passagem: `n` nós ordenados pais antes dos filhos, cada um compondo sua matriz local e então multiplicando-a pela matriz de mundo do pai — a travessia de `packages/sdk-core/src/world/transform-tree/update.ts`, as mesmas duas fórmulas na mesma ordem, em buffers lineares. `parents[i]` **precisa** indexar um nó já atualizado, logo estritamente menor que `i`; qualquer outro valor — incluindo a sentinela `HIERARCHY_ROOT` — torna o nó uma raiz cuja matriz de mundo é sua matriz local. A regra é idêntica nos dois caminhos: nenhuma entrada, por mais hostil que seja, pode fazê-los divergir. `local` é uma única matriz de rascunho, reutilizada por cada elemento."
-    },
-    "createPathGovernor": {
-      "description": "O que decide entre JS e WebAssembly, por operação nomeada: medianas móveis de nanossegundos por elemento, uma troca só depois de cinco execuções consecutivas com essa vantagem, e uma execução em cinquenta repetindo o outro caminho para atualizar sua mediana. Com menos de cinco amostras nada é decidido — um único valor formaria a mediana. `metrics()` publica, por operação, `path`, `jsNsPerElement`, `wasmNsPerElement`, a contagem de trocas, e a resolução do relógio em que a medição se apoia."
     },
     "frustumKeepsBoxBatch": {
       "description": "`n` caixas de seis números (min e depois max) contra os vinte e quatro floats de um frustum: `kept[i]` é 1 quando a caixa intersecta ou está totalmente dentro, e a contagem mantida é devolvida — `frustumExcludesBox` invertido, a polaridade em que a referência responde. O lote de esferas escreve `SPHERE_VALUES` números por caixa, centro e depois raio até o canto, como `sphereFromBounds` faz. Os dois laços vivem em `packages/math/src/batch/culling.ts`."
@@ -1421,6 +1389,19 @@
       "title": "Salvar e abrir uma cena",
       "description": "`scene.toJSON(camera)` escreve a cena como JSON simples e versionado; `scene.fromJSON(json, camera)` a reconstrói.",
       "html": "<p>As formas são guardadas pela chamada que as construiu, os materiais por seus valores, os modelos carregados por seu endereço — nunca embutidos — e as marcas <code>helper</code> de forma alguma. Outra versão do formato é recusada pelo nome. Veja em <a href=\"#/pt/examples/save-the-scene\">Salvar a cena</a>.</p>"
+    },
+    "PlacementLink": {
+      "members": {
+        "rows": "As linhas de posicionamento a que pertence a linha ligada.",
+        "index": "A posição da linha nessas linhas.",
+        "local": "A matriz local da sua malha, relativa ao pai: dezesseis números."
+      }
+    },
+    "SceneLightStore": {
+      "members": {
+        "shadowedLocals": "Quantas luzes que projetam sombra são locais em vez de sóis.",
+        "rects": "Quantas luzes são retângulos."
+      }
     }
   },
   "canvas": {
@@ -1450,8 +1431,6 @@
       "high": "alta",
       "balanced": "equilibrado",
       "adaptive": "adaptativo",
-      "switches": "trocas",
-      "arbitration": "arbitragem",
       "box 0": "caixa 0",
       "box 1": "caixa 1",
       "box 2": "caixa 2",
@@ -1491,8 +1470,6 @@
       "saturation": "saturação",
       "lightness": "luminosidade",
       "scalar": "escalar",
-      "nodes in the batch": "nós no lote",
-      "products in the batch": "produtos no lote",
       "boxes in the batch": "caixas no lote",
       "boxes tested": "caixas testadas",
       "kept by the frustum": "mantidas pelo frustum",
@@ -1509,12 +1486,6 @@
       "cone half-angle (rad)": "meio-ângulo do cone (rad)",
       "cone axis, heading (rad)": "eixo do cone, direção (rad)",
       "viewer distance": "distância do observador",
-      "JS nanoseconds per element": "nanossegundos de JS por elemento",
-      "Wasm nanoseconds per element": "nanossegundos de Wasm por elemento",
-      "executions observed": "execuções observadas",
-      "contract version": "versão do contrato",
-      "path chosen": "caminho escolhido",
-      "not decided yet": "ainda não decidido",
       "read and never written": "lido e nunca escrito",
       "the constant itself, read from the engine": "a própria constante, lida do motor",
       "reversed depth, infinite far plane": "profundidade invertida, plano distante infinito",
@@ -1529,8 +1500,6 @@
       "its forward direction": "sua direção para a frente",
       "under the root": "sob a raiz",
       "reparented to the world": "reatribuída ao mundo",
-      "allocations during the call": "alocações durante a chamada",
-      "largest difference on the last element": "maior diferença no último elemento",
       "this frame": "este quadro",
       "a box beyond the declared far plane": "uma caixa além do plano distante declarado",
       "a box three metres ahead": "uma caixa três metros à frente",
@@ -1554,11 +1523,6 @@
       "the unit box carried by that matrix": "a caixa unitária levada por essa matriz",
       "the union of the eight transformed corners, never the eight of the result": "a união dos oito cantos transformados, nunca os oito do resultado",
       "one buffer holds many matrices; no view is sliced per frame": "um buffer guarda várias matrizes; nenhuma view é recortada por quadro",
-      "one chain of nodes, parents before children, in one call": "uma cadeia de nós, pais antes dos filhos, em uma única chamada",
-      "none: the buffers are the caller’s": "nenhuma: os buffers são do chamador",
-      "the unit function stays the oracle; the WebAssembly kernel repeats it term by term": "a função unitária continua sendo o oráculo; o kernel WebAssembly a repete termo a termo",
-      "the governor, after those executions": "o regulador, depois dessas execuções",
-      "the kernel leads by enough, for long enough, to be worth the switch": "o kernel está à frente o suficiente, por tempo suficiente, para valer a troca",
       "the reads of one node": "as leituras de um nó",
       "the sign alone decides, with no square root: the exact clip test": "só o sinal decide, sem raiz quadrada: o teste de recorte exato",
       "the subtraction happens in double; only the write rounds": "a subtração acontece em double; só a escrita arredonda",
@@ -1595,7 +1559,6 @@
       "the child, before and after the root moves": "o filho, antes e depois de a raiz se mover",
       "the child, attached then detached": "o filho, anexado e depois desanexado",
       "matrices do not move until the next update, like the reference `add`": "as matrizes não se movem até a próxima atualização, como o `add` da referência",
-      "the batch against the unit function it repeats": "o lote comparado à função unitária que ele repete",
       "frame.view — the inverse of the camera world matrix": "frame.view — a inversa da matriz de mundo da câmera",
       "DIAGNOSTICS — the engine says which modes it can produce, and why not": "DIAGNOSTICS — o motor diz quais modos consegue produzir, e por que não",
       "LOD_QUALITY, as the engine holds it": "LOD_QUALITY, como o motor a guarda",
@@ -1605,7 +1568,6 @@
       "singular: the adjugate as-is, so the flattened surface keeps a normal": "singular: a adjunta como está, para que a superfície achatada mantenha uma normal",
       "no finite scale: nine zeros": "sem escala finita: nove zeros",
       "rejected: every normal of that cluster faces away from the viewer": "rejeitado: toda normal desse cluster aponta para longe do observador",
-      "JS keeps the work: under five samples, or the lead is not a burst": "o JS continua com o trabalho: menos de cinco amostras, ou a vantagem não é consistente",
       "nodeWorldDirection (object, +z)": "nodeWorldDirection (object, +z)",
       "nodeWorldDirection (viewer, −z)": "nodeWorldDirection (viewer, −z)",
       "root": "raiz",
@@ -1635,7 +1597,6 @@
       "column 1": "coluna 1",
       "column 2": "coluna 2",
       "out = a, aliased": "out = a, com alias",
-      "clock resolution the measurement rests on (ms)": "resolução do relógio em que a medição se apoia (ms)",
       "decomposeMatrix4 of that matrix — the round trip": "decomposeMatrix4 dessa matriz — a ida e volta",
       "depth against distance: it falls from 1 at the near plane toward 0 at infinity": "profundidade contra distância: cai de 1 no plano próximo até 0 no infinito",
       "depth at the near plane (0.1 m)": "profundidade no plano próximo (0,1 m)",
@@ -1651,7 +1612,6 @@
       "rotation of A (rad)": "rotação de A (rad)",
       "the direction (1, 0, 0) under that matrix": "a direção (1, 0, 0) sob essa matriz",
       "the identity written at offset 16 of one large buffer": "a identidade escrita no deslocamento 16 de um grande buffer",
-      "x of the last node — the sum 0 + 1 + … + (n − 1)": "x do último nó — a soma 0 + 1 + … + (n − 1)",
       "transformHomogeneousPoint — four components": "transformHomogeneousPoint — quatro componentes",
       "matrixAtRenderOrigin — the same matrix, applied at the origin": "matrixAtRenderOrigin — a mesma matriz, aplicada na origem",
       "viewToRenderOrigin — the view without its translation": "viewToRenderOrigin — a view sem sua translação",
@@ -1666,10 +1626,7 @@
       "surface": "superfície",
       "target": "alvo",
       "viewer": "observador",
-      "expected": "esperado",
-      "orientation": "orientação",
-      "products": "produtos",
-      "nodes": "nós"
+      "orientation": "orientação"
     },
     "patterns": {
       "singular": "determinante {{value}}: dezesseis zeros — teste o determinante, nunca a saída"

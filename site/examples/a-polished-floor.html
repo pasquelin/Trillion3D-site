@@ -1,0 +1,83 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>A polished floor</title>
+    <meta name="thumbnail" content="4" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #07080b;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, effect, geometry, light, material, math, object } from '../runtime/engine.js';
+      import { controls } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#07080b');
+      world.exposure = 1.3;
+
+      // A museum hall at night, its floor black lacquer. Nothing asks for a mirror: a smooth
+      // physical surface reflects by itself. Under a roughness of about 0.07 the engine traces its
+      // reflection sharp through the image on screen; rougher, it blurs it (up to 0.6).
+      const put = (mesh, x, y, z) => (mesh.position.set(x, y, z), world.scene.add(mesh), mesh);
+      const lacquer = material.meshStandard({ color: '#0b0c10', roughness: 0.03 });
+      put(object.mesh(geometry.box(30, 0.2, 30), lacquer), 0, -0.1, 0);
+      put(object.mesh(geometry.box(30, 9, 0.3), material.meshStandard({ color: '#2e3038', roughness: 0.85 })), 0, 4.5, -8);
+
+      // Tall slits of light in the back wall, each washing it warm and mirrored as a long streak
+      // across the floor.
+      const slit = geometry.box(0.14, 5.5, 0.06), glow = material.meshStandard({ color: '#000000', emissive: '#ffd9a8', emissiveIntensity: 6 });
+      for (let x = -10.5; x <= 10.5; x += 3)
+        put(object.mesh(slit, glow), x, 3.4, -7.83).add(light.point({ position: [0, 0, 0.6], color: '#ffd9a8', intensity: 10, distance: 5 }));
+
+      // Three plinths and their pieces — gold, glazed ceramic, chrome —, each under its own spot.
+      const stone = material.meshStandard({ color: '#e6e1d8', roughness: 0.6 }), block = geometry.box(1.1, 1, 1.1);
+      const vase = [[0, 0], [0.3, 0], [0.38, 0.12], [0.46, 0.5], [0.4, 0.9], [0.2, 1.15], [0.15, 1.35], [0.2, 1.48], [0.18, 1.5]];
+      const pieces = [
+        [geometry.torusKnot(0.34, 0.11, 200, 24), material.meshStandard({ color: '#e2b04a', metalness: 1, roughness: 0.2 }), 1.55],
+        [geometry.lathe(vase, 64), material.meshStandard({ color: '#f2efe9', roughness: 0.12 }), 1],
+        [geometry.sphere(0.42, 64, 32), material.meshStandard({ color: '#f4f4f6', metalness: 1, roughness: 0.03 }), 1.55],
+      ].map(([shape, paint, y], index) => {
+        const x = (index - 1) * 3.4;
+        put(object.mesh(block, stone), x, 0.5, -2.5);
+        world.scene.add(light.spot({ position: [x, 6.5, 0], target: [x, 1.3, -2.5], angle: 0.32, penumbra: 0.6, intensity: 50, color: '#fff2dc', castShadow: true }));
+        return put(object.mesh(shape, paint), x, y, -2.5);
+      });
+      world.scene.add(light.hemisphere({ color: '#7f8db0', groundColor: '#0b0c10', intensity: 1 }));
+      world.effects.add(effect.bloom({ intensity: 0.06 }));
+
+      world.camera.position.set(1.5, 1.6, 7.5);
+      world.camera.lookAt(0, 1.1, -2.5);
+      world.controls.target.set(0, 1.1, -2.5);
+      world.controls.minDistance = 3;
+      world.controls.maxDistance = 14;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.04;
+
+      // A paler floor adds its own colour under the same reflection, which then reads less: the
+      // mirror of a dielectric is a few per cent face-on, strong only at a grazing angle.
+      let turning = true;
+      controls({ floor: '#0b0c10', turn: true }, (values) => {
+        lacquer.color.set(values.floor);
+        turning = values.turn;
+        world.invalidate();
+      }, world);
+      world.onFrame(({ delta }) => {
+        if (!turning) return;
+        for (const piece of pieces) piece.rotation.y += Math.min(delta, 0.05) * 0.3;
+        world.invalidate();
+      });
+    </script>
+  </body>
+</html>

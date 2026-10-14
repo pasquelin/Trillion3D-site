@@ -1,9 +1,7 @@
 {
   "brushed-metal": {
-    "banner": "ドラッグしてヘアラインの反射を観察し、強さと方向を変えます。",
+    "banner": "ドラッグして鋼の反射を観察し、粗さを変えます。",
     "controls": {
-      "anisotropy": "ヘアラインの強さ",
-      "direction": "ヘアラインの方向",
       "roughness": "粗さ",
       "spin": "回転"
     }
@@ -338,7 +336,7 @@
     "banner": "ドラッグして見回そう。ネオンを光らせて点滅させよう。",
     "controls": {
       "star": "星",
-      "wave": "波",
+      "word": "文字",
       "glow": "光",
       "pulse": "点滅",
       "exposure": "露出",
@@ -660,7 +658,8 @@
       "wax": "ろう"
     },
     "readouts": {
-      "piecesWax": "ろうのかたまり"
+      "piecesWax": "ろうのかたまり",
+      "framesCooked": "計算済みフレーム"
     }
   },
   "bricks-with-a-normal-map": {
@@ -1424,7 +1423,7 @@
     }
   },
   "move-rotate-scale-gizmo": {
-    "banner": "ハンドルをドラッグして、物を動かしたり回したり大きくしたりしよう。横をドラッグすると見回せるよ。",
+    "banner": "物をクリックするとハンドルが付くよ。ハンドルをドラッグして、動かしたり回したり大きくしたりしよう。横をドラッグすると見回せるよ。",
     "controls": {
       "mode": "モード",
       "axes": "軸",
@@ -2393,7 +2392,7 @@
     }
   },
   "drag-a-crate": {
-    "banner": "木箱を床の上でドラッグします。スナップをオンにすると0.5メートル刻みで配置できます。",
+    "banner": "木箱、樽、ボールを床の上でドラッグします。スナップをオンにすると0.5メートル刻みで配置できます。",
     "controls": {
       "snap": "スナップ",
       "home": "ホーム"
@@ -2451,9 +2450,10 @@
   },
   "additive-poses": {
     "controls": {
-      "playing": "再生"
+      "playing": "再生",
+      "weight": "重み"
     },
-    "banner": "ドラッグしてシーンを見回します。「再生」でアニメーションを一時停止または再開します。"
+    "banner": "ドラッグしてシーンを見回します。「重み」で歩きの上に足す揺れの量を決めます。「再生」で一時停止または再開します。"
   },
   "move-a-hierarchy-by-name": {
     "banner": "5つの名前付きグループが再現可能なシーケンスを進む様子をご覧ください。ドライバーを切り替えると同じ姿勢を手書きします。",
@@ -2475,5 +2475,219 @@
   },
   "choose-your-quality": {
     "banner": "画質と解像度と視点を選ぼう。ひとつの設定をA、もうひとつをBにしまって、Cキーで切り替えよう。"
+  },
+  "a-polished-floor": {
+    "banner": "ドラッグでホールを歩き回れます。床を明るくすると、その鏡は床自身の色に沈みます。",
+    "controls": {
+      "floor": "床",
+      "turn": "回転"
+    }
+  },
+  "reflections-blurred-by-roughness": {
+    "banner": "ドラッグで見回せます。粗さを上げると、反射はレーンごとにぼやけ、0.6から消えます。",
+    "controls": {
+      "roughness": "粗さ",
+      "metal": "金属"
+    }
+  },
+  "reflections-from-the-screen": {
+    "banner": "ドラッグで見回せます。視線を下に傾けると、画面から外れた街灯は濡れた路面からも消えます。",
+    "controls": {
+      "wet": "濡れ",
+      "traffic": "交通"
+    }
+  },
+  "instanced-gltf": {
+    "banner": "ドラッグして谷のまわりを回ろう。スクロールして木々の間へ降りよう。",
+    "controls": {
+      "sunHeight": "太陽の高さ",
+      "mist": "もや",
+      "drift": "ただよう"
+    },
+    "readouts": {
+      "nodesFile": "ファイルのノード",
+      "objectsCooked": "クック後の物",
+      "trianglesDrawn": "描いた三角形"
+    },
+    "words": {
+      "credit": "この例のためにコードで作った谷と木々、CC0 — assets/examples/CREDITS.md を見てね",
+      "nodesPoses": "{nodes} ノード、{poses} 姿勢",
+      "notCounted": "ここでは数えていない"
+    }
+  },
+  "an-ocean": {
+    "banner": "ドラッグして見回そう。うねりを大きくし、波を長くし、太陽を低くしよう。",
+    "controls": {
+      "swell": "うねり",
+      "wavelength": "波長",
+      "sun": "太陽の高さ"
+    }
+  },
+  "a-raging-sea": {
+    "banner": "ドラッグして嵐を見回そう。波と風を強めよう。灯台の光が海を掃いていく。",
+    "controls": {
+      "height": "波の高さ",
+      "wind": "風"
+    }
+  },
+  "tone-mapping-compared": {
+    "banner": "ドラッグして見回そう。カーブを選んで、夕焼け、日の当たる床、ランプがそれぞれどう残るか見てみよう。",
+    "controls": {
+      "toneMapping": "トーンマッピング",
+      "exposure": "露出",
+      "lamps": "ランプ"
+    },
+    "choices": {
+      "toneMapping": {
+        "aces": "aces",
+        "agx": "agx",
+        "neutral": "ニュートラル",
+        "reinhard": "reinhard",
+        "cineon": "cineon",
+        "linear": "リニア"
+      }
+    }
+  },
+  "render-small-show-sharp": {
+    "banner": "ドラッグして鳥かごを見よう。描画スケールを下げると、描くピクセルはずっと少なくなるのに、画面はくっきりしたままだよ。",
+    "controls": {
+      "scale": "描画スケール",
+      "smoothing": "なめらかさ",
+      "circle": "回る"
+    },
+    "readouts": {
+      "pixels": "描いたピクセル"
+    }
+  },
+  "thick-lines": {
+    "banner": "ドラッグで周りを回ります。どの糸も、幅が画面のピクセルで数えられる線です。太くしたり、糸を増やしたり、漂わせたりしてみましょう。",
+    "controls": {
+      "width": "幅",
+      "strands": "糸の数",
+      "drift": "漂い",
+      "glow": "グロー",
+      "spin": "回転"
+    }
+  },
+  "sculpt-a-sphere": {
+    "banner": "粘土の上をドラッグして盛り上げるか、もう一方の道具で削ります。横をドラッグすると周りを回ります。",
+    "controls": {
+      "tool": "道具",
+      "brush": "ブラシ",
+      "strength": "強さ",
+      "mirror": "ミラー",
+      "clay": "粘土",
+      "reset": "リセット"
+    },
+    "choices": {
+      "tool": {
+        "raise": "盛る",
+        "carve": "削る"
+      }
+    }
+  },
+  "hover-over-triangles": {
+    "banner": "結び目の上でポインターを動かすと、真下の三角形が光り、軌跡を残しながら冷めていきます。",
+    "controls": {
+      "trail": "軌跡（秒）",
+      "spin": "回転"
+    },
+    "readouts": {
+      "triangle": "三角形"
+    }
+  },
+  "a-voxel-painter": {
+    "banner": "盤面か面をクリックするとボクセルを置き、Shift+クリックか「消去」スイッチで取り除きます。ドラッグで見回せます。",
+    "controls": {
+      "colour": "色",
+      "erase": "消去",
+      "clear": "すべて消去"
+    }
+  },
+  "cooked-blocks-that-fall": {
+    "banner": "このモデルのブロックはそれぞれ自分の物体を宣言し、モデルと一緒に事前計算されています。モデルを読み込むと復元され、ブロックはすぐに落ちて静止します。もう一度読み込んで確かめてください。",
+    "controls": {
+      "again": "もう一度",
+      "slowMotion": "スロー"
+    },
+    "readouts": {
+      "bodies": "物体",
+      "step": "ステップ"
+    }
+  },
+  "coloured-shadows-through-glass": {
+    "banner": "ステンドグラスを通った日差しが床に落ちます。太陽を動かすか、ガラスを濃くしてみてください。",
+    "controls": {
+      "sunHeight": "太陽の高さ",
+      "swing": "ゆれ",
+      "opacity": "不透明度"
+    }
+  },
+  "animation-from-the-file": {
+    "banner": "ドラッグして見回そう。歩きはファイルに入っているもの。輪を歩く人数と速さを変えてみよう。逆再生もできるよ。",
+    "controls": {
+      "walkers": "歩く人",
+      "speed": "速さ"
+    }
+  },
+  "reaching-with-ik": {
+    "banner": "ドラッグして見回そう。どの腕も光に手を伸ばす。光を自由に飛ばすか、ポインターで導いてみよう。",
+    "controls": {
+      "arms": "腕",
+      "follow": "光",
+      "speed": "速さ",
+      "reach": "届き具合"
+    },
+    "choices": {
+      "follow": {
+        "path": "自分の道",
+        "pointer": "ポインター"
+      }
+    }
+  },
+  "a-character-of-points": {
+    "banner": "ドラッグして見回そう。骨格が曲げる点のダンサー。点の数と踊る速さを変えてみよう。",
+    "controls": {
+      "points": "点",
+      "speed": "速さ",
+      "spin": "回転"
+    }
+  },
+  "a-face-that-talks": {
+    "banner": "ドラッグして胸像の周りを回ろう。唇、口、歯が3つのモーフターゲットを共有し、音節ごとに動くよ。",
+    "controls": {
+      "speed": "速さ",
+      "paused": "一時停止"
+    }
+  },
+  "a-galloping-horse": {
+    "banner": "ドラッグして見回そう。ギャロップを遅くして、ひづめが順に着地するのを見てみよう。",
+    "controls": {
+      "speed": "速さ"
+    }
+  },
+  "a-herd-of-morphs": {
+    "banner": "ドラッグして見回そう。群れ全体で形もクリップも1つだけ。それぞれが自分のウェイトで跳ねるよ。",
+    "controls": {
+      "creatures": "生き物",
+      "speed": "速さ"
+    }
+  },
+  "morph-and-skin-together": {
+    "banner": "ドラッグして植物の周りを回ろう。骨が葉を曲げ、モーフターゲットが葉を丸める。丸まり具合と風を変えてみよう。",
+    "controls": {
+      "leaves": "葉",
+      "wind": "風",
+      "curl": "丸まり"
+    }
+  },
+  "fog-on-the-ground": {
+    "banner": "ドラッグして見回そう。霧は谷を満たし、高くなるほど薄れる。濃さ、薄れる速さ、始まる高さを変えてみよう。",
+    "controls": {
+      "density": "濃さ",
+      "height": "薄れ方",
+      "base": "基準の高さ",
+      "colour": "色"
+    }
   }
 }

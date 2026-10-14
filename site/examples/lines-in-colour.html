@@ -21,7 +21,7 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, math, buffer } from '../runtime/engine.js';
+      import { createWorld, effect, geometry, material, object, light, math, buffer } from '../runtime/engine.js';
       import { controls, readout } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
@@ -105,6 +105,8 @@
       world.controls.minDistance = 3;
       world.controls.maxDistance = 16;
       world.controls.maxPolarAngle = Math.PI / 2 + 0.15;
+      // A soft glow round the pen and the bright strokes, as neon tubes have in the dark.
+      world.effects.add(effect.bloom({ intensity: 0.08 }));
 
       // The pen runs along the path; a piece shows once the pen has entered it.
       let drawn = 0, shown = null, current = null;

@@ -71,7 +71,8 @@
     "meaning": "यह क्या करता है",
     "details": "विवरण",
     "live": "यह यहीं, अभी चल रहा है",
-    "liveHint": "नियंत्रण हिलाएँ: ये मान इस ब्राउज़र में सच में चल रहे इंजन फ़ंक्शन से आ रहे हैं।"
+    "liveHint": "नियंत्रण हिलाएँ: ये मान इस ब्राउज़र में सच में चल रहे इंजन फ़ंक्शन से आ रहे हैं।",
+    "examples": "इसका उपयोग करने वाले उदाहरण"
   },
   "kind": {
     "Function": "फ़ंक्शन",
@@ -655,7 +656,7 @@
     "measurement-entry": {
       "title": "मापन का प्रवेश बिंदु",
       "description": "वह जगह जहाँ कोई नमूना या आंतरिक सेशन अभी भी नाम से बुलाया जा सकता है — कभी भी प्रकाशित `trillion3d` प्रवेश बिंदु से नहीं।",
-      "html": "<p>कोई पेज <code>trillion3d</code> इम्पोर्ट करता है और कभी किसी नमूने या आंतरिक सेशन को नहीं देखता: <code>createWorld</code> WebGPU से बनाता है, या मशीन के पास WebGPU न होने पर नाम लेकर मना कर दिया जाता है। बेंच और प्रमाणों को अब भी किसी नमूने का नाम लेना पड़ता है — सादा Three.js, <code>THREE.LOD</code>, आंतरिक <code>openMeasuredWorld</code> सेशन — और यही अलग मापन प्रवेश बिंदु का इकलौता काम है, <code>packages/sdk-browser/src/measurement/measurement.ts</code>।</p>\n<p>यह प्रकाशित प्रवेश बिंदु का सब कुछ दोबारा एक्सपोर्ट करता है, साथ में वह भी जिसकी किसी होस्ट को कभी ज़रूरत नहीं पड़ती: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (वह आंतरिक सेशन जो कोई दुनिया खुद पर खोलती है), पेज फ़ैक्टरी <code>webgpuPagesEngine</code>, और <code>replicateInstances</code> जैसे केवल मापन के सहायक। इनमें से कुछ भी प्रकाशित दुनिया तक नहीं पहुँचता, और कोई एप्लिकेशन इन्हें इम्पोर्ट नहीं करती।</p>"
+      "html": "<p>कोई पेज <code>trillion3d</code> इम्पोर्ट करता है और कभी किसी नमूने या आंतरिक सेशन को नहीं देखता: <code>createWorld</code> WebGPU से बनाता है, या मशीन के पास WebGPU न होने पर नाम लेकर मना कर दिया जाता है। बेंच और प्रमाणों को अब भी किसी नमूने का नाम लेना पड़ता है — सादा Three.js, <code>THREE.LOD</code>, आंतरिक <code>openMeasuredWorld</code> सेशन — और यही अलग मापन प्रवेश बिंदु का इकलौता काम है, <code>packages/sdk-browser/src/measurement/measurement.ts</code>।</p>\n<p>यह प्रकाशित प्रवेश बिंदु का सब कुछ दोबारा एक्सपोर्ट करता है, साथ में वह भी जिसकी किसी होस्ट को कभी ज़रूरत नहीं पड़ती: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (वह आंतरिक सेशन जो कोई दुनिया खुद पर खोलती है), पेज फ़ैक्टरी <code>webgpuPagesEngine</code>, और <code>attachParticles</code> जैसे केवल मापन के सहायक। इनमें से कुछ भी प्रकाशित दुनिया तक नहीं पहुँचता, और कोई एप्लिकेशन इन्हें इम्पोर्ट नहीं करती।</p>"
     },
     "createWorldJob": {
       "title": "वर्ल्ड लोड करना, एक रद्द किए जा सकने वाले काम की तरह",
@@ -722,21 +723,6 @@
         "उच्च गुणवत्ता — `pixelError: 1`, अधिकतम एनिसोट्रॉपी।",
         "संतुलित — `pixelError: 4`।",
         "अनुकूल — `pixelError: 2`, कैमरे की रफ़्तार के साथ `adaptivePixelError(base, speed, radius)` से बढ़ाया गया; स्थिर दृश्य आधार मान रखता है।"
-      ]
-    },
-    "ScreenErrorVariant": {
-      "description": "क्लस्टर त्रुटि का कौन सा प्रोजेक्शन कटौती सीमा से तुलना करती है। पूरे पेज के लिए मॉड्यूल स्थिति, जिसे CPU मीट्रिक पढ़ता है और कंपाइल होते समय चुनाव शेडर में जड़ दिया जाता है; बेंच का हर पक्ष अपने ही पेज पर चलता है। सूत्र का सार्वजनिक स्रोत: Karis, Stubbe और Wihlidal, SIGGRAPH 2021, \"Advances in Real-Time Rendering in Games\".",
-      "values": [
-        "हमारा (डिफ़ॉल्ट): एक सीमा जो कभी त्रुटि को कम करके नहीं आँकती।",
-        "प्रकाशित सूत्र, तुलना बेंच के लिए।"
-      ]
-    },
-    "MathPathMode": {
-      "description": "कोई बैच किस रास्ते पर चलता है। `auto` मापन से फ़ैसला करता है: गवर्नर हर तरफ़ के हर एलिमेंट के नैनोसेकंड का चलता मध्यम मान रखता है और उस बढ़त पर लगातार कई चलावों के बाद बदलता है, JS हमेशा मानक और फ़ॉलबैक बना रहता है। `MATH_PATH_CONTRACT` प्रकाशित रिपोर्ट को वर्ज़न देता है।",
-      "values": [
-        "मापन से फ़ैसला (डिफ़ॉल्ट)।",
-        "JavaScript रास्ता ज़बरदस्ती लगाया गया, किसी अभियान के लिए।",
-        "WebAssembly कर्नल ज़बरदस्ती लगाया गया, जब उस काम के लिए कोई मौजूद हो।"
       ]
     },
     "JobStatus": {
@@ -916,23 +902,8 @@
     "updateNodeMatrixWorld": {
       "description": "वह नोड और उसका पूरा सबट्री, पैरेंट पहले। कोई नोड तब पहुँचा जाता है जब वह ऑटोमैटिक अपडेट करता हो, जब वह चिह्नित हो, या जब `force` हो। किसी विज़िट किए नोड की मुहर `2 · traversal + reached` है, इसलिए एक पढ़ाई किसी बच्चे को बता देती है कि क्या वह उस सबट्री में है और उसका पैरेंट उसे क्या देता है। दूसरा रूप, माँगे जाने पर, रूट से पूर्वजों को भी घूमता है।"
     },
-    "nodeWorldPosition": {
-      "description": "वर्ल्ड मैट्रिक्स की पढ़ाई: ट्रांसलेशन कॉलम; घुमाव और स्केल उसके विभाजन से, ऋणात्मक डिटर्मिनेंट सिर्फ़ `x` लेकर चलता है। तीसरा कॉलम एक दिशा की तरह नॉर्मलाइज़ किया जाता है, `cameraForward` होने पर पलटा जाता है — कैमरा और रोशनी अपने `−z` की ओर देखते हैं। `nodeWorldMirrorsFaces` सच है जब वर्ल्ड मैट्रिक्स दिशा उलटता है, और तब ड्रॉ अपने सामने और पीछे के फलक बदल देता है; इसे बिना अपडेट के जैसा है वैसा पढ़ा जाता है, और शून्य या NaN डिटर्मिनेंट कुछ नहीं उलटता।"
-    },
     "lookAtNode": {
       "description": "`node` को वर्ल्ड बिंदु `(x, y, z)` की ओर घुमाता है। `viewer` किसी कैमरे या रोशनी के लिए सच है, जो अपने `−z` की ओर देखते हैं, किसी ऑब्जेक्ट के लिए झूठ, जो अपना `+z` सामने रखता है। `up` नोड की ऊपर की दिशा है, डिफ़ॉल्ट रूप से `(0, 1, 0)`। पूर्वज और नोड पहले अपडेट किए जाते हैं।"
-    },
-    "multiplyMatrix4Batch": {
-      "description": "`n` गुणनफल `out[i] = a[i] · b[i]`, तीनों पक्ष सोलह संख्याओं के सब-व्यू के रूप में दिए जाते हैं। सब-व्यू एक बार बनते हैं, कभी हर फ़्रेम में नहीं; एक WebAssembly कर्नल वही सूत्र पद-दर-पद दोहराता है और गवर्नर वह रास्ता चुनता है जो मापने में तेज़ निकले।"
-    },
-    "boxTransformBatch": {
-      "description": "`n` मैट्रिक्स से ट्रांसफ़ॉर्म किए `n` बॉक्स: `out[i] = boxTransform(boxes[i], mats[i])`। `out` और `boxes` हर एलिमेंट के लिए छह संख्याएँ लेकर चलते हैं, `mats` सोलह संख्याओं का सब-व्यू।"
-    },
-    "hierarchyUpdateBatch": {
-      "description": "पूरा पदानुक्रम एक ही चरण में अपडेट किया गया: `n` नोड, पैरेंट पहले बच्चे बाद में क्रम में, हर एक अपना लोकल मैट्रिक्स बनाकर फिर उसे अपने पैरेंट के वर्ल्ड मैट्रिक्स से गुणा करता है — `packages/sdk-core/src/world/transform-tree/update.ts` का ट्रैवर्सल, वही दो सूत्र उसी क्रम में, सीधे बफ़र पर। `parents[i]` **ज़रूर** किसी पहले से अपडेट किए नोड को इंगित करे, इसलिए यह `i` से सख़्ती से कम होना चाहिए; कोई और मान — `HIERARCHY_ROOT` सेंटिनल सहित — उस नोड को एक रूट बना देता है जिसका वर्ल्ड मैट्रिक्स उसका लोकल मैट्रिक्स ही है। नियम दोनों रास्तों पर एक जैसा है: कोई भी इनपुट, चाहे कितना भी कठोर हो, इन्हें अलग नहीं कर सकता। `local` एक स्क्रैच मैट्रिक्स है, जो हर एलिमेंट के लिए दोबारा इस्तेमाल होता है।"
-    },
-    "createPathGovernor": {
-      "description": "जो JS और WebAssembly के बीच फ़ैसला करता है, हर नामित ऑपरेशन के लिए: हर एलिमेंट के नैनोसेकंड का चलता मध्यम मान, उस बढ़त पर सिर्फ़ पाँच लगातार चलावों के बाद एक बदलाव, और पचास में से एक चलाव दूसरे रास्ते को दोबारा चलाकर उसका मध्यम मान ताज़ा करता है। पाँच नमूनों से कम होने पर कुछ भी तय नहीं होता — सिर्फ़ एक मान मध्यम मान बना देगा। `metrics()` हर ऑपरेशन के लिए प्रकाशित करता है `path`, `jsNsPerElement`, `wasmNsPerElement`, बदलावों की गिनती, और घड़ी की रिज़ॉल्यूशन जिस पर यह मापन टिका है।"
     },
     "frustumKeepsBoxBatch": {
       "description": "किसी फ़्रस्टम के चौबीस फ़्लोट के मुक़ाबले छह संख्याओं (पहले min फिर max) वाले `n` बॉक्स: `kept[i]` 1 है जब बॉक्स काटता है या अंदर है, और रखी गई गिनती लौटाई जाती है — `frustumExcludesBox` उलटा हुआ, वही ध्रुवता जो मानक जवाब देता है। गोले का बैच हर बॉक्स के लिए `SPHERE_VALUES` संख्याएँ लिखता है, केंद्र फिर कोने तक की त्रिज्या, जैसा `sphereFromBounds` करता है। दोनों लूप `packages/math/src/batch/culling.ts` में हैं।"
@@ -968,6 +939,19 @@
       "title": "दृश्य सहेजना और खोलना",
       "description": "`scene.toJSON(camera)` दृश्य को सादे, वर्ज़न वाले JSON में लिखता है; `scene.fromJSON(json, camera)` उसे फिर से बनाता है।",
       "html": "<p>आकृतियाँ उस कॉल से सहेजी जाती हैं जिसने उन्हें बनाया, सामग्री अपने मानों से, लोड किए गए मॉडल अपने पते से — कभी अंदर कॉपी नहीं होते — और <code>helper</code> निशान बिल्कुल नहीं। फ़ॉर्मैट का कोई दूसरा वर्ज़न नाम लेकर मना कर दिया जाता है। इसे <a href=\"#/en/examples/save-the-scene\">दृश्य सहेजना</a> में देखें।</p>"
+    },
+    "PlacementLink": {
+      "members": {
+        "rows": "वे प्लेसमेंट पंक्तियाँ जिनसे जुड़ी पंक्ति संबंधित है।",
+        "index": "उन पंक्तियों में पंक्ति का क्रमांक।",
+        "local": "इसके मेश का पैरेंट के सापेक्ष स्थानीय मैट्रिक्स: सोलह संख्याएँ।"
+      }
+    },
+    "SceneLightStore": {
+      "members": {
+        "shadowedLocals": "छाया डालने वाली कितनी लाइटें सूर्य के बजाय स्थानीय लाइटें हैं।",
+        "rects": "कितनी लाइटें आयत हैं।"
+      }
     }
   },
   "canvas": {
@@ -997,8 +981,6 @@
       "high": "उच्च",
       "balanced": "संतुलित",
       "adaptive": "अनुकूल",
-      "switches": "बदलाव",
-      "arbitration": "फ़ैसला",
       "box 0": "बॉक्स 0",
       "box 1": "बॉक्स 1",
       "box 2": "बॉक्स 2",
@@ -1038,8 +1020,6 @@
       "saturation": "सैचुरेशन",
       "lightness": "लाइटनेस",
       "scalar": "स्केलर",
-      "nodes in the batch": "बैच में नोड",
-      "products in the batch": "बैच में गुणनफल",
       "boxes in the batch": "बैच में बॉक्स",
       "boxes tested": "जाँचे गए बॉक्स",
       "kept by the frustum": "फ़्रस्टम ने रखे",
@@ -1056,12 +1036,6 @@
       "cone half-angle (rad)": "कोन का आधा कोण (rad)",
       "cone axis, heading (rad)": "कोन की धुरी, दिशा (rad)",
       "viewer distance": "देखने वाले की दूरी",
-      "JS nanoseconds per element": "प्रति एलिमेंट JS नैनोसेकंड",
-      "Wasm nanoseconds per element": "प्रति एलिमेंट Wasm नैनोसेकंड",
-      "executions observed": "देखे गए चलाव",
-      "contract version": "अनुबंध का वर्ज़न",
-      "path chosen": "चुना गया रास्ता",
-      "not decided yet": "अभी तय नहीं हुआ",
       "read and never written": "पढ़ा जाता है, कभी लिखा नहीं जाता",
       "the constant itself, read from the engine": "ख़ुद स्थिरांक, इंजन से पढ़ा गया",
       "reversed depth, infinite far plane": "उलटी गहराई, अनंत दूर का तल",
@@ -1076,8 +1050,6 @@
       "its forward direction": "इसकी आगे की दिशा",
       "under the root": "रूट के नीचे",
       "reparented to the world": "वर्ल्ड को पैरेंट बनाया गया",
-      "allocations during the call": "कॉल के दौरान आवंटन",
-      "largest difference on the last element": "आख़िरी एलिमेंट पर सबसे बड़ा अंतर",
       "this frame": "यह फ़्रेम",
       "a box beyond the declared far plane": "बताए गए दूर के तल से आगे एक बॉक्स",
       "a box three metres ahead": "तीन मीटर आगे एक बॉक्स",
@@ -1101,11 +1073,6 @@
       "the unit box carried by that matrix": "उस मैट्रिक्स से ले जाया गया यूनिट बॉक्स",
       "the union of the eight transformed corners, never the eight of the result": "आठ ट्रांसफ़ॉर्म हुए कोनों का मिलन, कभी नतीजे के आठ का नहीं",
       "one buffer holds many matrices; no view is sliced per frame": "एक बफ़र में कई मैट्रिक्स होते हैं; हर फ़्रेम में कोई व्यू नहीं काटा जाता",
-      "one chain of nodes, parents before children, in one call": "नोड की एक चेन, पैरेंट पहले बच्चे बाद में, एक ही कॉल में",
-      "none: the buffers are the caller’s": "कोई नहीं: बफ़र कॉलर के हैं",
-      "the unit function stays the oracle; the WebAssembly kernel repeats it term by term": "यूनिट फ़ंक्शन मानक बना रहता है; WebAssembly कर्नल इसे पद-दर-पद दोहराता है",
-      "the governor, after those executions": "उन चलावों के बाद, गवर्नर",
-      "the kernel leads by enough, for long enough, to be worth the switch": "कर्नल इतना और इतनी देर आगे रहता है कि बदलना उचित हो",
       "the reads of one node": "एक नोड की पढ़ाइयाँ",
       "the sign alone decides, with no square root: the exact clip test": "सिर्फ़ चिह्न फ़ैसला लेता है, बिना वर्गमूल: सटीक क्लिप जाँच",
       "the subtraction happens in double; only the write rounds": "घटाव डबल में होता है; सिर्फ़ लिखना गोल करता है",
@@ -1142,7 +1109,6 @@
       "the child, before and after the root moves": "बच्चा, रूट के हिलने से पहले और बाद में",
       "the child, attached then detached": "बच्चा, जोड़ा गया फिर अलग किया गया",
       "matrices do not move until the next update, like the reference `add`": "मैट्रिक्स अगले अपडेट तक नहीं हिलते, मानक के `add` की तरह",
-      "the batch against the unit function it repeats": "बैच, उस यूनिट फ़ंक्शन के मुक़ाबले जिसे यह दोहराता है",
       "frame.view — the inverse of the camera world matrix": "frame.view — कैमरे के वर्ल्ड मैट्रिक्स का उल्टा",
       "DIAGNOSTICS — the engine says which modes it can produce, and why not": "DIAGNOSTICS — इंजन बताता है कौन सा मोड बना सकता है, और अगर नहीं तो क्यों नहीं",
       "LOD_QUALITY, as the engine holds it": "LOD_QUALITY, जैसा इंजन इसे रखता है",
@@ -1152,7 +1118,6 @@
       "singular: the adjugate as-is, so the flattened surface keeps a normal": "सिंगुलर: एडजुगेट जैसा है वैसा, इसलिए चपटी हुई सतह में एक नॉर्मल बना रहता है",
       "no finite scale: nine zeros": "कोई परिमित स्केल नहीं: नौ शून्य",
       "rejected: every normal of that cluster faces away from the viewer": "अस्वीकृत: उस क्लस्टर का हर नॉर्मल देखने वाले से दूर मुड़ा है",
-      "JS keeps the work: under five samples, or the lead is not a burst": "JS काम अपने पास रखता है: पाँच नमूनों से कम पर, या जब बढ़त लगातार न हो",
       "nodeWorldDirection (object, +z)": "nodeWorldDirection (ऑब्जेक्ट, +z)",
       "nodeWorldDirection (viewer, −z)": "nodeWorldDirection (देखने वाला, −z)",
       "root": "रूट",
@@ -1182,7 +1147,6 @@
       "column 1": "कॉलम 1",
       "column 2": "कॉलम 2",
       "out = a, aliased": "out = a, वही बफ़र",
-      "clock resolution the measurement rests on (ms)": "घड़ी की रिज़ॉल्यूशन जिस पर यह मापन टिका है (ms)",
       "decomposeMatrix4 of that matrix — the round trip": "उस मैट्रिक्स का decomposeMatrix4 — आगे-पीछे का चक्कर",
       "depth against distance: it falls from 1 at the near plane toward 0 at infinity": "दूरी के मुक़ाबले गहराई: यह नज़दीक के तल पर 1 से गिरकर अनंत पर 0 हो जाती है",
       "depth at the near plane (0.1 m)": "नज़दीक के तल पर गहराई (0.1 m)",
@@ -1198,7 +1162,6 @@
       "rotation of A (rad)": "A का घुमाव (rad)",
       "the direction (1, 0, 0) under that matrix": "उस मैट्रिक्स के तहत दिशा (1, 0, 0)",
       "the identity written at offset 16 of one large buffer": "एक बड़े बफ़र के ऑफ़सेट 16 पर लिखी आइडेंटिटी",
-      "x of the last node — the sum 0 + 1 + … + (n − 1)": "आख़िरी नोड का x — जोड़ 0 + 1 + … + (n − 1)",
       "transformHomogeneousPoint — four components": "transformHomogeneousPoint — चार कंपोनेंट",
       "matrixAtRenderOrigin — the same matrix, applied at the origin": "matrixAtRenderOrigin — वही मैट्रिक्स, मूल बिंदु पर लगाया गया",
       "viewToRenderOrigin — the view without its translation": "viewToRenderOrigin — बिना ट्रांसलेशन वाला व्यू",
@@ -1213,10 +1176,7 @@
       "surface": "सतह",
       "target": "लक्ष्य",
       "viewer": "देखने वाला",
-      "expected": "अपेक्षित",
-      "orientation": "दिशा",
-      "products": "गुणनफल",
-      "nodes": "नोड"
+      "orientation": "दिशा"
     },
     "patterns": {
       "singular": "डिटर्मिनेंट {{value}}: सोलह शून्य — डिटर्मिनेंट जाँचें, कभी आउटपुट नहीं"
@@ -1531,7 +1491,8 @@
       "a-dolly-along-the-canal": "नहर के किनारे कैमरा डॉली",
       "a-folder-merged-into-one-scene": "एक दृश्य में मिला फ़ोल्डर",
       "drag-a-crate": "एक पेटी खींचें",
-      "move-a-hierarchy-by-name": "नाम से पदानुक्रम घुमाएँ"
+      "move-a-hierarchy-by-name": "नाम से पदानुक्रम घुमाएँ",
+      "cooked-blocks-that-fall": "पहले से तैयार गिरते ब्लॉक"
     },
     "missing": {
       "thick-lines": "चौड़ी रेखाएँ",
@@ -1575,7 +1536,6 @@
       "wide-gamut-colour": "वाइड-गैमट आउटपुट",
       "energy-conservation-test": "एनवायरनमेंट लाइटिंग (IBL)",
       "contact-shadow-under-a-car": "texture में रेंडर",
-      "coloured-shadows-through-glass": "पारदर्शी शैडो कास्टर",
       "shadows-in-the-corners": "स्क्रीन-स्पेस एम्बिएंट ऑक्लूज़न",
       "contact-shadows-from-the-screen": "स्क्रीन-स्पेस ट्रेसिंग",
       "light-that-bounces": "सार्वजनिक API में उछलती रोशनी",
@@ -1596,7 +1556,6 @@
       "voxel-models": "अन्य सोर्स इम्पोर्टर: VOX",
       "cad-and-building-models": "अन्य सोर्स इम्पोर्टर: 3DM, IFC",
       "a-toolpath-in-lines": "अन्य सोर्स इम्पोर्टर: G-code",
-      "instanced-gltf": "अन्य glTF एक्सटेंशन: GPU इंस्टेंसिंग",
       "gltf-material-variants": "अन्य glTF एक्सटेंशन: सामग्री वेरिएंट",
       "compressed-mesh-input": "अन्य glTF एक्सटेंशन: Draco, meshopt, क्वांटाइज़ेशन",
       "a-medical-scan": "वॉल्यूम रेंडरिंग",
@@ -1615,8 +1574,6 @@
       "a-mirror-on-the-wall": "texture में रेंडर: प्लानर मिरर",
       "a-polished-floor": "स्क्रीन-स्पेस परावर्तन",
       "reflections-from-the-screen": "स्क्रीन-स्पेस परावर्तन",
-      "an-ocean": "texture में रेंडर: पानी का परावर्तन और अपवर्तन",
-      "a-raging-sea": "कस्टम शेडर सामग्री",
       "fog-that-scatters-light": "वॉल्यूमेट्रिक कोहरा और प्रकाश किरणें",
       "a-cloud-in-a-box": "वॉल्यूम रेंडरिंग",
       "a-fire-in-a-volume": "वॉल्यूम रेंडरिंग",

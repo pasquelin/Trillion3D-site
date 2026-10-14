@@ -1,0 +1,484 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>A galloping horse</title>
+    <meta name="thumbnail" content="3" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #dcc9b4;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import {
+        createWorld,
+        animation,
+        buffer,
+        geometry,
+        light,
+        material,
+        math,
+        object,
+      } from '../runtime/engine.js';
+      import { controls, seeded } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      const haze = math.color('#dcc9b4');
+      world.scene.background = haze;
+      world.scene.fog = { color: haze, near: 18, far: 75 };
+
+      // The horse faces +x. Its skeleton is named nodes the clip moves; each piece of it —
+      // barrel, neck, head, thighs, cannons, tail — is a smooth shape lofted ring by ring and
+      // carried by its bone, the pieces overlapping where they meet.
+      const node = (name, parent, x, y, z = 0) => {
+        const group = object.group();
+        group.name = name;
+        group.position.set(x, y, z);
+        parent.add(group);
+        return group;
+      };
+      const horse = object.group();
+      const body = node('body', horse, 0, 0);
+      const neck = node('neck', body, 0.82, 0.28);
+      const head = node('head', neck, 0.58, 0.74);
+      const tail = [node('tail0', body, -1.12, 0.22)];
+      tail.push(node('tail1', tail[0], -0.28, -0.1));
+      tail.push(node('tail2', tail[1], -0.22, -0.2));
+      // A leg: hip, knee, hoof. `UPPER` from hip to knee and `LOWER` from knee to the sole.
+      const UPPER = 0.55,
+        LOWER = 0.64;
+      const legs = [
+        ['hindL', -0.8, 0.17, 0],
+        ['hindR', -0.8, -0.17, 0.1],
+        ['foreL', 0.72, 0.17, 0.42],
+        ['foreR', 0.72, -0.17, 0.52],
+      ].map(([name, x, z, footfall]) => {
+        const hip = node(`${name}Hip`, body, x, -0.25, z);
+        const knee = node(`${name}Knee`, hip, 0, -UPPER);
+        return { name, hip: [x, -0.25], z, footfall, hipNode: hip, kneeNode: knee };
+      });
+      /** Catmull-Rom through evenly spaced `values`, at `t` from 0 to 1. */
+      const smooth = (values, t) => {
+        const last = values.length - 1,
+          at = Math.min(t * last, last - 1e-9),
+          i = Math.floor(at),
+          u = at - i;
+        const [a, b, c, d] = [i - 1, i, i + 1, i + 2].map((k) => values[math.clamp(k, 0, last)]);
+        return (
+          0.5 *
+          (2 * b +
+            (c - a) * u +
+            (2 * a - 5 * b + 4 * c - d) * u * u +
+            (3 * b - a - 3 * c + d) * u ** 3)
+        );
+      };
+      const coat = math.color('#8a4524'),
+        points = math.color('#1d130f'),
+        blaze = math.color('#efe7dc'),
+        tint = math.color();
+      const hide = material.meshPhysical({
+        vertexColors: true,
+        roughness: 0.42,
+        sheen: 0.6,
+        clearcoat: 0.2,
+      });
+      horse.updateMatrixWorld(true);
+      /**
+       * A piece carried by `bone`: rings through `keys` — `[x, y, height, width, lift]` in the
+       * body's frame at rest, centre, half-sizes and a shift of the ring off its axis —, `z` off
+       * the middle. Each ring stands across the axis; `paint(s, a)` gives the colour at `s` along
+       * the piece and angle `a` round the ring. Both ends are closed.
+       */
+      function piece(bone, keys, z, paint, rings = 48, around = 32) {
+        const [xs, ys, hs, ws, lifts] = [0, 1, 2, 3, 4].map((k) =>
+          keys.map((key) => key[k] ?? 0),
+        );
+        const origin = bone.getWorldPosition(math.vector3());
+        const at = [],
+          colours = [],
+          index = [];
+        const vertex = (x, y, depth, s, a) => {
+          at.push(x - origin.x, y - origin.y, depth - origin.z);
+          const colour = paint(s, a);
+          colours.push(colour.r, colour.g, colour.b);
+        };
+        for (let r = 0; r <= rings; r++) {
+          const s = r / rings,
+            e = 1e-3;
+          const x = smooth(xs, s),
+            y = smooth(ys, s);
+          const tx = smooth(xs, Math.min(1, s + e)) - smooth(xs, Math.max(0, s - e)),
+            ty = smooth(ys, Math.min(1, s + e)) - smooth(ys, Math.max(0, s - e));
+          const length = Math.hypot(tx, ty) || 1;
+          // `up` is the axis turned a quarter round in the side view; the ring's width is along z.
+          const ux = -ty / length,
+            uy = tx / length;
+          const h = smooth(hs, s),
+            w = smooth(ws, s),
+            lift = smooth(lifts, s);
+          for (let k = 0; k < around; k++) {
+            const a = (k / around) * Math.PI * 2;
+            const across = Math.sin(a) * h + lift;
+            vertex(x + ux * across, y + uy * across, z + Math.cos(a) * w, s, a);
+          }
+        }
+        for (let r = 0; r < rings; r++)
+          for (let k = 0; k < around; k++) {
+            const a = r * around + k,
+              b = r * around + ((k + 1) % around);
+            // Wound so the faces look outward: the ring's next vertex, then the next ring's.
+            index.push(a, a + around, b, b, a + around, b + around);
+          }
+        // The caps: a centre vertex at each end, fanned to its ring.
+        for (const [r, flip] of [
+          [0, false],
+          [rings, true],
+        ]) {
+          const centre = at.length / 3,
+            s = r / rings;
+          vertex(smooth(xs, s), smooth(ys, s), z, s, 0);
+          for (let k = 0; k < around; k++) {
+            const a = r * around + k,
+              b = r * around + ((k + 1) % around);
+            index.push(...(flip ? [centre, b, a] : [centre, a, b]));
+          }
+        }
+        const shape = geometry.createBuffer({
+          position: buffer.float32(at, 3),
+          color: buffer.float32(colours, 3),
+          index: buffer.uint32(index, 1),
+        });
+        shape.computeVertexNormals();
+        bone.add(object.mesh(shape, hide));
+      }
+      const plain = () => coat;
+      const dark = () => points;
+
+      // The barrel, from rump to chest.
+      piece(
+        body,
+        [
+          [-1.2, 0.08, 0.05, 0.05],
+          [-1.12, 0.08, 0.3, 0.25],
+          [-0.95, 0.07, 0.42, 0.35],
+          [-0.65, 0.05, 0.46, 0.39],
+          [-0.3, 0, 0.44, 0.37],
+          [0.1, -0.02, 0.45, 0.37],
+          [0.45, 0.04, 0.47, 0.35],
+          [0.78, 0.04, 0.43, 0.29],
+          [0.98, 0, 0.3, 0.21],
+          [1.06, 0, 0.06, 0.05],
+        ],
+        0,
+        plain,
+        72,
+      );
+      // The neck, from inside the chest to behind the poll; `up` is its crest, and the mane a
+      // dark ridge along it.
+      const neckKeys = [
+        [0.7, 0.18, 0.3, 0.22],
+        [0.92, 0.45, 0.27, 0.19],
+        [1.12, 0.72, 0.22, 0.155],
+        [1.3, 0.93, 0.18, 0.13],
+        [1.42, 1.06, 0.15, 0.12],
+      ];
+      piece(neck, neckKeys, 0, plain);
+      piece(
+        neck,
+        neckKeys.map(([x, y, h], i) => [x, y, 0.05 + i * 0.004, 0.035, h * 0.95]),
+        0,
+        dark,
+        40,
+        16,
+      );
+      // The head, from the poll down to the muzzle: the jowl swells toward the throat, the
+      // muzzle darkens, a white blaze runs down the face.
+      piece(
+        head,
+        [
+          [1.36, 1.1, 0.06, 0.06],
+          [1.41, 1.04, 0.17, 0.13, -0.02],
+          [1.49, 0.94, 0.2, 0.135, -0.07],
+          [1.6, 0.8, 0.13, 0.11, -0.02],
+          [1.71, 0.67, 0.105, 0.095],
+          [1.77, 0.6, 0.1, 0.09, -0.01],
+          [1.8, 0.56, 0.04, 0.04],
+        ],
+        0,
+        (s, a) => {
+          const face = Math.sin(a) > 0.8 && Math.abs(Math.cos(a)) < 0.2;
+          if (face && s > 0.12 && s < 0.9) return blaze;
+          return tint.copy(coat).lerp(points, math.clamp((s - 0.75) / 0.2, 0, 0.8));
+        },
+      );
+      // The tail, one piece a bone, each reaching into the next.
+      [
+        [
+          [-1.06, 0.24, 0.07, 0.07],
+          [-1.25, 0.2, 0.1, 0.09],
+          [-1.43, 0.09, 0.125, 0.1],
+        ],
+        [
+          [-1.37, 0.14, 0.12, 0.1],
+          [-1.52, 0.02, 0.135, 0.1],
+          [-1.65, -0.11, 0.13, 0.095],
+        ],
+        [
+          [-1.59, -0.05, 0.13, 0.095],
+          [-1.72, -0.35, 0.1, 0.07],
+          [-1.78, -0.6, 0.03, 0.03],
+        ],
+      ].forEach((keys, index) => piece(tail[index], keys, 0, dark, 24, 20));
+      // The legs: the forearm or the thigh tapering to the knee on the hip, the cannon, the
+      // fetlock and the pastern on the knee; dark from the knee down, one white sock behind.
+      const joint = geometry.sphere(1, 24, 16),
+        kneeCap = material.meshPhysical({ color: '#7a3c20', roughness: 0.42, sheen: 0.6 });
+      for (const leg of legs) {
+        const hind = leg.name.startsWith('hind');
+        const [x] = leg.hip;
+        const rings = hind
+          ? [
+              [-0.32, 0.25, 0.13],
+              [0, 0.21, 0.12],
+              [0.28, 0.12, 0.085],
+              [0.5, 0.08, 0.07],
+              [0.62, 0.07, 0.062],
+              [0.78, 0.052, 0.05],
+              [0.95, 0.05, 0.048],
+              [1, 0.064, 0.058],
+              [1.07, 0.05, 0.05],
+            ]
+          : [
+              [-0.28, 0.15, 0.11],
+              [0, 0.14, 0.1],
+              [0.25, 0.095, 0.08],
+              [0.48, 0.07, 0.066],
+              [0.6, 0.065, 0.06],
+              [0.75, 0.05, 0.048],
+              [0.95, 0.05, 0.047],
+              [1, 0.064, 0.058],
+              [1.07, 0.05, 0.05],
+            ];
+        const sock = leg.name === 'hindL';
+        const paint = (d) => {
+          if (sock && d > 0.86) return blaze;
+          return tint.copy(coat).lerp(points, math.clamp((d - 0.6) / 0.18, 0, 1));
+        };
+        const keys = (from, to) =>
+          rings.slice(from, to).map(([d, h, w]) => [x, -0.25 - d, h, w]);
+        const span = (from, to) => (s) =>
+          rings[from][0] + s * (rings[to - 1][0] - rings[from][0]);
+        const upper = span(0, 5),
+          lower = span(3, 9);
+        piece(leg.hipNode, keys(0, 5), leg.z, (s) => paint(upper(s)), 40, 24);
+        piece(leg.kneeNode, keys(3, 9), leg.z, (s) => paint(lower(s)), 40, 24);
+        // The knee itself, round, so the bend shows no gap between the two pieces.
+        const knee = object.mesh(joint, kneeCap);
+        knee.scale.set(hind ? 0.075 : 0.068, 0.07, hind ? 0.066 : 0.062);
+        leg.kneeNode.add(knee);
+      }
+
+      // The rigid pieces ride their bones: hooves, eyes, ears.
+      const horn = material.meshStandard({ color: '#2b2522', roughness: 0.35 });
+      const hoof = geometry.cylinder(0.075, 0.095, 0.12, 24);
+      for (const { kneeNode } of legs) {
+        const shoe = object.mesh(hoof, horn);
+        shoe.position.y = -LOWER + 0.06;
+        kneeNode.add(shoe);
+      }
+      const eye = material.meshPhysical({ color: '#0b0706', roughness: 0.1, clearcoat: 1 });
+      const ear = geometry.cone(0.045, 0.18, 16),
+        earSkin = material.meshStandard({ color: '#7a3c20', roughness: 0.5 });
+      for (const side of [-1, 1]) {
+        const ball = object.mesh(geometry.sphere(0.035, 20, 14), eye);
+        ball.position.set(0.12, -0.01, side * 0.122);
+        const cone = object.mesh(ear, earSkin);
+        cone.position.set(0.03, 0.16, side * 0.07);
+        cone.rotation.set(side * 0.15, 0, -0.3);
+        head.add(ball, cone);
+      }
+      world.scene.add(horse);
+
+      // The gallop, computed then keyed. A stride lasts `STRIDE` s; each leg is on the ground for
+      // `DUTY` of it, from its footfall on: hind left, hind right, fore left, fore right, then a
+      // moment with no hoof down. On the ground a leg sweeps from `REACH` forward to `PUSH` back
+      // and its knee bends just enough to keep the sole on the ground; in the air it folds and
+      // swings forward again. The body rises in the flight and pitches with the hinds and fores.
+      const STRIDE = 0.62,
+        DUTY = 0.3,
+        REACH = 0.36,
+        PUSH = 0.36,
+        STEPS = 40;
+      const turn = (phase) => Math.PI * 2 * phase;
+      const height = (phase) => 1.37 + 0.05 * Math.cos(turn(phase - 0.92));
+      const pitch = (phase) => 0.05 * Math.sin(turn(phase + 0.1));
+      /** The hip's height at the stride's `phase`, the body raised and pitched. */
+      const hipHeight = (phase, [x, y]) =>
+        height(phase) + x * Math.sin(pitch(phase)) + y * Math.cos(pitch(phase));
+      /** How far from hip to sole a planted leg reaches, swung `swing` from the vertical. */
+      const planted = (phase, hip, swing) =>
+        Math.min(UPPER + LOWER - 1e-4, hipHeight(phase, hip) / Math.cos(swing));
+      /** The hip's and the knee's angles of `leg` at the stride's `phase`: the line from hip to
+       *  sole swung `swing`, the knee bent until that line is `reach` long. */
+      function legPose(phase, { hip, footfall }) {
+        const own = (phase - footfall + 1) % 1;
+        let swing, reach;
+        if (own < DUTY) {
+          swing = REACH - ((REACH + PUSH) * own) / DUTY;
+          reach = planted(phase, hip, swing);
+        } else {
+          // In the air: from the reach it left the ground with to the reach it lands with,
+          // folded on the way.
+          const air = (own - DUTY) / (1 - DUTY);
+          swing = -PUSH + ((REACH + PUSH) * (1 - Math.cos(Math.PI * air))) / 2;
+          const left = planted(footfall + DUTY, hip, -PUSH),
+            lands = planted(footfall, hip, REACH);
+          reach = left + (lands - left) * air - 0.32 * (UPPER + LOWER) * Math.sin(Math.PI * air);
+        }
+        const bend = Math.acos(
+          math.clamp((reach ** 2 - UPPER ** 2 - LOWER ** 2) / (2 * UPPER * LOWER), -1, 1),
+        );
+        const knee = Math.asin(math.clamp((LOWER * Math.sin(bend)) / reach, -1, 1));
+        return [swing + knee - pitch(phase), -bend];
+      }
+      const times = Array.from({ length: STEPS + 1 }, (_, i) => (i / STEPS) * STRIDE);
+      const sampled = (path, value) =>
+        animation.numberTrack(
+          path,
+          times,
+          times.map((time) => value((time / STRIDE) % 1)),
+        );
+      const gallop = animation.clip('gallop', STRIDE, [
+        sampled('body.position.y', height),
+        sampled('body.rotation.z', pitch),
+        sampled('neck.rotation.z', (phase) => -0.1 * Math.sin(turn(phase - 0.15))),
+        sampled('head.rotation.z', (phase) => 0.06 * Math.sin(turn(phase - 0.35))),
+        ...tail.map((_, index) =>
+          sampled(`tail${index}.rotation.z`, (phase) => {
+            const sway = Math.sin(turn(phase) - index * 0.9);
+            return -0.2 + index * 0.08 + 0.12 * sway;
+          }),
+        ),
+        ...legs.flatMap((leg) => [
+          sampled(`${leg.name}Hip.rotation.z`, (phase) => legPose(phase, leg)[0]),
+          sampled(`${leg.name}Knee.rotation.z`, (phase) => legPose(phase, leg)[1]),
+        ]),
+      ]);
+      const action = animation.createMixer(horse).play(gallop);
+
+      // The horse stays; the ground runs under it at the speed a planted hoof sweeps back, so no
+      // hoof slides. Rails run the length of the track and look the same as they pass; the posts,
+      // tufts and stones go by and come round again.
+      const soleX = (phase, leg) => {
+        const [hipAngle, knee] = legPose(phase, leg);
+        const lean = pitch(phase),
+          upper = hipAngle + lean;
+        const [x, y] = leg.hip;
+        return (
+          x * Math.cos(lean) - y * Math.sin(lean) +
+          UPPER * Math.sin(upper) +
+          LOWER * Math.sin(upper + knee)
+        );
+      };
+      const groundSpeed =
+        legs.reduce(
+          (sum, leg) => sum + soleX(leg.footfall, leg) - soleX(leg.footfall + DUTY - 1e-6, leg),
+          0,
+        ) /
+        legs.length /
+        (DUTY * STRIDE);
+      const add = (parent, shape, paint, at, scale) => {
+        const mesh = object.mesh(shape, paint);
+        mesh.position.set(...at);
+        if (scale) mesh.scale.set(...scale);
+        parent.add(mesh);
+        return mesh;
+      };
+      const ball = geometry.sphere(1, 48, 32);
+      const SPAN = 60;
+      const dirt = material.meshStandard({ color: '#9b7b5c', roughness: 0.95 });
+      const grass = material.meshStandard({ color: '#7d8a4e', roughness: 0.95 });
+      const wood = material.meshStandard({ color: '#e9e2d6', roughness: 0.6 });
+      add(world.scene, geometry.box(400, 0.2, 12.4), dirt, [0, -0.1, 0]);
+      add(world.scene, geometry.box(400, 0.18, 200), grass, [0, -0.12, 0]);
+      for (const z of [-6.5, 6.5])
+        for (const y of [0.62, 1.05])
+          add(world.scene, geometry.box(400, 0.08, 0.06), wood, [0, y, z]);
+      const passing = [];
+      const post = geometry.box(0.12, 1.2, 0.12);
+      for (let x = -SPAN / 2; x < SPAN / 2; x += 2.5)
+        for (const z of [-6.5, 6.5]) passing.push(add(world.scene, post, wood, [x, 0.6, z]));
+      const random = seeded(11);
+      const stone = material.meshStandard({ color: '#b9a58e', roughness: 0.9 });
+      const tuft = material.meshStandard({ color: '#5f6e37', roughness: 0.9 });
+      const pebble = geometry.sphere(0.06, 10, 8),
+        blade = geometry.cone(0.07, 0.28, 6);
+      for (let i = 0; i < 160; i++) {
+        const onTrack = i % 2 === 0;
+        const z = onTrack ? (random() - 0.5) * 11 : Math.sign(random() - 0.5) * (7 + random() * 8);
+        const mesh = add(world.scene, onTrack ? pebble : blade, onTrack ? stone : tuft, [
+          (random() - 0.5) * SPAN,
+          onTrack ? 0 : 0.12,
+          z,
+        ]);
+        mesh.scale.setScalar(0.6 + random());
+        passing.push(mesh);
+      }
+      for (const [x, z, size] of [
+        [-30, -60, 18],
+        [10, -70, 24],
+        [45, -55, 16],
+        [-55, 50, 20],
+      ])
+        add(world.scene, ball, grass, [x, -size * 0.55, z], [size * 1.6, size, size]);
+
+      world.scene.add(
+        light.directional({
+          color: '#ffd1a1',
+          intensity: 3.4,
+          position: [-8, 6, 6],
+          castShadow: true,
+        }),
+        light.hemisphere({ color: '#a9c6ef', groundColor: '#5a4a33', intensity: 0.8 }),
+      );
+      // The camera stays between the rails.
+      world.camera.position.set(2.6, 1.6, 4.6);
+      world.controls.target.set(0.2, 1.15, 0);
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.04;
+      world.controls.minDistance = 2.5;
+      world.controls.maxDistance = 6;
+
+      controls(
+        { speed: [0, 1.5, 1, 0.05] },
+        (values) => {
+          action.timeScale = values.speed;
+          world.invalidate();
+        },
+        world,
+      );
+      // The ground follows the clip's own time, ahead of each frame and after the clip has
+      // stepped: whatever the frame rate, it is drawn where the hooves are.
+      let played = action.time;
+      world.beforeFrame(() => {
+        const step = groundSpeed * (action.time - played);
+        played = action.time;
+        if (!step) return;
+        for (const mesh of passing) {
+          mesh.position.x -= step;
+          if (mesh.position.x < -SPAN / 2) mesh.position.x += SPAN;
+        }
+      });
+    </script>
+  </body>
+</html>

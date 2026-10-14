@@ -1,9 +1,7 @@
 {
   "brushed-metal": {
-    "banner": "拖动查看拉丝高光，并改变强度和方向。",
+    "banner": "拖动查看钢材上的高光，并改变其粗糙度。",
     "controls": {
-      "anisotropy": "拉丝强度",
-      "direction": "拉丝方向",
       "roughness": "粗糙度",
       "spin": "旋转"
     }
@@ -338,7 +336,7 @@
     "banner": "拖动四处看看。让霓虹灯发光、闪烁。",
     "controls": {
       "star": "星星",
-      "wave": "波浪",
+      "word": "文字",
       "glow": "发光",
       "pulse": "闪烁",
       "exposure": "曝光",
@@ -660,7 +658,8 @@
       "wax": "蜡"
     },
     "readouts": {
-      "piecesWax": "蜡块"
+      "piecesWax": "蜡块",
+      "framesCooked": "已计算帧数"
     }
   },
   "bricks-with-a-normal-map": {
@@ -1424,7 +1423,7 @@
     }
   },
   "move-rotate-scale-gizmo": {
-    "banner": "拖动手柄来移动、旋转或放大物体。在旁边拖动就能四处看。",
+    "banner": "点击一个物体，把手柄放到它上面。拖动手柄来移动、旋转或放大它。在旁边拖动就能四处看。",
     "controls": {
       "mode": "模式",
       "axes": "坐标轴",
@@ -2393,7 +2392,7 @@
     }
   },
   "drag-a-crate": {
-    "banner": "在地面上拖动木箱。开启吸附后可按半米步长放置。",
+    "banner": "在地面上拖动木箱、木桶或球。开启吸附后可按半米步长放置。",
     "controls": {
       "snap": "吸附",
       "home": "初始位置"
@@ -2451,9 +2450,10 @@
   },
   "additive-poses": {
     "controls": {
-      "playing": "播放"
+      "playing": "播放",
+      "weight": "权重"
     },
-    "banner": "拖动以环绕查看场景。使用播放开关暂停或继续动画。"
+    "banner": "拖动以环绕查看场景。权重决定在行走之上叠加多少摇摆；使用播放开关暂停或继续。"
   },
   "move-a-hierarchy-by-name": {
     "banner": "观看五个命名组合走完可复现的序列。切换驱动方式，手动写入相同的位姿。",
@@ -2475,5 +2475,219 @@
   },
   "choose-your-quality": {
     "banner": "选择画质、分辨率和视角。把一组设置存为 A，另一组存为 B，按 C 在两者之间切换。"
+  },
+  "a-polished-floor": {
+    "banner": "拖动以在展厅中走动。把地面调亮，它的镜像就沉入它自己的颜色里。",
+    "controls": {
+      "floor": "地面",
+      "turn": "旋转"
+    }
+  },
+  "reflections-blurred-by-roughness": {
+    "banner": "拖动以环顾四周。提高粗糙度：反射一条接一条地变模糊，从 0.6 起消失。",
+    "controls": {
+      "roughness": "粗糙度",
+      "metal": "金属"
+    }
+  },
+  "reflections-from-the-screen": {
+    "banner": "拖动以环顾四周。把视线向下倾斜：离开屏幕的路灯，也离开了湿漉漉的路面。",
+    "controls": {
+      "wet": "湿度",
+      "traffic": "车流"
+    }
+  },
+  "instanced-gltf": {
+    "banner": "拖动绕着山谷转。滚动下到树林之间。",
+    "controls": {
+      "sunHeight": "太阳高度",
+      "mist": "薄雾",
+      "drift": "漂移"
+    },
+    "readouts": {
+      "nodesFile": "文件中的节点",
+      "objectsCooked": "烘焙后的物体",
+      "trianglesDrawn": "绘制的三角形"
+    },
+    "words": {
+      "credit": "为这个示例用代码制作的山谷和树木，CC0 — 见 assets/examples/CREDITS.md",
+      "nodesPoses": "{nodes} 个节点，{poses} 个姿态",
+      "notCounted": "这里没有计数"
+    }
+  },
+  "an-ocean": {
+    "banner": "拖动四处看看。加大涌浪、拉长波浪、压低太阳。",
+    "controls": {
+      "swell": "涌浪",
+      "wavelength": "波长",
+      "sun": "太阳高度"
+    }
+  },
+  "a-raging-sea": {
+    "banner": "拖动环顾风暴。加大波浪和风力；灯塔的光扫过海面。",
+    "controls": {
+      "height": "浪高",
+      "wind": "风"
+    }
+  },
+  "tone-mapping-compared": {
+    "banner": "拖动四处看看。选一条曲线，看看每条曲线保留了多少落日、洒满阳光的地板和灯光。",
+    "controls": {
+      "toneMapping": "色调映射",
+      "exposure": "曝光",
+      "lamps": "灯"
+    },
+    "choices": {
+      "toneMapping": {
+        "aces": "aces",
+        "agx": "agx",
+        "neutral": "中性",
+        "reinhard": "reinhard",
+        "cineon": "cineon",
+        "linear": "线性"
+      }
+    }
+  },
+  "render-small-show-sharp": {
+    "banner": "拖动看鸟笼。降低渲染比例：画出的像素少得多，画面依然清晰。",
+    "controls": {
+      "scale": "渲染比例",
+      "smoothing": "平滑",
+      "circle": "环绕"
+    },
+    "readouts": {
+      "pixels": "已画像素"
+    }
+  },
+  "thick-lines": {
+    "banner": "拖动以环绕观看。每一股都是一条宽度以屏幕像素计的线：把它们加宽、增加股数、让它们漂移。",
+    "controls": {
+      "width": "宽度",
+      "strands": "股数",
+      "drift": "漂移",
+      "glow": "辉光",
+      "spin": "旋转"
+    }
+  },
+  "sculpt-a-sphere": {
+    "banner": "在黏土上拖动可将其隆起，或换另一种工具将其刻凹；在旁边拖动可环绕观看。",
+    "controls": {
+      "tool": "工具",
+      "brush": "笔刷",
+      "strength": "强度",
+      "mirror": "镜像",
+      "clay": "黏土",
+      "reset": "重置"
+    },
+    "choices": {
+      "tool": {
+        "raise": "隆起",
+        "carve": "刻凹"
+      }
+    }
+  },
+  "hover-over-triangles": {
+    "banner": "将指针移到结上：指针下方的三角形会发光，然后留下一道轨迹逐渐冷却。",
+    "controls": {
+      "trail": "轨迹（秒）",
+      "spin": "旋转"
+    },
+    "readouts": {
+      "triangle": "三角形"
+    }
+  },
+  "a-voxel-painter": {
+    "banner": "点击底板或某个面即可添加体素；按住 Shift 点击，或打开“擦除”开关，可移除一个。拖动以环顾四周。",
+    "controls": {
+      "colour": "颜色",
+      "erase": "擦除",
+      "clear": "全部清除"
+    }
+  },
+  "cooked-blocks-that-fall": {
+    "banner": "这个模型的每个方块都声明了自己的物体，并与模型一起预先计算：模型加载时即被恢复，方块随即落下并静止。再次加载即可观看。",
+    "controls": {
+      "again": "再来",
+      "slowMotion": "慢动作"
+    },
+    "readouts": {
+      "bodies": "物体",
+      "step": "步长"
+    }
+  },
+  "coloured-shadows-through-glass": {
+    "banner": "阳光穿过彩色玻璃，落在地面上。移动太阳，或让玻璃更浓。",
+    "controls": {
+      "sunHeight": "太阳高度",
+      "swing": "摆动",
+      "opacity": "不透明度"
+    }
+  },
+  "animation-from-the-file": {
+    "banner": "拖动四处看看。走路动作来自文件：改变环上行走的人数和速度，甚至可以倒着走。",
+    "controls": {
+      "walkers": "行走者",
+      "speed": "速度"
+    }
+  },
+  "reaching-with-ik": {
+    "banner": "拖动四处看看。每只手臂都伸向光：让光沿自己的路线飘动，或用指针引导它。",
+    "controls": {
+      "arms": "手臂",
+      "follow": "光",
+      "speed": "速度",
+      "reach": "伸展"
+    },
+    "choices": {
+      "follow": {
+        "path": "自己的路线",
+        "pointer": "指针"
+      }
+    }
+  },
+  "a-character-of-points": {
+    "banner": "拖动四处看看。由点组成、被骨架弯曲的舞者：改变点的数量和舞蹈的速度。",
+    "controls": {
+      "points": "点",
+      "speed": "速度",
+      "spin": "旋转"
+    }
+  },
+  "a-face-that-talks": {
+    "banner": "拖动绕着半身像看看。嘴唇、口腔和牙齿共用三个变形目标，一个音节一个音节地播放。",
+    "controls": {
+      "speed": "速度",
+      "paused": "已暂停"
+    }
+  },
+  "a-galloping-horse": {
+    "banner": "拖动四处看看。放慢奔跑，看每只马蹄依次落地。",
+    "controls": {
+      "speed": "速度"
+    }
+  },
+  "a-herd-of-morphs": {
+    "banner": "拖动四处看看。整个兽群只用一个形状和一个片段；每个生物用自己的权重跳跃。",
+    "controls": {
+      "creatures": "生物",
+      "speed": "速度"
+    }
+  },
+  "morph-and-skin-together": {
+    "banner": "拖动绕着植物看看。骨骼弯曲每片叶子，变形目标让它卷起：调整卷曲程度，改变风力。",
+    "controls": {
+      "leaves": "叶子",
+      "wind": "风",
+      "curl": "卷曲"
+    }
+  },
+  "fog-on-the-ground": {
+    "banner": "拖动四处看看。雾充满山谷，越高越稀薄：改变它的浓度、变稀的快慢和起始高度。",
+    "controls": {
+      "density": "浓度",
+      "height": "衰减",
+      "base": "起始高度",
+      "colour": "颜色"
+    }
   }
 }

@@ -25,7 +25,8 @@
       import { controls, readout } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
-      world.scene.background = math.color('#101218');
+      const DARK = math.color('#101218'), backdrop = DARK.clone(), horizon = DARK.clone();
+      world.scene.background = backdrop;
 
       // Four places, each the light arriving from every direction: a function from a direction
       // (x, y, z), y up, to a colour. Nothing in the scene draws them — only their light shows.
@@ -91,7 +92,7 @@
       world.scene.add(ball);
 
       // A key light gives the shapes their shadows; switch it off to see the probe alone.
-      const lamp = light.directional({ intensity: 1.4, position: [6, 8, 4], castShadow: true });
+      const lamp = light.directional({ intensity: 4, position: [-8, 6, 2], castShadow: true });
       const KEYS = { 'desert at sunset': '#ffb070', 'forest clearing': '#f4ffd8', 'neon alley': '#ff7ad8', snowfield: '#ffffff' };
       world.scene.add(probe, lamp);
       world.camera.position.set(0.6, 3.4, 9.4);
@@ -103,7 +104,7 @@
 
       // A new place is projected once; the probe then glides to it over a second, its 27 numbers
       // written in place, and the lighting follows. The opening glides from darkness.
-      let shown = new Array(27).fill(0), aim = shown;
+      let shown = new Array(27).fill(0), aim = shown.slice();
       const ui = controls({
         place: Object.keys(PLACES),
         turn: [0, 360, 0, 1],
@@ -112,7 +113,17 @@
         spin: true,
       }, (values, key) => {
         if (key === undefined || key === 'place' || key === 'turn') aim = project(PLACES[values.place], math.degToRad(values.turn));
-        if (key === undefined || key === 'place') lamp.color.set(KEYS[values.place]);
+        // The key light takes the place's colour; behind the stage, a dim tint of its horizon: its
+        // light averaged round the level directions, a twentieth of it over the dark.
+        if (key === undefined || key === 'place') {
+          const ring = [0, 0, 0];
+          for (let k = 0; k < 16; k++) {
+            const a = (k / 16) * Math.PI * 2, seen = PLACES[values.place]([Math.cos(a), 0, Math.sin(a)]);
+            for (let ch = 0; ch < 3; ch++) ring[ch] += seen[ch] / 16;
+          }
+          horizon.copy(DARK).lerp(math.color(ring), 0.05);
+          lamp.color.set(KEYS[values.place]);
+        }
         probe.intensity = values.strength;
         lamp.visible = values.keyLight;
         world.invalidate();
@@ -127,19 +138,23 @@
           garden.rotation.set(0, time * 0.15, 0);
           ball.position.set(0, 4.2 + Math.sin(time * 1.3) * 0.25, 0);
         }
+        // The 27 numbers glide in place: a settled probe writes nothing and builds nothing.
         let moved = 0;
-        shown = shown.map((value, k) => {
-          const next = math.lerp(value, aim[k], Math.min(1, step * 3.5));
-          moved = Math.max(moved, Math.abs(next - value));
-          return next;
-        });
+        for (let k = 0; k < 27; k++) {
+          const next = math.lerp(shown[k], aim[k], Math.min(1, step * 3.5));
+          moved = Math.max(moved, Math.abs(next - shown[k]));
+          shown[k] = next;
+        }
         if (moved > 1e-5) {
           probe.sh = shown;
           probe.needsUpdate = true;
           // The constant band alone: the irradiance averaged over every facing, π·L₀₀·Y₀₀.
           mean(shown.slice(0, 3).map((value) => (value * 0.886227).toFixed(2)).join(' · '));
         }
-        if (ui.spin || moved > 1e-5) world.invalidate();
+        // The backdrop glides to the place's horizon at the same pace, until it is there.
+        const tint = Math.abs(horizon.r - backdrop.r) + Math.abs(horizon.g - backdrop.g) + Math.abs(horizon.b - backdrop.b);
+        if (tint > 1e-4) backdrop.lerp(horizon, Math.min(1, step * 3.5));
+        if (ui.spin || moved > 1e-5 || tint > 1e-4) world.invalidate();
       });
     </script>
   </body>

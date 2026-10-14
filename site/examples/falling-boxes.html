@@ -9,7 +9,7 @@
       body {
         margin: 0;
         height: 100%;
-        background: #171d28;
+        background: #cddbe8;
       }
       canvas {
         display: block;
@@ -21,31 +21,53 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, math } from '../runtime/engine.js';
+      import { createWorld, geometry, material, object, light, math, texture } from '../runtime/engine.js';
       import { controls, physicsReadouts, seeded } from '../runtime/kit.js';
 
       // Physics is an option of the world: Jolt starts in a worker, fetched only now.
       const world = createWorld('view', { controls: 'orbit', physics: true });
-      world.scene.background = math.color('#dfe8f2');
+      const sky = math.color('#cddbe8');
+      world.scene.background = sky;
+      world.scene.fog = { color: sky, near: 25, far: 60 };
       world.camera.far = 400;
 
       // The floor is a static body: it holds the others and never moves.
-      const floor = object.mesh(geometry.box(40, 1, 40), material.meshStandard({ color: '#9aa7b5', physics: 'stone' }));
+      const floor = object.mesh(geometry.box(40, 1, 40), material.meshStandard({ color: '#a39a8c', physics: 'stone' }));
       floor.position.y = -0.5;
       floor.physics = 'static';
       world.scene.add(floor);
 
+      // A crate's face painted on a canvas: planks in a frame, worn by every wooden box and
+      // tinted by its colour.
+      const sheet = document.createElement('canvas');
+      sheet.width = sheet.height = 128;
+      const pen = sheet.getContext('2d');
+      for (let k = 0; k < 5; k++) {
+        (pen.fillStyle = k % 2 ? '#e2bd8a' : '#d4ab76'), pen.fillRect(0, k * 26, 128, 26);
+        // The seam above each plank.
+        (pen.fillStyle = '#9c6b3c'), pen.fillRect(0, k * 26 - 1, 128, 2);
+      }
+      pen.strokeStyle = '#8a5a2e';
+      pen.lineWidth = 14;
+      pen.strokeRect(7, 7, 114, 114);
+      const planks = texture.canvas(sheet);
+
       // Three matters: the material names what a box is made of, the physics reads its mass,
-      // grip and bounce from it.
+      // grip and bounce from it. Each comes in a few colours, so the pile is not one flat tint.
+      const tints = (colours, look) => colours.map((color) => material.meshStandard({ color, ...look }));
       const matters = {
-        wood: material.meshStandard({ color: '#c08a4d', roughness: 0.8, physics: 'wood' }),
-        rubber: material.meshStandard({ color: '#d0453f', roughness: 0.6, physics: 'rubber' }),
-        ice: material.meshStandard({ color: '#a9d8f0', roughness: 0.1, physics: 'ice' }),
+        wood: tints(['#ffffff', '#e6c49c', '#c99f78'], { map: planks, roughness: 0.8, physics: 'wood' }),
+        rubber: tints(['#d0453f', '#e0873a', '#3f7fd0'], { roughness: 0.6, physics: 'rubber' }),
+        ice: tints(['#a9d8f0', '#cdeefa', '#8cc4e8'], { roughness: 0.1, physics: 'ice' }),
       };
-      const crate = geometry.box(1, 1, 1), next = seeded(3), boxes = [];
+      // Three sizes, each one geometry the boxes share: the physics reads each box's shape from it.
+      // Each size wears one tint of its matter, so a matter's boxes draw in three batches.
+      const sizes = [geometry.box(1, 1, 1), geometry.box(0.7, 0.7, 0.7), geometry.box(1.4, 0.6, 0.8)];
+      const next = seeded(3), boxes = [];
       const drop = (count, matter) => {
         for (let i = 0; i < count; i++) {
-          const box = object.mesh(crate, matters[matter]);
+          const kind = Math.floor(next() * sizes.length);
+          const box = object.mesh(sizes[kind], matters[matter][kind]);
           box.position.set((next() - 0.5) * 6, 6 + boxes.length * 0.35, (next() - 0.5) * 6);
           box.rotation.set(next() * 3, next() * 3, next() * 3);
           box.castShadow = box.receiveShadow = true;
@@ -58,7 +80,7 @@
 
       const sun = light.directional({ intensity: 3, castShadow: true });
       sun.position.set(8, 16, 6);
-      world.scene.add(sun, light.hemisphere({ intensity: 1.2, color: '#ffffff', groundColor: '#8a9099' }));
+      world.scene.add(sun, light.hemisphere({ intensity: 1.2, color: '#e3eeff', groundColor: '#8f7f6a' }));
       world.camera.position.set(12, 9, 14);
       world.controls.target.set(0, 2, 0);
 
