@@ -21,7 +21,7 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light } from '../runtime/engine.js';
+      import { createWorld, geometry, material, object, light, math } from '../runtime/engine.js';
       import { controls } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
@@ -37,20 +37,38 @@
       gnomon.position.set(0, 0.75, -0.2);
       gnomon.rotation.x = -0.6;
       world.scene.add(lawn, dial, gnomon);
-      const profile = [[0, 0], [0.42, 0], [0.42, 0.25], [0.3, 0.25], [0.26, 2.9], [0.4, 3], [0.42, 3.2], [0, 3.2]];
+      // One column and one hour mark, shared by all twelve: built once, drawn twelve times.
+      const shaft = geometry.lathe([[0, 0], [0.42, 0], [0.42, 0.25], [0.3, 0.25], [0.26, 2.9], [0.4, 3], [0.42, 3.2], [0, 3.2]], 32);
+      const notch = geometry.box(0.12, 0.08, 0.4);
       for (let index = 0; index < 12; index++) {
         const angle = (index / 12) * Math.PI * 2;
-        const column = object.mesh(geometry.lathe(profile, 32), stone);
+        const column = object.mesh(shaft, stone);
         column.position.set(Math.cos(angle) * 6, 0, Math.sin(angle) * 6);
-        const mark = object.mesh(geometry.box(0.12, 0.08, 0.4), bronze);
+        const mark = object.mesh(notch, bronze);
         mark.position.set(Math.cos(angle) * 1.9, 0.44, Math.sin(angle) * 1.9);
         mark.rotation.y = -angle;
         world.scene.add(column, mark);
       }
 
-      // The sun, and the blue sky's own light filling the shadows it leaves.
+      // The sun, and the sky's own light filling the shadows it leaves, from above, with the lawn's
+      // green from below.
       const sun = light.directional({ intensity: 3, castShadow: true });
-      world.scene.add(sun, light.ambient({ intensity: 0.25, color: '#8fb4ff' }));
+      const sky = light.hemisphere({ intensity: 0.45, groundColor: '#3c5230' });
+      world.scene.add(sun, sky);
+      // The sky by the sun's height: indigo once it is down, orange as it nears the horizon, blue
+      // high up. Each key holds the colour the background shows and the fog's: the fog is light,
+      // exposed and tone-mapped like a surface, the background is not, so its key is the radiance
+      // the display curve shows as that same colour, and the lawn's edge melts into the sky.
+      const SKY = [
+        [0, '#2b2d55', [0.043, 0.044, 0.104]],
+        [0.18, '#e8955e', [0.865, 0.216, 0.083]],
+        [0.55, '#8fb8e6', [0.156, 0.398, 1.15]],
+      ].map(([at, colour, haze]) => ({ at, colour: math.color(colour), haze: math.color(haze) }));
+      const backdrop = math.color(), haze = math.color();
+      world.scene.background = backdrop;
+      // At dusk a mist settles on the lawn, thick at the grass and gone a few metres up. Its
+      // colour is heard when written; its density is read when the fog is set again.
+      const mist = { color: haze, density: 0, heightFalloff: 1.2 };
       world.camera.position.set(7, 4.4, 7.8);
       world.camera.lookAt(0, 0.6, 0);
       world.controls.target.set(0, 0.6, 0);
@@ -72,6 +90,15 @@
         sun.color.setRGB(1, 0.55 + 0.45 * height, 0.25 + 0.75 * height);
         sun.intensity = 0.4 + 2.8 * height;
         world.exposure = ui.adaptEyes ? 1 + (1 - height) * 1.5 : 1;
+        let next = 1;
+        while (next < SKY.length - 1 && height > SKY[next].at) next++;
+        const low = SKY[next - 1], high = SKY[next], share = math.clamp((height - low.at) / (high.at - low.at), 0, 1);
+        backdrop.copy(low.colour).lerp(high.colour, share);
+        sky.color.copy(backdrop);
+        haze.copy(low.haze).lerp(high.haze, share).multiplyScalar(1 / world.exposure);
+        mist.density = 0.15 * (1 - height) ** 2;
+        // No mist at all, not one of no density, costs nothing.
+        world.scene.fog = mist.density > 1e-4 ? mist : null;
         world.invalidate();
       });
       world.invalidate();

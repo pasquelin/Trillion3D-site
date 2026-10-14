@@ -39,6 +39,10 @@
       // `world.controls` 'vehicle' drives the one you pick with the keyboard.
       const world = createWorld('view', { physics: true });
       world.scene.background = math.color('#bcd3e6');
+      // Haze over the valley: the far cliffs pale into the sky. The fog is light, exposed and
+      // tone-mapped like a surface, the background is not: this is the radiance the display
+      // curve shows as #bcd3e6.
+      world.scene.fog = { color: math.color([0.36, 0.664, 1.168]), near: 50, far: 260 };
       world.camera.far = 400;
       await world.scene.load('../assets/examples/terrain/cache/native/full/manifest.json');
 
@@ -49,8 +53,8 @@
         light.hemisphere({ intensity: 1.1, color: '#ffffff', groundColor: '#6d7a5a' }),
       );
 
-      // Cliffs around the 128 m valley, so no drive ends off its edge.
-      const rock = material.meshStandard({ color: '#8b857c', roughness: 0.95, physics: 'stone' });
+      // Sandstone cliffs around the 128 m valley, so no drive ends off its edge.
+      const rock = material.meshStandard({ color: '#a8876a', roughness: 0.95, physics: 'stone' });
       for (const [x, z, w, d] of [
         [0, -66, 136, 4],
         [0, 66, 136, 4],

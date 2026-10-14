@@ -9,7 +9,7 @@
       body {
         margin: 0;
         height: 100%;
-        background: #171d28;
+        background: #0d1017;
       }
       canvas {
         display: block;
@@ -21,25 +21,35 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light } from '../runtime/engine.js';
+      import { createWorld, geometry, material, object, light, texture, effect, math } from '../runtime/engine.js';
       import { controls } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#0d1017');
 
-      // A checkered table and a striped wall behind it, so the glass has something to bend.
-      const tiles = [material.meshStandard({ color: '#f2efe6', roughness: 0.6 }), material.meshStandard({ color: '#27313f', roughness: 0.6 })];
-      for (let row = 0; row < 12; row++)
-        for (let column = 0; column < 12; column++) {
-          const tile = object.mesh(geometry.box(0.5, 0.1, 0.5), tiles[(row + column) % 2]);
-          tile.position.set((column - 5.5) * 0.5, -0.05, (row - 5.5) * 0.5);
-          world.scene.add(tile);
-        }
-      const stripes = ['#e0663c', '#f2b134', '#3cb4a0', '#3c6ee0', '#a04ad0'].map((colour) => material.meshStandard({ color: colour, roughness: 0.7 }));
-      for (let band = 0; band < 15; band++) {
-        const stripe = object.mesh(geometry.box(0.4, 3, 0.1), stripes[band % stripes.length]);
-        stripe.position.set((band - 7) * 0.4, 1.5, -3.05);
-        world.scene.add(stripe);
-      }
+      // A checkered table and a striped wall behind it, so the glass has something to bend. Each
+      // is one box wearing a picture drawn on a canvas: twelve by twelve squares, fifteen bands.
+      const picture = (width, height, cells, paint) => {
+        const canvas = document.createElement('canvas'), pen = canvas.getContext('2d');
+        canvas.width = width;
+        canvas.height = height;
+        for (let x = 0; x < cells[0]; x++)
+          for (let y = 0; y < cells[1]; y++) {
+            pen.fillStyle = paint(x, y);
+            pen.fillRect((x * width) / cells[0], (y * height) / cells[1], width / cells[0], height / cells[1]);
+          }
+        return texture.canvas(canvas);
+      };
+      const checks = picture(240, 240, [12, 12], (x, y) => ((x + y) % 2 ? '#27313f' : '#f2efe6'));
+      // Seen at a low angle, the checks stay sharp: the texture is read along the slant.
+      checks.anisotropy = 8;
+      const table = object.mesh(geometry.box(6, 0.1, 6), material.meshStandard({ map: checks, roughness: 0.6 }));
+      table.position.y = -0.05;
+      const BANDS = ['#e0663c', '#f2b134', '#3cb4a0', '#3c6ee0', '#a04ad0'];
+      const bands = picture(600, 8, [15, 1], (x) => BANDS[x % BANDS.length]);
+      const wall = object.mesh(geometry.box(6, 3, 0.1), material.meshStandard({ map: bands, roughness: 0.7 }));
+      wall.position.set(0, 1.5, -3.05);
+      world.scene.add(table, wall);
 
       // Three shapes of the same glass: `transmission` lets light through, `ior` sets how much
       // it bends, `thickness` how far it travels inside.
@@ -54,8 +64,15 @@
         world.scene.add(piece);
         return piece;
       });
-      world.scene.add(light.directional({ intensity: 3, color: '#fff4e6', position: [3, 8, 5], castShadow: true }));
+      // A dim room: a low sun for the shadows and the edges of the glass, a cool lamp, and a warm
+      // panel washing the striped wall, so what the glass bends is the brightest thing behind it.
+      // A touch of bloom lets the brightest edges spill a little.
+      world.scene.add(light.directional({ intensity: 1.6, color: '#fff4e6', position: [3, 8, 5], castShadow: true }));
       world.scene.add(light.point({ intensity: 20, color: '#9ec2ff', position: [-3, 3, 2], distance: 12 }));
+      const wash = light.rectArea({ intensity: 4, color: '#ffd9b0', width: 6, height: 0.5, position: [0, 3.4, -1.4] });
+      wash.lookAt(0, 1.4, -3);
+      world.scene.add(wash);
+      world.effects.add(effect.bloom({ intensity: 0.06 }));
       world.camera.position.set(0, 2.2, 4.6);
       world.camera.lookAt(0, 0.5, 0);
       world.controls.target.set(0, 0.5, 0);

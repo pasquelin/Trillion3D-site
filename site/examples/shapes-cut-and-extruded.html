@@ -9,7 +9,7 @@
       body {
         margin: 0;
         height: 100%;
-        background: #171d28;
+        background: #1f2536;
       }
       canvas {
         display: block;
@@ -74,6 +74,7 @@
       ];
 
       const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#1f2536');
       const floor = object.mesh(geometry.box(14, 0.2, 6), material.meshStandard({ color: '#2a2f3a', roughness: 0.75 }));
       floor.position.y = -0.1;
       world.scene.add(floor);

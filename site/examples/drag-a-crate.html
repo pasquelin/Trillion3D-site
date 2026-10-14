@@ -22,23 +22,70 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, math } from '../runtime/engine.js';
+      import {
+        createWorld,
+        geometry,
+        texture,
+        material,
+        object,
+        light,
+        math,
+      } from '../runtime/engine.js';
       import { controls, pointerOnPlane } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
-      world.scene.background = math.color('#9fb4cc');
+      const sky = math.color('#9fb4cc');
+      world.scene.background = sky;
+      world.scene.fog = { color: sky, near: 12, far: 30 };
       const floor = object.mesh(
         geometry.box(12, 0.2, 9),
         material.meshStandard({ color: '#d7c8aa', roughness: 0.9 }),
       );
       floor.position.y = -0.1;
-      const crate = object.mesh(
+      world.scene.add(floor);
+
+      // The props: crates, barrels and balls, each with a material of its own, so that the one
+      // under the pointer may glow alone. `half` is how far each reaches from its centre.
+      // A crate's face painted on a canvas: planks in a frame, crossed by a brace.
+      const sheet = document.createElement('canvas');
+      sheet.width = sheet.height = 128;
+      const pen = sheet.getContext('2d');
+      for (let k = 0; k < 4; k++) (pen.fillStyle = k % 2 ? '#c8955c' : '#b98549'), pen.fillRect(0, k * 32, 128, 32);
+      pen.strokeStyle = '#7a4f28';
+      pen.lineWidth = 16;
+      pen.strokeRect(8, 8, 112, 112);
+      pen.beginPath(), pen.moveTo(12, 116), pen.lineTo(116, 12), pen.stroke();
+      const planks = texture.canvas(sheet);
+      const [big, small, barrel, ball] = [
         geometry.box(1.4, 1.4, 1.4),
-        material.meshStandard({ color: '#9a5b2f', roughness: 0.75 }),
+        geometry.box(0.9, 0.9, 0.9),
+        geometry.cylinder(0.45, 0.45, 1.2, 32),
+        geometry.sphere(0.4, 32, 16),
+      ];
+      const PROPS = [
+        [big, { map: planks, roughness: 0.8 }, [0, 0.7, 0], 0.7],
+        [small, { map: planks, roughness: 0.8 }, [-2.6, 0.45, 1.2], 0.45],
+        [small, { map: planks, roughness: 0.8 }, [3, 0.45, -1.8], 0.45],
+        [barrel, { color: '#b4432f', roughness: 0.5, metalness: 0.4 }, [2.4, 0.6, 1.6], 0.45],
+        [barrel, { color: '#2f6fb4', roughness: 0.5, metalness: 0.4 }, [-3.4, 0.6, -1.4], 0.45],
+        [ball, { color: '#f2b134', roughness: 0.35 }, [-1, 0.4, 2.6], 0.4],
+        [ball, { color: '#4fb36d', roughness: 0.35 }, [0.9, 0.4, -2.6], 0.4],
+      ];
+      const props = PROPS.map(([shape, look, home, half]) => {
+        const prop = object.mesh(shape, material.meshStandard(look));
+        prop.position.set(...home);
+        prop.userData = { home, half };
+        world.scene.add(prop);
+        return prop;
+      });
+      // A ring on the floor under the prop being dragged: where it lands.
+      const marker = object.mesh(
+        geometry.ring(0.55, 0.7, 48).rotateX(-Math.PI / 2),
+        material.meshBasic({ color: '#fff6e0' }),
       );
-      const HOME = [0, 0.7, 0];
-      crate.position.set(...HOME);
-      world.scene.add(floor, crate);
+      marker.castShadow = false;
+      marker.visible = false;
+      world.scene.add(marker);
       world.scene.add(
         light.directional({
           intensity: 3,
@@ -52,12 +99,13 @@
       world.camera.lookAt(0, 0, 0);
       world.controls.target.set(0, 0, 0);
 
-      let drag = null;
+      let drag = null,
+        hovered = null;
       const ui = controls(
         {
           snap: false,
           home: () => {
-            crate.position.set(...HOME);
+            for (const prop of props) prop.position.set(...prop.userData.home);
             world.invalidate();
           },
         },
@@ -68,39 +116,74 @@
         const edge = ui.snap ? Math.floor(limit * 2) / 2 : limit;
         return math.clamp(place(value), -edge, edge);
       };
+      const hitAt = (event) => world.raycast({ x: event.offsetX, y: event.offsetY }, { objects: props });
+      // The prop under the pointer glows a little, and the cursor offers to grab it.
+      const hover = (prop) => {
+        if (prop === hovered) return;
+        hovered?.material.emissive.set('#000000');
+        prop?.material.emissive.set('#3a2c14');
+        hovered = prop;
+        world.canvas.style.cursor = prop ? 'grab' : '';
+        world.invalidate();
+      };
+      const mark = (prop) => {
+        marker.position.set(prop.position.x, 0.01, prop.position.z);
+        marker.scale.setScalar(prop.userData.half / 0.5);
+      };
       world.canvas.addEventListener('pointerdown', (event) => {
         if (event.button !== 0 || drag) return;
-        const hit = world.raycast({ x: event.offsetX, y: event.offsetY }, { objects: [crate] });
+        const hit = hitAt(event);
         if (!hit) return;
+        const prop = hit.object;
         drag = {
+          prop,
           pointerId: event.pointerId,
-          offsetX: crate.position.x - hit.point.x,
-          offsetZ: crate.position.z - hit.point.z,
+          offsetX: prop.position.x - hit.point.x,
+          offsetZ: prop.position.z - hit.point.z,
           height: hit.point.y,
           controlsEnabled: world.controls.enabled,
         };
+        hover(prop);
+        world.canvas.style.cursor = 'grabbing';
+        mark(prop);
+        marker.visible = true;
         world.controls.enabled = false;
         world.canvas.setPointerCapture(event.pointerId);
+        world.invalidate();
       });
       world.canvas.addEventListener('pointermove', (event) => {
-        if (!drag || event.pointerId !== drag.pointerId) return;
+        if (!drag) {
+          // No hover while a button orbits the view.
+          if (!event.buttons) hover(hitAt(event)?.object ?? null);
+          return;
+        }
+        if (event.pointerId !== drag.pointerId) return;
         const point = pointerOnPlane(world, event, drag.height);
         if (!point) return;
-        crate.position.set(
-          within(point[0] + drag.offsetX, 5.3),
-          HOME[1],
-          within(point[1] + drag.offsetZ, 3.8),
+        const { prop } = drag,
+          { home, half } = prop.userData;
+        prop.position.set(
+          within(point[0] + drag.offsetX, 6 - half),
+          home[1],
+          within(point[1] + drag.offsetZ, 4.5 - half),
         );
+        mark(prop);
         world.invalidate();
       });
       const finish = (event) => {
         if (!drag || event.pointerId !== drag.pointerId) return;
         const { pointerId, controlsEnabled } = drag;
         drag = null;
+        marker.visible = false;
+        world.canvas.style.cursor = hovered ? 'grab' : '';
         world.controls.enabled = controlsEnabled;
         if (world.canvas.hasPointerCapture(pointerId))
           world.canvas.releasePointerCapture(pointerId);
+        world.invalidate();
       };
+      world.canvas.addEventListener('pointerleave', () => {
+        if (!drag) hover(null);
+      });
       world.canvas.addEventListener('pointerup', finish);
       world.canvas.addEventListener('pointercancel', finish);
       world.canvas.addEventListener('lostpointercapture', finish);

@@ -8,7 +8,7 @@
       body {
         margin: 0;
         height: 100%;
-        background: #171d28;
+        background: #1d2430;
       }
       canvas {
         display: block;
@@ -20,12 +20,17 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, helper } from '../runtime/engine.js';
+      import { createWorld, geometry, material, object, light, helper, math } from '../runtime/engine.js';
       import { controls, readout, words } from '../runtime/kit.js';
       const say = words();
 
       const world = createWorld('view', { controls: 'orbit', physics: true });
-      world.scene.add(light.directional({ intensity: 3, position: [3, 5, 4] }), light.ambient({ intensity: 0.3 }));
+      world.scene.background = math.color('#1d2430');
+      // A sun whose shadow follows the tower down, and a sky that fills the shade.
+      world.scene.add(
+        light.directional({ intensity: 3, color: '#fff1dc', position: [3, 5, 4], castShadow: true }),
+        light.hemisphere({ intensity: 0.8, color: '#c9dbff', groundColor: '#3a3430' }),
+      );
       // Each size is written once and every height is read from it: the ground's top is at 0,
       // the lowest block sits on it and each block on the one below, in contact, never inside.
       const GROUND = [12, 0.2, 12], BLOCK = [1, 0.5, 1], BLOCK_KG = 20;
@@ -36,8 +41,10 @@
       const grid = helper.grid(GROUND[0], GROUND[0]);
       grid.position.y = 0.002;
       world.scene.add(ground, grid);
+      // The four blocks share one shape: the file writes it once.
+      const brick = geometry.box(...BLOCK);
       ['#e0663c', '#3c8ce0', '#5fbf6a', '#d8b43c'].forEach((colour, i) => {
-        const block = object.mesh(geometry.box(...BLOCK), material.meshStandard({ color: colour, physics: 'wood' }));
+        const block = object.mesh(brick, material.meshStandard({ color: colour, physics: 'wood' }));
         block.position.y = BLOCK[1] / 2 + i * BLOCK[1];
         block.rotation.y = i * 0.3;
         block.physics = { type: 'dynamic', mass: BLOCK_KG };

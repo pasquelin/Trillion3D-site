@@ -43,12 +43,14 @@
       // The scratches a length is read in: on the ground, and in the air.
       const ground = math.vector2(), gaze = math.vector3();
       const add = (mesh, x, y, z) => (mesh.position.set(x, y, z), blocks.add(mesh), mesh);
-      const box = geometry.box(1, 1, 1), crown = geometry.cone(1, 1, 24), trunk = geometry.cylinder(0.08, 0.1, 1, 12);
+      // Shapes built once and scaled: every building, roof, car, lot, crown and trunk wears one of
+      // them, and copies in one paint are drawn together.
+      const box = geometry.box(1, 1, 1), crown = geometry.cone(1, 1, 24), trunk = geometry.cylinder(0.08, 0.1, 1, 12), lot = geometry.box(3, 0.12, 3);
       for (let i = 0; i < 6; i++)
         for (let j = 0; j < 6; j++) {
           const cx = -10 + i * 4, cz = -10 + j * 4, centre = Math.max(Math.abs(cx), Math.abs(cz)) < 3;
           const park = !centre && random() < 0.17;
-          add(object.mesh(geometry.box(3, 0.12, 3), park ? GRASS : PAVING), cx, 0.06, cz);
+          add(object.mesh(lot, park ? GRASS : PAVING), cx, 0.06, cz);
           if (park) {
             for (let t = 0; t < 5; t++) {
               const x = cx + (random() - 0.5) * 2.2, z = cz + (random() - 0.5) * 2.2, h = 0.6 + random() * 0.5;
@@ -67,8 +69,9 @@
           }
         }
       // Cars: each drives along one street, one way, and comes round again at the table's edge.
+      const PAINTS = ['#d8402e', '#f2c230', '#2f6fc1', '#f4f1ea'].map(matte);
       const cars = Array.from({ length: 14 }, (_, k) => {
-        const mesh = add(object.mesh(box, matte(['#d8402e', '#f2c230', '#2f6fc1', '#f4f1ea'][k % 4])), 0, 0.2, 0);
+        const mesh = add(object.mesh(box, PAINTS[k % 4]), 0, 0.2, 0);
         const street = -12 + 4 * (1 + (k % 5)), across = k % 2 === 0;
         mesh.scale.set(across ? 0.7 : 0.36, 0.3, across ? 0.36 : 0.7);
         return { mesh, street: street + (k % 3 === 0 ? 0.22 : -0.22), across, at: random() * 26, speed: (k % 3 === 0 ? -1 : 1) * (1.5 + random() * 1.5) };

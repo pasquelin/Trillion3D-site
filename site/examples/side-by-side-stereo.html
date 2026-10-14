@@ -62,7 +62,7 @@
     <div class="eye" style="left: 0"><b></b><span id="leftEye"></span></div>
     <div class="eye" style="left: 50%"><b></b><span id="rightEye"></span></div>
     <script type="module">
-      import { createWorld, geometry, material, object, light, math } from '../runtime/engine.js';
+      import { createWorld, geometry, material, object, light, math, buffer, effect } from '../runtime/engine.js';
       import { controls, words, opening } from '../runtime/kit.js';
       const say = words();
 
@@ -123,13 +123,17 @@
           world.scene.add(arm);
           return { arm, ball, moon, planet };
         });
-        // Far stars, for depth: small glowing points on a wide shell above the horizon.
-        const star = material.meshStandard({ color: '#000000', emissive: '#dfe8ff', emissiveIntensity: 3 });
-        const dot = geometry.sphere(0.12, 8, 6);
+        // Far stars, for depth: small glowing points on a wide shell above the horizon, all of them
+        // the vertices of one geometry drawn as dots.
+        const stars = new Float32Array(160 * 3);
         for (let k = 0; k < 160; k++) {
           const a = k * 2.39996, up = 0.08 + ((k * 0.618) % 1) * 0.9, reach = 38 + ((k * 7.31) % 1) * 10;
-          add(dot, star, [Math.cos(a) * Math.cos(up) * reach, Math.sin(up) * reach, Math.sin(a) * Math.cos(up) * reach]);
+          stars.set([Math.cos(a) * Math.cos(up) * reach, Math.sin(up) * reach, Math.sin(a) * Math.cos(up) * reach], k * 3);
         }
+        const glow = material.meshStandard({ color: '#000000', emissive: '#dfe8ff', emissiveIntensity: 3, size: 0.24 });
+        world.scene.add(object.points(geometry.createBuffer({ position: buffer.float32(stars, 3) }), glow));
+        // A soft glow round the sun and the stars.
+        world.effects.add(effect.bloom({ intensity: 0.08 }));
         return (time) => {
           for (const { arm, ball, moon, planet } of arms) {
             arm.rotation.set(0, (time / planet.period) * Math.PI * 2, 0);
@@ -182,11 +186,11 @@
         side.set(1, 0, 0).applyQuaternion(world.camera.quaternion);
         other.camera.position.copy(world.camera.position).addScaledVector(side, sign * ui.separation);
         other.camera.lookAt(world.controls.target);
-        world.invalidate();
-      });
-      other.onFrame(() => {
+        // The other eye draws one frame for each of this one's, which asks for more only while
+        // the planets turn: a still orrery is drawn again only when the viewer moves the camera.
         turnRight(time);
         other.invalidate();
+        if (ui.speed) world.invalidate();
       });
       world.invalidate();
     </script>

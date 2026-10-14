@@ -50,22 +50,21 @@
       const requested = Number(new URL(location.href).searchParams.get('count') ?? 10);
       const count = [1, 10, 100].includes(requested) ? requested : 10;
       const columns = Math.ceil(Math.sqrt(count));
-      const actions = [];
-      for (let i = 0; i < count; i++) {
-        const model = await world.scene.load(
-          '../assets/examples/cesium-man/cache/native/full/manifest.json',
-        );
+      // Every character is asked for at once rather than one after the other: their downloads and
+      // reads overlap instead of queueing.
+      const models = await Promise.all(
+        Array.from({ length: count }, () => world.scene.load('../assets/examples/cesium-man/cache/native/full/manifest.json')),
+      );
+      const actions = models.map((model, i) => {
         model.position.set(((i % columns) - (columns - 1) / 2) * 2, 0, Math.floor(i / columns) * 2);
         const clip = model.animations[0];
         if (!clip) throw new Error('The compiled sample must retain its animation');
-        actions.push(
-          animation
-            .createMixer(model)
-            .clipAction(clip)
-            .play()
-            .seek(i * 0.071),
-        );
-      }
+        return animation
+          .createMixer(model)
+          .clipAction(clip)
+          .play()
+          .seek(i * 0.071);
+      });
       world.camera.position.set(columns * 1.4, columns * 0.8 + 1.5, columns * 2.2 + 2);
       world.controls.target.set(0, 0.8, Math.ceil(count / columns) - 1);
       controls(

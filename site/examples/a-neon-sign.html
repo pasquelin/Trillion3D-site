@@ -21,19 +21,36 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, math } from '../runtime/engine.js';
-      import { controls } from '../runtime/kit.js';
+      import { createWorld, geometry, material, object, light, math, texture, effect } from '../runtime/engine.js';
+      import { controls, sineHash } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
-      // A closed room, 9 m wide, 4.6 m high and 7.6 m deep: the sign hangs on its back wall.
-      const plaster = material.meshStandard({ color: '#6b5a58', roughness: 0.85 });
-      const slab = (width, height, depth, x, y, z, paint = plaster) => {
-        const mesh = object.mesh(geometry.box(width, height, depth), paint);
+      // A bar's back room, 9 m wide, 4.6 m high and 7.6 m deep: the sign hangs on its back wall.
+      // The walls are brick: a picture painted once on a canvas, course by course, each brick its
+      // own shade of fired clay between lines of mortar.
+      const card = document.createElement('canvas');
+      card.width = 1024;
+      card.height = 512;
+      const paint = card.getContext('2d');
+      paint.fillStyle = '#5d5650';
+      paint.fillRect(0, 0, card.width, card.height);
+      const COURSES = 66, ACROSS = 44, high = card.height / COURSES, wide = card.width / ACROSS;
+      for (let course = 0; course < COURSES; course++)
+        for (let k = -1; k < ACROSS; k++) {
+          // `sineHash`: a number from 0 to 1 that looks random but is the same at every visit.
+          const tone = sineHash(course * 97 + k, 0);
+          paint.fillStyle = `hsl(${8 + tone * 14} ${30 + sineHash(course * 97 + k, 1) * 20}% ${18 + tone * 14}%)`;
+          paint.fillRect((k + (course % 2) * 0.5) * wide + 1, course * high + 1, wide - 2, high - 2);
+        }
+      const brick = material.meshStandard({ map: texture.canvas(card), roughness: 0.9 });
+      const slab = (width, height, depth, x, y, z, matter = brick) => {
+        const mesh = object.mesh(geometry.box(width, height, depth), matter);
         mesh.position.set(x, y, z);
         world.scene.add(mesh);
       };
-      slab(9.4, 0.2, 7.8, 0, -0.1, 3.6, material.meshStandard({ color: '#4a4d57', roughness: 0.5 }));
-      slab(9.4, 0.2, 7.8, 0, 4.7, 3.6);
+      // The floor has just been mopped: a dark surface this smooth gives the tubes back.
+      slab(9.4, 0.2, 7.8, 0, -0.1, 3.6, material.meshStandard({ color: '#1c1f26', roughness: 0.15 }));
+      slab(9.4, 0.2, 7.8, 0, 4.7, 3.6, material.meshStandard({ color: '#2a2628', roughness: 0.9 }));
       slab(9.4, 4.6, 0.2, 0, 2.3, -0.2);
       slab(9.4, 4.6, 0.2, 0, 2.3, 7.5);
       slab(0.2, 4.6, 7.8, -4.6, 2.3, 3.6);
@@ -41,23 +58,44 @@
       // A faint light from everywhere, so the corners the signs do not reach are dark, not void.
       world.scene.add(light.ambient({ intensity: 0.15, color: '#8fa0c8' }));
 
-      // A tube follows a curve. Its material emits: colour times strength is added to the image
-      // whatever lights it. What it throws on the wall is a point light of the same colour, held
-      // just in front of the tube and casting no shadow: a tube glows, it does not stencil itself
-      // onto the wall behind it.
-      function neon(points, closed, colour, centre) {
+      // A tube follows a line: bent glass, straight between its bends, or a smooth loop for the O.
+      // Its material emits: colour times strength is added to the image whatever lights it. What
+      // it throws on the wall is a point light of the same colour, held just in front of the sign
+      // and casting no shadow: a tube glows, it does not stencil itself onto the wall behind it.
+      function neon(strokes, colour, centre) {
         const tube = material.meshStandard({ color: '#000000', emissive: colour, emissiveIntensity: 8 });
-        world.scene.add(object.mesh(geometry.tube(math.curve(points, closed), 240, 0.045, 12, closed), tube));
+        for (const { points, loop } of strokes) {
+          const line = loop ? math.curve(points, true) : math.path(points);
+          world.scene.add(object.mesh(geometry.tube(line, Math.ceil(line.getLength() * 90), 0.04, 12, loop), tube));
+        }
         const glow = light.point({ position: centre, color: colour, intensity: 3, distance: 9 });
         world.scene.add(glow);
         return { tube, glow };
       }
-      const star = Array.from({ length: 10 }, (_, index) => {
-        const angle = (index / 10) * Math.PI * 2, reach = index % 2 ? 0.45 : 1.1;
-        return [-1.6 + Math.sin(angle) * reach, 3 + Math.cos(angle) * reach, 0];
+      // The word OPEN, its letters drawn in a box one unit high, then set on the wall side by side.
+      const arc = (x, y, rx, ry, from, to, count) => Array.from({ length: count }, (_, k) => {
+        const angle = from + ((to - from) * k) / (count - 1);
+        return [x + rx * Math.cos(angle), y + ry * Math.sin(angle)];
       });
-      const wave = Array.from({ length: 24 }, (_, index) => [0.2 + index * 0.15, 2.6 + Math.sin(index * 0.8) * 0.35, 0]);
-      const signs = [neon(star, true, '#ff3d9a', [-1.6, 3, 0.35]), neon(wave, false, '#2de2ff', [1.9, 2.6, 0.35])];
+      const bowl = arc(0.32, 0.76, 0.24, 0.24, Math.PI / 2, -Math.PI / 2, 9);
+      const LETTERS = [
+        [{ points: arc(0.3, 0.5, 0.3, 0.5, 0, Math.PI * 2, 17).slice(1), loop: true }],
+        [{ points: [[0, 0], [0, 1], ...bowl, [0, 0.52]] }],
+        [{ points: [[0.58, 1], [0, 1], [0, 0], [0.58, 0]] }, { points: [[0, 0.5], [0.45, 0.5]] }],
+        [{ points: [[0, 0], [0, 1], [0.6, 0], [0.6, 1]] }],
+      ];
+      const word = LETTERS.flatMap((strokes, k) => strokes.map(({ points, loop }) => ({
+        points: points.map(([u, v]) => [-0.85 + k * 0.85 + u * 0.9, 2.2 + v * 0.9, 0]),
+        loop,
+      })));
+      const star = Array.from({ length: 11 }, (_, index) => {
+        const angle = (index / 10) * Math.PI * 2, reach = index % 2 ? 0.3 : 0.75;
+        return [-1.95 + Math.sin(angle) * reach, 2.62 + Math.cos(angle) * reach, 0];
+      });
+      const signs = [neon([{ points: star }], '#ff3d9a', [-1.95, 2.62, 0.35]), neon(word, '#2de2ff', [0.7, 2.65, 0.35])];
+      // The tubes are far brighter than anything they light: a bloom spreads a little of that
+      // light around them, as the air and a lens would.
+      world.effects.add(effect.bloom({ intensity: 0.08, radius: 1.5 }));
 
       // The camera turns on an arc in front of the sign, never above the ceiling, below its own
       // eye level or farther than the front wall: no drag takes it outside the room, so none shows
@@ -73,11 +111,11 @@
       world.camera.lookAt(0, 2, 3.2);
 
       const ui = controls({
-        star: '#ff3d9a', wave: '#2de2ff', glow: [0, 20, 8], pulse: true,
+        star: '#ff3d9a', word: '#2de2ff', glow: [0, 20, 8], pulse: true,
         exposure: [0.2, 4, 1], toneMapping: ['aces', 'agx', 'neutral', 'reinhard', 'cineon', 'linear'],
       }, (values) => {
         signs.forEach(({ tube, glow }, index) => {
-          const colour = index ? values.wave : values.star;
+          const colour = index ? values.word : values.star;
           tube.emissive.set(colour);
           tube.emissiveIntensity = glow.intensity = values.glow;
           glow.color.set(colour);

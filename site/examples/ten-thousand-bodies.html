@@ -28,6 +28,9 @@
       // simulated by Jolt in a worker. The panel shows what it costs, live, on both threads.
       const world = createWorld('view', { controls: 'orbit', physics: true });
       world.scene.background = math.color('#1d2430');
+      // The floor's far edge fades into the dark. The fog is light, exposed and tone-mapped like a
+      // surface, the background is not: this is the radiance the display curve shows as #1d2430.
+      world.scene.fog = { color: math.color([0.027, 0.035, 0.05]), near: 90, far: 220 };
       world.camera.far = 600;
       const floor = object.mesh(geometry.box(120, 2, 120), material.meshStandard({ color: '#56606e', physics: 'stone' }));
       floor.position.y = -1;
@@ -51,7 +54,8 @@
         world.scene.add(...boxes);
       };
 
-      world.scene.add(light.directional({ intensity: 2.5, position: [30, 60, 20] }), light.hemisphere({ intensity: 1.2, color: '#ffffff', groundColor: '#404855' }));
+      // The sun casts: every box throws its shadow on the floor and on the boxes under it.
+      world.scene.add(light.directional({ intensity: 2.5, position: [30, 60, 20], castShadow: true }), light.hemisphere({ intensity: 1.2, color: '#ffffff', groundColor: '#404855' }));
       world.camera.position.set(60, 45, 60);
       world.controls.target.set(0, 0, 0);
 

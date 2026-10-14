@@ -21,7 +21,7 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, math } from '../runtime/engine.js';
+      import { buffer, createWorld, effect, geometry, material, object, light, math } from '../runtime/engine.js';
       import { controls, readout, seeded, language } from '../runtime/kit.js';
 
       // One small crystal shape and twelve colours, from the core's to the rim's. Twelve
@@ -37,6 +37,7 @@
       const bands = Array.from({ length: BANDS }, () => material.meshStandard({ roughness: 0.4, emissive: '#000000', emissiveIntensity: 0.9 }));
 
       const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#05060c');
       const galaxy = object.group();
       world.scene.add(galaxy);
       // A seeded sequence (the kit's `seeded`): the same galaxy on every run.
@@ -51,6 +52,15 @@
         galaxy.add(star.mesh);
         return star;
       });
+      // Dust between the arms: four thousand faint points in one object, a thin disc that turns
+      // with the galaxy.
+      const dust = [];
+      for (let index = 0; index < 4000; index++) {
+        const r = 0.6 + next() ** 0.6 * RADIUS * 1.15, angle = next() * Math.PI * 2;
+        dust.push(Math.cos(angle) * r, (next() + next() - 1) * 0.25 * (1.3 - r / RADIUS), Math.sin(angle) * r);
+      }
+      const haze = geometry.createBuffer({ position: buffer.float32(new Float32Array(dust), 3) });
+      galaxy.add(object.points(haze, material.points({ color: '#7d86b8', size: 0.025 })));
       // The core: a glowing ball and the lamp inside it.
       const core = object.mesh(geometry.sphere(0.45, 48, 24), material.meshStandard({ color: '#000000', emissive: '#ffd27a', emissiveIntensity: 6 }));
       world.scene.add(core, light.point({ intensity: 60, color: '#ffd9a0', distance: 14 }));
@@ -58,6 +68,8 @@
       world.camera.position.set(0, 5.5, 8.5);
       world.camera.lookAt(0, 0, 0);
       world.controls.target.set(0, 0, 0);
+      // A soft glow spreads the core's light into the dark around it.
+      world.effects.add(effect.bloom({ intensity: 0.08 }));
 
       // Arms and twist move every placement; the colours rewrite the twelve materials once.
       let shown = null;

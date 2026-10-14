@@ -38,20 +38,13 @@
       const asphalt = object.mesh(geometry.box(1, 0.1, 1), matte('#2b2e35', 0.95));
       asphalt.position.y = -0.05;
       world.scene.add(asphalt);
-      // Each pool holds what the largest city could ask of it: a block at most is a pavement and
-      // four towers of four boxes, or a park's nine trees; four round towers of two drums each.
-      const MOST = 12, pool = (shape, perBlock) => ({ shape, meshes: [], used: 0, size: perBlock * MOST * MOST });
-      const pools = [pool(cube, 17), pool(drum, 8), pool(crown, 9)];
-      for (const each of pools)
-        for (let k = 0; k < each.size; k++) {
-          const mesh = object.mesh(each.shape, roof);
-          mesh.visible = false;
-          world.scene.add(mesh);
-          each.meshes.push(mesh);
-        }
+      // Each pool grows to what the largest city built so far has asked of it, never more: a
+      // smaller city hides the meshes it does not use, and a larger one adds only the missing.
+      const MOST = 12, pool = (shape) => ({ shape, meshes: [], used: 0 });
+      const pools = [pool(cube), pool(drum), pool(crown)];
       function place(kind, dress, x, y, z, width, height, depth) {
+        if (kind.used === kind.meshes.length) world.scene.add((kind.meshes[kind.used] = object.mesh(kind.shape, dress)));
         const mesh = kind.meshes[kind.used++];
-        if (!mesh) return;
         mesh.material = dress;
         mesh.position.set(x, y, z);
         mesh.scale.set(width, height, depth);
@@ -108,19 +101,36 @@
               }
             }
           }
-        for (const each of pools) for (let k = each.used; k < each.size; k++) each.meshes[k].visible = false;
+        for (const each of pools) for (let k = each.used; k < each.meshes.length; k++) each.meshes[k].visible = false;
         placeTraffic(blocks, next);
+        // The haze starts at the near edge of the city as first seen and keeps the far edge
+        // seven tenths clear, whatever its size.
+        world.scene.fog = { color: sky, near: 47 - half, far: 47 + 6 * half };
       }
 
-      // Cars run along the roads between the blocks, each on its lane, in both directions.
+      // Cars run along the roads between the blocks, each on its lane, in both directions: one
+      // for every five metres of road, up to 160, so a small town is not jammed.
       const cars = Array.from({ length: 160 }, (_, index) => {
         const mesh = object.mesh(cube, paints[index % paints.length]);
         world.scene.add(mesh);
         return { mesh, road: 0, along: 0, speed: 0, alongX: false, half: 0 };
       });
+      let moving = 0;
+      // Moves each running car `delta` seconds along its road; zero just sets it on its lane.
+      function drive(delta) {
+        for (let k = 0; k < moving; k++) {
+          const car = cars[k], span = car.half * 2;
+          car.along = (((car.along + car.speed * delta) % span) + span) % span;
+          const lane = car.speed > 0 ? 0.22 : -0.22, run = car.along - car.half;
+          if (car.alongX) car.mesh.position.set(run, 0.02, car.road + lane);
+          else car.mesh.position.set(car.road + lane, 0.02, run);
+        }
+      }
       function placeTraffic(blocks, next) {
         const half = (blocks * PITCH) / 2;
-        for (const car of cars) {
+        moving = Math.min(cars.length, Math.round((2 * (blocks + 1) * blocks * PITCH) / 5));
+        cars.forEach((car, k) => (car.mesh.visible = k < moving));
+        for (const car of cars.slice(0, moving)) {
           car.alongX = next() < 0.5;
           car.road = Math.floor(next() * (blocks + 1)) * PITCH - half;
           car.along = next() * blocks * PITCH;
@@ -128,8 +138,12 @@
           car.half = half;
           car.mesh.scale.set(car.alongX ? 0.55 : 0.28, 0.25, car.alongX ? 0.28 : 0.55);
         }
+        drive(0);
       }
 
+      // The sky and the haze share one colour, bluer as the sun climbs.
+      const sky = math.color();
+      world.scene.background = sky;
       const sun = light.directional({ intensity: 3.2, castShadow: true });
       world.scene.add(sun, light.hemisphere({ color: '#a9c1ff', groundColor: '#3a2e25', intensity: 0.7 }));
       world.camera.position.set(26, 22, 32);
@@ -151,6 +165,7 @@
           const angle = ((values.hour - 6) / 14) * Math.PI, height = Math.sin(angle);
           sun.position.set(Math.cos(angle) * 40, 6 + height * 36, 18);
           sun.color.set('#ffae66').lerp(math.color('#fff6e8'), height);
+          sky.set('#6a6f86').lerp(math.color('#a9bfd6'), height);
         }
         if (key !== 'hour' && key !== 'traffic') build(values);
         buildings?.(String(counts.buildings));
@@ -164,13 +179,7 @@
 
       world.onFrame(({ delta }) => {
         if (!ui.traffic) return;
-        for (const car of cars) {
-          const span = car.half * 2;
-          car.along = (((car.along + car.speed * delta) % span) + span) % span;
-          const lane = car.speed > 0 ? 0.22 : -0.22, run = car.along - car.half;
-          if (car.alongX) car.mesh.position.set(run, 0.02, car.road + lane);
-          else car.mesh.position.set(car.road + lane, 0.02, run);
-        }
+        drive(delta);
         world.invalidate();
       });
     </script>

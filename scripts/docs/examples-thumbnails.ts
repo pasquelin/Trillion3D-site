@@ -10,7 +10,7 @@ import { readyEntries } from '../../site/app/examples/list.ts'
  * `site/assets/examples/thumbnails/<id>.png` — the cards of the Examples page. The render alone:
  * the example's panels and its credit line are hidden. An argument limits the run to one example.
  */
-const site = resolve(import.meta.dirname, '../site'),
+const site = resolve(import.meta.dirname, '../../site'),
   out = resolve(site, 'assets/examples/thumbnails'),
   only = process.argv[2],
   entries = readyEntries.filter(({ id }) => !only || id === only)

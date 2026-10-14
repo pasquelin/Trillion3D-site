@@ -21,7 +21,7 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, math } from '../runtime/engine.js';
+      import { buffer, createWorld, effect, geometry, material, object, light, math } from '../runtime/engine.js';
       import { controls, seeded } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
@@ -61,12 +61,30 @@
         boulder.rotation.y = angle;
         world.scene.add(boulder);
       }
+      // Each boat a rounded hull half in the water, and a mast.
+      const keel = geometry.sphere(1, 24, 12), pole = geometry.cylinder(0.03, 0.04, 1.6, 8);
       for (let index = 0; index < 6; index++) {
-        const angle = (index / 6) * Math.PI * 2 + 0.4, hull = object.mesh(geometry.box(1.6, 0.4, 0.6), whitewash);
-        hull.position.set(Math.cos(angle) * 12, -0.25, Math.sin(angle) * 12);
-        hull.rotation.y = -angle;
-        world.scene.add(hull);
+        const angle = (index / 6) * Math.PI * 2 + 0.4, boat = object.group();
+        const hull = object.mesh(keel, index % 2 ? red : whitewash);
+        hull.scale.set(0.9, 0.28, 0.32);
+        const mast = object.mesh(pole, whitewash);
+        mast.position.y = 0.8;
+        boat.add(hull, mast);
+        boat.position.set(Math.cos(angle) * 12, -0.4, Math.sin(angle) * 12);
+        boat.rotation.y = -angle;
+        world.scene.add(boat);
       }
+      // Stars: a far shell of small points over the sea, from the horizon up.
+      const sky = [];
+      for (let index = 0; index < 1500; index++) {
+        const y = 0.03 + next() * 0.97, around = next() * Math.PI * 2, ring = Math.sqrt(1 - y * y);
+        sky.push(ring * Math.cos(around) * 600, y * 600, ring * Math.sin(around) * 600);
+      }
+      const stars = geometry.createBuffer({ position: buffer.float32(new Float32Array(sky), 3) });
+      world.scene.add(object.points(stars, material.points({ color: '#dfe6ff', size: 1.8 })));
+      // A night haze over the water: thick at the sea, thinning with height, so the sea fades into
+      // the night sky at the horizon while the stars overhead stay clear.
+      world.scene.fog = { color: math.color('#0c1424'), density: 0.02, heightFalloff: 0.08 };
       // Night: a faint moon that casts the shadows, and the sky's dim light on what it misses.
       world.scene.add(
         light.directional({ intensity: 2, color: '#8099d9', position: [-8, 12, 10], castShadow: true }),
@@ -100,6 +118,8 @@
       world.camera.lookAt(0, 3, 0);
       world.controls.target.set(0, 3, 0);
       world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
+      // The lantern burns far brighter than white: a soft glow spreads it into the night air.
+      world.effects.add(effect.bloom({ intensity: 0.08 }));
 
       const ui = controls({ turnsPerMinute: [0, 30, 10, 1], beamWidth: [0.05, 0.4, 0.12], colour: '#fff2cc' }, (values) => {
         beam.angle = values.beamWidth;

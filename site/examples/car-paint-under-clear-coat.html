@@ -20,54 +20,115 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, math } from '../runtime/engine.js';
-      import { controls } from '../runtime/kit.js';
+      import { createWorld, geometry, material, object, light, math, buffer, effect } from '../runtime/engine.js';
+      import { controls, ease } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
       world.scene.background = math.color('#101720');
+      // The paint: a metallic base under a clear varnish. The base scatters the light in a broad
+      // coloured glow; the coat, smooth and colourless, adds a sharp white reflection on top.
       const paint = material.meshPhysical({
         color: '#b31324',
         metalness: 0.72,
         roughness: 0.3,
         clearcoat: 1,
         clearcoatRoughness: 0.05,
+        vertexColors: true,
       });
-      const dark = material.meshStandard({ color: '#111317', metalness: 0.7, roughness: 0.24 });
+
+      // THE BODY, lofted: slices across the car from the nose to the tail, each a rounded
+      // rectangle (a superellipse) whose height and width follow the car's lines — a low bonnet
+      // rising to the windscreen, a cabin, a short boot, the floor lifted in an arch over each
+      // wheel. Above the waist the slice narrows, as a car's glasshouse leans in. Every slice
+      // shares its corners with the next and closes on itself, so the normals are smooth and a
+      // highlight runs along the body without breaking.
+      const between = (from, to, x) => ease.smooth((x - from) / (to - from));
+      const WHEELS = [-1.42, 1.38];
+      const round = (value) => Math.sign(value) * Math.sqrt(Math.abs(value));
+      function carBody(slices = 140, around = 72) {
+        const positions = [], colours = [], index = [];
+        for (let i = 0; i <= slices; i++) {
+          const s = i / slices, x = (s - 0.5) * 4.6;
+          const end = (1 - Math.abs(2 * s - 1) ** 6) ** (1 / 6);
+          const waist = 0.86 + 0.14 * between(0, 0.36, s) - 0.04 * between(0.82, 1, s);
+          const cabin = between(0.3, 0.46, s) * (1 - between(0.68, 0.86, s));
+          const arch = Math.max(...WHEELS.map((wheel) => Math.sqrt(Math.max(0, 1 - ((x - wheel) / 0.4) ** 2))));
+          const top = waist + 0.48 * cabin, bottom = 0.3 + 0.42 * arch;
+          const middle = (top + bottom) / 2, half = ((top - bottom) / 2) * end;
+          for (let k = 0; k < around; k++) {
+            const angle = (k / around) * Math.PI * 2;
+            const y = middle + half * round(Math.sin(angle));
+            const width = 0.95 * end * (1 - 0.3 * cabin * between(waist, waist + 0.5, y));
+            const z = width * round(Math.cos(angle));
+            positions.push(x, y, z);
+            // Windows: the cabin above the waist, but for its roof, is dark glass under the coat.
+            const inCabin = cabin > 0.05 && y > waist + 0.05 && y < top - 0.03;
+            const roof = cabin >= 0.95 && Math.abs(z) <= width * 0.75;
+            const tone = inCabin && !roof ? 0.04 : 1;
+            colours.push(tone, tone, tone);
+            if (i < slices) {
+              const a = i * around, b = a + around, next = (k + 1) % around;
+              index.push(a + k, b + k, a + next, b + k, b + next, a + next);
+            }
+          }
+        }
+        const shape = geometry.createBuffer({
+          position: buffer.float32(positions, 3),
+          color: buffer.float32(colours, 3),
+          index: buffer.uint32(index, 1),
+        });
+        shape.computeVertexNormals();
+        // The nose and the tail close each in one point: every vertex there faces straight ahead.
+        const normals = shape.attributes.normal;
+        for (let k = 0; k < around; k++) {
+          normals.setXYZ(k, -1, 0, 0);
+          normals.setXYZ(slices * around + k, 1, 0, 0);
+        }
+        return shape;
+      }
       const car = object.group();
-      const body = object.mesh(geometry.box(4.6, 0.65, 2), paint);
-      body.position.y = 0.85;
-      const cabin = object.mesh(geometry.box(2.25, 0.72, 1.65), paint);
-      cabin.position.set(-0.25, 1.48, 0);
-      car.add(body, cabin);
-      const wheelShape = geometry.cylinder(0.46, 0.46, 0.28, 48);
-      for (const x of [-1.45, 1.45])
-        for (const z of [-1.02, 1.02]) {
-          const wheel = object.mesh(wheelShape, dark);
-          wheel.position.set(x, 0.48, z);
+      car.add(object.mesh(carBody(), paint));
+      // Four wheels: a tyre and a polished rim, tucked under the body.
+      const rubber = material.meshStandard({ color: '#121316', roughness: 0.8 });
+      const chrome = material.meshStandard({ color: '#d8dce2', metalness: 1, roughness: 0.18 });
+      const tyre = geometry.cylinder(0.34, 0.34, 0.26, 48), rim = geometry.cylinder(0.21, 0.21, 0.27, 32);
+      for (const x of WHEELS)
+        for (const z of [-0.78, 0.78]) {
+          const wheel = object.group();
+          wheel.add(object.mesh(tyre, rubber), object.mesh(rim, chrome));
+          wheel.position.set(x, 0.34, z);
           wheel.rotation.x = Math.PI / 2;
           car.add(wheel);
         }
-      car.position.y = 0.06;
       world.scene.add(car);
-      const floor = object.mesh(
-        geometry.cylinder(5.5, 5.5, 0.18, 96),
-        material.meshStandard({ color: '#28313a', roughness: 0.72 }),
-      );
+      // A dark, polished studio floor: it catches the softboxes and the car in long reflections.
+      const floor = object.mesh(geometry.cylinder(7, 7, 0.1, 128), material.meshStandard({ color: '#0d0f12', roughness: 0.12 }));
+      floor.position.y = -0.05;
       floor.receiveShadow = true;
       world.scene.add(floor);
-      world.scene.add(
-        light.directional({
-          intensity: 4,
-          color: '#fff0d9',
-          position: [5, 9, 6],
-          castShadow: true,
-        }),
-      );
-      world.scene.add(
-        light.point({ intensity: 70, color: '#76aaff', position: [-5, 4, 2], distance: 20 }),
-      );
-      world.camera.position.set(6.2, 3.3, 6.8);
-      world.controls.target.set(0, 0.9, 0);
+
+      // THE STUDIO. Three long softboxes hang over the car, lengthwise: on the coat each becomes a
+      // long white streak that slides over the curves as the car turns. A softbox is a rectangle
+      // light (`rectArea`) facing down, and a white panel drawn where it hangs.
+      const panel = material.meshBasic({ color: '#fff6ea' }), panelShape = geometry.plane(5.5, 0.7);
+      for (const z of [-1.6, 0, 1.6]) {
+        const softbox = light.rectArea({ color: '#fff6ea', intensity: 5, width: 5.5, height: 0.7 });
+        softbox.position.set(0, 4.4, z);
+        softbox.rotation.x = -Math.PI / 2;
+        const face = object.mesh(panelShape, panel);
+        face.position.set(0, 4.42, z);
+        face.rotation.x = Math.PI / 2;
+        face.castShadow = false;
+        world.scene.add(softbox, face);
+      }
+      // A low key light from the side for the shadow under the car, and the studio's own light
+      // from every way: a bright ceiling, a dark floor, so the sills fall into shade.
+      world.scene.add(light.directional({ intensity: 1.2, color: '#fff0d9', position: [5, 7, 4], castShadow: true }));
+      world.scene.add(light.hemisphere({ color: '#a4a8b4', groundColor: '#07070a', intensity: 0.8 }));
+      world.effects.add(effect.bloom({ intensity: 0.05 }));
+      world.camera.position.set(5.6, 2.4, 5.4);
+      world.controls.target.set(0, 0.75, 0);
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.08;
 
       const ui = controls(
         {
@@ -80,6 +141,7 @@
           paint.color.set(values.paint);
           paint.clearcoat = values.clearCoat;
           paint.clearcoatRoughness = values.coatRoughness;
+          world.invalidate();
         },
         world,
       );
