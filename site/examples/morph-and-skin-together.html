@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Morph and skin together</title>
+    <meta name="thumbnail" content="3" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #0f1d1c;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import {
+        createWorld,
+        animation,
+        buffer,
+        geometry,
+        light,
+        material,
+        math,
+        object,
+      } from '../runtime/engine.js';
+      import { controls } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#0f1d1c');
+
+      // One leaf shape: a blade along +x, folded along its midrib. Four bones run down the midrib
+      // and bend it; one morph target, `curl`, rolls its edges up. The two add up: the bones carry
+      // the curled shape wherever they bend it.
+      const LENGTH = 1.2,
+        WIDTH = 0.3,
+        BONES = 4,
+        ALONG = 32,
+        ACROSS = 12,
+        ROLL = 4,
+        LEAVES = 12;
+      const blade = (u, v, curl) => {
+        // Never quite zero wide: a row of coincident vertices at the base or the tip would leave
+        // its triangles without area.
+        const half = WIDTH * Math.max(0.03, Math.sin(Math.PI * u) ** 0.75) * (1 - 0.3 * u);
+        const z = v * half;
+        // The curl rolls each half round a tube of radius 1 / ROLL above the midrib.
+        const angle = ROLL * Math.abs(z) * curl;
+        const across = curl ? (Math.sign(z) * Math.sin(angle)) / ROLL : z;
+        const lift = curl ? (1 - Math.cos(angle)) / ROLL : 0;
+        return [u * LENGTH, 0.25 * Math.abs(z) + lift, across];
+      };
+
+      // The plant: a stem rising from a pot, and leaves spiralling up it. Each leaf is a holder
+      // turned round the stem and tilted up, with its chain of four bones along the midrib.
+      const size = (n) => 1 - n * 0.045;
+      const holders = Array.from({ length: LEAVES }, (_, n) => {
+        const holder = object.group();
+        holder.position.y = 0.55 + n * 0.12;
+        holder.rotation.set(0, n * 2.399963, 0.75 - n * 0.03);
+        holder.scale.setScalar(size(n));
+        let parent = holder;
+        for (let i = 0; i < BONES; i++) {
+          const bone = object.group();
+          bone.name = `bone${i}`;
+          bone.position.x = i ? LENGTH / BONES : 0;
+          parent.add(bone);
+          parent = bone;
+        }
+        world.scene.add(holder);
+        holder.updateMatrixWorld(true);
+        return holder;
+      });
+      // The whole foliage is one skinned mesh: each leaf's blade is laid where its holder puts it,
+      // its vertices bound to its own four bones of one skeleton. Made now, with the bones as
+      // built, so this is the bind pose. (At the pinned engine, several hand-built skinned meshes
+      // each on its own skeleton draw torn once their poses differ; one mesh draws whole.)
+      const skeleton = animation.skeleton(
+        holders.flatMap((holder) =>
+          Array.from({ length: BONES }, (_, i) => holder.getObjectByName(`bone${i}`)),
+        ),
+      );
+      const flat = [],
+        curled = [],
+        joints = [],
+        weights = [],
+        index = [];
+      const point = math.vector3();
+      const laid = (list, at, holder) =>
+        list.push(...point.set(...at).applyMatrix4(holder.matrixWorld).toArray());
+      holders.forEach((holder, n) => {
+        const first = flat.length / 3;
+        for (let i = 0; i <= ALONG; i++)
+          for (let j = 0; j <= ACROSS; j++) {
+            const u = i / ALONG,
+              v = (j / ACROSS) * 2 - 1;
+            laid(flat, blade(u, v, 0), holder);
+            laid(curled, blade(u, v, 1), holder);
+            // Between the middles of the two nearest bones, the weight slides from one to the next.
+            const along = math.clamp(u * BONES - 0.5, 0, BONES - 1);
+            const bone = Math.min(Math.floor(along), BONES - 2);
+            const share = math.clamp(along - bone, 0, 1);
+            joints.push(n * BONES + bone, n * BONES + bone + 1, 0, 0);
+            weights.push(1 - share, share, 0, 0);
+            if (i < ALONG && j < ACROSS) {
+              const a = first + i * (ACROSS + 1) + j,
+                b = a + ACROSS + 1;
+              index.push(a, a + 1, b, b, a + 1, b + 1);
+            }
+          }
+      });
+      const shaped = (at) => {
+        const made = geometry.createBuffer({
+          position: buffer.float32(at, 3),
+          index: buffer.uint16(index, 1),
+        });
+        made.computeVertexNormals();
+        return made;
+      };
+      const foliageShape = shaped(flat);
+      const curledShape = shaped(curled);
+      foliageShape.setAttribute('skinIndex', buffer.uint16(joints, 4));
+      foliageShape.setAttribute('skinWeight', buffer.float32(weights, 4));
+      const curl = curledShape.getAttribute('position');
+      curl.name = 'curl';
+      foliageShape.morphAttributes.position = [curl];
+      foliageShape.morphAttributes.normal = [curledShape.getAttribute('normal')];
+
+      // Seen against the light, the leaf glows through: its subsurface colour is the light it
+      // lets pass.
+      const foliage = object.mesh(
+        foliageShape,
+        material.meshPhysical({
+          color: '#4fae5a',
+          roughness: 0.42,
+          sheen: 0.3,
+          subsurfaceColor: '#c8ff6a',
+          side: 'double',
+        }),
+      );
+      foliage.skeleton = skeleton;
+
+      const stemPath = math.curve([
+        [0, 0.35, 0],
+        [0.04, 0.9, 0.02],
+        [-0.03, 1.5, -0.02],
+        [0, 2, 0],
+      ]);
+      const stem = object.mesh(
+        geometry.tube(stemPath, 48, 0.035, 12),
+        material.meshPhysical({ color: '#3e7d3f', roughness: 0.5, sheen: 0.4 }),
+      );
+      const pot = object.mesh(
+        geometry.lathe(
+          [
+            [0.001, 0],
+            [0.32, 0],
+            [0.36, 0.05],
+            [0.44, 0.42],
+            [0.4, 0.42],
+            [0.34, 0.38],
+          ],
+          64,
+        ),
+        material.meshPhysical({ color: '#c46a45', roughness: 0.55, clearcoat: 0.3 }),
+      );
+      const soil = object.mesh(
+        geometry.cylinder(0.36, 0.36, 0.04, 48),
+        material.meshStandard({ color: '#2b1d16', roughness: 1 }),
+      );
+      soil.position.y = 0.36;
+      const table = object.mesh(
+        geometry.cylinder(1.6, 1.6, 0.08, 96),
+        material.meshPhysical({ color: '#2a2622', roughness: 0.35, clearcoat: 0.6 }),
+      );
+      table.position.y = -0.04;
+      world.scene.add(foliage, stem, pot, soil, table);
+
+      // Two clips: `sway` bends a leaf's bones, one mixer a leaf, each starting at its own time
+      // and going at its own pace; `curl` plays the morph of the whole foliage.
+      const SWAY = 3,
+        CURL = 6,
+        STEPS = 24;
+      const sampled = (path, duration, value) => {
+        const times = Array.from({ length: STEPS + 1 }, (_, i) => (i / STEPS) * duration);
+        return animation.numberTrack(
+          path,
+          times,
+          times.map((time) => value((time / duration) * Math.PI * 2)),
+        );
+      };
+      const sway = animation.clip(
+        'sway',
+        SWAY,
+        Array.from({ length: BONES }, (_, i) => [
+          sampled(`bone${i}.rotation.z`, SWAY, (a) => -0.16 - 0.1 * Math.sin(a - i * 0.6)),
+          sampled(`bone${i}.rotation.y`, SWAY, (a) => 0.07 * Math.sin(a + 1 - i * 0.5)),
+        ]).flat(),
+      );
+      const curlTimes = Array.from({ length: STEPS + 1 }, (_, i) => (i / STEPS) * CURL);
+      const roll = animation.clip('curl', CURL, [
+        animation.weightsTrack(
+          '.morphTargetInfluences',
+          curlTimes,
+          curlTimes.map((time) => (1 - Math.cos((time / CURL) * Math.PI * 2)) / 2),
+        ),
+      ]);
+      // Opened half curled: the thumbnail and the first look show the curl at work.
+      const curling = animation.createMixer(foliage).clipAction(roll).play().seek(CURL / 3);
+      const bendings = holders.map((holder) =>
+        animation.createMixer(holder).clipAction(sway),
+      );
+
+      world.scene.add(
+        light.directional({
+          color: '#ffe2b8',
+          intensity: 2.6,
+          position: [-3, 5, 4],
+          castShadow: true,
+        }),
+        // The back light: through the leaves, it shows the subsurface glow.
+        light.directional({ color: '#d6ffb0', intensity: 3, position: [2, 3, -5] }),
+        light.hemisphere({ color: '#b9e6ff', groundColor: '#1d2a22', intensity: 0.5 }),
+      );
+      world.camera.position.set(1.6, 1.55, 2.0);
+      world.controls.target.set(0, 1.05, 0);
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
+      world.controls.minDistance = 1.5;
+      world.controls.maxDistance = 9;
+
+      controls(
+        { leaves: [3, LEAVES, LEAVES, 1], wind: [0, 2, 1], curl: [0, 1, 1] },
+        (values) => {
+          // A hidden leaf folds to nothing on its holder and its mixer stops: three leaves cost
+          // three mixers. A shown one starts its sway at its own time, at its own pace.
+          holders.forEach((holder, i) => {
+            const shown = i < values.leaves,
+              bending = bendings[i];
+            holder.scale.setScalar(shown ? size(i) : 0);
+            if (shown && !bending.playingNow) bending.play().seek(i * 0.37);
+            if (!shown && bending.playingNow) bending.stop();
+            bending.timeScale = values.wind * (0.85 + ((i * 7) % 5) * 0.07);
+          });
+          // The wind sets both paces: still air stills the curl as well as the bend.
+          curling.timeScale = values.wind;
+          // The curl's weight blends the morph with the flat leaf: the bones go on bending it.
+          curling.weight = values.curl;
+          world.invalidate();
+        },
+        world,
+      );
+    </script>
+  </body>
+</html>

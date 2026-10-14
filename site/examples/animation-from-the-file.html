@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Animation from the file</title>
+    <meta name="thumbnail" content="4" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #110e18;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      p {
+        position: absolute;
+        bottom: 0;
+        margin: 0.5rem;
+        color: white;
+        font: 12px system-ui;
+      }
+      a {
+        color: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <p>
+      CesiumMan © 2017 Cesium —
+      <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+      <a
+        href="https://github.com/KhronosGroup/glTF-Sample-Assets/blob/main/LICENSES/LicenseRef-LegalMark-Cesium.txt"
+        >Cesium logo notice</a
+      >.
+    </p>
+    <script type="module">
+      import {
+        createWorld,
+        animation,
+        effect,
+        geometry,
+        light,
+        material,
+        math,
+        object,
+      } from '../runtime/engine.js';
+      import { controls } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#110e18');
+
+      // A zoetrope: a turntable, its rim of bulbs, and walkers in a ring on it. The walkers stand
+      // in place while the deck turns under them, back against their stride.
+      const RADIUS = 2.4;
+      const walnut = material.meshPhysical({ color: '#5a3424', roughness: 0.35, clearcoat: 0.8 });
+      const brass = material.meshStandard({ color: '#d9a74e', roughness: 0.25, metalness: 0.9 });
+      const floor = object.mesh(
+        geometry.cylinder(14, 14, 0.2, 96),
+        material.meshStandard({ color: '#1a1622', roughness: 0.6 }),
+      );
+      floor.position.y = -0.3;
+      const carousel = object.group();
+      const deck = object.mesh(geometry.cylinder(3.3, 3.4, 0.2, 128), walnut);
+      deck.position.y = -0.1;
+      const rim = object.mesh(geometry.torus(3.35, 0.04, 12, 192), brass);
+      rim.rotation.x = Math.PI / 2;
+      const hub = object.mesh(geometry.cylinder(0.25, 0.35, 1.6, 48), brass);
+      hub.position.y = 0.8;
+      const finial = object.mesh(geometry.sphere(0.32, 48, 32), brass);
+      finial.position.y = 1.75;
+      carousel.add(deck, rim, hub, finial);
+      const bulb = geometry.sphere(0.05, 16, 12);
+      const glow = material.meshStandard({
+        color: '#000000',
+        emissive: '#ffcf7a',
+        emissiveIntensity: 7,
+      });
+      for (let i = 0; i < 64; i++) {
+        const angle = (i / 64) * Math.PI * 2;
+        const lamp = object.mesh(bulb, glow);
+        lamp.position.set(Math.sin(angle) * 3.42, -0.1, Math.cos(angle) * 3.42);
+        carousel.add(lamp);
+      }
+      world.scene.add(floor, carousel);
+
+      // The walkers are the file's: each loads the model and plays the clip it carries, the walk
+      // the file was saved with. Nothing of the motion is written here.
+      const MOST = 16;
+      const walkers = await Promise.all(
+        Array.from({ length: MOST }, async () => {
+          const model = await world.scene.load(
+            '../assets/examples/cesium-man/cache/native/full/manifest.json',
+          );
+          const clip = model.animations[0];
+          if (!clip) throw new Error('The compiled sample must retain its animation');
+          const holder = object.group();
+          holder.add(model);
+          world.scene.add(holder);
+          return { holder, action: animation.createMixer(model).clipAction(clip).play(), clip };
+        }),
+      );
+
+      world.scene.add(
+        light.spot({
+          color: '#fff1dc',
+          intensity: 90,
+          position: [0, 8, 0],
+          target: [0, 0, 0],
+          angle: 0.62,
+          penumbra: 0.5,
+          castShadow: true,
+        }),
+        light.directional({ color: '#8fb2ff', intensity: 1.2, position: [-5, 3, -6] }),
+        light.hemisphere({ color: '#b9b3ff', groundColor: '#1a1622', intensity: 0.35 }),
+      );
+      world.effects.add(effect.bloom({ intensity: 0.08, radius: 1.2 }));
+      world.camera.position.set(4.3, 2.5, 5.1);
+      world.controls.target.set(0, 0.8, 0);
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.08;
+      world.controls.maxDistance = 20;
+
+      // The walkers stand round the ring, each facing along it, and each starts the clip a share
+      // of its length later than the one before: round the ring, the poses read as one stride.
+      // A planted foot goes back under its walker at the pace the walk covers ground — 0.9 m a
+      // second at speed 1, measured off the file's clip —, and the deck turns back under the feet at that pace, so they hold
+      // on it; a negative speed plays the clip backwards and turns the deck forward.
+      const WALK = 0.9;
+      // The deck follows the first walker's clip time, so it keeps step with the feet whatever
+      // the frame rate: `played` is the time it has turned for.
+      const lead = walkers[0].action;
+      let played = 0;
+      controls(
+        { walkers: [1, MOST, 12, 1], speed: [-1.5, 2, 1] },
+        (values, key) => {
+          walkers.forEach(({ holder, action, clip }, index) => {
+            const shown = index < values.walkers;
+            holder.visible = shown;
+            action.timeScale = values.speed;
+            if (key !== undefined && key !== 'walkers') return;
+            // A hidden walker stops playing; the shown ones are laid out round the ring again.
+            if (!shown) {
+              action.stop();
+              return;
+            }
+            const angle = (index / values.walkers) * Math.PI * 2;
+            holder.position.set(Math.sin(angle) * RADIUS, 0, Math.cos(angle) * RADIUS);
+            holder.rotation.y = angle + Math.PI / 2;
+            action.play().seek((index / values.walkers) * clip.duration);
+          });
+          played = lead.time;
+          world.invalidate();
+        },
+        world,
+      );
+      // Ahead of each frame, after the clips have stepped: the deck is drawn where the feet are.
+      world.beforeFrame(() => {
+        carousel.rotation.y -= (WALK / RADIUS) * (lead.time - played);
+        played = lead.time;
+      });
+    </script>
+  </body>
+</html>

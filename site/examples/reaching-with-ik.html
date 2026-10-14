@@ -1,0 +1,213 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Reaching with IK</title>
+    <meta name="thumbnail" content="3" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #0b1018;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import {
+        createWorld,
+        animation,
+        effect,
+        geometry,
+        light,
+        material,
+        math,
+        object,
+      } from '../runtime/engine.js';
+      import { controls, pointerOnPlane } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#0b1018');
+
+      // A dark polished floor with two faint rings: the arms stand on the inner one.
+      const RING = 1.8;
+      const floor = object.mesh(
+        geometry.cylinder(9, 9, 0.2, 96),
+        material.meshStandard({ color: '#151b25', roughness: 0.32, metalness: 0.4 }),
+      );
+      floor.position.y = -0.1;
+      world.scene.add(floor);
+      for (const radius of [RING, 3.4]) {
+        const ring = object.mesh(
+          geometry.torus(radius, 0.012, 8, 160),
+          material.meshStandard({ color: '#000000', emissive: '#3fb6ff', emissiveIntensity: 1.5 }),
+        );
+        ring.rotation.x = Math.PI / 2;
+        ring.position.y = 0.005;
+        world.scene.add(ring);
+      }
+
+      // One light wanders over the floor; every arm reaches for it.
+      const orb = object.mesh(
+        geometry.sphere(0.3, 48, 32),
+        material.meshStandard({ color: '#000000', emissive: '#ffb45e', emissiveIntensity: 9 }),
+      );
+      const halo = object.mesh(
+        geometry.torus(0.46, 0.01, 8, 96),
+        material.meshStandard({ color: '#000000', emissive: '#ffd59a', emissiveIntensity: 5 }),
+      );
+      const glow = light.point({ color: '#ffb45e', intensity: 26, distance: 12, castShadow: true });
+      world.scene.add(orb, halo, glow);
+
+      // Shared shapes and paints: every arm draws with the same few, whatever their number.
+      const ceramic = material.meshStandard({ color: '#e7ebf0', roughness: 0.28, metalness: 0.05 });
+      const graphite = material.meshStandard({ color: '#2a3039', roughness: 0.35, metalness: 0.8 });
+      const accent = material.meshStandard({ color: '#ff7a3d', roughness: 0.4, metalness: 0.3 });
+      const UPPER = 1.45,
+        LOWER = 1.35;
+      // The chain's built bend: the shoulder and the elbow turned up from straight.
+      const SHOULDER = 0.5,
+        ELBOW = 1.5;
+      const shapes = {
+        foot: geometry.cylinder(0.42, 0.5, 0.24, 48),
+        column: geometry.cylinder(0.15, 0.2, 0.9, 32),
+        collar: geometry.torus(0.2, 0.035, 12, 48),
+        joint: geometry.sphere(0.16, 32, 20),
+        upper: geometry.capsule(0.1, UPPER - 0.2, 8, 24),
+        lower: geometry.capsule(0.075, LOWER - 0.2, 8, 24),
+        palm: geometry.sphere(0.1, 24, 16),
+        finger: geometry.box(0.035, 0.18, 0.05),
+      };
+      const part = (parent, shape, paint, at = [0, 0, 0]) => {
+        const mesh = object.mesh(shape, paint);
+        mesh.position.set(...at);
+        parent.add(mesh);
+        return mesh;
+      };
+
+      /** One arm: a foot, a column, a turret that turns toward the light, and the IK chain on top:
+       *  shoulder, elbow, wrist, each bone along its node's +y. The chain is built bent, so the
+       *  solver keeps the bend's side; the pole above and behind keeps the elbow up. */
+      function arm() {
+        const base = object.group();
+        part(base, shapes.foot, graphite, [0, 0.12, 0]);
+        part(base, shapes.column, ceramic, [0, 0.69, 0]);
+        const turret = object.group();
+        turret.position.y = 1.14;
+        part(turret, shapes.joint, graphite);
+        part(turret, shapes.collar, accent).rotation.x = Math.PI / 2;
+        const shoulder = object.group();
+        shoulder.rotation.x = SHOULDER;
+        part(shoulder, shapes.upper, ceramic, [0, UPPER / 2, 0]);
+        const elbow = object.group();
+        elbow.position.y = UPPER;
+        elbow.rotation.x = ELBOW;
+        part(elbow, shapes.joint, graphite).scale.setScalar(0.75);
+        part(elbow, shapes.lower, ceramic, [0, LOWER / 2, 0]);
+        const wrist = object.group();
+        wrist.position.y = LOWER;
+        part(wrist, shapes.palm, accent);
+        for (const side of [-1, 1])
+          part(wrist, shapes.finger, graphite, [side * 0.05, 0.12, 0]).rotation.z = side * -0.25;
+        elbow.add(wrist);
+        shoulder.add(elbow);
+        turret.add(shoulder);
+        const pole = object.group();
+        pole.position.set(0, 3, -1.5);
+        turret.add(pole);
+        base.add(turret);
+        world.scene.add(base);
+        return { base, turret, shoulder, elbow, wrist, pole };
+      }
+      const arms = Array.from({ length: 8 }, arm);
+
+      world.scene.add(
+        light.hemisphere({ color: '#9fc2ff', groundColor: '#0d1118', intensity: 0.6 }),
+        light.directional({ color: '#bcd6ff', intensity: 0.8, position: [-6, 9, -4] }),
+        light.directional({ color: '#e8eeff', intensity: 1.4, position: [5, 7, 6] }),
+      );
+      const bloom = effect.bloom({ intensity: 0.12, radius: 1.2 });
+      world.effects.add(bloom);
+      world.camera.position.set(4.2, 4.4, 5.0);
+      world.controls.target.set(0, 1.4, 0);
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
+      world.controls.maxDistance = 20;
+
+      // The light follows its own path, or the pointer on the plane it floats in. Either way it
+      // stays within 0.8 m of the centre and between 1.5 and 2.2 m high: every arm reaches it.
+      const ui = controls(
+        { arms: [1, 8, 6, 1], follow: ['path', 'pointer'], speed: [0, 2, 1], reach: [0, 1, 1] },
+        (values) => {
+          // The shown arms share the ring evenly, whatever their number.
+          arms.forEach(({ base }, index) => {
+            const angle = (index / values.arms) * Math.PI * 2;
+            base.position.set(Math.sin(angle) * RING, 0, Math.cos(angle) * RING);
+            base.visible = index < values.arms;
+          });
+          world.invalidate();
+        },
+        world,
+      );
+      // The pointer leads the light on the plane 1.8 m up.
+      const LEAD = 1.8;
+      const goal = math.vector3(0, LEAD, 0);
+      world.canvas.addEventListener('pointermove', (event) => {
+        if (ui.follow !== 'pointer') return;
+        const met = pointerOnPlane(world, event, LEAD);
+        if (!met) return;
+        const [x, z] = met;
+        const scale = Math.min(1, 0.8 / Math.hypot(x, z));
+        goal.set(x * scale, LEAD, z * scale);
+        world.invalidate();
+      });
+
+      const at = math.vector3(),
+        shoulderAt = math.vector3(),
+        poleAt = math.vector3(),
+        toward = math.vector3();
+      // Solved ahead of each drawn frame, so the arms are drawn where they reach in that very
+      // frame. Frames keep coming while the light moves: still, and settled, nothing is drawn.
+      let time = 0;
+      world.beforeFrame(({ delta }) => {
+        time += Math.min(delta, 0.05) * ui.speed;
+        if (ui.follow === 'path')
+          goal.set(
+            Math.sin(time * 0.7) * 0.8,
+            1.85 + Math.sin(time * 1.3) * 0.32,
+            Math.sin(time * 0.53 + 1) * 0.8,
+          );
+        // The light eases toward its goal, so a jump of the pointer becomes a glide.
+        orb.position.lerp(goal, 1 - Math.exp(-6 * Math.min(delta, 0.05)));
+        halo.position.copy(orb.position);
+        halo.rotation.set(time * 0.9, time * 0.6, 0);
+        glow.position.copy(orb.position);
+        arms.forEach(({ base, turret, shoulder, elbow, wrist, pole }, index) => {
+          if (index >= ui.arms) return;
+          // The turret faces the light; the hand aims at the point of the light's surface that
+          // faces this arm, so the hands gather round it instead of meeting at its centre.
+          turret.rotation.y = Math.atan2(
+            orb.position.x - base.position.x,
+            orb.position.z - base.position.z,
+          );
+          shoulder.getWorldPosition(shoulderAt);
+          toward.copy(shoulderAt).sub(orb.position).normalize();
+          at.copy(orb.position).addScaledVector(toward, 0.48);
+          pole.getWorldPosition(poleAt);
+          // Back to the built bend first: `reach` then blends from that pose, never from the
+          // last frame's solve.
+          shoulder.rotation.set(SHOULDER, 0, 0);
+          elbow.rotation.set(ELBOW, 0, 0);
+          animation.twoBoneIK(shoulder, elbow, wrist, at, poleAt, ui.reach);
+        });
+        if (ui.speed || orb.position.distanceToSquared(goal) > 1e-6) world.invalidate();
+      });
+    </script>
+  </body>
+</html>
