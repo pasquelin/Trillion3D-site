@@ -3,7 +3,7 @@
   <head>
     <meta charset="utf-8" />
     <title>Blobs that merge</title>
-    <meta name="thumbnail" content="6" />
+    <meta name="thumbnail" content="5" />
     <style>
       html,
       body {
@@ -148,14 +148,19 @@
               if (here !== values[index3(i, j + 1, k)] > 0) square(cell(i - 1, j, k - 1), cell(i, j, k - 1), cell(i, j, k), cell(i - 1, j, k));
               if (here !== values[index3(i, j, k + 1)] > 0) square(cell(i - 1, j - 1, k), cell(i, j - 1, k), cell(i, j, k), cell(i - 1, j, k));
             }
-        const pieces = new Set(parent.map((_, n) => root(n))).size;
-        const shape = geometry.createBuffer({
-          position: buffer.float32(new Float32Array(position), 3),
-          normal: buffer.float32(new Float32Array(normal), 3),
+        return {
+          position: new Float32Array(position),
+          normal: new Float32Array(normal),
+          triangles: new Uint32Array(triangles),
+          pieces: new Set(parent.map((_, n) => root(n))).size,
+        };
+      }
+      const shapeOf = ({ position, normal, triangles }) =>
+        geometry.createBuffer({
+          position: buffer.float32(position, 3),
+          normal: buffer.float32(normal, 3),
           index: buffer.uint32(triangles),
         });
-        return { shape, pieces };
-      }
 
       // The loop is cooked into frames, each its own mesh; playing is showing one and hiding the
       // one before. Stickiness cooks them again.
@@ -167,38 +172,38 @@
         const level = 0.05 + stickiness * 0.7;
         return { level, reach2: 1 / (1 - Math.cbrt(level)) };
       };
-      // A whole loop takes a while to cook: it is cooked a few frames at a time, between the
-      // pictures. The first loop plays as it is cooked (`cookSome(0)` cooks just its first
-      // frame); a loop cooked again waits aside and replaces the old one whole, each frame giving
-      // its former shape back. Answers whether the frames changed.
+      // A whole loop takes a while to cook: it is cooked one frame at a time, a little apart —
+      // a page busy cooking on every picture would hold them all back —, and waits aside until it
+      // is whole, then joins the scene at once. Meanwhile the lamp shows the loop's first frame,
+      // cooked before the first picture. A loop cooked again replaces the old one whole, each
+      // frame giving its former shape back. Answers whether the frames changed.
       const frames = [], pieceCounts = [];
       let recipe = reachFor(0.55), ready = 0, aside = [];
-      const cookSome = (budget) => {
-        const until = performance.now() + budget;
-        while (ready < FRAMES) {
-          const cooked = wax(ready / FRAMES, recipe.level, recipe.reach2);
-          if (frames[ready]) aside.push(cooked);
-          else {
-            const made = object.mesh(cooked.shape, waxMatter);
-            made.visible = false;
-            world.scene.add(made);
-            frames[ready] = made;
-            pieceCounts[ready] = cooked.pieces;
+      const cookOne = () => {
+        aside.push(wax(ready / FRAMES, recipe.level, recipe.reach2));
+        if (++ready < FRAMES) return false;
+        aside.forEach((cooked, k) => {
+          const shape = shapeOf(cooked);
+          if (frames[k]) {
+            const worn = frames[k].geometry;
+            frames[k].geometry = shape;
+            worn.dispose();
+          } else {
+            frames[k] = object.mesh(shape, waxMatter);
+            frames[k].visible = false;
+            world.scene.add(frames[k]);
           }
-          ready++;
-          if (performance.now() >= until) break;
-        }
-        if (ready < FRAMES || !aside.length) return false;
-        aside.forEach(({ shape, pieces }, k) => {
-          const worn = frames[k].geometry;
-          frames[k].geometry = shape;
-          worn.dispose();
-          pieceCounts[k] = pieces;
+          pieceCounts[k] = cooked.pieces;
         });
         aside = [];
         return true;
       };
-      cookSome(0);
+      const first = wax(0, recipe.level, recipe.reach2);
+      frames.push(object.mesh(shapeOf(first), waxMatter));
+      pieceCounts.push(first.pieces);
+      world.scene.add(frames[0]);
+      aside.push(first);
+      ready = 1;
 
       // The lamp around the wax: a steel foot and cap, the glass between them.
       const steel = material.meshStandard({ color: '#b9bdc6', metalness: 0.75, roughness: 0.28 });
@@ -247,7 +252,6 @@
           // Cooking every frame again takes a moment: done once the slider rests.
           clearTimeout(waiting);
           waiting = setTimeout(() => {
-            for (const { shape } of aside) shape.dispose();
             aside = [];
             recipe = reachFor(values.stickiness);
             ready = 0;
@@ -272,13 +276,15 @@
         world.camera.position.set(...mix({ math }, from, to, k));
         return time < 3.5;
       });
-      let time = 0, warm = 0, shown = 0;
+      let time = 0, warm = 0, shown = 0, sinceCooked = 0;
       world.onFrame(({ delta }) => {
         const step = Math.min(delta, 0.05);
         const baking = ready < FRAMES;
         let swapped = false;
-        if (baking) {
-          swapped = cookSome(8);
+        sinceCooked += delta;
+        if (baking && sinceCooked >= 0.04) {
+          sinceCooked = 0;
+          swapped = cookOne();
           cooking(`${ready} / ${FRAMES}`);
         }
         time += step * ui.heat;
@@ -287,7 +293,7 @@
           bulb.intensity = 26 * warm;
           glow.intensity = 14 * warm;
         }
-        // A frame not cooked yet shows the last one that is: the first loop waits on the cook.
+        // Until the first loop is cooked, the lamp shows its first frame.
         const frame = Math.min(Math.floor((time / LOOP) * FRAMES) % FRAMES, frames.length - 1);
         if (frame !== shown || !frames[shown].visible || swapped) {
           frames[shown].visible = false;

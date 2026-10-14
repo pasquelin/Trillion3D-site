@@ -79,11 +79,10 @@
       plinth.position.y = -0.2;
       world.scene.add(plinth);
 
-      // One geometry, drawn nine times: the big gem in the middle and a ring of small ones. They
-      // are cut stones, not plastic: a physical material that lets the light through
-      // (`transmission`), bent as a sapphire bends it (`ior`), tinted by the stone's colour. Each
-      // facet both reflects the lamps and shows what lies behind, bent: the facets are what sparkle.
-      const stone = (color) => material.meshPhysical({ color, roughness: 0.02, transmission: 1, ior: 1.77, thickness: 0.8 });
+      // One geometry, drawn nine times: the big gem in the middle and a ring of small ones, each a
+      // polished stone in its own colour. Each flat facet catches the lamps at its own angle: the
+      // facets are what sparkle.
+      const stone = (color) => material.meshStandard({ color, roughness: 0.12, metalness: 0.1 });
       const heart = stone('#3fb6ff');
       const big = object.mesh(gem(6, 0.55, 1.2, true), heart);
       big.position.y = 1.9;
