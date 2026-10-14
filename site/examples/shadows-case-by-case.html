@@ -9,7 +9,7 @@
       body {
         margin: 0;
         height: 100%;
-        background: #171d28;
+        background: #a9c3de;
       }
       canvas {
         display: block;
@@ -21,7 +21,7 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light } from '../runtime/engine.js';
+      import { createWorld, geometry, material, object, light, math } from '../runtime/engine.js';
       import { controls, readout } from '../runtime/kit.js';
 
       // One long street built in code, and every situation a shadow has to hold in it. Pick a
@@ -31,17 +31,21 @@
       const sand = material.meshStandard({ color: '#b59a73', roughness: 0.9 });
       const chalk = material.meshStandard({ color: '#eee5d2', roughness: 0.7 });
       const brick = material.meshStandard({ color: '#9a5b43', roughness: 0.8 });
+      // One box per size: the two beams and the three pergola bars share theirs.
+      const boxes = new Map();
       function box(size, at, matter) {
-        const mesh = object.mesh(geometry.box(...size), matter);
+        if (!boxes.has(String(size))) boxes.set(String(size), geometry.box(...size));
+        const mesh = object.mesh(boxes.get(String(size)), matter);
         mesh.position.set(...at);
         world.scene.add(mesh);
         return mesh;
       }
       box([40, 0.2, 100], [0, -0.1, -35], sand);
-      const profile = [[0, 0], [0.42, 0], [0.42, 0.25], [0.3, 0.25], [0.28, 2.7], [0.4, 2.7], [0.42, 2.95], [0, 2.95]];
+      // One column turned on a lathe, worn by all forty: they are drawn together.
+      const shaft = geometry.lathe([[0, 0], [0.42, 0], [0.42, 0.25], [0.3, 0.25], [0.28, 2.7], [0.4, 2.7], [0.42, 2.95], [0, 2.95]], 32);
       for (const side of [-1, 1]) {
         for (let index = 0; index < 20; index++) {
-          const column = object.mesh(geometry.lathe(profile, 32), chalk);
+          const column = object.mesh(shaft, chalk);
           column.position.set(side * 2.4, 0, 4 - index * 4);
           world.scene.add(column);
         }
@@ -62,7 +66,8 @@
       const spot = light.spot({ position: [0, 6.5, -58], intensity: 300, distance: 14, angle: 0.6, penumbra: 0.3, castShadow: true, color: '#ffd9a0' });
       spot.target.position.set(0, 0, -58);
       const sun = light.directional({ intensity: 3.2, color: '#ffe2c0', castShadow: true });
-      world.scene.add(spot, sun, light.ambient({ intensity: 0.3, color: '#8fb4ff' }));
+      const sky = light.hemisphere({ intensity: 0.45, color: '#9fc0ff', groundColor: '#6b5a48' });
+      world.scene.add(spot, sun, sky);
       world.camera.far = 200;
 
       // Every case: where the sun stands, whether the lamp burns, and the camera — a fixed pose
@@ -98,6 +103,9 @@
         since = null;
         sun.position.set(...chosen.sun);
         sun.intensity = chosen.lamp ? 0.15 : 3.2;
+        // A day sky, and a night one when the lamp burns, its fill dimmed with it.
+        sky.intensity = chosen.lamp ? 0.2 : 0.45;
+        world.scene.background = math.color(chosen.lamp ? '#141a26' : '#a9c3de');
         world.exposure = chosen.lamp ? 1.6 : 1;
         spot.visible = Boolean(chosen.lamp);
         ball.visible = Boolean(chosen.ball);

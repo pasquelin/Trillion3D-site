@@ -21,7 +21,7 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, side } from '../runtime/engine.js';
+      import { buffer, createWorld, effect, geometry, material, object, light, side } from '../runtime/engine.js';
       import { controls, seeded } from '../runtime/kit.js';
 
       // A sequence in [0, 1) from a seed: the same scene on every run.
@@ -41,7 +41,8 @@
         return { ring, tilt: z, rate: 0.2 + index * 0.12 };
       });
       // A glowing sun at the heart, and twelve stars pinned on the outer ring.
-      const sun = object.mesh(geometry.sphere(0.45, 64, 32), material.meshStandard({ color: '#000000', emissive: '#ffb347', emissiveIntensity: 6 }));
+      const fire = material.meshStandard({ color: '#000000', emissive: '#ffb347', emissiveIntensity: 6 });
+      const sun = object.mesh(geometry.sphere(0.45, 64, 32), fire);
       astrolabe.add(sun);
       const star = material.meshStandard({ color: '#000000', emissive: '#9fd4ff', emissiveIntensity: 8 });
       for (let index = 0; index < 12; index++) {
@@ -50,17 +51,17 @@
         point.position.set(Math.cos(angle) * 2.2, Math.sin(angle) * 2.2, 0);
         spinning[0].ring.add(point);
       }
-      // The night sky around it: a dome seen from inside, and a few hundred far stars.
-      const dome = object.mesh(geometry.sphere(40, 64, 32), material.meshStandard({ color: '#1b2350', roughness: 1, side: side.double }));
+      // The night sky around it: a dome seen from inside, its own flat colour that no lamp shades,
+      // and a few hundred far stars, all of them one object of points.
+      const dome = object.mesh(geometry.sphere(40, 64, 32), material.meshBasic({ color: '#0d1233', side: side.double }));
       world.scene.add(dome);
-      const far = material.meshStandard({ color: '#000000', emissive: '#ffffff', emissiveIntensity: 3 }), next = seeded(2);
-      const speck = geometry.sphere(1, 8, 6);
+      const next = seeded(2), sky = [];
       for (let index = 0; index < 300; index++) {
-        const point = object.mesh(speck, far);
-        point.scale.setScalar(0.08 + next() * 0.1);
-        point.position.set(next() - 0.5, next() - 0.5, next() - 0.5).setLength(36);
-        world.scene.add(point);
+        const y = next() * 2 - 1, around = next() * Math.PI * 2, ring = Math.sqrt(1 - y * y);
+        sky.push(ring * Math.cos(around) * 36, y * 36, ring * Math.sin(around) * 36);
       }
+      const stars = geometry.createBuffer({ position: buffer.float32(new Float32Array(sky), 3) });
+      world.scene.add(object.points(stars, material.points({ color: '#ffffff', size: 0.25 })));
       const axis = object.mesh(geometry.cylinder(0.03, 0.03, 5.4, 12), bronze);
       astrolabe.add(axis);
       const glow = light.point({ intensity: 25, distance: 10, color: '#ffb347', radius: 0.45, castShadow: true });
@@ -69,9 +70,12 @@
       world.camera.far = 100;
       world.camera.lookAt(0, 0, 0);
       world.controls.target.set(0, 0, 0);
+      // A soft glow spreads the light of the sun and of the twelve pinned stars into the air.
+      world.effects.add(effect.bloom({ intensity: 0.08 }));
 
       const ui = controls({ turning: true, sun: '#ffb347' }, (values) => {
         glow.color.set(values.sun);
+        fire.emissive.set(values.sun);
         world.invalidate();
       }, world);
       // Each ring turns in its own plane: the last of its three angles, applied first, is the spin.

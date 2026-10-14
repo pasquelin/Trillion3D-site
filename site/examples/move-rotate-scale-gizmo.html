@@ -8,7 +8,7 @@
       body {
         margin: 0;
         height: 100%;
-        background: #171d28;
+        background: #1e2735;
       }
       canvas {
         display: block;
@@ -20,16 +20,38 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, helper, controls as family } from '../runtime/engine.js';
+      import { createWorld, geometry, material, object, light, helper, math, controls as family } from '../runtime/engine.js';
       import { controls, readout } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
-      world.scene.add(light.directional({ intensity: 3, position: [3, 5, 4] }), light.ambient({ intensity: 0.3 }));
-      world.scene.add(helper.grid(8, 8));
-      const crate = object.mesh(geometry.box(1, 1, 1), material.meshStandard({ color: '#3c8ce0' }));
-      crate.position.set(0, 0.5, 0);
-      world.scene.add(crate);
-      world.camera.position.set(2, 1.8, 2.6);
+      const sky = math.color('#1e2735');
+      world.scene.background = sky;
+      world.scene.fog = { color: sky, near: 7, far: 16 };
+      world.scene.add(
+        light.directional({ intensity: 3, color: '#fff1dc', position: [3, 6, 4], castShadow: true }),
+        light.hemisphere({ intensity: 1, color: '#cfe0ff', groundColor: '#4a3e34' }),
+      );
+      // A floor under the grid, a hair below it, so the lines lie on it and the shadows fall on it.
+      const floor = object.mesh(geometry.cylinder(9, 9, 0.1, 96), material.meshStandard({ color: '#3a4558', roughness: 0.95 }));
+      floor.position.y = -0.06;
+      // It takes shadows and casts none.
+      floor.castShadow = false;
+      world.scene.add(floor, helper.grid(8, 8));
+      // The props the handles may be put on: a click on one picks it.
+      const prop = (shape, color, at) => {
+        const mesh = object.mesh(shape, material.meshStandard({ color, roughness: 0.5 }));
+        mesh.position.set(...at);
+        world.scene.add(mesh);
+        return mesh;
+      };
+      const crate = prop(geometry.box(1, 1, 1), '#3c8ce0', [0, 0.5, 0]);
+      const props = [
+        crate,
+        prop(geometry.cylinder(0.35, 0.35, 1.2, 32), '#e0763c', [-1.6, 0.6, -0.6]),
+        prop(geometry.sphere(0.4, 32, 16), '#e0c23c', [1.4, 0.4, -0.9]),
+        prop(geometry.cone(0.45, 1, 32), '#4fb36d', [-0.9, 0.5, 1.4]),
+      ];
+      world.camera.position.set(3, 2.6, 3.8);
       world.camera.lookAt(0, 0.5, 0);
       world.controls.target.set(0, 0.5, 0);
 
@@ -45,9 +67,25 @@
       );
 
       const pose = readout('position'), turns = readout('drags');
+      const show = () => pose(gizmo.object.position.toArray().map((v) => v.toFixed(2)).join(', '));
       let drags = 0;
-      gizmo.addEventListener('change', () => pose(crate.position.toArray().map((v) => v.toFixed(2)).join(', ')));
+      gizmo.addEventListener('change', show);
       gizmo.addEventListener('dragEnd', () => turns(String(++drags)));
+
+      // A click — a press let go where it began, not a drag of a handle or of the view — on a
+      // prop puts the handles on it.
+      let press = null;
+      world.canvas.addEventListener('pointerdown', (event) => (press = { x: event.offsetX, y: event.offsetY }));
+      gizmo.addEventListener('dragStart', () => (press = null));
+      world.canvas.addEventListener('pointerup', (event) => {
+        if (!press || Math.hypot(event.offsetX - press.x, event.offsetY - press.y) > 4) return;
+        press = null;
+        const hit = world.raycast({ x: event.offsetX, y: event.offsetY }, { objects: props });
+        if (!hit || hit.object === gizmo.object) return;
+        gizmo.attach(hit.object);
+        show();
+        world.invalidate();
+      });
     </script>
   </body>
 </html>

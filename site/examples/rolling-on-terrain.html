@@ -36,6 +36,9 @@
       // for the boulders — and the physics streams it in on its own once it is on.
       const world = createWorld('view', { controls: 'orbit', physics: true });
       world.scene.background = math.color('#cfe0ee');
+      // Haze over the far side of the valley. The fog is light, exposed and tone-mapped like a
+      // surface, the background is not: this is the radiance the display curve shows as #cfe0ee.
+      world.scene.fog = { color: math.color([0.509, 0.927, 1.642]), near: 100, far: 360 };
       world.camera.far = 400;
       await world.scene.load('../assets/examples/terrain/cache/native/full/manifest.json');
 
@@ -53,10 +56,14 @@
         stone: material.meshStandard({ color: '#8f8a83', roughness: 0.9, physics: 'stone' }),
         ice: material.meshStandard({ color: '#a9d8f0', roughness: 0.1, physics: 'ice' }),
       };
+      // At most a few hundred balls: past that, each new one takes the place of the oldest, and a
+      // ball that rolled off the valley is taken away once it has fallen below it.
+      const MOST = 240;
       const ball = geometry.sphere(1, 24, 16),
         next = seeded(5),
         balls = [];
       const drop = (x, y, z, matter) => {
+        if (balls.length >= MOST) world.scene.remove(balls.shift());
         const body = object.mesh(ball, matters[matter]);
         body.position.set(x, y, z);
         body.castShadow = true;
@@ -65,6 +72,10 @@
         world.scene.add(body);
         balls.push(body);
       };
+      world.onFrame(() => {
+        for (let k = balls.length - 1; k >= 0; k--)
+          if (balls[k].position.y < -40) world.scene.remove(balls.splice(k, 1)[0]);
+      });
       const rain = () => {
         for (let i = 0; i < 20; i++)
           drop((next() - 0.5) * 100, 30, (next() - 0.5) * 100, settings.matter);

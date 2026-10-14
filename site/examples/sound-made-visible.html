@@ -22,7 +22,7 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, math } from '../runtime/engine.js';
+      import { createWorld, effect, geometry, material, object, light, math } from '../runtime/engine.js';
       import { announce, controls, whiteNoise, words, opening, ease } from '../runtime/kit.js';
       const say = words();
 
@@ -30,7 +30,8 @@
       world.scene.background = math.color('#0d0b16');
 
       // Sixty-four bars, one per band of pitch from the lowest bass (warm) to the highest treble
-      // (cool). Sixteen glazes, made once; the sound only ever changes a bar's height.
+      // (cool). Sixteen glazes, made once; the sound changes a bar's height, and how brightly the
+      // glaze of its four bars burns.
       const BARS = 64, STOPS = ['#ff3d6e', '#ffb03a', '#3de0c2', '#4a7dff', '#b36bff'];
       const glazes = Array.from({ length: 16 }, (_, k) => {
         const at = (k / 15) * (STOPS.length - 1), low = Math.floor(at), colour = math.color(STOPS[low]).lerp(math.color(STOPS[Math.min(STOPS.length - 1, low + 1)]), at - low);
@@ -66,6 +67,8 @@
         light.point({ color: '#ff4f9a', intensity: 60, position: [-9, 5, -6] }),
         light.point({ color: '#3fd0ff', intensity: 60, position: [9, 5, -6] }),
       );
+      // A soft glow round the brightest bars, so the loud bands light the dark around them.
+      world.effects.add(effect.bloom({ intensity: 0.08 }));
 
       // Three ways to stand the bars: a ring round the ball, a wall like a studio meter, a spiral.
       const LAYOUTS = {
@@ -211,6 +214,8 @@
       // bar the loudest bin of its band. Before any sound, a slow swell stands in.
       const spectrum = new Uint8Array(1024), wave = new Uint8Array(2048), sampleRate = () => audio?.sampleRate ?? 48000;
       const band = (k) => Math.floor((40 * 300 ** (k / BARS) * 2048) / sampleRate());
+      // How loud each glaze's four bars are, summed afresh every frame.
+      const burn = new Float32Array(16);
       let time = 0;
       world.onFrame(({ delta }) => {
         const step = Math.min(delta, 0.05), live = analyser && (timer || microphone);
@@ -221,12 +226,14 @@
         }
         if (morph < 1) morph = Math.min(1, morph + step / 1.2);
         let loud = 0;
+        burn.fill(0);
         for (const [k, bar] of bars.entries()) {
           let peak = 0;
           if (live) for (let bin = band(k); bin <= Math.max(band(k), band(k + 1) - 1); bin++) peak = Math.max(peak, spectrum[bin] ?? 0);
           const level = live ? (peak / 255) ** 1.6 : 0.12 + 0.1 * Math.sin(time * 1.4 - k * 0.25);
           bar.level = math.lerp(bar.level, level, Math.min(1, step * 18));
           loud += bar.level;
+          burn[Math.floor(k / 4)] += bar.level / 4;
           const t = ease.inOut(morph), x = math.lerp(bar.from[0], bar.to[0], t), z = math.lerp(bar.from[1], bar.to[1], t);
           bar.mesh.position.set(x, 0, z);
           bar.mesh.rotation.y = -Math.atan2(z, x);
@@ -234,6 +241,12 @@
         }
         pearls.forEach((mesh, k) => (mesh.position.y = Math.max(0.15, 1.3 + (live ? (wave[k * 21] - 128) / 128 : 0.1 * Math.sin(time * 2 + k * 0.4)) * 1.6 * ui.height)));
         heart.scale.setScalar(0.8 + (loud / BARS) * 1.6);
+        // A material write repaints every bar wearing it: the glow moves in tenths, so a glaze
+        // whose bars hold still costs nothing.
+        glazes.forEach((glaze, g) => {
+          const glow = Math.round((0.35 + burn[g] * 5) * 10) / 10;
+          if (glaze.emissiveIntensity !== glow) glaze.emissiveIntensity = glow;
+        });
         world.invalidate();
       });
     </script>
