@@ -62,8 +62,8 @@
         }),
         light.hemisphere({ color: '#aac7e4', groundColor: '#27313b', intensity: 0.8 }),
       );
-      world.camera.position.set(7, 5, 8);
-      world.controls.target.set(0, 1, 0);
+      world.camera.position.set(6, 4.4, 7.2);
+      world.controls.target.set(0.2, 1.6, 0);
       world.camera.lookAt(world.controls.target);
 
       // Readouts join the panel, so the panel comes first; its button calls `clear` below.
@@ -92,11 +92,9 @@
       };
       clear();
 
-      const measure = (x, y) => {
-        const hit = world.raycast({ x, y }, { objects: [exhibits] });
-        if (!hit) return;
+      const pick = (point) => {
         if (picked.length === 2) clear();
-        picked.push(hit.point.clone());
+        picked.push(point);
         drop();
         const positions = picked.flatMap((point) => point.toArray());
         shown = [world.guides.points({ positions, color: mark, size: 10 })];
@@ -105,6 +103,14 @@
         pointB(format(picked[1]));
         distance(`${picked[0].distanceTo(picked[1]).toFixed(2)} m`);
       };
+      const measure = (x, y) => {
+        const hit = world.raycast({ x, y }, { objects: [exhibits] });
+        if (hit) pick(hit.point.clone());
+      };
+      // The page opens on one measurement already taken, the arch's crown to the plinth
+      // before the knot: a click starts the next one.
+      pick(math.vector3(-1.5, 4.6, 0.32));
+      pick(math.vector3(3.2, 0, 2.2));
       // A click that did not drag the camera: releasing an orbit drag or a two-finger pinch
       // measures nothing.
       onClick(world.canvas, (event) => measure(event.offsetX, event.offsetY));

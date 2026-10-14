@@ -75,7 +75,7 @@
         light.directional({ color: '#ffd7a8', intensity: 1.4, position: [4, 5, 3], target: CENTRE, castShadow: true }),
         light.hemisphere({ color: '#b8c8ff', groundColor: '#4a4038', intensity: 0.45 }),
       );
-      world.camera.position.set(0.6, 2.2, 4.6);
+      world.camera.position.set(1.1, 2.0, 3.7);
       world.camera.lookAt(...CENTRE);
       world.controls.target.set(...CENTRE);
       world.controls.minDistance = 2.2;
@@ -115,11 +115,11 @@
       // clay is worked by the stroke as seen in its own half: the stroke, and its reflection
       // across x = 0, each vertex moved once, so the two halves stay exact mirror images.
       const p = position.array;
-      function press(hit, step) {
+      // `push` is how far the centre moves, outwards when positive.
+      function press(hit, push, r = ui.brush, mirror = ui.mirror) {
         const at = [hit.point.x - CENTRE[0], hit.point.y - CENTRE[1], hit.point.z - CENTRE[2]], n = hit.normal;
-        const r = ui.brush, push = (ui.tool === 'raise' ? 1 : -1) * ui.strength * step * 0.6;
         for (let v = 0; v < p.length; v += 3) {
-          const side = ui.mirror && p[v] * at[0] < 0 ? -1 : 1;
+          const side = mirror && p[v] * at[0] < 0 ? -1 : 1;
           const d2 = (p[v] - at[0] * side) ** 2 + (p[v + 1] - at[1]) ** 2 + (p[v + 2] - at[2]) ** 2;
           if (d2 >= r * r) continue;
           const fall = (1 - d2 / (r * r)) ** 2 * push;
@@ -133,6 +133,30 @@
           p[v + 2] *= kept;
         }
         position.needsUpdate = true;
+      }
+
+      // The clay opens already worked, a head roughed out with the mirror on: a crown, a chin, a
+      // brow, sockets, a nose, cheeks, a mouth and ears, each one press, some with a brush wider
+      // than the panel offers. `reset` gives back the plain sphere.
+      const strokes = [
+        // [x, y, z on the sphere, brush, push]
+        [0, 1, 0.1, 0.95, 0.1],
+        [0, -0.7, 0.7, 0.45, 0.14],
+        [0.28, 0.3, 0.92, 0.26, 0.07],
+        [0.3, 0.14, 0.95, 0.22, -0.14],
+        [0, 0.12, 1, 0.16, 0.08],
+        [0, -0.04, 1, 0.22, 0.16],
+        [0.45, -0.15, 0.88, 0.32, 0.06],
+        [0, -0.36, 0.93, 0.08, -0.05],
+        [0.07, -0.35, 0.93, 0.08, -0.05],
+        [0.14, -0.33, 0.93, 0.08, -0.04],
+        [0, -0.45, 0.9, 0.14, 0.04],
+        [0.97, 0.05, -0.15, 0.26, 0.2],
+      ];
+      for (const [x, y, z, r, push] of strokes) {
+        const length = Math.hypot(x, y, z), normal = { x: x / length, y: y / length, z: z / length };
+        const point = { x: CENTRE[0] + normal.x, y: CENTRE[1] + normal.y, z: CENTRE[2] + normal.z };
+        press({ point, normal }, push, r, true);
       }
 
       // Pressing on the clay sculpts and holds the camera still; pressing beside it turns the
@@ -181,7 +205,7 @@
           aimRing();
         }
         if (sculpting && hit) {
-          press(hit, Math.min(delta, 0.05));
+          press(hit, (ui.tool === 'raise' ? 1 : -1) * ui.strength * Math.min(delta, 0.05) * 0.6);
           world.invalidate();
         }
       });
