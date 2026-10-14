@@ -521,7 +521,8 @@
     "meaning": "Was es macht",
     "details": "Details",
     "live": "Läuft hier, live",
-    "liveHint": "Bewege die Regler: Diese Werte kommen von der Engine-Funktion, die gerade in diesem Browser läuft."
+    "liveHint": "Bewege die Regler: Diese Werte kommen von der Engine-Funktion, die gerade in diesem Browser läuft.",
+    "examples": "Beispiele, die es verwenden"
   },
   "kind": {
     "Function": "Funktion",
@@ -1105,7 +1106,7 @@
     "measurement-entry": {
       "title": "Der Einstiegspunkt für Messungen",
       "description": "Wo ein Vergleichswert oder eine interne Sitzung noch benennbar ist — niemals über den veröffentlichten `trillion3d`-Einstiegspunkt.",
-      "html": "<p>Eine Seite importiert <code>trillion3d</code> und sieht nie einen Vergleichswert oder eine interne Sitzung: <code>createWorld</code> zeichnet mit WebGPU oder wird namentlich verweigert, wenn die Maschine keines bietet. Der Bench und die Beweise müssen aber weiterhin einen Vergleichswert benennen können — reines Three.js, <code>THREE.LOD</code>, die interne <code>openMeasuredWorld</code>-Sitzung — und genau dafür gibt es den eigenen Mess-Einstiegspunkt, <code>packages/sdk-browser/src/measurement/measurement.ts</code>.</p>\n<p>Er exportiert alles erneut, was der veröffentlichte Einstiegspunkt tut, plus das, was ein Host nie braucht: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (die interne Sitzung, die eine Welt an sich selbst öffnet), die Seiten-Fabrik <code>webgpuPagesEngine</code> und reine Mess-Hilfsfunktionen wie <code>replicateInstances</code>. Nichts davon erreicht eine veröffentlichte Welt, und nichts davon wird von einer Anwendung importiert.</p>"
+      "html": "<p>Eine Seite importiert <code>trillion3d</code> und sieht nie einen Vergleichswert oder eine interne Sitzung: <code>createWorld</code> zeichnet mit WebGPU oder wird namentlich verweigert, wenn die Maschine keines bietet. Der Bench und die Beweise müssen aber weiterhin einen Vergleichswert benennen können — reines Three.js, <code>THREE.LOD</code>, die interne <code>openMeasuredWorld</code>-Sitzung — und genau dafür gibt es den eigenen Mess-Einstiegspunkt, <code>packages/sdk-browser/src/measurement/measurement.ts</code>.</p>\n<p>Er exportiert alles erneut, was der veröffentlichte Einstiegspunkt tut, plus das, was ein Host nie braucht: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (die interne Sitzung, die eine Welt an sich selbst öffnet), die Seiten-Fabrik <code>webgpuPagesEngine</code> und reine Mess-Hilfsfunktionen wie <code>attachParticles</code>. Nichts davon erreicht eine veröffentlichte Welt, und nichts davon wird von einer Anwendung importiert.</p>"
     },
     "createWorldJob": {
       "title": "Ein Weltladen als abbrechbarer Auftrag",
@@ -1350,9 +1351,6 @@
     },
     "updateNodeMatrixWorld": {
       "description": "Der Knoten und sein ganzer Teilbaum, Eltern zuerst. Ein Knoten wird erreicht, wenn er automatisch aktualisiert, wenn er markiert ist, oder bei `force`. Der Stempel eines besuchten Knotens ist `2 · traversal + reached`, sodass ein Lesevorgang einem Kind sagt, ob es im Teilbaum ist und was sein Elternteil ihm übergibt. Die zweite Form durchläuft auf Wunsch auch die Vorfahren von der Wurzel aus."
-    },
-    "nodeWorldPosition": {
-      "description": "Lesevorgänge der Weltmatrix: die Translationsspalte; Rotation und Skalierung aus ihrer Zerlegung, eine negative Determinante allein von `x` getragen; die dritte Spalte als Richtung normalisiert, umgedreht bei `cameraForward` — eine Kamera und ein Licht schauen zu ihrem `−z`. `nodeWorldMirrorsFaces` ist wahr, wenn die Weltmatrix die Orientierung umkehrt, und die Zeichnung tauscht dann ihre Vorder- und Rückseiten; sie liest, wie sie ist, ohne Update, und eine null oder NaN Determinante kehrt nichts um."
     },
     "lookAtNode": {
       "description": "Dreht `node` zum Weltpunkt `(x, y, z)`. `viewer` ist wahr für eine Kamera oder ein Licht, die zu ihrem `−z` schauen, falsch für ein Objekt, das sein `+z` zeigt. `up` ist das Oben des Knotens, standardmäßig `(0, 1, 0)`. Vorfahren und der Knoten werden zuerst aktualisiert."

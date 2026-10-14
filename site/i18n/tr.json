@@ -521,7 +521,8 @@
     "meaning": "Ne yapar",
     "details": "Ayrıntılar",
     "live": "Şu anda çalışıyor",
-    "liveHint": "Kontrolleri hareket ettirin: bu değerler, bu tarayıcıda çalışan motor fonksiyonundan geliyor."
+    "liveHint": "Kontrolleri hareket ettirin: bu değerler, bu tarayıcıda çalışan motor fonksiyonundan geliyor.",
+    "examples": "Bunu kullanan örnekler"
   },
   "kind": {
     "Function": "Fonksiyon",
@@ -1105,7 +1106,7 @@
     "measurement-entry": {
       "title": "Ölçüm giriş noktası",
       "description": "Bir tanığın ya da dahili bir oturumun hâlâ adlandırılabildiği yer — asla yayımlanmış `trillion3d` girişi üzerinden değil.",
-      "html": "<p>Bir sayfa <code>trillion3d</code>'yi içe aktarır ve hiçbir zaman bir tanık ya da dahili bir oturum görmez: <code>createWorld</code> WebGPU ile çizer, makine hiçbirini sağlamıyorsa adıyla reddedilir. Bench ve kanıtların yine de bir tanık adlandırması gerekir — saf Three.js, <code>THREE.LOD</code>, dahili <code>openMeasuredWorld</code> oturumu — ve bu, ayrı ölçüm giriş noktasının, <code>packages/sdk-browser/src/measurement/measurement.ts</code>'in tek işidir.</p>\n<p>Yayımlanmış girişin dışa aktardığı her şeyi yeniden dışa aktarır, ayrıca bir host'un hiç ihtiyaç duymadığı şeyleri de: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (bir dünyanın kendi üzerinde açtığı dahili oturum), sayfa fabrikası <code>webgpuPagesEngine</code> ve <code>replicateInstances</code> gibi yalnızca ölçüme ait yardımcılar. Bunların hiçbiri yayımlanmış bir dünyaya ulaşmaz ve hiçbiri bir uygulama tarafından içe aktarılmaz.</p>"
+      "html": "<p>Bir sayfa <code>trillion3d</code>'yi içe aktarır ve hiçbir zaman bir tanık ya da dahili bir oturum görmez: <code>createWorld</code> WebGPU ile çizer, makine hiçbirini sağlamıyorsa adıyla reddedilir. Bench ve kanıtların yine de bir tanık adlandırması gerekir — saf Three.js, <code>THREE.LOD</code>, dahili <code>openMeasuredWorld</code> oturumu — ve bu, ayrı ölçüm giriş noktasının, <code>packages/sdk-browser/src/measurement/measurement.ts</code>'in tek işidir.</p>\n<p>Yayımlanmış girişin dışa aktardığı her şeyi yeniden dışa aktarır, ayrıca bir host'un hiç ihtiyaç duymadığı şeyleri de: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (bir dünyanın kendi üzerinde açtığı dahili oturum), sayfa fabrikası <code>webgpuPagesEngine</code> ve <code>attachParticles</code> gibi yalnızca ölçüme ait yardımcılar. Bunların hiçbiri yayımlanmış bir dünyaya ulaşmaz ve hiçbiri bir uygulama tarafından içe aktarılmaz.</p>"
     },
     "createWorldJob": {
       "title": "İptal edilebilir bir görev olarak dünya yükleme",
@@ -1350,9 +1351,6 @@
     },
     "updateNodeMatrixWorld": {
       "description": "Düğüm ve tüm alt ağacı, önce ebeveynler. Bir düğüme, otomatik güncelleniyorsa, işaretliyse, ya da `force` verilmişse ulaşılır. Ziyaret edilen bir düğümün zaman damgası `2 · traversal + reached`'tir, bu yüzden tek bir okuma, bir çocuğa alt ağaçta olup olmadığını ve ebeveyninin ona ne geçirdiğini söyler. İkinci biçim, istendiğinde, atalar arasında kökten de dolaşır."
-    },
-    "nodeWorldPosition": {
-      "description": "Dünya matrisinden okumalar: öteleme sütunu; negatif bir determinantın yalnızca `x` tarafından taşındığı, kendi ayrıştırmasından dönüş ve ölçek; `cameraForward` olduğunda ters çevrilen, bir yön olarak normalize edilmiş üçüncü sütun — bir kamera ve bir ışık kendi `−z`'lerine doğru bakar. `nodeWorldMirrorsFaces`, dünya matrisi yönelimi ters çevirdiğinde doğrudur, ve çizim o zaman ön ve arka yüzlerini değiştirir; olduğu gibi okur, güncellemeden, ve sıfır ya da NaN bir determinant hiçbir şeyi ters çevirmez."
     },
     "lookAtNode": {
       "description": "`node`'u dünya noktası `(x, y, z)`'ye doğru çevirir. `viewer`, kendi `−z`'sine doğru bakan bir kamera ya da ışık için doğrudur, kendi `+z`'sini sunan bir nesne için yanlıştır. `up`, varsayılanı `(0, 1, 0)` olan düğümün yukarısıdır. Atalar ve düğüm önce güncellenir."

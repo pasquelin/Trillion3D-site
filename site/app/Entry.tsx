@@ -3,10 +3,14 @@ import { kindName } from '../content/i18n/dictionary.ts'
 import { issueUrl } from '../content/model.ts'
 import { demoFor } from '../demos/registry.ts'
 import { ApiDemo } from './ApiDemo.tsx'
+import { ExampleCard } from './examples/ExampleCard.tsx'
+import { exampleTitle, thumbnailOf } from './examples/list.ts'
+import { EXAMPLE_USES } from './examples/usage.inline.ts'
 import { DocPage } from './layout/DocPage.tsx'
 import { Collapse } from './ui/Collapse.tsx'
 import { entryRest, entrySummary } from '../content/model.ts'
-import { LEARN_SECTIONS } from './portal/routes.ts'
+import { LEARN_SECTIONS, routeHref } from './portal/routes.ts'
+import { Grid } from './ui/Grid.tsx'
 import { CodeBlock } from './ui/CodeBlock.tsx'
 import { Card } from './ui/Card.tsx'
 import { Alert } from './ui/Alert.tsx'
@@ -23,6 +27,25 @@ function LiveDemo({ demo, locale }: { demo: DemoDef; locale: Locale }) {
     <Card title={t('entry.live')}>
       <Note>{t('entry.liveHint')}</Note>
       <ApiDemo demo={demo} locale={locale} />
+    </Card>
+  )
+}
+
+/** The gallery's examples that use the entry, in learning order, each opening its page. */
+function InExamples({ ids, locale }: { ids: string[]; locale: Locale }) {
+  const t = useWords(locale)
+  return (
+    <Card title={t('entry.examples')}>
+      <Grid dense>
+        {ids.map((id) => (
+          <ExampleCard
+            key={id}
+            title={exampleTitle(id, locale)}
+            href={routeHref({ locale, area: 'examples', id })}
+            thumbnail={thumbnailOf(id)}
+          />
+        ))}
+      </Grid>
     </Card>
   )
 }
@@ -44,11 +67,13 @@ function Details({ rest, html }: { rest: string; html?: string }) {
 /**
  * One guide or API entry. A guide reads as text: its description, its prose, then its code. An
  * API entry keeps one order: its summary, the signature, the parameters, what it returns, the
- * example, the members, then the long description, folded under Details.
+ * example, the members, its live demo, the gallery's examples that use it, then the long
+ * description, folded under Details.
  */
 export function Entry({ entry, locale }: { entry: PortalEntry; locale: Locale }) {
   const t = useWords(locale)
   const demo = demoFor(entry.id)
+  const examples = EXAMPLE_USES[entry.id]
   const summary = entrySummary(entry)
   const rest = entryRest(entry)
   const guide = LEARN_SECTIONS.includes(entry.section)
@@ -78,6 +103,7 @@ export function Entry({ entry, locale }: { entry: PortalEntry; locale: Locale })
       )}
       <Members entry={entry} locale={locale} />
       {demo && <LiveDemo demo={demo} locale={locale} />}
+      {examples && <InExamples ids={examples} locale={locale} />}
       {!guide && (rest || entry.html) && <Collapse title={t('entry.details')}>{details}</Collapse>}
       {(entry.replaces || entry.proof) && (
         <Card title={t('entry.proof')}>

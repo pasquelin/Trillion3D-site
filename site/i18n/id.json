@@ -71,7 +71,8 @@
     "meaning": "Fungsinya",
     "details": "Rincian",
     "live": "Berjalan, di sini",
-    "liveHint": "Gerakkan kendalinya: nilai ini datang dari fungsi mesin yang berjalan di browser ini."
+    "liveHint": "Gerakkan kendalinya: nilai ini datang dari fungsi mesin yang berjalan di browser ini.",
+    "examples": "Contoh yang menggunakannya"
   },
   "kind": {
     "Function": "Fungsi",
@@ -655,7 +656,7 @@
     "measurement-entry": {
       "title": "Titik masuk pengukuran",
       "description": "Tempat sebuah saksi atau sesi internal masih bisa disebut namanya — tidak pernah lewat titik masuk `trillion3d` yang diterbitkan.",
-      "html": "<p>Sebuah halaman meng-import <code>trillion3d</code> dan tidak pernah melihat saksi atau sesi internal: <code>createWorld</code> menggambar dengan WebGPU, atau ditolak dengan menyebut namanya bila mesin tidak menyediakannya. Bench dan bukti masih perlu menyebut nama sebuah saksi — Three.js polos, <code>THREE.LOD</code>, sesi internal <code>openMeasuredWorld</code> — dan itulah satu-satunya tugas titik masuk pengukuran yang terpisah, <code>packages/sdk-browser/src/measurement/measurement.ts</code>.</p>\n<p>Titik masuk ini mengekspor ulang semua yang diekspor titik masuk yang diterbitkan, ditambah apa yang tidak pernah dibutuhkan sebuah host: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (sesi internal yang dibuka sebuah dunia pada dirinya sendiri), pabrik halaman <code>webgpuPagesEngine</code>, dan pembantu khusus pengukuran seperti <code>replicateInstances</code>. Tidak satu pun sampai ke dunia yang diterbitkan, dan tidak satu pun di-import oleh aplikasi.</p>"
+      "html": "<p>Sebuah halaman meng-import <code>trillion3d</code> dan tidak pernah melihat saksi atau sesi internal: <code>createWorld</code> menggambar dengan WebGPU, atau ditolak dengan menyebut namanya bila mesin tidak menyediakannya. Bench dan bukti masih perlu menyebut nama sebuah saksi — Three.js polos, <code>THREE.LOD</code>, sesi internal <code>openMeasuredWorld</code> — dan itulah satu-satunya tugas titik masuk pengukuran yang terpisah, <code>packages/sdk-browser/src/measurement/measurement.ts</code>.</p>\n<p>Titik masuk ini mengekspor ulang semua yang diekspor titik masuk yang diterbitkan, ditambah apa yang tidak pernah dibutuhkan sebuah host: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (sesi internal yang dibuka sebuah dunia pada dirinya sendiri), pabrik halaman <code>webgpuPagesEngine</code>, dan pembantu khusus pengukuran seperti <code>attachParticles</code>. Tidak satu pun sampai ke dunia yang diterbitkan, dan tidak satu pun di-import oleh aplikasi.</p>"
     },
     "createWorldJob": {
       "title": "Pemuatan dunia sebagai pekerjaan yang bisa dibatalkan",
@@ -900,9 +901,6 @@
     },
     "updateNodeMatrixWorld": {
       "description": "Node itu dan seluruh subtree-nya, induk lebih dulu. Sebuah node terjangkau kalau ia diperbarui otomatis, kalau ia ditandai, atau kalau `force`. Stempel sebuah node yang dikunjungi adalah `2 · traversal + reached`, jadi satu pembacaan memberi tahu seorang anak apakah ia ada di subtree itu dan apa yang diteruskan induknya. Bentuk keduanya juga menjelajahi leluhurnya dari root, kalau diminta."
-    },
-    "nodeWorldPosition": {
-      "description": "Pembacaan matriks dunia: kolom translasinya; rotasi dan skalanya dari penguraiannya, sebuah determinan negatif dibawa oleh `x` saja. Kolom ketiganya dinormalisasi sebagai sebuah arah, dibalik saat `cameraForward` — sebuah kamera dan sebuah cahaya melihat ke arah `−z`-nya. `nodeWorldMirrorsFaces` benar saat matriks dunia membalik orientasi, dan gambarnya lalu menukar sisi depan dan belakangnya; ini dibaca apa adanya, tanpa pembaruan, dan sebuah determinan nol atau NaN tidak membalik apa pun."
     },
     "lookAtNode": {
       "description": "Memutar `node` ke arah titik dunia `(x, y, z)`. `viewer` benar untuk sebuah kamera atau cahaya, yang melihat ke arah `−z`-nya, salah untuk sebuah objek, yang menghadapkan `+z`-nya. `up` adalah arah atas node-nya, `(0, 1, 0)` secara bawaan. Leluhur dan node-nya diperbarui lebih dulu."

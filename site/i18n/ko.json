@@ -521,7 +521,8 @@
     "meaning": "하는 일",
     "details": "자세히",
     "live": "지금 여기서 동작 중입니다",
-    "liveHint": "컨트롤을 움직여 보세요. 이 값들은 이 브라우저에서 실제로 실행 중인 엔진 함수에서 옵니다."
+    "liveHint": "컨트롤을 움직여 보세요. 이 값들은 이 브라우저에서 실제로 실행 중인 엔진 함수에서 옵니다.",
+    "examples": "이것을 사용하는 예제"
   },
   "kind": {
     "Function": "함수",
@@ -1105,7 +1106,7 @@
     "measurement-entry": {
       "title": "측정 전용 진입점",
       "description": "대조 구현이나 내부 세션에 이름으로 접근할 수 있는 곳 — 공개된 `trillion3d` 진입점을 통해서는 결코 접근할 수 없습니다.",
-      "html": "<p>페이지가 <code>trillion3d</code>를 임포트할 때는 대조 구현이나 내부 세션이 전혀 보이지 않습니다: <code>createWorld</code>는 WebGPU로 그리며, 기기가 WebGPU를 제공하지 않으면 이름을 밝혀 거부합니다. 그러나 벤치와 증명에서는 여전히 대조 구현을 이름으로 지정해야 합니다 — 순정 Three.js, <code>THREE.LOD</code>, 내부의 <code>openMeasuredWorld</code> 세션 같은 것들이죠. 바로 이 하나의 역할만을 맡는 것이 별도의 측정 진입점인 <code>packages/sdk-browser/src/measurement/measurement.ts</code>입니다.</p>\n<p>이 진입점은 공개 진입점이 내보내는 모든 것을 다시 내보내고, 호스트에는 결코 필요 없는 것들도 더합니다: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code>(월드가 스스로에게 여는 내부 세션), 페이지 팩토리 <code>webgpuPagesEngine</code>, 그리고 <code>replicateInstances</code> 같은 측정 전용 도우미입니다. 이 중 어느 것도 공개된 월드에는 닿지 않으며, 어떤 애플리케이션도 임포트하지 않습니다.</p>"
+      "html": "<p>페이지가 <code>trillion3d</code>를 임포트할 때는 대조 구현이나 내부 세션이 전혀 보이지 않습니다: <code>createWorld</code>는 WebGPU로 그리며, 기기가 WebGPU를 제공하지 않으면 이름을 밝혀 거부합니다. 그러나 벤치와 증명에서는 여전히 대조 구현을 이름으로 지정해야 합니다 — 순정 Three.js, <code>THREE.LOD</code>, 내부의 <code>openMeasuredWorld</code> 세션 같은 것들이죠. 바로 이 하나의 역할만을 맡는 것이 별도의 측정 진입점인 <code>packages/sdk-browser/src/measurement/measurement.ts</code>입니다.</p>\n<p>이 진입점은 공개 진입점이 내보내는 모든 것을 다시 내보내고, 호스트에는 결코 필요 없는 것들도 더합니다: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code>(월드가 스스로에게 여는 내부 세션), 페이지 팩토리 <code>webgpuPagesEngine</code>, 그리고 <code>attachParticles</code> 같은 측정 전용 도우미입니다. 이 중 어느 것도 공개된 월드에는 닿지 않으며, 어떤 애플리케이션도 임포트하지 않습니다.</p>"
     },
     "createWorldJob": {
       "title": "취소 가능한 작업으로서의 월드 로드",
@@ -1350,9 +1351,6 @@
     },
     "updateNodeMatrixWorld": {
       "description": "그 노드와 서브트리 전체를 부모부터 순서대로 처리합니다. 어떤 노드가 처리 대상이 되는 것은, 자동 업데이트 상태이거나, 표시되어 있거나, `force`가 지정된 경우입니다. 방문된 노드의 스탬프는 `2 · traversal + reached`이므로, 한 번의 읽기만으로 자식 노드는 자신이 그 서브트리에 속하는지, 그리고 부모로부터 무엇을 전달받는지 알 수 있습니다. 두 번째 형태는 요청이 있으면 루트로부터 조상들도 함께 순회합니다."
-    },
-    "nodeWorldPosition": {
-      "description": "월드 행렬에 대한 읽기: 평행이동 열; 분해를 통한 회전과 스케일(음의 행렬식은 어느 축이 뒤집혔든 `x` 하나만이 담당); 그리고 방향으로 정규화된 세 번째 열 — `cameraForward`인 경우 뒤집힙니다(카메라와 조명은 각자의 `−z` 방향을 바라봅니다). `nodeWorldMirrorsFaces`는 월드 행렬이 방향을 뒤집을 때 true가 되며, 이때 렌더링은 앞면과 뒷면을 서로 바꿉니다; 이는 업데이트 없이 있는 그대로 읽히며, 행렬식이 0이거나 NaN이면 아무것도 뒤집지 않습니다."
     },
     "lookAtNode": {
       "description": "`node`를 월드 좌표의 점 `(x, y, z)` 쪽으로 향하게 합니다. `viewer`는 각자의 `−z` 방향을 바라보는 카메라나 조명이면 true, 자신의 `+z` 방향을 드러내는 오브젝트면 false입니다. `up`은 그 노드의 위쪽 방향으로, 기본값은 `(0, 1, 0)`입니다. 조상들과 그 노드 자신이 먼저 업데이트됩니다."

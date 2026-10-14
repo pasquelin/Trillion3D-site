@@ -521,7 +521,8 @@
     "meaning": "O que faz",
     "details": "Detalhes",
     "live": "Está rodando, aqui",
-    "liveHint": "Mova os controles: esses valores vêm da função do motor rodando neste navegador."
+    "liveHint": "Mova os controles: esses valores vêm da função do motor rodando neste navegador.",
+    "examples": "Exemplos que o usam"
   },
   "kind": {
     "Function": "Função",
@@ -1105,7 +1106,7 @@
     "measurement-entry": {
       "title": "O ponto de entrada de medição",
       "description": "Onde uma testemunha ou uma sessão interna ainda podem ser nomeadas — nunca através do ponto de entrada publicado `trillion3d`.",
-      "html": "<p>Uma página importa <code>trillion3d</code> e nunca vê uma testemunha ou uma sessão interna: <code>createWorld</code> desenha com WebGPU, ou é recusado por nome se a máquina não conceder nenhum. O benchmark e as provas ainda precisam nomear uma testemunha — Three.js puro, <code>THREE.LOD</code>, a sessão interna <code>openMeasuredWorld</code> — e essa é a única função do ponto de entrada de medição separado, <code>packages/sdk-browser/src/measurement/measurement.ts</code>.</p>\n<p>Ele reexporta tudo o que o ponto de entrada publicado exporta, mais o que um host nunca precisa: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (a sessão interna que um mundo abre sobre si mesmo), a fábrica de páginas <code>webgpuPagesEngine</code> e auxiliares só de medição como <code>replicateInstances</code>. Nada disso chega a um mundo publicado, e nenhuma aplicação o importa.</p>"
+      "html": "<p>Uma página importa <code>trillion3d</code> e nunca vê uma testemunha ou uma sessão interna: <code>createWorld</code> desenha com WebGPU, ou é recusado por nome se a máquina não conceder nenhum. O benchmark e as provas ainda precisam nomear uma testemunha — Three.js puro, <code>THREE.LOD</code>, a sessão interna <code>openMeasuredWorld</code> — e essa é a única função do ponto de entrada de medição separado, <code>packages/sdk-browser/src/measurement/measurement.ts</code>.</p>\n<p>Ele reexporta tudo o que o ponto de entrada publicado exporta, mais o que um host nunca precisa: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (a sessão interna que um mundo abre sobre si mesmo), a fábrica de páginas <code>webgpuPagesEngine</code> e auxiliares só de medição como <code>attachParticles</code>. Nada disso chega a um mundo publicado, e nenhuma aplicação o importa.</p>"
     },
     "createWorldJob": {
       "title": "Um carregamento de mundo como job cancelável",
@@ -1350,9 +1351,6 @@
     },
     "updateNodeMatrixWorld": {
       "description": "O nó e toda a sua subárvore, pais primeiro. Um nó é alcançado se atualiza automaticamente, se está marcado, ou se `force`. A marca temporal de um nó visitado é `2 · traversal + reached`, então uma leitura diz a um filho se ele está na subárvore e o que seu pai lhe passa. A segunda forma também percorre os ancestrais a partir da raiz, quando solicitado."
-    },
-    "nodeWorldPosition": {
-      "description": "Leituras da matriz de mundo: a coluna de translação; a rotação e a escala a partir de sua decomposição, com um determinante negativo carregado só pelo `x`; a terceira coluna normalizada como uma direção, invertida quando `cameraForward` — uma câmera e uma luz olham em direção ao seu `−z`. `nodeWorldMirrorsFaces` é verdadeiro quando a matriz de mundo inverte a orientação, e o desenho então troca suas faces da frente e de trás; ela lê como está, sem atualizar, e um determinante zero ou NaN não inverte nada."
     },
     "lookAtNode": {
       "description": "Vira `node` em direção ao ponto do mundo `(x, y, z)`. `viewer` é verdadeiro para uma câmera ou uma luz, que olham em direção ao seu `−z`, falso para um objeto, que apresenta seu `+z`. `up` é o up do nó, `(0, 1, 0)` por padrão. Os ancestrais e o nó são atualizados primeiro."

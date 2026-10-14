@@ -71,7 +71,8 @@
     "meaning": "Tác dụng",
     "details": "Chi tiết",
     "live": "Chạy trực tiếp, ngay tại đây",
-    "liveHint": "Kéo các nút điều khiển: những giá trị này đến từ hàm của bộ máy đang chạy thật trong trình duyệt này."
+    "liveHint": "Kéo các nút điều khiển: những giá trị này đến từ hàm của bộ máy đang chạy thật trong trình duyệt này.",
+    "examples": "Các ví dụ dùng nó"
   },
   "kind": {
     "Function": "Hàm",
@@ -655,7 +656,7 @@
     "measurement-entry": {
       "title": "Điểm vào dành cho đo lường",
       "description": "Nơi một mẫu đối chứng hay một phiên nội bộ vẫn còn được gọi tên — không bao giờ qua điểm vào `trillion3d` đã công bố.",
-      "html": "<p>Một trang import <code>trillion3d</code> và không bao giờ thấy một mẫu đối chứng hay một phiên nội bộ nào: <code>createWorld</code> vẽ bằng WebGPU, hoặc bị từ chối đích danh nếu máy không cấp WebGPU. Bộ đo hiệu năng và các bằng chứng vẫn cần gọi tên một mẫu đối chứng — Three.js thuần túy, <code>THREE.LOD</code>, phiên nội bộ <code>openMeasuredWorld</code> — và đó là nhiệm vụ duy nhất của điểm vào đo lường riêng biệt, <code>packages/sdk-browser/src/measurement/measurement.ts</code>.</p>\n<p>Nó xuất lại mọi thứ mà điểm vào đã công bố xuất ra, cộng thêm những gì một host không bao giờ cần: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (phiên nội bộ mà một thế giới mở trên chính nó), nhà máy trang <code>webgpuPagesEngine</code>, và các hàm hỗ trợ chỉ dành cho đo lường như <code>replicateInstances</code>. Không thứ nào đến được một thế giới đã công bố, và không ứng dụng nào import chúng.</p>"
+      "html": "<p>Một trang import <code>trillion3d</code> và không bao giờ thấy một mẫu đối chứng hay một phiên nội bộ nào: <code>createWorld</code> vẽ bằng WebGPU, hoặc bị từ chối đích danh nếu máy không cấp WebGPU. Bộ đo hiệu năng và các bằng chứng vẫn cần gọi tên một mẫu đối chứng — Three.js thuần túy, <code>THREE.LOD</code>, phiên nội bộ <code>openMeasuredWorld</code> — và đó là nhiệm vụ duy nhất của điểm vào đo lường riêng biệt, <code>packages/sdk-browser/src/measurement/measurement.ts</code>.</p>\n<p>Nó xuất lại mọi thứ mà điểm vào đã công bố xuất ra, cộng thêm những gì một host không bao giờ cần: <code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code> (phiên nội bộ mà một thế giới mở trên chính nó), nhà máy trang <code>webgpuPagesEngine</code>, và các hàm hỗ trợ chỉ dành cho đo lường như <code>attachParticles</code>. Không thứ nào đến được một thế giới đã công bố, và không ứng dụng nào import chúng.</p>"
     },
     "createWorldJob": {
       "title": "Tải một thế giới như một công việc có thể hủy",
@@ -900,9 +901,6 @@
     },
     "updateNodeMatrixWorld": {
       "description": "Node đó và toàn bộ cây con của nó, cha trước con sau. Một node được tiếp cận nếu nó tự cập nhật, nếu nó được đánh dấu, hoặc nếu có `force`. Con dấu của một node được ghé thăm là `2 · traversal + reached`, nên chỉ một lần đọc là đủ cho một node con biết nó có nằm trong cây con đó không và cha nó truyền lại gì. Dạng thứ hai còn duyệt qua các tổ tiên từ gốc, khi được yêu cầu."
-    },
-    "nodeWorldPosition": {
-      "description": "Các phép đọc ma trận thế giới: cột tịnh tiến; góc xoay và tỉ lệ từ việc phân rã nó, một định thức âm được mang bởi `x` mà thôi. Cột thứ ba được chuẩn hóa như một hướng, bị đảo ngược khi có `cameraForward` — một camera và một nguồn sáng nhìn về phía `−z` của chúng. `nodeWorldMirrorsFaces` là đúng khi ma trận thế giới đảo ngược hướng, và khi đó phép vẽ hoán đổi mặt trước và mặt sau của nó; giá trị này được đọc nguyên trạng, không cập nhật, và một định thức bằng không hoặc NaN sẽ không đảo ngược gì cả."
     },
     "lookAtNode": {
       "description": "Xoay `node` hướng về điểm thế giới `(x, y, z)`. `viewer` là đúng cho một camera hoặc một nguồn sáng, những thứ nhìn về phía `−z` của chúng, sai cho một vật thể, thứ hướng `+z` của nó ra ngoài. `up` là hướng lên của node, `(0, 1, 0)` theo mặc định. Các tổ tiên và node đó được cập nhật trước."

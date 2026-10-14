@@ -17,7 +17,8 @@ console.log(result.metrics.wallMs);`,
     id: 'prepareMany',
     example: `import { createBatchProgress, prepareMany } from 'trillion3d';
 
-const summary = await prepareMany(jobs, { workers: 2, onEvent: createBatchProgress() });`,
+const progress = createBatchProgress(); // one line per job on the terminal
+const summary = await prepareMany(jobs, { workers: 2, onEvent: (event) => progress.event(event) });`,
   },
   {
     id: 'createJob',

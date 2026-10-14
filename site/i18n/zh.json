@@ -521,7 +521,8 @@
     "meaning": "作用",
     "details": "详情",
     "live": "它正在这里运行",
-    "liveHint": "试着拖动控件:这些数值来自在这个浏览器里真正运行的引擎函数。"
+    "liveHint": "试着拖动控件:这些数值来自在这个浏览器里真正运行的引擎函数。",
+    "examples": "使用它的示例"
   },
   "kind": {
     "Function": "函数",
@@ -1105,7 +1106,7 @@
     "measurement-entry": {
       "title": "测量专用入口",
       "description": "对照实现或内部会话,仍能通过名字访问到的地方——公开发布的 `trillion3d` 入口永远不会暴露它们。",
-      "html": "<p>一个页面导入 <code>trillion3d</code> 时,永远看不到对照实现或内部会话:<code>createWorld</code> 用 WebGPU 绘制,如果机器不提供 WebGPU,就会指名拒绝。而基准测试和证明仍然需要能指名一个对照实现——原生 Three.js、<code>THREE.LOD</code>、内部的 <code>openMeasuredWorld</code> 会话——这正是独立的测量入口 <code>packages/sdk-browser/src/measurement/measurement.ts</code> 唯一的职责。</p>\n<p>它会重新导出公开入口导出的全部内容,外加宿主永远用不到的东西:<code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code>(世界对自身打开的内部会话)、页面工厂 <code>webgpuPagesEngine</code>,以及 <code>replicateInstances</code> 这类仅用于测量的辅助函数。这些都不会进入已发布的世界,也没有任何应用会导入它们。</p>"
+      "html": "<p>一个页面导入 <code>trillion3d</code> 时,永远看不到对照实现或内部会话:<code>createWorld</code> 用 WebGPU 绘制,如果机器不提供 WebGPU,就会指名拒绝。而基准测试和证明仍然需要能指名一个对照实现——原生 Three.js、<code>THREE.LOD</code>、内部的 <code>openMeasuredWorld</code> 会话——这正是独立的测量入口 <code>packages/sdk-browser/src/measurement/measurement.ts</code> 唯一的职责。</p>\n<p>它会重新导出公开入口导出的全部内容,外加宿主永远用不到的东西:<code>openMeasuredWorld</code>/<code>createMeasuredWorldJob</code>(世界对自身打开的内部会话)、页面工厂 <code>webgpuPagesEngine</code>,以及 <code>attachParticles</code> 这类仅用于测量的辅助函数。这些都不会进入已发布的世界,也没有任何应用会导入它们。</p>"
     },
     "createWorldJob": {
       "title": "把世界的加载当作一个可取消的任务",
@@ -1350,9 +1351,6 @@
     },
     "updateNodeMatrixWorld": {
       "description": "按照从父到子的顺序,处理该节点及其整个子树。一个节点会被访问到,前提是它处于自动更新状态、或者被标记过、或者传入了 `force`。已访问节点的标记值是 `2 · traversal + reached`,因此只需一次读取,子节点就能知道自己是否在这个子树范围内,以及父节点传给它的是什么。第二种形式在被要求时,也会从根节点开始遍历所有祖先节点。"
-    },
-    "nodeWorldPosition": {
-      "description": "对世界矩阵的读取:平移列;通过分解得到的旋转和缩放(负的行列式只由 `x` 轴单独承担,无论实际翻转的是哪个轴);以及被归一化为方向的第三列——在 `cameraForward` 的情况下会被反转(摄像机和灯光都朝着各自的 `−z` 方向看)。`nodeWorldMirrorsFaces` 在世界矩阵翻转朝向时为 true,这时绘制会交换正反两面;它是原样读取的,不涉及更新,行列式为零或 NaN 时不会翻转任何东西。"
     },
     "lookAtNode": {
       "description": "让 `node` 朝向世界坐标中的点 `(x, y, z)`。`viewer` 对于朝各自 `−z` 方向看的摄像机或灯光为 true,对于呈现自己 `+z` 方向的物体为 false。`up` 是该节点的上方向,默认是 `(0, 1, 0)`。祖先节点和该节点自身会先被更新。"
