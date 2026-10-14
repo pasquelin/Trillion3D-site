@@ -52,10 +52,10 @@
       block([40, 1, 40], [0, -0.5, 0], '#5d5048', 'static', 'stone');
 
       // The door turns about a pin along its left edge; its motor swings it to an angle.
-      block([0.2, 2.3, 0.2], [-6.1, 1.15, 2], '#6b4f36', 'static');
-      const door = block([1.2, 2.1, 0.08], [-5.35, 1.15, 2], '#c08a4d', 'dynamic');
+      block([0.2, 2.3, 0.2], [-3.4, 1.15, 2], '#6b4f36', 'static');
+      const door = block([1.2, 2.1, 0.08], [-2.65, 1.15, 2], '#c08a4d', 'dynamic');
       const hinge = joint.hinge(door, null, {
-        anchor: [-5.95, 1.15, 2],
+        anchor: [-3.25, 1.15, 2],
         axis: [0, 1, 0],
         limits: { min: -1.7, max: 1.7 },
         motor: { mode: 'position', target: 0, maxForce: 600 },
@@ -73,26 +73,26 @@
         motor: { mode: 'position', target: 0, maxForce: 800 },
       });
 
-      // The chain: links held end to end by ball joints, the first one to the world.
+      // The chain: links held end to end by ball joints, the first one to the world just under a
+      // gallows. It starts raised to one side, so it swings from the first frame.
+      block([0.16, 5.4, 0.16], [3.2, 2.7, 1.3], '#6b4f36', 'static');
+      block([0.16, 0.14, 0.86], [3.2, 5.12, 1.65], '#6b4f36', 'static');
       const links = [];
       const chain = [];
+      const lean = 0.9;
+      const along = (d) => [3.2 - d * Math.sin(lean), 4.97 - d * Math.cos(lean), 2];
       for (let i = 0; i < 10; i++) {
-        const link = block(
-          [0.12, 0.3, 0.12],
-          [6, 4.8 - i * 0.34, 2],
-          '#8d99a6',
-          'dynamic',
-          'metal',
-        );
-        const top = [6, 4.97 - i * 0.34, 2];
-        chain.push(joint.point(link, links[i - 1] ?? null, { anchor: top }));
+        const link = block([0.12, 0.3, 0.12], along(i * 0.34 + 0.17), '#8d99a6', 'dynamic', 'metal');
+        link.rotation.z = -lean;
+        chain.push(joint.point(link, links[i - 1] ?? null, { anchor: along(i * 0.34) }));
         links.push(link);
       }
 
       // The bridge: planks hinged end to end, hung between two pillars in a gentle sag. Each hinge
       // breaks past `strength` newtons of pull; a stone weighs far more than the bridge.
-      block([0.6, 2.4, 1.6], [-3.6, 1.2, -5], '#a39b8f', 'static', 'stone');
-      block([0.6, 2.4, 1.6], [3.6, 1.2, -5], '#a39b8f', 'static', 'stone');
+      const BRIDGE_Z = -3;
+      block([0.6, 2.4, 1.6], [-3.6, 1.2, BRIDGE_Z], '#a39b8f', 'static', 'stone');
+      block([0.6, 2.4, 1.6], [3.6, 1.2, BRIDGE_Z], '#a39b8f', 'static', 'stone');
       const PLANKS = 11,
         PLANK = 0.62,
         SPAN = 6.6;
@@ -125,12 +125,12 @@
             dy = PLANK * Math.sin(a);
           const plank = block(
             [PLANK - 0.02, 0.08, 1.2],
-            [x + dx / 2, y + dy / 2, -5],
+            [x + dx / 2, y + dy / 2, BRIDGE_Z],
             '#b98b57',
             'dynamic',
           );
           plank.rotation.z = a;
-          const options = { anchor: [x, y, -5], axis: [0, 0, 1], breakForce: strength };
+          const options = { anchor: [x, y, BRIDGE_Z], axis: [0, 0, 1], breakForce: strength };
           bridge.push(joint.hinge(plank, planks[i - 1] ?? null, options));
           planks.push(plank);
           x += dx;
@@ -138,7 +138,7 @@
         }
         bridge.push(
           joint.hinge(planks[PLANKS - 1], null, {
-            anchor: [x, y, -5],
+            anchor: [x, y, BRIDGE_Z],
             axis: [0, 0, 1],
             breakForce: strength,
           }),
@@ -154,8 +154,8 @@
         sun,
         light.hemisphere({ intensity: 0.9, color: '#d9e4ff', groundColor: '#6b5440' }),
       );
-      world.camera.position.set(0, 7, 14);
-      world.controls.target.set(0, 1.5, -1);
+      world.camera.position.set(1.4, 4.4, 8.6);
+      world.controls.target.set(0.3, 2, -0.6);
 
       const settings = controls(
         {
@@ -165,7 +165,7 @@
           swingChain: () => links[links.length - 1].physics.applyImpulse(60, 0, 0),
           dropStone: () => {
             if (weight) return;
-            weight = block([0.8, 0.8, 0.8], [0, 6, -5], '#6f6a64', 'dynamic', 'stone');
+            weight = block([0.8, 0.8, 0.8], [0, 6, BRIDGE_Z], '#6f6a64', 'dynamic', 'stone');
           },
           rebuild: () => build(settings.strength),
         },
