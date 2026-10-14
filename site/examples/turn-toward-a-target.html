@@ -21,7 +21,7 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, math } from '../runtime/engine.js';
+      import { createWorld, effect, geometry, material, object, light, math } from '../runtime/engine.js';
       import { controls, pointerOnPlane, readout, seeded, opening, ease, mix } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
@@ -111,6 +111,8 @@
         light.point({ color: '#8feaff', intensity: 45, distance: 26 }),
       );
       world.scene.add(drone);
+      // A soft glow round the drone's lamp, so the eye finds it among the dishes.
+      world.effects.add(effect.bloom({ intensity: 0.06 }));
 
       // Golden hour: a low sun behind the array casts long shadows toward the viewer; the sky's
       // blue fills the shade.

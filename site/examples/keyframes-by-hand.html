@@ -21,7 +21,7 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light, math, animation } from '../runtime/engine.js';
+      import { createWorld, effect, geometry, material, object, light, math, animation } from '../runtime/engine.js';
       import { controls, readout, words, ease } from '../runtime/kit.js';
       const say = words();
 
@@ -120,6 +120,11 @@
       const hero = lamp(lampPaint);
       hero.position.set(-2.4, 0, 0.3);
       world.scene.add(hero);
+      // The bulb lights the desk: a spot in the head, aimed out of the shade's mouth. Both ride
+      // on the head, so the pool of light follows every look and every hop. It casts no shadow:
+      // it sits inside the bulb.
+      const beam = light.spot({ color: '#fff1c8', intensity: 40, distance: 8, angle: 0.7, penumbra: 0.6, position: [0.38, 0, 0], target: [2, 0, 0] });
+      hero.getObjectByName('head').add(beam, beam.target);
       const mixer = animation.createMixer(hero);
       const waking = mixer.clipAction(wake), plain = mixer.clipAction(linear), soft = mixer.clipAction(smooth);
       waking.loop = 'once';
@@ -168,6 +173,8 @@
       world.controls.minDistance = 3;
       world.controls.maxDistance = 18;
       world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
+      // A soft glow round the bulb, brighter than white.
+      world.effects.add(effect.bloom({ intensity: 0.06 }));
 
       controls({
         timing: ['eased', 'linear'],
