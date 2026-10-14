@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Temporal upscaling</title>
+    <meta name="thumbnail" content="3" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #b9c7d6;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, geometry, material, object, light, math } from '../runtime/engine.js';
+      import { controls, readout, circling } from '../runtime/kit.js';
+
+      // The image is drawn at a fraction of the display per axis — half of it is a quarter of the
+      // pixels — and temporal antialiasing rebuilds it to the display's size: each frame samples
+      // other points inside the pixels, and the frames before it, followed as the camera moves,
+      // fill in the rest. Asked from the start, the rebuilding pass is ready at the first frame.
+      const world = createWorld('view', { controls: 'orbit', renderScale: 0.75, temporalAntialiasing: true });
+      world.scene.background = math.color('#b9c7d6');
+
+      // Detail finer than a pixel on purpose: a checkered terrace of small tiles, and on it a
+      // brass birdcage of thin bars, rings and arches, whose shadow stripes the tiles.
+      const tiles = [material.meshStandard({ color: '#ece6da', roughness: 0.7 }), material.meshStandard({ color: '#2d3440', roughness: 0.7 })];
+      const tile = geometry.box(0.4, 0.1, 0.4);
+      for (let row = 0; row < 24; row++)
+        for (let column = 0; column < 24; column++) {
+          const mesh = object.mesh(tile, tiles[(row + column) % 2]);
+          mesh.position.set((column - 11.5) * 0.4, -0.05, (row - 11.5) * 0.4);
+          world.scene.add(mesh);
+        }
+      const brass = material.meshStandard({ color: '#d9a948', roughness: 0.3, metalness: 1 });
+      const BARS = 48, RADIUS = 1.4, HEIGHT = 2.2, BASE = 0.15, TOP = BASE + HEIGHT;
+      const bar = geometry.cylinder(0.012, 0.012, HEIGHT, 6);
+      for (let k = 0; k < BARS; k++) {
+        const angle = (k / BARS) * Math.PI * 2;
+        const mesh = object.mesh(bar, brass);
+        mesh.position.set(Math.cos(angle) * RADIUS, BASE + HEIGHT / 2, Math.sin(angle) * RADIUS);
+        world.scene.add(mesh);
+      }
+      const thinRing = geometry.torus(RADIUS, 0.018, 8, 192);
+      for (const y of [BASE, 0.6, 1.2, 1.8, TOP]) {
+        const ring = object.mesh(y === BASE ? geometry.torus(RADIUS, 0.06, 8, 192) : thinRing, brass);
+        ring.rotation.x = Math.PI / 2;
+        ring.position.y = y;
+        world.scene.add(ring);
+      }
+      // The dome: arches from the top ring to a finial, one tube along a quarter circle, turned
+      // round the cage at every other bar.
+      const arc = Array.from({ length: 13 }, (_, step) => {
+        const t = (step / 12) * (Math.PI / 2);
+        return [Math.cos(t) * RADIUS, TOP + Math.sin(t) * 1.1, 0];
+      });
+      const arch = geometry.tube(math.curve(arc), 32, 0.012, 6);
+      for (let k = 0; k < BARS; k += 2) {
+        const mesh = object.mesh(arch, brass);
+        mesh.rotation.y = -(k / BARS) * Math.PI * 2;
+        world.scene.add(mesh);
+      }
+      const finial = object.mesh(geometry.sphere(0.09, 32, 16), brass);
+      finial.position.y = 3.5;
+      // Inside, a perch and a small enamelled bird on it.
+      const perch = object.mesh(geometry.cylinder(0.02, 0.02, 2.4, 12), material.meshStandard({ color: '#6b4428', roughness: 0.6 }));
+      perch.rotation.z = Math.PI / 2;
+      perch.position.y = 1.3;
+      const enamel = material.meshStandard({ color: '#1f8fa8', roughness: 0.25 });
+      const body = object.mesh(geometry.sphere(0.16, 48, 24), enamel);
+      body.scale.set(1.4, 1, 1);
+      body.position.set(0.1, 1.48, 0);
+      const head = object.mesh(geometry.sphere(0.1, 48, 24), enamel);
+      head.position.set(0.3, 1.62, 0);
+      world.scene.add(finial, perch, body, head);
+
+      world.scene.add(
+        light.directional({ color: '#fff0dc', intensity: 3, position: [6, 9, 4], castShadow: true }),
+        light.hemisphere({ color: '#dfe9ff', groundColor: '#6a5a48', intensity: 0.7 }),
+      );
+      world.camera.position.set(4.2, 2.4, 4.2);
+      world.camera.lookAt(0, 1.4, 0);
+      world.controls.target.set(0, 1.4, 0);
+      world.controls.minDistance = 2.5;
+      world.controls.maxDistance = 9;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
+
+      // The scale is asked of the world; the pixels are read back from each frame, as drawn. With
+      // smoothing off nothing rebuilds a smaller image, so the engine draws every pixel again.
+      controls({
+        scale: [0.5, 1, 0.75, 0.05],
+        smoothing: true,
+        circle: true,
+      }, (values, key) => {
+        if (key === 'circle') values.circle ? round.restart() : round.stop();
+        if (key === undefined || key === 'scale') world.renderScale = values.scale;
+        if (key === undefined || key === 'smoothing') world.temporalAntialiasing = values.smoothing;
+      }, world);
+      const pixels = readout('pixels');
+      const mega = (count) => (count / 1e6).toFixed(2);
+      let counted = '';
+      world.onFrame(({ metrics }) => {
+        const drawn = (metrics.renderWidth ?? 0) * (metrics.renderHeight ?? 0);
+        const shown = world.canvas.width * world.canvas.height;
+        if (!drawn || !shown || `${drawn}/${shown}` === counted) return;
+        counted = `${drawn}/${shown}`;
+        pixels(`${mega(drawn)} / ${mega(shown)} M · ${Math.round((100 * drawn) / shown)} %`);
+      });
+
+      // The camera circles slowly, so the bars cross the pixels, until the first press or wheel.
+      const round = circling(world, -0.08);
+    </script>
+  </body>
+</html>
