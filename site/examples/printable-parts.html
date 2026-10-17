@@ -21,7 +21,7 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { buffer, createWorld, geometry, light, loader, material, math, object } from '../runtime/engine.js';
+      import { buffer, createWorld, geometry, light, loader, material, math, object, srgbToLinearBatch } from '../runtime/engine.js';
       import { controls, ease, flights, language, readout, words } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
@@ -87,14 +87,16 @@
               values[property.name] = property.list ? Array.from({ length: read(property.countType) }, () => read(property.type)) : read(property.type);
             if (element.name === 'vertex') {
               positions.push(values.x, values.y, values.z);
-              // Colours in the file are sRGB bytes; the vertex colours the engine blends are linear.
-              if ('red' in values) colours.push(...[values.red, values.green, values.blue].map((byte) => math.srgbToLinear(byte / 255)));
+              if ('red' in values) colours.push(values.red / 255, values.green / 255, values.blue / 255);
             } else if (element.name === 'face') {
               const corners = values.vertex_indices ?? values.vertex_index;
               for (let k = 1; k + 1 < corners.length; k++) indices.push(corners[0], corners[k], corners[k + 1]);
             }
           }
-        return [{ positions, indices, colours: colours.length ? colours : null, colour: null }];
+        // Colours in the file are sRGB bytes; the vertex colours the engine blends are linear.
+        const linear = new Float64Array(colours.length);
+        srgbToLinearBatch(linear, colours, colours.length);
+        return [{ positions, indices, colours: colours.length ? Array.from(linear) : null, colour: null }];
       }
 
       const hexOf = (rgb) => '#' + rgb.map((value) => Math.round(value * 255).toString(16).padStart(2, '0')).join('');
