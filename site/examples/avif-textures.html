@@ -1,0 +1,154 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>AVIF textures</title>
+    <meta name="thumbnail" content="6" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #120f1a;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, geometry, material, object, light, math, loader, effect } from '../runtime/engine.js';
+      import { controls, readout, flights, words } from '../runtime/kit.js';
+      const say = words();
+
+      // Two AVIF files, read like any other picture: `loader.texture` hands the address to the
+      // browser, which decodes AVIF as it decodes PNG or JPEG. The view out of the window is one
+      // file, saved at four qualities; the olive branch is another, with its transparency.
+      const FOLDER = '../assets/examples/avif-textures/';
+      const QUALITIES = ['90', '60', '30', '10'];
+      // Each file is fetched once for its size in bytes, then read as a texture from a local copy.
+      async function picture(name) {
+        const bytes = await (await fetch(FOLDER + name)).blob();
+        const url = URL.createObjectURL(bytes);
+        try {
+          const map = await loader.texture(url);
+          map.anisotropy = 8;
+          return { map, bytes: bytes.size, width: map.width, height: map.height };
+        } finally {
+          URL.revokeObjectURL(url);
+        }
+      }
+      // The five downloads run while the world starts and the room is built.
+      const pictures = Promise.all([
+        Promise.all(QUALITIES.map((quality) => picture(`landscape-q${quality}.avif`))),
+        picture('branch.avif'),
+      ]);
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#120f1a');
+
+      // A room at dusk, its wall pierced by a wide window. Outside, far off, the landscape: a
+      // picture on a great panel that lights itself, so it reads as the evening sky.
+      const plaster = material.meshStandard({ color: '#d9cfc2', roughness: 0.9 });
+      const wood = material.meshStandard({ color: '#6b4630', roughness: 0.55 });
+      const paint = material.meshStandard({ color: '#2e3b4a', roughness: 0.5 });
+      const block = (size, at, matter) => {
+        const part = object.mesh(geometry.box(...size), matter);
+        part.position.set(...at);
+        part.receiveShadow = true;
+        world.scene.add(part);
+        return part;
+      };
+      const OPEN = { left: -1.5, right: 1.5, bottom: 0.95, top: 2.75 }, WALL = 0.3;
+      block([3, 1, WALL], [-OPEN.right - 1.5, 1.6, 0], plaster).scale.set(1, 3.2, 1);
+      block([3, 1, WALL], [OPEN.right + 1.5, 1.6, 0], plaster).scale.set(1, 3.2, 1);
+      block([OPEN.right * 2, OPEN.bottom, WALL], [0, OPEN.bottom / 2, 0], plaster);
+      block([OPEN.right * 2, 3.2 - OPEN.top, WALL], [0, (3.2 + OPEN.top) / 2, 0], plaster);
+      // The casement: a frame, one upright and one bar, and a deep sill.
+      const W = OPEN.right - OPEN.left, H = OPEN.top - OPEN.bottom, MID = (OPEN.top + OPEN.bottom) / 2;
+      for (const [size, at] of [
+        [[W, 0.07, 0.1], [0, OPEN.top - 0.035, -0.05]],
+        [[0.07, H, 0.1], [OPEN.left + 0.035, MID, -0.05]],
+        [[0.07, H, 0.1], [OPEN.right - 0.035, MID, -0.05]],
+        [[0.05, H, 0.08], [0, MID, -0.05]],
+        [[W, 0.05, 0.08], [0, OPEN.bottom + H * 0.8, -0.05]],
+      ]) block(size, at, paint);
+      block([W + 0.3, 0.06, 0.55], [0, OPEN.bottom - 0.03, 0.1], wood);
+      block([9, 0.1, 7], [0, -0.05, 3.2], material.meshStandard({ color: '#4a3226', roughness: 0.7 }));
+      block([0.1, 3.2, 7], [-4.5, 1.6, 3.2], plaster);
+      block([0.1, 3.2, 7], [4.5, 1.6, 3.2], plaster);
+      block([9, 0.1, 7], [0, 3.25, 3.2], plaster);
+
+      const [views, branch] = await pictures;
+
+      const outside = material.meshBasic({ map: views[0].map });
+      const landscape = object.mesh(geometry.plane(20, 10), outside);
+      landscape.position.set(0, 2.45, -9);
+      world.scene.add(landscape);
+
+      // On the sill, a stoneware jug holding olive branches: each branch a square of the picture
+      // standing in the jug, cut out where the picture is transparent (`alphaTest`).
+      const jugProfile = [[0, 0], [0.09, 0], [0.11, 0.06], [0.12, 0.16], [0.1, 0.26], [0.065, 0.32], [0.07, 0.36], [0.06, 0.36], [0.055, 0.32], [0, 0.3]];
+      const jug = object.mesh(geometry.lathe(jugProfile, 64), material.meshStandard({ color: '#3d5a73', roughness: 0.25 }));
+      jug.position.set(-0.75, OPEN.bottom, 0.1);
+      world.scene.add(jug);
+      const leaves = material.meshStandard({ map: branch.map, alphaTest: 0.5, side: 'double', roughness: 0.6 });
+      const sprig = geometry.plane(1.1, 1.1);
+      for (const [turn, lean, scale] of [[0.2, 0.08, 1], [1.4, -0.12, 0.85], [2.5, 0.16, 0.9], [-0.9, -0.05, 0.75]]) {
+        const card = object.mesh(sprig, leaves);
+        card.position.set(-0.75 + Math.sin(turn) * 0.02, OPEN.bottom + 0.3 + 0.5 * scale, 0.1 + Math.cos(turn) * 0.02);
+        card.rotation.set(0, turn, lean);
+        card.scale.set(scale, scale, scale);
+        world.scene.add(card);
+      }
+
+      // The last of the sun, low on the horizon of the picture, through the window: the
+      // casement and the branches throw long shadows on the floor. A violet sky fills the room.
+      world.scene.add(light.directional({ color: '#ffb27a', intensity: 3.2, position: [3, 5, -8], castShadow: true }));
+      world.scene.add(light.hemisphere({ color: '#8f86c4', groundColor: '#3a2620', intensity: 0.7 }));
+      // A lamp lit inside, near the viewer, for the branch's leaves.
+      const lamp = light.point({ color: '#ffcf96', intensity: 30, distance: 8, position: [1.8, 2.4, 2.6] });
+      world.scene.add(lamp);
+      world.effects.add(effect.bloom({ intensity: 0.05 }));
+
+      const ROOM = { position: [1.4, 1.65, 4.4], target: [-0.1, 1.65, 0] };
+      const SPOTS = {
+        room: ROOM,
+        view: { position: [0.1, 1.75, 2.2], target: [0, 1.7, -6] },
+        branch: { position: [-0.1, 1.75, 1.15], target: [-0.75, 1.55, 0.1] },
+      };
+      world.camera.position.set(3.6, 2.4, 7.5);
+      world.controls.target.set(0, 1.6, 0);
+      world.controls.minDistance = 0.4;
+      world.controls.maxDistance = 9;
+      world.controls.update();
+      const flyTo = flights({ math }, world);
+      flyTo(ROOM, 2.5);
+
+      // What each file weighs, and its size in pixels.
+      const kb = (bytes) => `${(bytes / 1024).toFixed(1)} KB`;
+      const line = ({ bytes, width, height }) => `${kb(bytes)} · ${width}×${height}`;
+      const shownView = () => views[QUALITIES.indexOf(ui.quality)];
+      const ui = controls({
+        quality: QUALITIES.slice(),
+        lookAt: Object.keys(SPOTS),
+      }, (values, key) => {
+        if (key === 'quality') {
+          outside.map = shownView().map;
+          view(line(shownView()));
+        }
+        if (key === 'lookAt') flyTo(SPOTS[values.lookAt], 1.8);
+        world.invalidate();
+      }, world);
+      const view = readout('view');
+      view(line(shownView()));
+      readout('branch')(`${line(branch)} · ${say('alpha')}`);
+      // Decoded, every picture costs four bytes a pixel, whatever its file weighed.
+      readout('decoded')(`${(((views[0].width * views[0].height + branch.width * branch.height) * 4) / 1048576).toFixed(1)} MB`);
+    </script>
+  </body>
+</html>

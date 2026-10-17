@@ -1,0 +1,271 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Pixel-art render</title>
+    <meta name="thumbnail" content="4" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #1d1838;
+      }
+      /* The world draws into a canvas a few dozen pixels a side; the page blows it up by a whole
+         factor with no smoothing, so each image pixel becomes a square block on the screen. */
+      #view {
+        position: absolute;
+        top: 0;
+        left: 0;
+        display: block;
+        transform-origin: 0 0;
+        image-rendering: pixelated;
+        touch-action: none;
+        cursor: grab;
+      }
+      #view.smooth {
+        image-rendering: auto;
+      }
+      #view.posterized {
+        filter: url(#posterized);
+      }
+      #view.handheld {
+        filter: url(#handheld);
+      }
+      #view.dusk {
+        filter: url(#dusk);
+      }
+      svg {
+        position: absolute;
+        width: 0;
+        height: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <!-- The palettes, as SVG filters the browser runs over the blown-up image, pixel by pixel:
+         each channel cut into a few steps, or the brightness read onto four fixed colours (the
+         darkest for the night, the brightest for what is lit: sixteen bins, uneven on purpose). -->
+    <svg aria-hidden="true">
+      <filter id="posterized" color-interpolation-filters="sRGB">
+        <feComponentTransfer>
+          <feFuncR type="discrete" tableValues="0 0.33 0.67 1" />
+          <feFuncG type="discrete" tableValues="0 0.33 0.67 1" />
+          <feFuncB type="discrete" tableValues="0 0.33 0.67 1" />
+        </feComponentTransfer>
+      </filter>
+      <filter id="handheld" color-interpolation-filters="sRGB">
+        <feColorMatrix type="matrix" values="0.3 0.59 0.11 0 0  0.3 0.59 0.11 0 0  0.3 0.59 0.11 0 0  0 0 0 1 0" />
+        <feComponentTransfer>
+          <feFuncR type="discrete" tableValues="0.059 0.059 0.188 0.188 0.188 0.545 0.545 0.545 0.608 0.608 0.608 0.608 0.608 0.608 0.608 0.608" />
+          <feFuncG type="discrete" tableValues="0.22 0.22 0.384 0.384 0.384 0.675 0.675 0.675 0.737 0.737 0.737 0.737 0.737 0.737 0.737 0.737" />
+          <feFuncB type="discrete" tableValues="0.059 0.059 0.188 0.188 0.188 0.059 0.059 0.059 0.059 0.059 0.059 0.059 0.059 0.059 0.059 0.059" />
+        </feComponentTransfer>
+      </filter>
+      <filter id="dusk" color-interpolation-filters="sRGB">
+        <feColorMatrix type="matrix" values="0.3 0.59 0.11 0 0  0.3 0.59 0.11 0 0  0.3 0.59 0.11 0 0  0 0 0 1 0" />
+        <feComponentTransfer>
+          <feFuncR type="discrete" tableValues="0.102 0.102 0.369 0.369 0.369 0.91 0.91 0.91 0.996 0.996 0.996 0.996 0.996 0.996 0.996 0.996" />
+          <feFuncG type="discrete" tableValues="0.075 0.075 0.165 0.165 0.165 0.459 0.459 0.459 0.906 0.906 0.906 0.906 0.906 0.906 0.906 0.906" />
+          <feFuncB type="discrete" tableValues="0.2 0.2 0.369 0.369 0.369 0.29 0.29 0.29 0.627 0.627 0.627 0.627 0.627 0.627 0.627 0.627" />
+        </feComponentTransfer>
+      </filter>
+    </svg>
+    <script type="module">
+      import { createWorld, camera, effect, geometry, material, object, light, math, buffer } from '../runtime/engine.js';
+      import { controls, readout, seeded } from '../runtime/kit.js';
+
+      // One image pixel per CSS pixel of the canvas, no temporal antialiasing and the full render
+      // scale: the engine draws a small, hard-edged image, each pixel sampled at its centre, and
+      // nothing between it and the screen but the page's nearest-neighbour blow-up.
+      const canvas = document.getElementById('view');
+      const world = createWorld('view', { pixelRatio: 1, temporalAntialiasing: false, renderScale: 1 });
+      world.scene.background = math.color('#1d1838');
+      world.scene.fog = { color: math.color('#1d1838'), near: 40, far: 70 };
+
+      // An orthographic lens on the classic diagonal: no perspective, so parallel edges stay
+      // parallel and step across the pixel grid in the same regular stairs.
+      const lens = camera.orthographic({ near: 1, far: 120, top: 7.5, bottom: -7.5, fitAspect: true });
+      lens.position.set(26, 20, 26);
+      lens.lookAt(0, -0.6, 0);
+      world.camera = lens;
+
+      // A floating island at dusk, in flat-shaded facets and a short, saturated palette: what a
+      // pixel artist would draw by hand, here lit, shadowed and turned in real time.
+      const flat = (color, extra = {}) => material.meshStandard({ color, roughness: 0.85, flatShading: true, ...extra });
+      const glow = (color, power = 4) => material.meshStandard({ color: '#000000', emissive: color, emissiveIntensity: power });
+      const island = object.group();
+      world.scene.add(island);
+      const add = (shape, paint, x = 0, y = 0, z = 0, parent = island) => {
+        const mesh = object.mesh(shape, paint);
+        mesh.position.set(x, y, z);
+        parent.add(mesh);
+        return mesh;
+      };
+      const random = seeded(7);
+
+      // The ground: a nine-sided slab of grass on a cone of earth and stone hanging under it.
+      add(geometry.cylinder(6, 5.7, 0.7, 9), flat('#6abe30'), 0, -0.35, 0);
+      add(geometry.cylinder(5.7, 5.2, 0.9, 9), flat('#8f563b'), 0, -1.15, 0);
+      add(geometry.cone(5.2, 5.5, 9).rotateX(Math.PI), flat('#5e3a2a'), 0, -4.35, 0);
+      const stone = flat('#847e87');
+      for (let k = 0; k < 9; k++) {
+        const a = (k / 9) * Math.PI * 2 + 0.3, r = 3.6 + random() * 1.2;
+        add(geometry.sphere(0.5 + random() * 0.5, 5, 4), stone, Math.cos(a) * r, -2 - random() * 2, Math.sin(a) * r);
+      }
+
+      // The cottage: cream walls, a red prism roof, a chimney, a door, and windows lit from inside.
+      const cottage = object.group();
+      cottage.position.set(-1.6, 0, -0.8);
+      cottage.rotation.set(0, 0.35, 0);
+      island.add(cottage);
+      add(geometry.box(2.6, 1.7, 2), flat('#eec39a'), 0, 0.85, 0, cottage);
+      add(geometry.cylinder(1.35, 1.35, 3, 3).rotateZ(Math.PI / 2).rotateX(Math.PI / 6), flat('#ac3232'), 0, 2.2, 0, cottage);
+      add(geometry.box(0.4, 1.2, 0.4), flat('#595652'), 0.75, 2.6, -0.4, cottage);
+      add(geometry.box(0.6, 1, 0.08), flat('#663931'), 0.6, 0.5, 1.02, cottage);
+      const lit = glow('#fbf236', 3);
+      add(geometry.box(0.5, 0.45, 0.08), lit, -0.6, 1, 1.02, cottage);
+      add(geometry.box(0.08, 0.45, 0.5), lit, 1.32, 1, 0.2, cottage);
+      add(geometry.box(0.08, 0.45, 0.5), lit, -1.32, 1, -0.3, cottage);
+      const hearth = light.point({ color: '#ffb347', intensity: 6, distance: 5, position: [0, 1, 1.6] });
+      cottage.add(hearth);
+
+      // Pines in stacked cones, a trunk each, two greens.
+      const trunk = geometry.cylinder(0.15, 0.2, 0.8, 5), bark = flat('#663931');
+      const needles = [flat('#37946e'), flat('#4b692f')];
+      for (const [x, z, s] of [[3.3, -2.2, 1.1], [4.2, -0.4, 0.8], [2.4, -3.6, 0.9], [-4.1, 1.6, 1], [-3.4, 3, 0.7], [0.4, -4.4, 0.75], [-4.2, -1.8, 0.85]]) {
+        const tree = object.group();
+        tree.position.set(x, 0, z);
+        tree.scale.set(s, s, s);
+        add(trunk, bark, 0, 0.4, 0, tree);
+        for (let layer = 0; layer < 3; layer++) add(geometry.cone(1 - layer * 0.25, 1.1, 7), needles[(layer + (x > 0 ? 1 : 0)) % 2], 0, 1.2 + layer * 0.6, 0, tree);
+        island.add(tree);
+      }
+
+      // A pond with a still, shiny face, a jetty of planks and a few reeds.
+      add(geometry.cylinder(1.6, 1.6, 0.06, 10), flat('#5b6ee1', { roughness: 0.15, metalness: 0.2 }), 2, 0.02, 2);
+      add(geometry.box(1.6, 0.1, 0.5), flat('#8a6f30'), 0.9, 0.12, 2.6).rotation.set(0, -0.5, 0);
+      const reed = geometry.cylinder(0.03, 0.03, 0.6, 3), reedPaint = flat('#99e550');
+      for (let k = 0; k < 7; k++) add(reed, reedPaint, 3.3 + random() * 0.4, 0.3, 1.2 + random() * 1.4);
+
+      // A lantern on a post, the path's last light: a warm bulb and a point light that flickers.
+      add(geometry.box(0.14, 1.6, 0.14), flat('#45283c'), 0.6, 0.8, 0.6);
+      add(geometry.box(0.32, 0.32, 0.32), glow('#ffd27a', 6), 0.6, 1.75, 0.6);
+      const lantern = light.point({ color: '#ffc066', intensity: 6, distance: 5, position: [0.6, 1.75, 0.6] });
+      island.add(lantern);
+      const path = flat('#d9a066');
+      for (let k = 0; k < 5; k++) add(geometry.box(0.5, 0.06, 0.5), path, -0.6 + k * 0.6, 0.03, 0.9 + k * 0.25).rotation.set(0, k * 0.4, 0);
+
+      // Rocks drifting round the island on their own slow orbits, and clouds below it.
+      const drifting = Array.from({ length: 5 }, (_, k) => {
+        const rock = add(geometry.sphere(0.35 + random() * 0.35, 5, 4), flat(k % 2 ? '#847e87' : '#8f563b'), 0, 0, 0, world.scene);
+        return { rock, radius: 7 + random() * 2, height: -1.5 - random() * 3, phase: random() * 6.3, speed: 0.15 + random() * 0.15 };
+      });
+      const cloud = flat('#cbdbfc', { roughness: 1 });
+      const clouds = [[-8, -7, 2], [7, -8, -6], [2, -9, 8]].map(([x, y, z]) => {
+        const puff = object.group();
+        puff.position.set(x, y, z);
+        for (let k = 0; k < 4; k++) add(geometry.sphere(0.6 + random() * 0.4, 6, 4), cloud, k * 0.8 - 1.2, random() * 0.3, random() * 0.6, puff);
+        world.scene.add(puff);
+        return puff;
+      });
+
+      // Fireflies: one geometry of points, glowing, single pixels at every size.
+      const flies = new Float32Array(40 * 3);
+      for (let k = 0; k < 40; k++) flies.set([(random() - 0.5) * 9, 0.5 + random() * 2.5, (random() - 0.5) * 9], k * 3);
+      const swarm = object.points(geometry.createBuffer({ position: buffer.float32(flies, 3) }), material.meshStandard({ color: '#000000', emissive: '#d9ff8a', emissiveIntensity: 4, size: 0.12 }));
+      island.add(swarm);
+
+      // Low sun from the side, a violet sky, and a glow round what shines.
+      world.scene.add(
+        light.directional({ color: '#ffb070', intensity: 2.2, position: [-14, 9, 10], castShadow: true }),
+        light.hemisphere({ color: '#7b6cd6', groundColor: '#3a2a20', intensity: 0.9 }),
+      );
+      world.effects.add(effect.bloom({ intensity: 0.12 }));
+
+      // The canvas's size: the window divided by the pixel size, rounded up so the blown-up
+      // picture still covers it; the engine reads the new CSS box and draws at that resolution.
+      let size = 0;
+      function fit(pixel) {
+        size = pixel;
+        const width = Math.ceil(innerWidth / pixel), height = Math.ceil(innerHeight / pixel);
+        canvas.style.width = `${width}px`;
+        canvas.style.height = `${height}px`;
+        canvas.style.transform = `scale(${pixel})`;
+        shown(`${width} × ${height}`);
+        world.invalidate();
+      }
+      addEventListener('resize', () => fit(size));
+
+      // The opening: the picture starts in huge blocks and sharpens, step by step, to the chosen
+      // pixel size while the island turns into view.
+      let opening = 0, chosen = 5;
+      const STEPS = [24, 16, 11, 8];
+      let spin = 0.25;
+      const ui = controls({
+        pixelSize: [1, 16, 5, 1],
+        palette: ['full', 'posterized', 'handheld', 'dusk'],
+        upscale: ['nearest', 'smooth'],
+        turn: [0, 1, 0.25, 0.01],
+      }, (values) => {
+        chosen = values.pixelSize;
+        spin = values.turn;
+        canvas.className = [values.upscale === 'smooth' ? 'smooth' : '', values.palette === 'full' ? '' : values.palette].join(' ');
+        if (opening >= STEPS.length * 0.35) fit(chosen);
+        world.invalidate();
+      }, world);
+      const shown = readout('resolution');
+      fit(STEPS[0]);
+
+      // A drag turns the island, a wheel zooms the lens; the picture keeps its pixel grid.
+      let held = null, angle = -0.9;
+      canvas.addEventListener('pointerdown', (event) => {
+        held = { x: event.clientX, angle };
+        canvas.setPointerCapture(event.pointerId);
+        canvas.style.cursor = 'grabbing';
+      });
+      canvas.addEventListener('pointermove', (event) => {
+        if (!held) return;
+        angle = held.angle + (event.clientX - held.x) * 0.008;
+        world.invalidate();
+      });
+      canvas.addEventListener('pointerup', () => {
+        held = null;
+        canvas.style.cursor = 'grab';
+      });
+      canvas.addEventListener('wheel', (event) => {
+        event.preventDefault();
+        lens.zoom = math.clamp(lens.zoom * Math.exp(-event.deltaY * 0.0015), 0.6, 3);
+        world.invalidate();
+      }, { passive: false });
+
+      let time = 0;
+      world.beforeFrame(({ delta }) => {
+        const step = Math.min(delta, 0.05);
+        time += step;
+        if (opening < STEPS.length * 0.35) {
+          opening += step;
+          const at = Math.floor(opening / 0.35);
+          const pixel = at < STEPS.length ? Math.max(chosen, STEPS[at]) : chosen;
+          if (pixel !== size) fit(pixel);
+        }
+        if (!held) angle += step * spin;
+        island.rotation.set(0, angle, 0);
+        island.position.y = Math.sin(time * 0.8) * 0.15;
+        for (const { rock, radius, height, phase, speed } of drifting) {
+          const a = phase + time * speed + angle;
+          rock.position.set(Math.cos(a) * radius, height + Math.sin(time + phase) * 0.3, Math.sin(a) * radius);
+          rock.rotation.set(time * speed, time * speed * 2, 0);
+        }
+        clouds.forEach((puff, k) => (puff.position.x += Math.sin(time * 0.2 + k) * step * 0.3));
+        lantern.intensity = 6 + Math.sin(time * 13) * 1.2 + Math.sin(time * 7.3) * 1.5;
+        hearth.intensity = 5 + Math.sin(time * 9.1) * 1;
+        swarm.position.y = Math.sin(time * 1.7) * 0.25;
+        swarm.rotation.set(0, -time * 0.3, 0);
+        world.invalidate();
+      });
+    </script>
+  </body>
+</html>

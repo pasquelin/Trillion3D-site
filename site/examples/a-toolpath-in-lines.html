@@ -1,0 +1,293 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>A toolpath in lines</title>
+    <meta name="thumbnail" content="8" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #0b0d14;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { buffer, createWorld, effect, geometry, helper, light, loader, material, math, object } from '../runtime/engine.js';
+      import { circling, controls, language, mix, readout } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#0b0d14');
+
+      // The file is a real printer program: a twisted six-point star with a round bore, sliced for
+      // a 220 mm bed — 26 000 lines of G-code, its walls, infill and skins marked by the slicer's
+      // `;LAYER:` and `;TYPE:` comments, its bore walls written as G2/G3 arcs. The engine has no
+      // G-code reader: the page fetches the text and reads it itself, below.
+      const text = await loader.file('../assets/examples/a-toolpath-in-lines/star-tower.gcode', 'text');
+
+      // The reader follows the machine's state line by line: absolute or relative positions
+      // (G90/G91), absolute or relative extrusion (M82/M83), G92 resetting an axis, millimetres or
+      // inches (G21/G20). A G0/G1 that moves in X/Y while the filament advances lays plastic; one
+      // that moves without it is a travel. A G2/G3 arc, around the centre I/J from where it starts,
+      // is cut into short chords. Each segment keeps its layer, its kind and its speed.
+      function readGcode(source) {
+        const at = { X: 0, Y: 0, Z: 0, E: 0 };
+        let relative = false, relativeE = false, unit = 1, feed = 1500, layer = -1, kind = 'TRAVEL';
+        const moves = [];
+        let seconds = 0, filament = 0;
+        const add = (x, y, z, e) => {
+          const dx = x - at.X, dy = y - at.Y, dz = z - at.Z, length = Math.hypot(dx, dy, dz);
+          seconds += length / (feed / 60);
+          const laid = e - at.E > 1e-6 && Math.hypot(dx, dy) > 1e-6;
+          if (laid) filament += e - at.E;
+          if (length > 1e-6 && layer >= 0)
+            moves.push({ from: [at.X, at.Y, at.Z], to: [x, y, z], layer, kind: laid ? kind : 'TRAVEL', speed: feed / 60, time: seconds });
+          Object.assign(at, { X: x, Y: y, Z: z, E: e });
+        };
+        const lines = source.split('\n');
+        for (const raw of lines) {
+          const comment = raw.indexOf(';');
+          if (comment >= 0) {
+            const note = raw.slice(comment + 1).trim();
+            if (note.startsWith('LAYER:')) layer = Number(note.slice(6));
+            else if (note.startsWith('TYPE:')) kind = note.slice(5);
+          }
+          const code = (comment >= 0 ? raw.slice(0, comment) : raw).trim().toUpperCase();
+          if (!code) continue;
+          const fields = code.split(/\s+/), command = fields[0];
+          const words = Object.fromEntries(fields.map((word) => [word[0], Number(word.slice(1))]));
+          if (words.F) feed = words.F * unit;
+          const next = (axis) => (axis in words ? words[axis] * unit + (relative ? at[axis] : 0) : at[axis]);
+          const nextE = () => ('E' in words ? words.E * unit + (relativeE ? at.E : 0) : at.E);
+          if (command === 'G0' || command === 'G1') add(next('X'), next('Y'), next('Z'), nextE());
+          else if (command === 'G2' || command === 'G3') {
+            const [x, y, z, e] = [next('X'), next('Y'), next('Z'), nextE()];
+            const cx = at.X + (words.I ?? 0) * unit, cy = at.Y + (words.J ?? 0) * unit;
+            const radius = Math.hypot(at.X - cx, at.Y - cy);
+            let start = Math.atan2(at.Y - cy, at.X - cx), sweep = Math.atan2(y - cy, x - cx) - start;
+            // G2 turns clockwise, G3 counter-clockwise; an arc back to its start is a whole turn.
+            if (command === 'G3' && sweep <= 1e-9) sweep += Math.PI * 2;
+            if (command === 'G2' && sweep >= -1e-9) sweep -= Math.PI * 2;
+            const chords = Math.max(4, Math.ceil(Math.abs(sweep) * radius / 0.5));
+            const [z0, e0] = [at.Z, at.E];
+            for (let step = 1; step <= chords; step++) {
+              const t = step / chords, angle = start + sweep * t;
+              add(cx + Math.cos(angle) * radius, cy + Math.sin(angle) * radius, math.lerp(z0, z, t), math.lerp(e0, e, t));
+            }
+          } else if (command === 'G90') relative = false;
+          else if (command === 'G91') relative = true;
+          else if (command === 'M82') relativeE = false;
+          else if (command === 'M83') relativeE = true;
+          else if (command === 'G20') unit = 25.4;
+          else if (command === 'G21') unit = 1;
+          else if (command === 'G92') for (const axis of ['X', 'Y', 'Z', 'E']) if (axis in words) at[axis] = words[axis] * unit;
+        }
+        return { moves, seconds, filament, lines: lines.length };
+      }
+      const program = readGcode(text);
+      const LAYERS = program.moves.reduce((top, move) => Math.max(top, move.layer), 0) + 1;
+
+      // The printer's millimetres become tenths of the scene's units, the part's centre on the
+      // origin, Z standing up as the scene's Y.
+      const SCALE = 0.1, CENTRE = [110, 110];
+      const place = ([x, y, z]) => [(x - CENTRE[0]) * SCALE, z * SCALE, -(y - CENTRE[1]) * SCALE];
+
+      // A line in the engine carries one colour, its material's, and a width in CSS pixels. So the
+      // toolpath is cut, in the order the nozzle runs it, into runs of at most 96 moves of one
+      // layer and one kind — the outer wall of layer 12, its infill... — about a thousand lines,
+      // each wearing its own ink, so the colour can follow the kind, the layer or the speed. A run
+      // shows once the nozzle has laid its last move: the part grows behind the nozzle.
+      const KINDS = ['SKIRT', 'WALL-OUTER', 'WALL-INNER', 'FILL', 'SKIN', 'TRAVEL'];
+      const KIND_COLOURS = { SKIRT: '#5bc8ff', 'WALL-OUTER': '#ff5a4f', 'WALL-INNER': '#57d98c', FILL: '#f5a524', SKIN: '#ffe27a', TRAVEL: '#7d8bc2' };
+      const RUN = 96;
+      const runs = [], open = new Map();
+      const moves = program.moves;
+      moves.forEach((move, index) => {
+        let run = open.get(move.kind);
+        if (!run || run.layer !== move.layer || run.indices.length >= RUN) {
+          run = { layer: move.layer, kind: move.kind, indices: [] };
+          open.set(move.kind, run);
+          runs.push(run);
+        }
+        run.indices.push(index);
+        run.end = index + 1;
+      });
+      // In the order they finish: the nozzle reveals them one after the other.
+      runs.sort((a, b) => a.end - b.end);
+      const printed = object.group();
+      world.scene.add(printed);
+      for (const run of runs) {
+        const points = new Float32Array(run.indices.length * 6);
+        run.indices.forEach((index, at) => points.set([...place(moves[index].from), ...place(moves[index].to)], at * 6));
+        run.speed = run.indices.reduce((sum, index) => sum + moves[index].speed, 0) / run.indices.length;
+        // Travels are thin dashes, half seen: where the nozzle flies over the part, laying nothing.
+        run.ink = run.kind === 'TRAVEL'
+          ? material.lineDashed({ linewidth: 1, dashSize: 0.04, gapSize: 0.05, transparent: true, opacity: 0.6 })
+          : material.line({ linewidth: 1.6 });
+        run.line = object.lineSegments(geometry.createBuffer({ position: buffer.float32(points, 3) }), run.ink);
+      }
+
+      // The printer around the path: a dark textured build plate with its 10 mm grid, and the
+      // hot end — an aluminium heater block under its cooling fins, a brass nozzle, the molten tip glowing.
+      const plate = object.mesh(geometry.box(22, 0.12, 22), material.meshStandard({ color: '#1d1f27', roughness: 0.55, metalness: 0.4 }));
+      plate.position.y = -0.062;
+      plate.receiveShadow = true;
+      const grid = helper.grid(22, 22, '#3b4054', '#2a2e3c');
+      grid.position.y = 0.001;
+      world.scene.add(plate, grid);
+      const head = object.group();
+      const block = object.mesh(geometry.box(0.42, 0.24, 0.34), material.meshStandard({ color: '#c9ced6', roughness: 0.45, metalness: 0.6 }));
+      block.position.set(0.05, 0.43, 0);
+      block.castShadow = true;
+      // The heat break above the block, ringed with cooling fins.
+      const steel = material.meshStandard({ color: '#8d939e', roughness: 0.3, metalness: 0.9 });
+      const fins = Array.from({ length: 6 }, (_, k) => {
+        const fin = object.mesh(geometry.cylinder(0.17, 0.17, 0.025, 32), steel);
+        fin.position.y = 0.62 + k * 0.06;
+        fin.castShadow = true;
+        return fin;
+      });
+      const rod = object.mesh(geometry.cylinder(0.05, 0.05, 0.45, 16), steel);
+      rod.position.y = 0.75;
+      const brass = material.meshStandard({ color: '#d8a64a', roughness: 0.25, metalness: 1 });
+      const nut = object.mesh(geometry.cylinder(0.1, 0.1, 0.1, 6), brass);
+      nut.position.y = 0.26;
+      const cone = object.mesh(geometry.cylinder(0.08, 0.02, 0.21, 24), brass);
+      cone.position.y = 0.105;
+      const tip = object.mesh(geometry.sphere(0.022, 16, 8), material.meshStandard({ color: '#000000', emissive: '#ff8a3d', emissiveIntensity: 6 }));
+      const glow = light.point({ color: '#ff9a52', intensity: 1.6, distance: 2.2 });
+      for (const part of [nut, cone]) part.castShadow = true;
+      head.add(block, rod, ...fins, nut, cone, tip, glow);
+      world.scene.add(head);
+
+      world.scene.add(
+        light.directional({ color: '#fff0dc', intensity: 2.2, position: [5, 9, 4], castShadow: true }),
+        light.hemisphere({ color: '#8fa3d9', groundColor: '#15121c', intensity: 0.5 }),
+      );
+      world.effects.add(effect.bloom({ intensity: 0.06 }));
+
+      // Three ways to read the same lines: what the slicer meant each move for, how high it lies,
+      // how fast the nozzle runs along it.
+      const LAYER_RAMP = ['#3a2bd8', '#1f8fff', '#20d6b5', '#b6f04a', '#ffd23f', '#ff6a3d'];
+      const SPEED_RAMP = ['#2d6bff', '#22d3c5', '#ffe14d', '#ff4d4d'];
+      const ramp = (stops, t) => {
+        const at = math.clamp(t, 0, 1) * (stops.length - 1), k = Math.min(stops.length - 2, Math.floor(at));
+        return math.color(stops[k]).lerp(math.color(stops[k + 1]), at - k);
+      };
+      const speeds = runs.filter((run) => run.kind !== 'TRAVEL').map((run) => run.speed);
+      const [slowest, fastest] = [Math.min(...speeds), Math.max(...speeds)];
+      const inkFor = (mode, kind, layer, speed) => {
+        if (kind === 'TRAVEL') return math.color(KIND_COLOURS.TRAVEL);
+        if (mode === 'layer') return ramp(LAYER_RAMP, layer / (LAYERS - 1));
+        if (mode === 'speed') return ramp(SPEED_RAMP, (speed - slowest) / (fastest - slowest));
+        return math.color(KIND_COLOURS[kind]);
+      };
+
+      // The print runs from its first move: `clock` is the printer's own time in seconds, the
+      // pace how many of them pass in one of ours. The top layer is the slider's: the print stops
+      // there, and moving the slider down shows the part cut at that height, as a slicer does.
+      let clock = 0, reached = 0, dirty = true;
+      const ui = controls({
+        colour: ['kind', 'layer', 'speed'],
+        topLayer: [1, LAYERS, LAYERS, 1],
+        pace: [10, 400, 90, 10],
+        travel: false,
+        reprint: () => {
+          clock = 0;
+          reached = 0;
+          dirty = true;
+        },
+      }, (values, key) => {
+        // A new colour rewrites the inks alone; the travel switch shows or hides the travels
+        // alone: the other lines stay as they are.
+        if (key === undefined || key === 'colour')
+          for (const run of runs) run.ink.color.copy(inkFor(values.colour, run.kind, run.layer, run.speed));
+        if (key === 'travel') for (const run of runs) if (run.kind === 'TRAVEL') showRun(run, run.end <= reached);
+        world.invalidate();
+      }, world);
+      const shownAt = readout('layer');
+      readout('filament')(`${(program.filament / 1000).toFixed(2)} m`);
+      const shownTime = readout('printTime');
+      readout('gcodeLines')(program.lines.toLocaleString(language()));
+      readout('segments')(moves.length.toLocaleString(language()));
+      const shownLines = readout('lines');
+      let added = 0;
+      const clockFace = (seconds) => [Math.floor(seconds / 3600), Math.floor((seconds % 3600) / 60), Math.floor(seconds % 60)].map((part, at) => (at ? String(part).padStart(2, '0') : part)).join(':');
+
+      // Which runs show: every one the nozzle has finished, travels when asked. The world cuts a
+      // line into pages when it joins the scene, a cost that grows with its segments: a run joins
+      // the scene only when it is first shown, a few a frame, never all at the start. A run's
+      // visibility is written only when it changes; the runs are in the nozzle's order, so a
+      // print going forward reveals the next few and stops at the first not reached.
+      let revealed = 0;
+      const showRun = (run, on) => {
+        on &&= run.kind !== 'TRAVEL' || ui.travel;
+        if (on && !run.added) {
+          run.added = true;
+          printed.add(run.line);
+          shownLines(`${(++added).toLocaleString(language())} / ${runs.length.toLocaleString(language())}`);
+        }
+        if (run.line.visible !== on) run.line.visible = on;
+      };
+      function reveal() {
+        if (dirty) {
+          for (const run of runs) showRun(run, run.end <= reached);
+          revealed = runs.findIndex((run) => run.end > reached);
+          if (revealed < 0) revealed = runs.length;
+          dirty = false;
+        }
+        while (revealed < runs.length && runs[revealed].end <= reached) showRun(runs[revealed++], true);
+      }
+      const layerStart = [];
+      moves.forEach((move, index) => (layerStart[move.layer] ??= index));
+
+      world.camera.position.set(2.8, 2.5, 3.5);
+      world.controls.target.set(0, 0.8, 0);
+      world.camera.lookAt(0, 0.8, 0);
+      world.controls.minDistance = 1.2;
+      world.controls.maxDistance = 16;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.04;
+      circling(world, 0.12);
+
+      world.onFrame(({ delta }) => {
+        // The move after the top layer the slider allows: the print rests there.
+        const end = ui.topLayer >= LAYERS ? moves.length : layerStart[ui.topLayer];
+        if (reached > end) {
+          reached = end;
+          clock = moves[end - 1]?.time ?? 0;
+          dirty = true;
+        }
+        const printing = reached < end;
+        if (printing) {
+          clock += Math.min(delta, 0.05) * ui.pace;
+          while (reached < end && moves[reached].time <= clock) reached++;
+        }
+        // Nothing printed and no jump back: the nozzle, its glow and the readouts stay as they are.
+        if (!printing && !dirty) return;
+        reveal();
+        // The nozzle sits where the machine is now: part way along the move under way.
+        const move = moves[Math.min(reached, moves.length - 1)], previous = moves[reached - 1];
+        let nozzle = previous ? previous.to : move.from;
+        if (reached < end && previous) {
+          const span = move.time - previous.time, t = span > 0 ? math.clamp((clock - previous.time) / span, 0, 1) : 1;
+          nozzle = mix({ math }, move.from, move.to, t);
+        }
+        head.position.set(...place(nozzle));
+        glow.intensity = reached < end && move.kind !== 'TRAVEL' ? 1.6 : 0.25;
+        const layer = (previous ?? move).layer;
+        shownAt(`${layer + 1} / ${LAYERS} · ${nozzle[2].toFixed(2)} mm`);
+        shownTime(`${clockFace(Math.min(clock, program.seconds))} / ${clockFace(program.seconds)}`);
+        if (printing) world.invalidate();
+      });
+      addEventListener('pagehide', () => world.dispose(), { once: true });
+    </script>
+  </body>
+</html>

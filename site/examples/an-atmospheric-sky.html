@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>An atmospheric sky</title>
+    <meta name="thumbnail" content="6" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #1b2236;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, geometry, material, object, light, math, texture, side, effect, buffer } from '../runtime/engine.js';
+      import { controls, readout, seeded, opening, ease, valueNoise, projectBands, turnBands, srgbByte } from '../runtime/kit.js';
+
+      // THE AIR. The sky is no picture here: it is computed, ray by ray, from the air itself. Sunlight
+      // crosses a shell of gas 60 km thick around a planet of 6360 km radius, and on its way it is
+      // scattered toward the eye by molecules (Rayleigh: blue far more than red, ∝ 1/λ⁴), by haze
+      // (Mie: every colour alike, mostly forward, the white halo round the sun) and absorbed by
+      // ozone high up (the deep blue of the zenith at dusk). Lengths in metres, coefficients per
+      // metre for red, green and blue.
+      const GROUND = 6360e3, TOP = 6420e3, EYE = GROUND + 2;
+      const RAYLEIGH = [5.802e-6, 13.558e-6, 33.1e-6], RAYLEIGH_HEIGHT = 8000;
+      const MIE = 3.996e-6, MIE_HEIGHT = 1200, MIE_G = 0.8;
+      const OZONE = [0.65e-6, 1.881e-6, 0.085e-6];
+      // The sunlight arriving at the top of the air, the world's unit of light: a white surface
+      // facing a high sun is lit about as brightly as the engine's usual key light.
+      const SUN = 3.2;
+      const air = { rayleigh: 1, mie: 1 };
+      // How far a ray from radius `r`, at cosine `mu` from the vertical, travels before leaving a
+      // sphere of radius `R`, or `-1` when it never reaches it.
+      function exit(r, mu, R) {
+        const b = r * mu, c = r * r - R * R, disc = b * b - c;
+        return disc < 0 ? -1 : -b + Math.sqrt(disc);
+      }
+      function hitsGround(r, mu) {
+        const b = r * mu, disc = b * b - (r * r - GROUND * GROUND);
+        return mu < 0 && disc >= 0 ? -b - Math.sqrt(disc) : -1;
+      }
+
+      // The light reaching each height from each slant of the sun: the transmittance table. 64
+      // heights (packed toward the ground, where the air is dense) by 128 slants, 40 steps each;
+      // rebuilt only when the air itself changes.
+      const T_HEIGHTS = 64, T_SLANTS = 128, transmittance = new Float32Array(T_HEIGHTS * T_SLANTS * 3);
+      function buildTransmittance() {
+        const ext = [0, 1, 2].map((c) => [RAYLEIGH[c] * air.rayleigh, (MIE / 0.9) * air.mie, OZONE[c]]);
+        for (let i = 0; i < T_HEIGHTS; i++) {
+          const h = (i / (T_HEIGHTS - 1)) ** 2 * (TOP - GROUND), r = GROUND + h;
+          for (let j = 0; j < T_SLANTS; j++) {
+            const mu = (j / (T_SLANTS - 1)) * 2 - 1, at = (i * T_SLANTS + j) * 3;
+            if (hitsGround(r, mu) > 0) {
+              transmittance[at] = transmittance[at + 1] = transmittance[at + 2] = 0;
+              continue;
+            }
+            const length = exit(r, mu, TOP), MARCH = 40, ds = length / MARCH, depth = [0, 0, 0];
+            for (let k = 0; k < MARCH; k++) {
+              const t = (k + 0.5) * ds, height = Math.sqrt(r * r + t * t + 2 * r * mu * t) - GROUND;
+              depth[0] += Math.exp(-height / RAYLEIGH_HEIGHT) * ds;
+              depth[1] += Math.exp(-height / MIE_HEIGHT) * ds;
+              depth[2] += Math.max(0, 1 - Math.abs(height - 25e3) / 15e3) * ds;
+            }
+            for (let c = 0; c < 3; c++) transmittance[at + c] = Math.exp(-(ext[c][0] * depth[0] + ext[c][1] * depth[1] + ext[c][2] * depth[2]));
+          }
+        }
+      }
+      function sunThrough(h, mu, out) {
+        const x = Math.sqrt(math.clamp(h / (TOP - GROUND), 0, 1)) * (T_HEIGHTS - 1), y = math.clamp((mu + 1) / 2, 0, 1) * (T_SLANTS - 1);
+        const i = Math.min(T_HEIGHTS - 2, Math.floor(x)), j = Math.min(T_SLANTS - 2, Math.floor(y)), fx = x - i, fy = y - j;
+        for (let c = 0; c < 3; c++) {
+          const a = transmittance[(i * T_SLANTS + j) * 3 + c], b = transmittance[(i * T_SLANTS + j + 1) * 3 + c];
+          const d = transmittance[((i + 1) * T_SLANTS + j) * 3 + c], e = transmittance[((i + 1) * T_SLANTS + j + 1) * 3 + c];
+          out[c] = (a * (1 - fy) + b * fy) * (1 - fx) + (d * (1 - fy) + e * fy) * fx;
+        }
+        return out;
+      }
+
+      // THE SKY. One ray per row of the panorama and per turn away from the sun, the sun put at
+      // turn 0: the sky is symmetric about the sun's vertical plane, so 256 rows by 96 turns (packed
+      // near the sun, where its halo is sharp) hold the whole sphere. Each ray is marched in 24
+      // steps; at each the light the sun still has there, scattered toward the eye by the air
+      // there, dimmed by the air between. A ray that meets the ground ends on it: the far land
+      // seen through all that air, paler and bluer with distance.
+      const ROWS = 256, COLUMNS = 512, TURNS = 96;
+      const turnAt = (j) => Math.PI * (j / (TURNS - 1)) ** 2;
+      const sky = new Float32Array(ROWS * TURNS * 3);
+      const GROUND_ALBEDO = [0.3, 0.24, 0.15];
+      let sunHeight = 0.3, sunAzimuth = 0, skyLight = 0;
+      // Along a row every ray climbs the same way, whatever its turn: the heights of its steps,
+      // the air there and the air already crossed are worked out once per row; only the sun's
+      // slant at each step changes with the turn.
+      const STEPS = 24, stepAir = new Float32Array(STEPS * 2), stepSeen = new Float32Array(STEPS * 3), stepAt = new Float32Array(STEPS * 3);
+      function buildSky() {
+        const s0 = Math.cos(sunHeight), s1 = Math.sin(sunHeight), sunT = [0, 0, 0], groundSun = [0, 0, 0];
+        const scatterR = RAYLEIGH.map((b) => b * air.rayleigh), mieS = MIE * air.mie, mieE = mieS / 0.9, g2 = MIE_G * MIE_G;
+        sunThrough(0, s1, groundSun);
+        let lit = 0;
+        for (let row = 0; row < ROWS; row++) {
+          const fromUp = ((row + 0.5) / ROWS) * Math.PI, mu = Math.cos(fromUp), across = Math.sin(fromUp);
+          const ground = hitsGround(EYE, mu), length = ground > 0 ? ground : exit(EYE, mu, TOP), ds = length / STEPS;
+          let dR = 0, dM = 0, dO = 0;
+          for (let k = 0; k < STEPS; k++) {
+            const t = (k + 0.5) * ds, y = EYE + mu * t, r = Math.sqrt(across * across * t * t + y * y), h = r - GROUND;
+            const nR = Math.exp(-h / RAYLEIGH_HEIGHT), nM = Math.exp(-h / MIE_HEIGHT), nO = Math.max(0, 1 - Math.abs(h - 25e3) / 15e3);
+            const R = dR + nR * ds * 0.5, M = dM + nM * ds * 0.5, O = dO + nO * ds * 0.5;
+            for (let c = 0; c < 3; c++) stepSeen[k * 3 + c] = Math.exp(-(scatterR[c] * R + mieE * M + OZONE[c] * O));
+            dR += nR * ds;
+            dM += nM * ds;
+            dO += nO * ds;
+            stepAir[k * 2] = nR * ds;
+            stepAir[k * 2 + 1] = nM * ds;
+            stepAt[k * 3] = across * t / r;
+            stepAt[k * 3 + 1] = y / r;
+            stepAt[k * 3 + 2] = h;
+          }
+          // The land at the end of a downward ray, lit by the sun through the air and by the sky,
+          // seen through every metre between: paler and bluer the farther it lies.
+          const land = [0, 0, 0];
+          if (ground > 0)
+            for (let c = 0; c < 3; c++)
+              land[c] = Math.exp(-(scatterR[c] * dR + mieE * dM + OZONE[c] * dO)) * (GROUND_ALBEDO[c] / Math.PI) * (SUN * groundSun[c] * Math.max(0, s1) + skyLight * Math.PI);
+          for (let j = 0; j < TURNS; j++) {
+            const turn = turnAt(j), cosTurn = Math.cos(turn), nu = across * cosTurn * s0 + mu * s1;
+            const phaseR = (3 / (16 * Math.PI)) * (1 + nu * nu);
+            const phaseM = ((3 / (8 * Math.PI)) * ((1 - g2) * (1 + nu * nu))) / ((2 + g2) * (1 + g2 - 2 * MIE_G * nu) ** 1.5);
+            let r0 = 0, r1 = 0, r2 = 0;
+            for (let k = 0; k < STEPS; k++) {
+              sunThrough(stepAt[k * 3 + 2], stepAt[k * 3] * cosTurn * s0 + stepAt[k * 3 + 1] * s1, sunT);
+              const a = stepAir[k * 2] * phaseR, b = stepAir[k * 2 + 1] * mieS * phaseM;
+              r0 += stepSeen[k * 3] * sunT[0] * (scatterR[0] * a + b);
+              r1 += stepSeen[k * 3 + 1] * sunT[1] * (scatterR[1] * a + b);
+              r2 += stepSeen[k * 3 + 2] * sunT[2] * (scatterR[2] * a + b);
+            }
+            const at = (row * TURNS + j) * 3;
+            sky[at] = SUN * r0 + land[0];
+            sky[at + 1] = SUN * r1 + land[1];
+            sky[at + 2] = SUN * r2 + land[2];
+            if (row < ROWS / 2 && j) lit += ((sky[at] + sky[at + 1] + sky[at + 2]) / 3) * mu * across * (turn - turnAt(j - 1));
+          }
+        }
+        // The sky's light on level ground, for the far land of the next build: twice the half
+        // turn summed, each row π / ROWS high, over π (the land multiplies it back).
+        skyLight = (2 * lit) / ROWS;
+      }
+      // Reads the sky table in the sun's frame: the row from the angle down from straight up, the
+      // turn away from the sun's plane between two of the packed columns.
+      function skyAt(row, turn, out) {
+        const x = Math.sqrt(Math.min(Math.abs(turn), Math.PI) / Math.PI) * (TURNS - 1);
+        const j = Math.min(TURNS - 2, Math.floor(x)), f = x - j, at = (row * TURNS + j) * 3;
+        for (let c = 0; c < 3; c++) out[c] = sky[at + c] * (1 - f) + sky[at + 3 + c] * f;
+        return out;
+      }
+
+      // The panorama the dome shows: 512 × 256 texels painted from the table. A texture holds 8
+      // bits a channel, so it carries the sky divided by its brightest texel, in sRGB; the dome's
+      // `emissiveIntensity` multiplies that back, and the sky reaches exposure and tone mapping as
+      // radiance, like any lit surface.
+      const paper = document.createElement('canvas');
+      paper.width = COLUMNS;
+      paper.height = ROWS;
+      const brush = paper.getContext('2d'), pixels = brush.createImageData(COLUMNS, ROWS), panorama = new Float32Array(ROWS * COLUMNS * 3);
+      const sample = [0, 0, 0];
+      function paint() {
+        let peak = 1e-6;
+        for (let row = 0; row < ROWS; row++)
+          for (let column = 0; column < COLUMNS; column++) {
+            const turn = (column / COLUMNS) * Math.PI * 2;
+            skyAt(row, turn > Math.PI ? turn - Math.PI * 2 : turn, sample);
+            panorama.set(sample, (row * COLUMNS + column) * 3);
+            peak = Math.max(peak, sample[0], sample[1], sample[2]);
+          }
+        const data = pixels.data;
+        for (let k = 0, n = ROWS * COLUMNS; k < n; k++) {
+          data[k * 4] = srgbByte(panorama[k * 3] / peak);
+          data[k * 4 + 1] = srgbByte(panorama[k * 3 + 1] / peak);
+          data[k * 4 + 2] = srgbByte(panorama[k * 3 + 2] / peak);
+          data[k * 4 + 3] = 255;
+        }
+        brush.putImageData(pixels, 0, 0);
+        return peak;
+      }
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#000000');
+      world.camera.far = 1200;
+      const skyMap = texture.canvas(paper);
+      const dome = object.mesh(geometry.sphere(500, 128, 64), material.meshStandard({ color: '#000000', roughness: 1, emissive: '#ffffff', emissiveMap: skyMap, side: side.back }));
+      dome.castShadow = dome.receiveShadow = false;
+      // The sun's disc, a little over half a degree wide, in the colour the air leaves it; the
+      // bloom spreads some of it into a glare.
+      const disc = object.mesh(geometry.sphere(5, 32, 16), material.meshStandard({ color: '#000000', roughness: 1, emissive: '#ffffff' }));
+      disc.castShadow = disc.receiveShadow = false;
+      world.scene.add(dome, disc);
+      world.effects.add(effect.bloom({ intensity: 0.05, radius: 1.2 }));
+
+      // The stars: points on a far sphere, a pixel or two wide, turning once a day about the
+      // celestial pole, 45° up in the north. Their light is fixed, added to the sky's: they show
+      // only once the sky has grown darker than they are.
+      const random = seeded(11), spin = object.group(), heavens = object.group();
+      for (const [size, count, glow] of [[1, 2200, 4e-5], [1.4, 700, 1.2e-4], [2, 120, 4e-4]]) {
+        const at = new Float32Array(count * 3);
+        for (let k = 0; k < count; k++) {
+          const y = random() * 2 - 1, around = random() * Math.PI * 2, ring = Math.sqrt(1 - y * y);
+          at.set([ring * Math.cos(around) * 450, y * 450, ring * Math.sin(around) * 450], k * 3);
+        }
+        const stars = object.points(geometry.createBuffer({ position: buffer.float32(at, 3) }), material.points({ color: '#000000', size, sizeAttenuation: false, transparent: true, blending: 'additive', depthWrite: false }));
+        stars.castShadow = stars.receiveShadow = false;
+        stars.userData.glow = glow;
+        spin.add(stars);
+      }
+      heavens.add(spin);
+      world.scene.add(heavens);
+
+      // THE LIGHT ON THE SCENE, from the same numbers. The sun: its colour and strength after the
+      // air it crosses to the ground. The sky: projected into the nine spherical-harmonic bands of
+      // a probe, from every direction of the table, the far land below included (`projectBands`,
+      // the kit's, in the order the engine's probe reads them). It is projected with the sun at
+      // turn 0, as the table holds it, once per build; the bands then turn to where the sun is.
+      const sun = light.directional({ castShadow: true, intensity: 3 });
+      const probe = light.probe({ sh: new Array(27).fill(0) });
+      world.scene.add(sun, probe);
+      const P_ROWS = 64, P_COLUMNS = 128;
+      const project = () =>
+        projectBands((d, i, j) => {
+          const turn = ((j + 0.5) / P_COLUMNS) * Math.PI * 2;
+          return skyAt(Math.floor(((i + 0.5) / P_ROWS) * ROWS), turn > Math.PI ? turn - Math.PI * 2 : turn, sample);
+        }, P_ROWS, P_COLUMNS);
+      let skyBands = null;
+
+      // THE PLACE: a ring of standing stones on a dry plain, a white ball on the altar to show the
+      // sky's light, hills on the horizon to catch the low sun.
+      const stone = material.meshLambert({ color: '#b9ad98' });
+      const plain = object.mesh(geometry.circle(480, 96), material.meshLambert({ color: '#95876b' }));
+      plain.rotation.x = -Math.PI / 2;
+      plain.receiveShadow = true;
+      world.scene.add(plain);
+      const place = (mesh, x, y, z) => {
+        mesh.position.set(x, y, z);
+        mesh.receiveShadow = true;
+        world.scene.add(mesh);
+        return mesh;
+      };
+      // Each stone hewn from a box: its corners pushed in and out by a smooth noise of where they
+      // are, the same at the shared edges of two faces, so the block stays closed; its top a little
+      // narrower than its foot. Normals are worked out again from the new shape.
+      const noise = valueNoise({ math }), ring = seeded(4);
+      function hewn(width, tall, depth, seed) {
+        const block = geometry.box(width, tall, depth, 4, 10, 3), position = block.getAttribute('position'), points = position.array;
+        for (let k = 0; k < points.length; k += 3) {
+          const [x, y, z] = [points[k], points[k + 1], points[k + 2]], narrow = 1 - 0.14 * (y / tall + 0.5);
+          points[k] = x * narrow + 0.09 * noise(x * 1.7, y * 1.7, z * 1.7, seed);
+          points[k + 1] = y + 0.06 * noise(x * 1.3, y * 1.3, z * 1.3, seed + 1);
+          points[k + 2] = z * narrow + 0.09 * noise(x * 1.7, y * 1.7, z * 1.7, seed + 2);
+        }
+        position.needsUpdate = true;
+        return block.computeVertexNormals();
+      }
+      const tint = (k) => material.meshLambert({ color: math.color('#b9ad98').lerp(math.color(k % 3 ? '#9a9180' : '#c9b48f'), ring() * 0.8) });
+      for (let k = 0; k < 14; k++) {
+        const angle = (k / 14) * Math.PI * 2, tall = 3.4 + ring() * 1.4, standing = place(object.mesh(hewn(1.3, tall, 0.8, k * 3), tint(k)), Math.cos(angle) * 10, tall / 2 - 0.2, Math.sin(angle) * 10);
+        standing.rotation.set((ring() - 0.5) * 0.12, -angle + (ring() - 0.5) * 0.2, (ring() - 0.5) * 0.1);
+        if (k % 2 === 0 && k !== 6) {
+          const next = ((k + 1) / 14) * Math.PI * 2, mid = (angle + next) / 2;
+          const lintel = place(object.mesh(hewn(5.4, 0.7, 0.9, 100 + k), tint(k + 1)), Math.cos(mid) * 10.1, tall + 0.1, Math.sin(mid) * 10.1);
+          lintel.rotation.y = -mid + Math.PI / 2;
+        }
+      }
+      place(object.mesh(hewn(2.6, 1, 1.4, 200), stone), 0, 0.5, 0);
+      place(object.mesh(geometry.sphere(0.6, 64, 32), material.meshLambert({ color: '#f4f2ee' })), 0, 1.6, 0);
+      const hills = material.meshLambert({ color: '#6f6a52' });
+      for (let k = 0; k < 11; k++) {
+        const angle = (k / 11) * Math.PI * 2 + ring() * 0.4, reach = 180 + ring() * 140, size = 40 + ring() * 50;
+        const hill = object.mesh(geometry.sphere(size, 96, 48), hills);
+        hill.position.set(Math.cos(angle) * reach, -size * 0.86, Math.sin(angle) * reach);
+        hill.scale.set(1.6, 1, 1);
+        hill.rotation.y = ring() * 3;
+        hill.castShadow = hill.receiveShadow = false;
+        world.scene.add(hill);
+      }
+
+      world.controls.target.set(0, 5, 0);
+      world.camera.fov = 58;
+      world.controls.minDistance = 6;
+      world.controls.maxDistance = 60;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.03;
+
+      // The sun's course on a summer day at 45° north: its height and bearing from the hour.
+      const LATITUDE = math.degToRad(45), DECLINATION = math.degToRad(20);
+      function sunAt(hour) {
+        const angle = ((hour - 12) / 12) * Math.PI;
+        const height = Math.asin(Math.sin(LATITUDE) * Math.sin(DECLINATION) + Math.cos(LATITUDE) * Math.cos(DECLINATION) * Math.cos(angle));
+        const bearing = Math.atan2(-Math.sin(angle), Math.tan(DECLINATION) * Math.cos(LATITUDE) - Math.sin(LATITUDE) * Math.cos(angle)) + Math.PI;
+        return [height, bearing];
+      }
+      // The stars' pole stands as high in the north as the latitude.
+      heavens.rotation.x = -(Math.PI / 2 - LATITUDE);
+
+      // The sky is built again when the air changes, or when the sun has moved by a quarter of a
+      // degree since the last build (about 17 ms of work); between two builds the dome only turns.
+      const START = 18.6;
+      let hour = START, changed = true, built = -1, moved = true;
+      const ui = controls(
+        { hour: [4, 21, START, 0.05], run: true, haze: [0, 6, 1, 0.05], air: [0.2, 4, 1, 0.05], adaptEyes: true },
+        (values, key) => {
+          if (key === undefined || key === 'haze' || key === 'air') {
+            air.mie = values.haze;
+            air.rayleigh = values.air;
+            buildTransmittance();
+            changed = true;
+          }
+          if (key === 'hour') hour = values.hour;
+          moved = true;
+          world.invalidate();
+        },
+        world,
+      );
+      const clock = readout('clock'), sunUp = readout('sunHeight'), throughAir = readout('sunThroughAir');
+
+      const ground = [0, 0, 0];
+      function update() {
+        const [height, bearing] = sunAt(hour);
+        sunHeight = height;
+        // North is −z, east +x: the bearing turned into the scene's ground plane.
+        const sx = Math.cos(height) * Math.sin(bearing), sz = -Math.cos(height) * Math.cos(bearing);
+        sunAzimuth = Math.atan2(sz, sx);
+        if (changed || Math.abs(height - built) > 0.004) {
+          buildSky();
+          dome.material.emissiveIntensity = paint();
+          skyMap.needsUpdate = true;
+          skyBands = project();
+          built = height;
+          changed = false;
+        }
+        // The panorama is painted with the sun at its turn 0: the dome turns to where it is.
+        dome.rotation.y = -sunAzimuth;
+        const direction = [Math.cos(height) * Math.cos(sunAzimuth), Math.sin(height), Math.cos(height) * Math.sin(sunAzimuth)];
+        sunThrough(0, direction[1], ground);
+        const above = math.clamp((height + 0.01) / 0.02, 0, 1), strongest = Math.max(...ground, 1e-6);
+        sun.position.set(direction[0] * 40, direction[1] * 40, direction[2] * 40);
+        sun.color.setRGB(ground[0] / strongest, ground[1] / strongest, ground[2] / strongest);
+        sun.intensity = SUN * strongest * above;
+        disc.material.emissive.copy(sun.color);
+        // Brighter than the brightest sky round it, yet not so bright that the display curve
+        // bleaches it: the low sun keeps its red.
+        disc.material.emissiveIntensity = 5 * dome.material.emissiveIntensity;
+        disc.visible = above > 0;
+        disc.userData.direction = direction;
+        const night = math.clamp((-math.radToDeg(height) - 2) / 10, 0, 1);
+        heavens.visible = night > 0;
+        for (const stars of spin.children) stars.material.color.setScalar(stars.userData.glow * night);
+        spin.rotation.y = -((hour - 12) / 24) * Math.PI * 2;
+        probe.sh = turnBands(skyBands, sunAzimuth);
+        probe.needsUpdate = true;
+        // Eyes that adapt: the exposure follows the light falling on a face turned to the sun, its
+        // own and the sky’s, from a bright noon to a night thousands of times dimmer.
+        const level = 0.35 * SUN * strongest * above + 2 * Math.PI * skyLight;
+        world.exposure = ui.adaptEyes ? math.clamp(2.6 / level, 1, 3000) : 1;
+        const minutes = Math.round(hour * 60);
+        clock(`${Math.floor(minutes / 60)}:${String(minutes % 60).padStart(2, '0')}`);
+        sunUp(`${math.radToDeg(height).toFixed(1)}°`);
+        throughAir(`${ground.map((v) => Math.round(v * 100)).join(' · ')} %`);
+      }
+
+      // The opening: from far and low, the camera drifts in and turns slowly, the sun a little to
+      // the left of the ring.
+      const [startHeight, startBearing] = sunAt(START);
+      const facing = Math.atan2(-Math.cos(startHeight) * Math.cos(startBearing), Math.cos(startHeight) * Math.sin(startBearing)) + 0.35;
+      opening(world, (time) => {
+        const azimuth = Math.atan2(-Math.cos(facing), -Math.sin(facing)) + time * 0.02, settle = ease.out(time / 5), reach = 38 - 8 * settle, rise = 0.04 + 0.06 * settle, { target } = world.controls;
+        world.camera.position.set(target.x + Math.sin(azimuth) * Math.cos(rise) * reach, target.y + Math.sin(rise) * reach, target.z + Math.cos(azimuth) * Math.cos(rise) * reach);
+      });
+      // Before each frame is drawn: the sun and the sky brought up to the hour, if it changed. And
+      // the sky is infinitely far: the dome and the sun's disc move with the eye.
+      world.beforeFrame(() => {
+        if (moved) update();
+        moved = false;
+        const eye = world.camera.position, d = disc.userData.direction;
+        dome.position.copy(eye);
+        heavens.position.copy(eye);
+        disc.position.set(eye.x + d[0] * 480, eye.y + d[1] * 480, eye.z + d[2] * 480);
+      });
+      // The clock runs only while `run` is on; still, the world waits for the next change.
+      world.onFrame(({ delta }) => {
+        if (!ui.run) return;
+        hour += Math.min(delta, 0.05) * 0.12;
+        if (hour > 21) hour = 4;
+        moved = true;
+        world.invalidate();
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Procedural wood</title>
+    <meta name="thumbnail" content="6" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #17110d;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, geometry, material, object, light, math, texture, buffer, effect } from '../runtime/engine.js';
+      import { controls, readout, valueNoise, sineHash, ease } from '../runtime/kit.js';
+
+      // Wood is a solid: a log of rings around its pith, cut wherever the object is. So the wood
+      // here is a function of a point in space, not of a picture: for every texel of a mesh, the
+      // page finds the point of the surface that texel covers and asks the log what grows there.
+      // A board cut along the log shows long flames, its end shows the rings, and the grain runs
+      // on without a seam over every edge. Everything is computed on the CPU, in this page, from
+      // value noise; the engine only receives three pictures a mesh: colour, roughness, relief.
+      const noise = valueNoise({ math });
+      const fbm = (x, y, z, octaves, seed) => {
+        let sum = 0, amplitude = 0.5, frequency = 1;
+        for (let octave = 0; octave < octaves; octave++, frequency *= 2.03, amplitude *= 0.5)
+          sum += amplitude * noise(x * frequency, y * frequency, z * frequency, seed + octave);
+        return sum;
+      };
+
+      // Four woods, each a few numbers: the colour of the light earlywood a ring starts with and of
+      // the dense latewood it ends with, the pale sapwood under the bark, how open its pores are
+      // (oak's show as dark ticks, maple has almost none) and how much its fibres shimmer.
+      const SPECIES = {
+        oak: { early: '#d9ae74', late: '#94653a', sap: '#e6c9a0', pores: 0.9, fibres: 0.09 },
+        walnut: { early: '#80573a', late: '#3b2416', sap: '#c9a57a', pores: 0.45, fibres: 0.07 },
+        cherry: { early: '#cf8a5c', late: '#93482a', sap: '#e3bf92', pores: 0.12, fibres: 0.06 },
+        maple: { early: '#f0dcb8', late: '#cfa877', sap: '#f4e6cb', pores: 0.04, fibres: 0.12 },
+      };
+      const rgb = (hex) => { const c = math.color(hex).getHex(); return [(c >> 16) & 255, (c >> 8) & 255, c & 255]; };
+      const smooth = (a, b, x) => ease.smooth((x - a) / (b - a));
+
+      // What grows at the point (x, y, z) of a log: the point is first taken into the log's own
+      // frame — `a` along its axis, (u, w) across it — then its distance to the pith, bent by
+      // noise, counts the rings. Writes colour, height and roughness into `out`.
+      function grow(x, y, z, log, wood, out) {
+        const dx = x - log.centre[0], dy = y - log.centre[1], dz = z - log.centre[2];
+        const a = dx * log.axis[0] + dy * log.axis[1] + dz * log.axis[2];
+        let u = dx * log.across[0] + dy * log.across[1] + dz * log.across[2];
+        let w = dx * log.up[0] + dy * log.up[1] + dz * log.up[2];
+        // The pith wanders a little along the trunk, and the rings are never round: low noise in
+        // space pushes them in and out. `figure` is how much.
+        const figure = wood.figure;
+        u += figure * 0.03 * noise(a * 2.2, 0.5, 0, log.seed);
+        w += figure * 0.03 * noise(a * 2.2, 7.5, 0, log.seed + 1);
+        let radius = Math.hypot(u, w) + figure * 0.014 * fbm(a * 1.6, u * 7, w * 7, 3, log.seed + 2);
+        // A knot is a branch growing out of the pith, a cone widening as it goes: around it the
+        // rings swerve, and inside it the branch's own rings show, darker, ringed by a crack.
+        let knot = 0, knotRings = 0;
+        for (const branch of log.knots) {
+          const along = a - branch.at, reach = along * branch.dir[0] + u * branch.dir[1] + w * branch.dir[2];
+          if (reach <= 0) continue;
+          const size = 0.004 + 0.1 * reach;
+          const distance = Math.hypot(along - reach * branch.dir[0], u - reach * branch.dir[1], w - reach * branch.dir[2]);
+          radius -= 1.2 * size * Math.exp(-((distance / (size * 3)) ** 2));
+          const core = smooth(size * 1.05, size * 0.85, distance);
+          if (core > knot) [knot, knotRings] = [core, distance * wood.ringsPerMetre * 2.5];
+        }
+        const rings = radius * wood.ringsPerMetre, ring = Math.floor(rings), f = rings - ring;
+        // Each year's ring a little wider or darker than the last: a hash of its number.
+        const year = sineHash(ring, log.seed);
+        // Light earlywood, then the dense latewood closing the year, cut sharply by the next spring.
+        const late = smooth(0.5 + 0.2 * year, 0.96, f) ** 1.6;
+        // Fibres: noise stretched forty times along the axis, the grain's fine streaks. Pores: a
+        // sharper, finer noise, open only in the earlywood of ring-porous woods.
+        const fibre = noise(a * 9, u * 380, w * 380, log.seed + 5);
+        const pore = wood.pores * (1 - smooth(0.12, 0.35, f)) * smooth(0.25, 0.65, noise(a * 30, u * 1100, w * 1100, log.seed + 6));
+        const patch = fbm(a * 3, u * 5, w * 5, 2, log.seed + 7);
+        const heart = smooth(log.heart - 0.01, log.heart + 0.02, radius);
+        const shade = (1 + 0.12 * patch + wood.fibres * fibre - 0.1 * year * late) * (1 - 0.55 * pore);
+        for (let channel = 0; channel < 3; channel++) {
+          const body = wood.early[channel] + (wood.late[channel] - wood.early[channel]) * late * (1 - 0.6 * heart);
+          out[channel] = (body + (wood.sap[channel] - body) * heart * 0.7) * shade;
+        }
+        if (knot > 0) {
+          const inner = 0.62 + 0.2 * Math.abs(Math.sin(knotRings * Math.PI)), crack = 1 - 1.6 * knot * (1 - knot);
+          for (let channel = 0; channel < 3; channel++) out[channel] *= (1 - knot * (1 - inner)) * crack;
+        }
+        out[3] = 0.35 * late + 0.25 * fibre - pore;
+        out[4] = 0.42 + 0.2 * (1 - late) + 0.35 * pore;
+      }
+
+      // The texels of a mesh, found once: each triangle is laid on the picture by its texture
+      // coordinates, and every texel it covers takes the surface point under it, interpolated
+      // from the triangle's corners. A texel near an edge goes to the nearest triangle, and two
+      // texels past it are covered too, so the picture's filtering never reads an empty texel.
+      const PAD = 2;
+      function texelsOf(shape, width, height) {
+        const position = shape.attributes.position.array, uv = shape.attributes.uv.array, index = shape.index.array;
+        const best = new Float32Array(width * height).fill(-Infinity), points = new Float32Array(width * height * 3);
+        for (let t = 0; t < index.length; t += 3) {
+          const [i, j, k] = [index[t], index[t + 1], index[t + 2]];
+          // Corners in texels: a texel's centre is at (column + ½, row + ½); its first row is v = 0.
+          const ax = uv[i * 2] * width, ay = uv[i * 2 + 1] * height, bx = uv[j * 2] * width, by = uv[j * 2 + 1] * height, cx = uv[k * 2] * width, cy = uv[k * 2 + 1] * height;
+          const area = (bx - ax) * (cy - ay) - (cx - ax) * (by - ay);
+          if (Math.abs(area) < 1e-9) continue;
+          const edges = [[bx, by, cx, cy], [cx, cy, ax, ay], [ax, ay, bx, by]].map(([x0, y0, x1, y1]) => Math.hypot(x1 - x0, y1 - y0));
+          const left = Math.max(0, Math.floor(Math.min(ax, bx, cx) - PAD)), right = Math.min(width - 1, Math.ceil(Math.max(ax, bx, cx) + PAD));
+          const bottom = Math.max(0, Math.floor(Math.min(ay, by, cy) - PAD)), top = Math.min(height - 1, Math.ceil(Math.max(ay, by, cy) + PAD));
+          for (let row = bottom; row <= top; row++)
+            for (let column = left; column <= right; column++) {
+              const px = column + 0.5, py = row + 0.5;
+              const l0 = ((bx - px) * (cy - py) - (cx - px) * (by - py)) / area;
+              const l1 = ((cx - px) * (ay - py) - (ax - px) * (cy - py)) / area;
+              const l2 = 1 - l0 - l1;
+              // How far inside the triangle, in texels: negative outside.
+              const inside = Math.min((l0 * Math.abs(area)) / edges[0], (l1 * Math.abs(area)) / edges[1], (l2 * Math.abs(area)) / edges[2]);
+              const at = row * width + column;
+              if (inside < -PAD || inside <= best[at]) continue;
+              best[at] = inside;
+              for (let axis = 0; axis < 3; axis++)
+                points[at * 3 + axis] = l0 * position[i * 3 + axis] + l1 * position[j * 3 + axis] + l2 * position[k * 3 + axis];
+            }
+        }
+        // The covered texels' ranks, counted first so they fit one typed array.
+        let count = 0;
+        for (let at = 0; at < best.length; at++) if (best[at] > -Infinity) count++;
+        const covered = new Int32Array(count);
+        for (let at = 0, n = 0; at < best.length; at++) if (best[at] > -Infinity) covered[n++] = at;
+        return { width, height, points, covered };
+      }
+
+      // A box whose six faces are unfolded side by side on one picture, as a cardboard box is cut
+      // flat: the four sides in a row, the top above the front and the bottom below. Its texels
+      // keep one size on every face, and two faces that meet on the box meet on the picture.
+      function unfoldedBox(width, height, depth) {
+        const [w, h, d] = [width, height, depth], U = 2 * w + 2 * d, V = h + 2 * d;
+        const faces = [
+          [[d, d], [-w / 2, -h / 2, d / 2], [1, 0, 0], w, [0, 1, 0], h],
+          [[d + w, d], [w / 2, -h / 2, d / 2], [0, 0, -1], d, [0, 1, 0], h],
+          [[2 * d + w, d], [w / 2, -h / 2, -d / 2], [-1, 0, 0], w, [0, 1, 0], h],
+          [[0, d], [-w / 2, -h / 2, -d / 2], [0, 0, 1], d, [0, 1, 0], h],
+          [[d, d + h], [-w / 2, h / 2, d / 2], [1, 0, 0], w, [0, 0, -1], d],
+          [[d, 0], [-w / 2, -h / 2, -d / 2], [1, 0, 0], w, [0, 0, 1], d],
+        ];
+        const positions = [], normals = [], uvs = [], index = [];
+        for (const [[nu, nv], corner, right, across, up, along] of faces) {
+          const normal = [right[1] * up[2] - right[2] * up[1], right[2] * up[0] - right[0] * up[2], right[0] * up[1] - right[1] * up[0]];
+          const first = positions.length / 3;
+          for (const [s, t] of [[0, 0], [1, 0], [1, 1], [0, 1]]) {
+            positions.push(...corner.map((c, axis) => c + right[axis] * across * s + up[axis] * along * t));
+            normals.push(...normal);
+            uvs.push((nu + across * s) / U, (nv + along * t) / V);
+          }
+          index.push(first, first + 1, first + 2, first, first + 2, first + 3);
+        }
+        const shape = geometry.createBuffer({
+          position: buffer.float32(positions, 3),
+          normal: buffer.float32(normals, 3),
+          uv: buffer.float32(uvs, 2),
+          index: buffer.uint32(index, 1),
+        });
+        return { shape, unfolded: [U, V] };
+      }
+
+      // The three pictures of one piece, written into its data textures.
+      function pictures(width, height) {
+        const make = (colour) => {
+          const map = texture.data(new Uint8Array(width * height * 4).fill(255), width, height, 'rgba');
+          map.colorSpace = colour ? 'srgb' : 'linear';
+          map.anisotropy = 8;
+          return map;
+        };
+        const relief = make(false);
+        // Until the bake reaches it, a flat relief: every texel facing straight out.
+        const flat = [128, 128, 255];
+        for (let at = 0; at < width * height * 4; at += 4) relief.image.data.set(flat, at);
+        return { colour: make(true), roughness: make(false), relief };
+      }
+
+      // A log: where its pith runs, which way, the radius of its heartwood, and its seed.
+      const log = (centre, axis, heart, seed) => {
+        const along = axis.map((v) => v / Math.hypot(...axis));
+        const helper = Math.abs(along[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0];
+        const cross = (p, q) => [p[1] * q[2] - p[2] * q[1], p[2] * q[0] - p[0] * q[2], p[0] * q[1] - p[1] * q[0]];
+        const across = cross(along, helper).map((v, _, all) => v / Math.hypot(...all));
+        const up = cross(along, across);
+        return { centre, axis: along, across, up, heart, seed, knots: [] };
+      };
+      // A branch out of a log at `at` along its axis, heading towards the direction `towards`
+      // (in the piece's coordinates), leaning up the trunk as branches do.
+      const branch = (one, at, towards) => {
+        const across = towards.reduce((sum, v, i) => sum + v * one.across[i], 0), up = towards.reduce((sum, v, i) => sum + v * one.up[i], 0);
+        const length = Math.hypot(0.35, across, up);
+        one.knots.push({ at, dir: [0.35 / length, across / length, up / length] });
+        return one;
+      };
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#17110d');
+
+      // The pieces. Each is a shape with texture coordinates no two triangles share, a picture
+      // size, and the log it is cut from, in its own coordinates.
+      const pieces = [];
+      const piece = (shape, width, height, logs, place) => {
+        const maps = pictures(width, height);
+        const finish = material.meshPhysical({ map: maps.colour, roughnessMap: maps.roughness, normalMap: maps.relief, roughness: 1, clearcoat: 0.8, clearcoatRoughness: 0.12 });
+        const mesh = object.mesh(shape, finish);
+        mesh.receiveShadow = true;
+        place(mesh);
+        world.scene.add(mesh);
+        // Its texels are found when its first bake reaches it: `texels`.
+        const one = { mesh, maps, finish, logs, width, height, texels: null };
+        pieces.push(one);
+        return one;
+      };
+
+      // A table of six planks, each sawn from its own log, laid with a groove between them: its
+      // logs are chosen plank by plank, by the plank under the texel.
+      const TABLE = [2.4, 1.3], PLANKS = 6;
+      const tableShape = geometry.plane(TABLE[0], TABLE[1], 1, 1);
+      const table = piece(tableShape, 1280, 694, Array.from({ length: PLANKS }, (_, k) =>
+        log([0, (k - (PLANKS - 1) / 2) * (TABLE[1] / PLANKS) + 0.04 * Math.sin(k * 3.1), -0.16 - 0.07 * sineHash(k, 3)], [1, 0.015 * Math.sin(k * 2.3), 0.035 + 0.04 * sineHash(k, 4)], 0.12, 40 + k)), (mesh) => {
+        mesh.rotation.x = -Math.PI / 2;
+      });
+      // A few planks were sawn through a branch: up towards their face, here and there.
+      for (const [k, at] of [[0, 0.55], [1, -0.7], [2, 0.15], [3, 0.85], [4, -0.3], [5, -0.95], [5, 0.4]]) branch(table.logs[k], at, [0.2 * Math.sin(k * 5), 0.3 * Math.cos(at * 7), 1]);
+      table.plank = (x, y) => math.clamp(Math.floor((y / TABLE[1] + 0.5) * PLANKS), 0, PLANKS - 1);
+      table.groove = (x, y) => { const s = ((y / TABLE[1] + 0.5) * PLANKS) % 1; return Math.min(s, 1 - s) * (TABLE[1] / PLANKS); };
+      const apron = object.mesh(geometry.box(TABLE[0] - 0.04, 0.06, TABLE[1] - 0.04), material.meshStandard({ color: '#2a1a10', roughness: 0.8 }));
+      apron.position.y = -0.031;
+      world.scene.add(apron);
+
+      // A bowl turned from the side of a log, its pith above the rim: the rings come out as the
+      // nested ovals a turner looks for at the bottom of a bowl.
+      // Its profile, out along the outer wall from the foot, over the rim, back down inside.
+      const outer = (s) => [0.04 + 0.175 * Math.sin((s * Math.PI) / 2) ** 0.8, 0.012 + 0.15 * s ** 1.6];
+      const lip = [[0, 0], [0.042, 0]];
+      for (let k = 0; k <= 40; k++) lip.push(outer(k / 40));
+      const [rimX, rimY] = outer(1);
+      lip.push([rimX - 0.004, rimY + 0.006], [rimX - 0.013, rimY + 0.004]);
+      for (let k = 40; k >= 0; k--) {
+        const [x, y] = outer(k / 40);
+        lip.push([Math.max(0, x - 0.013 - 0.006 * (1 - k / 40)), Math.max(0.028, y + 0.002)]);
+      }
+      lip.push([0, 0.028]);
+      const bowl = piece(geometry.lathe(lip, 160), 1024, 768, [log([0, 0.3, 0.05], [1, 0, 0.15], 0.16, 11)], (mesh) => mesh.position.set(-0.32, 0, 0.12));
+
+      // A cube cut across the trunk: its top shows the rings, its sides the grain running up, and
+      // every edge joins them.
+      const CUBE = 0.17;
+      const cube = unfoldedBox(CUBE, CUBE, CUBE);
+      piece(cube.shape, Math.round(cube.unfolded[0] * 1300), Math.round(cube.unfolded[1] * 1300), [log([-0.16, 0, 0.12], [0.05, 1, -0.08], 0.4, 23)], (mesh) => {
+        mesh.position.set(0.3, CUBE / 2, -0.12);
+        mesh.rotation.y = 0.5;
+      });
+      // A ball, turned from the same kind of log, its axis tilted: rings wrap it as bands.
+      piece(geometry.sphere(0.075, 96, 64), 768, 384, [log([0.03, 0.09, 0.02], [0.4, 0.2, 1], 0.25, 31)], (mesh) => mesh.position.set(0.24, 0.075, 0.24));
+
+      // Light: a warm lamp over the bench from the left, its pool fading into the dark workshop,
+      // a softbox behind whose reflection the varnish catches, and a dim cool fill.
+      world.scene.add(light.spot({ color: '#ffdcb0', intensity: 9, distance: 6, angle: 0.62, penumbra: 0.7, position: [-0.9, 1.7, 0.9], target: [0, 0, 0], castShadow: true }));
+      const softbox = light.rectArea({ color: '#fff3e2', intensity: 4, width: 1.4, height: 0.5, position: [0.6, 0.9, -1.3] });
+      softbox.lookAt(0, 0.1, 0);
+      world.scene.add(softbox, light.hemisphere({ color: '#9fb4e6', groundColor: '#3a2214', intensity: 0.25 }));
+      world.effects.add(effect.bloom({ intensity: 0.04 }));
+      world.camera.position.set(0.42, 0.56, 1.12);
+      world.controls.target.set(-0.13, 0.05, 0.0);
+      world.controls.minDistance = 0.25;
+      world.controls.maxDistance = 3;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.08;
+      world.controls.update();
+
+      // The bake: every texel of every piece asks its log what grows there. It runs a slice at a
+      // time between frames, so the page answers while it works; a later change of setting
+      // abandons a bake under way and starts a new one.
+      let baking = 0;
+      const sample = new Float32Array(5);
+      // Texels baked between two frames.
+      const SLICE = 24000;
+      const nextFrame = () => new Promise(requestAnimationFrame);
+      async function bake(settings, which = pieces) {
+        const ask = ++baking, started = performance.now();
+        // A table whose first bake was abandoned is baked with the pieces.
+        if (!table.baked) which = pieces;
+        const wood = { ...SPECIES[settings.wood] };
+        for (const part of ['early', 'late', 'sap']) wood[part] = rgb(wood[part]);
+        wood.ringsPerMetre = settings.rings * 10;
+        wood.figure = settings.figure;
+        const tableWood = { ...wood, ...TABLE_WOOD };
+        let done = 0;
+        for (const one of which) {
+          // A piece's texels are found once, in a slice of their own after a frame is shown.
+          if (!one.texels) {
+            await nextFrame();
+            if (ask !== baking) return;
+            one.texels = texelsOf(one.mesh.geometry, one.width, one.height);
+          }
+          const { width, height, points, covered } = one.texels;
+          const colour = one.maps.colour.image.data, rough = one.maps.roughness.image.data, relief = one.maps.relief.image.data;
+          const heights = new Float32Array(width * height);
+          for (let start = 0; start < covered.length; start += SLICE) {
+            for (let n = start; n < Math.min(covered.length, start + SLICE); n++) {
+              const at = covered[n], x = points[at * 3], y = points[at * 3 + 1], z = points[at * 3 + 2];
+              const logOf = one.plank ? one.logs[one.plank(x, y)] : one.logs[0];
+              grow(x, y, z, logOf, one === table ? tableWood : wood, sample);
+              let groove = 1;
+              if (one.groove) groove = smooth(0.0006, 0.0028, one.groove(x, y));
+              for (let channel = 0; channel < 3; channel++) colour[at * 4 + channel] = math.clamp(sample[channel] * (0.35 + 0.65 * groove), 0, 255);
+              heights[at] = sample[3] * 0.25 - (1 - groove) * 2.5;
+              rough[at * 4] = rough[at * 4 + 1] = rough[at * 4 + 2] = math.clamp(sample[4] + (1 - groove) * 0.4, 0, 1) * 255;
+            }
+            done += Math.min(SLICE, covered.length - start);
+            await nextFrame();
+            if (ask !== baking) return;
+          }
+          // The relief: which way the surface leans at each texel, from the slope of its height
+          // across the picture. Red leans along u, green along v.
+          const h = (column, row) => heights[math.clamp(row, 0, height - 1) * width + math.clamp(column, 0, width - 1)];
+          for (const at of covered) {
+            const column = at % width, row = (at - column) / width;
+            const du = (h(column + 1, row) - h(column - 1, row)) * 1.5, dv = (h(column, row + 1) - h(column, row - 1)) * 1.5;
+            const length = Math.hypot(du, dv, 1);
+            relief[at * 4] = (0.5 - du / length / 2) * 255;
+            relief[at * 4 + 1] = (0.5 - dv / length / 2) * 255;
+            relief[at * 4 + 2] = (0.5 + 0.5 / length) * 255;
+          }
+          for (const map of Object.values(one.maps)) map.needsUpdate = true;
+          one.baked = true;
+          world.invalidate();
+        }
+        texels(done.toLocaleString());
+        time(`${Math.round(performance.now() - started)} ms`);
+      }
+      // The table stays an old oak, whatever wood the pieces on it are.
+      const TABLE_WOOD = { early: rgb('#b88a5a'), late: rgb('#6d4526'), sap: rgb('#c9a57a'), pores: 0.8, fibres: 0.1, ringsPerMetre: 70 };
+
+      // The pieces on the table: what the wood settings rebake.
+      const onTable = pieces.filter((one) => one !== table);
+      const ui = controls({
+        wood: Object.keys(SPECIES),
+        rings: [3, 20, 9, 1],
+        figure: [0, 1.5, 0.6, 0.05],
+        varnish: [0, 1, 0.8, 0.05],
+        newLogs: () => {
+          for (const one of onTable) for (const each of one.logs) each.seed += 100;
+          bake(ui, onTable);
+        },
+        turn: true,
+      }, (values, key) => {
+        for (const one of pieces) one.finish.clearcoat = one === table ? 0.35 : values.varnish;
+        if (key === undefined) bake(values);
+        else if (key === 'wood' || key === 'rings' || key === 'figure') bake(values, onTable);
+        world.invalidate();
+      }, world);
+      const texels = readout('texels'), time = readout('bakeTime');
+
+      world.onFrame(({ delta }) => {
+        if (!ui.turn) return;
+        bowl.mesh.rotation.y += delta * 0.25;
+        world.invalidate();
+      });
+    </script>
+  </body>
+</html>

@@ -1454,6 +1454,38 @@
       "credit": "Amazon Lumberyard Bistro (NVIDIA ORCA), CC BY 4.0 — assets/examples/CREDITS.md 참고"
     }
   },
+  "a-map-of-what-the-engine-draws": {
+    "banner": "왼쪽 뷰를 클릭하고 W A S D로 걸어 보세요. 오른쪽 지도는 그 뷰가 이 프레임에서 계산한 것을 위에서 보여 줍니다. 선별을 고정한 뒤 그 밖으로 걸어 나가 보세요.",
+    "controls": {
+      "freeze": "고정",
+      "frustum": "시야 절두체",
+      "clusters": "클러스터",
+      "shadows": "그림자 페이지",
+      "reflections": "반사 광선",
+      "lights": "조명",
+      "mapSize": "지도 크기 (m)"
+    },
+    "readouts": {
+      "clusters": "클러스터",
+      "occluded": "가려짐",
+      "missing": "로드 안 됨",
+      "shadowPages": "그린 그림자 페이지",
+      "raysMissed": "아무것도 맞지 않은 광선"
+    },
+    "words": {
+      "credit": "Emerald Square: Nicholas Hull, Kate Anderson (NVIDIA ORCA), 식생 SpeedTree, CC BY-NC-SA 3.0 — assets/examples/CREDITS.md 참고",
+      "fine": "세밀",
+      "coarse": "거침",
+      "occluded": "가려짐",
+      "missing": "로드 안 됨",
+      "pageDrawn": "그린 그림자 페이지",
+      "pageCached": "캐시된 그림자 페이지",
+      "rayHit": "광선과 맞은 지점",
+      "rayMissed": "아무것도 맞지 않은 광선",
+      "camera": "카메라",
+      "frozenCut": "고정된 선별"
+    }
+  },
   "a-bust-a-crate-and-a-glass-ball": {
     "banner": "끌어서 흉상 주위를 돌아 봐. 상자와 유리 공이 회전판 위에서 돌아.",
     "words": {
@@ -2726,6 +2758,739 @@
       "height": "옅어짐",
       "base": "기준 높이",
       "colour": "색"
+    }
+  },
+  "paint-where-you-click": {
+    "banner": "꽃병을 누르고 끌면 칠해집니다. 가만히 있으면 도는 물레가 한 바퀴 띠를 그립니다. 옆을 끌면 시점이 돌아갑니다.",
+    "controls": {
+      "colour": "색",
+      "brush": "붓 크기",
+      "wheel": "물레 속도",
+      "clear": "지우기"
+    },
+    "readouts": {
+      "triangle": "삼각형",
+      "uv": "텍스처 (u, v)",
+      "strokes": "획"
+    }
+  },
+  "pixel-art-render": {
+    "banner": "드래그해 섬을 돌리고 스크롤로 확대하세요. 픽셀 크기와 팔레트를 바꿔 보세요.",
+    "controls": {
+      "pixelSize": "픽셀 크기",
+      "palette": "팔레트",
+      "upscale": "확대 방식",
+      "turn": "회전"
+    },
+    "choices": {
+      "palette": {
+        "full": "풀 컬러",
+        "posterized": "64색",
+        "handheld": "휴대용 게임기 초록",
+        "dusk": "황혼의 네 가지 색"
+      },
+      "upscale": {
+        "nearest": "최근접 픽셀",
+        "smooth": "부드럽게"
+      }
+    },
+    "readouts": {
+      "resolution": "그린 해상도"
+    }
+  },
+  "a-line-that-draws-itself": {
+    "banner": "선이 스스로 그려지는 스피로그래프: 선 하나의 대시가 펜 뒤에서 자라납니다. 바퀴와 구멍을 고르고, 드래그해 둘러보세요.",
+    "controls": {
+      "wheel": "바퀴 톱니 수",
+      "hole": "펜 구멍",
+      "speed": "초당 바퀴 수",
+      "width": "선 굵기",
+      "layers": "다음 층",
+      "clear": "종이 지우기"
+    },
+    "readouts": {
+      "drawn": "그려진 층",
+      "laps": "닫힐 때까지 바퀴 수",
+      "inkLaid": "그은 잉크"
+    }
+  },
+  "decals-on-a-surface": {
+    "banner": "조약돌 위로 포인터를 옮기면 투영 상자가 보입니다. 클릭하면 그 아래 표면에서 스티커를 잘라 붙입니다. 끌어서 시점을 돌리세요.",
+    "controls": {
+      "sticker": "스티커",
+      "size": "크기",
+      "turn": "무작위 회전",
+      "box": "상자 보기",
+      "spin": "회전",
+      "clear": "모두 떼기"
+    },
+    "choices": {
+      "sticker": {
+        "mixed": "섞어서",
+        "star": "별",
+        "bolt": "번개",
+        "heart": "하트",
+        "target": "과녁",
+        "flag": "체크무늬",
+        "smile": "미소",
+        "hazard": "경고",
+        "flower": "꽃"
+      }
+    },
+    "readouts": {
+      "decals": "데칼",
+      "kept": "잘린 삼각형"
+    }
+  },
+  "procedural-wood-and-noise": {
+    "banner": "드래그해서 둘러보세요. 모든 텍셀은 페이지에서 계산한 노이즈로 자라납니다. 나무를 고르고 새 통나무를 켜 보세요.",
+    "controls": {
+      "wood": "목재",
+      "rings": "10 cm당 나이테",
+      "figure": "결 무늬",
+      "varnish": "바니시",
+      "newLogs": "새 통나무",
+      "turn": "그릇 돌리기"
+    },
+    "choices": {
+      "wood": {
+        "oak": "오크",
+        "walnut": "월넛",
+        "cherry": "체리",
+        "maple": "메이플"
+      }
+    },
+    "readouts": {
+      "texels": "계산한 텍셀",
+      "bakeTime": "계산 시간"
+    }
+  },
+  "a-toolpath-in-lines": {
+    "banner": "실제 G-code 파일을 페이지에서 읽어, 노즐이 출력하는 동안 선으로 그립니다. 드래그해 돌리고, 맨 위 레이어를 낮춰 부품을 잘라 보세요.",
+    "controls": {
+      "colour": "색상 기준",
+      "topLayer": "맨 위 레이어",
+      "pace": "재생 속도",
+      "travel": "이동 경로",
+      "reprint": "다시 출력"
+    },
+    "choices": {
+      "colour": {
+        "kind": "경로 종류",
+        "layer": "레이어",
+        "speed": "속도"
+      }
+    },
+    "readouts": {
+      "layer": "레이어",
+      "filament": "필라멘트",
+      "printTime": "출력 시간",
+      "gcodeLines": "G-code 줄",
+      "segments": "선분",
+      "lines": "장면의 선"
+    }
+  },
+  "pick-an-instance": {
+    "banner": "육각형을 가리키면 한 모양의 배치 1,519개 중 어느 것인지 알려 줍니다. 클릭하면 골라지고 섬 전체로 물결이 퍼집니다.",
+    "controls": {
+      "ripple": "물결",
+      "swell": "너울"
+    },
+    "readouts": {
+      "instance": "인스턴스",
+      "cell": "칸 (q, r)",
+      "height": "높이",
+      "placements": "배치",
+      "shapes": "공유하는 모양"
+    }
+  },
+  "shapes-from-an-svg": {
+    "banner": "경로 하나하나 읽어 들인 SVG, 채워진 모양마다 구멍째 판지에서 오려 냅니다. 층을 벌려 보거나, 직접 만든 SVG를 페이지에 끌어다 놓으세요.",
+    "controls": {
+      "spread": "층 간격",
+      "depth": "판지 두께",
+      "bevel": "모따기",
+      "detail": "곡선 정밀도",
+      "sway": "흔들림",
+      "yourSvg": "내 SVG 열기"
+    },
+    "readouts": {
+      "paths": "읽은 모양",
+      "outlines": "윤곽선",
+      "holes": "오려 낸 구멍",
+      "triangles": "삼각형",
+      "file": "파일"
+    }
+  },
+  "boolean-shapes": {
+    "banner": "드래그해서 주위를 돌아보세요. 연산을 고르고 표류를 켜면 worker가 움직이는 형태를 다시 자릅니다.",
+    "controls": {
+      "operation": "연산",
+      "ball": "구",
+      "bore": "구멍",
+      "drifting": "표류",
+      "operands": "피연산자",
+      "spin": "회전"
+    },
+    "choices": {
+      "operation": {
+        "carved": "(정육면체 ∩ 구) − 구멍",
+        "subtract": "정육면체 − 구",
+        "intersect": "정육면체 ∩ 구",
+        "union": "정육면체 ∪ 구"
+      }
+    },
+    "readouts": {
+      "triangles": "삼각형",
+      "computedIn": "계산 시간"
+    }
+  },
+  "a-convex-hull": {
+    "banner": "움직이는 점 무리를 감싸는 가장 작은 볼록 입체를 매 프레임 처음부터 다시 만듭니다. 점과 구름을 바꾸고, 드래그해 둘러보세요.",
+    "controls": {
+      "points": "점",
+      "motion": "움직임",
+      "cloud": "구름",
+      "facets": "면",
+      "edges": "모서리"
+    },
+    "choices": {
+      "cloud": {
+        "ball": "공",
+        "cube": "정육면체",
+        "torus": "고리",
+        "swarm": "세 무리"
+      }
+    },
+    "readouts": {
+      "hullCorners": "껍질의 꼭짓점",
+      "faces": "면",
+      "inside": "안쪽 점",
+      "euler": "V − E + F",
+      "buildTime": "껍질 생성 시간"
+    }
+  },
+  "contact-shadow-under-a-car": {
+    "banner": "드래그하여 회전하세요. 램프를 넓히거나 차를 들어 올리거나 튀어 오르게 하면 그림자가 타이어에 달라붙습니다.",
+    "controls": {
+      "lampWidth": "램프 폭",
+      "rideHeight": "지상고",
+      "hop": "점프",
+      "paint": "도색",
+      "drive": "주행"
+    },
+    "readouts": {
+      "height": "높이"
+    }
+  },
+  "contact-shadows-from-the-screen": {
+    "banner": "드래그하여 회전하고 스크롤하여 다가가세요. 모든 핀과 배선이 머리카락처럼 가는 그림자를 유지합니다.",
+    "controls": {
+      "sunHeight": "태양 높이",
+      "sunTurn": "태양 방향",
+      "sweep": "스윕"
+    },
+    "readouts": {
+      "ray": "화면 광선"
+    }
+  },
+  "light-that-bounces": {
+    "banner": "드래그하여 방 안을 들여다보세요. 반사광을 끄고 켜 보세요: 햇빛 한 조각이 방 전체를 밝힙니다.",
+    "controls": {
+      "bounce": "반사광",
+      "sunHeight": "태양 높이",
+      "sunTurn": "태양 방향",
+      "sweep": "스윕",
+      "sunColour": "태양 색"
+    }
+  },
+  "voxel-models": {
+    "banner": "페이지에서 읽은 MagicaVoxel 파일. 가려진 면은 버리고, 모서리는 이웃 복셀로 음영을 줍니다. 드래그해 돌리고, 높이를 낮춰 모델을 잘라 보세요.",
+    "controls": {
+      "model": "모델",
+      "height": "높이",
+      "occlusion": "차폐",
+      "spin": "회전"
+    },
+    "choices": {
+      "model": {
+        "lighthouse": "등대",
+        "castle": "성",
+        "balloon": "열기구"
+      }
+    },
+    "readouts": {
+      "voxels": "복셀",
+      "facesDrawn": "그린 면",
+      "facesHidden": "버린 면",
+      "file": "파일"
+    }
+  },
+  "red-cyan-anaglyph": {
+    "banner": "빨강-청록 안경을 쓰세요. 빨간 렌즈가 왼쪽 눈입니다. 드래그로 회전, 스크롤로 다가갑니다.",
+    "controls": {
+      "glasses": "안경",
+      "separation": "눈 사이 거리",
+      "screenPlane": "화면 평면",
+      "swapEyes": "눈 바꾸기",
+      "speed": "속도"
+    },
+    "choices": {
+      "glasses": {
+        "halfColour": "하프 컬러",
+        "colour": "풀 컬러",
+        "grey": "회색",
+        "none": "없음, 왼쪽 눈만"
+      }
+    },
+    "readouts": {
+      "screenDistance": "화면 평면 거리"
+    }
+  },
+  "cross-fade-between-scenes": {
+    "banner": "두 개의 월드, 하나의 카메라. 드래그로 회전하고, 장면이 넘어가는 방식을 고르세요.",
+    "controls": {
+      "transition": "전환",
+      "duration": "길이(초)",
+      "hold": "멈춤(초)",
+      "autoplay": "자동 재생",
+      "switchScene": "장면 바꾸기"
+    },
+    "choices": {
+      "transition": {
+        "iris": "아이리스",
+        "wipe": "와이프",
+        "fade": "크로스페이드",
+        "blinds": "블라인드"
+      }
+    },
+    "readouts": {
+      "showing": "보이는 장면",
+      "worldsDrawing": "그리는 월드"
+    },
+    "words": {
+      "desert": "사막",
+      "glacier": "빙하"
+    }
+  },
+  "a-refracting-pane": {
+    "banner": "드래그해서 둘러보세요. 유리는 뒤에 있는 것을 굴절시킵니다. 무늬, 굴절률, 두께를 바꿔 보세요.",
+    "controls": {
+      "glass": "유리",
+      "refraction": "굴절률",
+      "thickness": "두께",
+      "tint": "색조",
+      "slide": "밀기"
+    },
+    "choices": {
+      "glass": {
+        "reeded": "골 유리",
+        "hammered": "망치 무늬",
+        "rippled": "물결",
+        "bullseye": "불스아이",
+        "flat": "평판"
+      }
+    }
+  },
+  "pick-lines-and-points": {
+    "banner": "포인터를 천구의 위로 움직이면 닿는 범위 안에서 가장 가까운 별이나 선이 빛납니다. 엔진의 raycast는 삼각형에 맞고, 점과 선분은 여기서 픽셀 단위로 검사합니다.",
+    "controls": {
+      "reach": "범위 (px)",
+      "stars": "별 선택",
+      "lines": "선 선택",
+      "turning": "회전"
+    },
+    "readouts": {
+      "hit": "선택",
+      "place": "위치",
+      "off": "거리",
+      "cost": "비용"
+    },
+    "words": {
+      "nothing": "없음",
+      "star": "별 {n} / {total}",
+      "figure": "별자리 {n}",
+      "parallel": "위선 {deg}°",
+      "meridian": "경선 {deg}°",
+      "segment": "선분 {k} / {total}",
+      "place": "경도 {lon}° · 위도 {lat}°",
+      "pixels": "{px} px",
+      "cost": "{n}회 검사 · {us} µs"
+    }
+  },
+  "printable-parts": {
+    "banner": "STL, PLY, AMF, 3MF 파일을 각각 페이지의 수십 줄 코드로 읽습니다. 드래그해 돌리고, 부품을 골라 가까이서 보세요.",
+    "controls": {
+      "focus": "보기",
+      "stlColour": "STL 필라멘트",
+      "wireframe": "와이어프레임",
+      "spin": "회전"
+    },
+    "choices": {
+      "focus": {
+        "all": "베드 전체",
+        "gear": "기어 (STL)",
+        "vase": "꽃병 (PLY)",
+        "bolt": "볼트와 너트 (AMF)",
+        "knot": "매듭 (3MF)"
+      }
+    },
+    "readouts": {
+      "gear": "gear.stl",
+      "vase": "vase.ply",
+      "bolt": "bolt.amf",
+      "knot": "knot.3mf"
+    },
+    "words": {
+      "summary": "{size} kB · 삼각형 {triangles}개"
+    }
+  },
+  "avif-textures": {
+    "banner": "드래그해서 둘러보세요. 풍경과 올리브 가지는 AVIF 파일입니다. 품질을 낮추고 창밖을 보세요.",
+    "controls": {
+      "quality": "AVIF 품질",
+      "lookAt": "보기"
+    },
+    "choices": {
+      "lookAt": {
+        "room": "방",
+        "view": "풍경",
+        "branch": "가지"
+      }
+    },
+    "readouts": {
+      "view": "풍경",
+      "branch": "가지",
+      "decoded": "디코딩된 픽셀"
+    },
+    "words": {
+      "alpha": "투명"
+    }
+  },
+  "smoothing-by-subdivision": {
+    "banner": "드래그해서 주위를 돌아보세요. 단계를 올리면 삼각형이 각각 넷으로 나뉩니다. 호박색 모서리는 주름이라 날카롭게 남습니다.",
+    "controls": {
+      "shape": "케이지",
+      "level": "단계",
+      "creases": "주름",
+      "creaseAngle": "주름 각도",
+      "cage": "케이지 보기",
+      "spin": "회전"
+    },
+    "choices": {
+      "shape": {
+        "knot": "매듭",
+        "goblet": "술잔",
+        "ball": "정이십면체",
+        "cube": "정육면체"
+      }
+    },
+    "readouts": {
+      "triangles": "삼각형",
+      "cageTriangles": "케이지 삼각형"
+    }
+  },
+  "motion-retargeting": {
+    "banner": "드래그해서 둘러보세요. CesiumMan의 걸음을 뼈 이름, 체격, 기본 자세가 다른 두 골격에 맞게 다시 썼습니다. 방식을 바꿔 각 단계가 무엇을 고치는지 확인하세요.",
+    "controls": {
+      "method": "방식",
+      "speed": "속도"
+    },
+    "choices": {
+      "method": {
+        "directions": "뼈 방향 맞추기",
+        "turns": "월드 회전 옮기기",
+        "copy": "로컬 회전 복사"
+      }
+    },
+    "readouts": {
+      "bones": "연결한 뼈",
+      "keys": "구운 키"
+    }
+  },
+  "breaking-things": {
+    "banner": "클릭하면 쇠공을 던집니다. 벽, 기둥, 크리스털은 보로노이 조각으로 잘려 있고, 강도를 넘으면 끊어지는 조인트로 용접되어 있습니다.",
+    "controls": {
+      "pieces": "조각 수",
+      "strength": "강도 (kN)",
+      "speed": "속도 (m/s)",
+      "slowMotion": "슬로 모션",
+      "throwAtWall": "벽에 던지기",
+      "rebuild": "다시 세우기"
+    },
+    "readouts": {
+      "pieces": "조각",
+      "welds": "버티는 용접",
+      "broken": "끊어진 용접"
+    }
+  },
+  "a-ground-projected-sky": {
+    "banner": "드래그하여 혼천의 주위를 걸어 보세요. 사진 속 바닥이 그 아래에 그대로 있고 그림자를 받습니다. '지면 투영'을 끄면 단순한 구에서 바닥이 미끄러지는 것을 볼 수 있습니다.",
+    "controls": {
+      "place": "장소",
+      "grounded": "지면 투영",
+      "height": "높이",
+      "radius": "반지름",
+      "turning": "회전"
+    },
+    "choices": {
+      "place": {
+        "plaza": "대리석 광장",
+        "salt flat": "황혼의 소금 평원",
+        "meadow": "초원"
+      }
+    },
+    "readouts": {
+      "flatFloor": "평평한 바닥의 범위"
+    },
+    "words": {
+      "credit": "파노라마는 이 페이지가 열릴 때 코드로 그린 것으로, 아무것도 내려받지 않습니다."
+    }
+  },
+  "sound-in-space": {
+    "banner": "듣기를 누르고(헤드폰 권장) 회전하고 확대해 보세요. 각 소리는 빛나는 자리에서 들리며, 카메라를 따라가는 Web Audio 패너가 머리 주위에 배치합니다.",
+    "controls": {
+      "listen": "듣기",
+      "silence": "음소거",
+      "volume": "음량",
+      "distanceModel": "거리 감쇠",
+      "rolloff": "감쇠율",
+      "panning": "패닝",
+      "moving": "움직임"
+    },
+    "choices": {
+      "distanceModel": {
+        "inverse": "역수",
+        "exponential": "지수",
+        "linear": "선형"
+      },
+      "panning": {
+        "HRTF": "HRTF (3D)",
+        "equalpower": "등전력 (스테레오)"
+      }
+    },
+    "readouts": {
+      "bell": "종",
+      "horn": "나팔",
+      "firefly": "반딧불이"
+    },
+    "words": {
+      "listening": "듣는 중: 소리 주위를 돌거나, 가까이 가거나, 나팔 뒤로 가서 그 원뿔을 벗어나 보세요.",
+      "silent": "소리 일시 정지.",
+      "level": "{db} dB · {m} m",
+      "distance": "{m} m"
+    }
+  },
+  "drag-objects": {
+    "banner": "조각을 무대 위로 끌어 보세요. 다른 조각 위에 놓으면 쌓이고, 다른 조각에 부딪히면 밀어냅니다. Shift를 누르고 있으면 수직 평면에서 들어 올립니다.",
+    "controls": {
+      "plane": "평면",
+      "shove": "밀어내기",
+      "home": "제자리로"
+    },
+    "choices": {
+      "plane": {
+        "floor": "수평",
+        "wall": "수직"
+      }
+    },
+    "readouts": {
+      "held": "잡은 것",
+      "surface": "평면",
+      "height": "높이"
+    },
+    "words": {
+      "nothing": "없음",
+      "floor": "수평",
+      "wall": "수직",
+      "metres": "{m} m",
+      "ball": "옻칠한 공",
+      "knot": "도자기 매듭",
+      "crate": "나무 상자",
+      "glass": "유리 기둥",
+      "cone": "빨간 원뿔",
+      "gem": "금빛 보석",
+      "pill": "분홍 캡슐"
+    }
+  },
+  "oriented-boxes": {
+    "banner": "드래그해서 주위를 돌아보세요. 청록 상자는 형태와 함께 돌고, 호박색 상자는 월드 축을 따릅니다. 빨간색은 두 상자가 맞닿았다는 뜻입니다.",
+    "controls": {
+      "boxes": "상자",
+      "fit": "맞춤",
+      "speed": "속도",
+      "tumbling": "구르기"
+    },
+    "choices": {
+      "boxes": {
+        "both": "둘 다",
+        "oriented": "방향성",
+        "aligned": "축 정렬",
+        "none": "없음"
+      },
+      "fit": {
+        "tightest": "가장 꽉 맞게",
+        "principal axes": "주축"
+      }
+    },
+    "readouts": {
+      "orientedVolume": "부피, 방향성",
+      "alignedVolume": "부피, 축 정렬",
+      "orientedContacts": "접촉, 방향성",
+      "alignedContacts": "접촉, 축 정렬"
+    }
+  },
+  "edit-a-spline": {
+    "banner": "금색 핸들을 끌면 곡선이 따라옵니다. Shift를 누르고 있으면 올리거나 내릴 수 있습니다. 바닥을 더블클릭하면 핸들을 추가하고, 핸들을 더블클릭하면 지웁니다.",
+    "controls": {
+      "closed": "닫힌 고리",
+      "radius": "반지름",
+      "speed": "구슬",
+      "polygon": "제어선",
+      "reset": "초기화"
+    },
+    "readouts": {
+      "handles": "핸들",
+      "length": "길이",
+      "triangles": "삼각형"
+    },
+    "words": {
+      "metres": "{m} m"
+    }
+  },
+  "compressed-mesh-input": {
+    "banner": "드래그해서 둘러보세요. 하나의 glTF에 이 대리석 흉상이 세 번 들어 있습니다: 압축하지 않은 부동소수점, Draco, meshopt. 컴파일러가 굽는 동안 두 형식을 모두 디코딩하므로 브라우저에는 디코더가 필요 없습니다. 흉상을 골라 그 파일을 읽어 보세요.",
+    "controls": {
+      "bust": "흉상",
+      "turn": "회전"
+    },
+    "choices": {
+      "bust": {
+        "all": "세 개 모두",
+        "plain": "압축 없는 부동소수점",
+        "draco": "Draco",
+        "meshopt": "Meshopt"
+      }
+    },
+    "readouts": {
+      "stored": "저장 크기",
+      "decoded": "디코딩 후",
+      "extension": "확장",
+      "triangles": "삼각형"
+    }
+  },
+  "lens-flares": {
+    "banner": "드래그해 시점을 돌려 보세요. 고스트가 화면 중앙을 지나 움직이고, 날개가 해를 가릴 때마다 흐려집니다.",
+    "controls": {
+      "flare": "플레어",
+      "lens": "렌즈",
+      "strength": "강도",
+      "sunHeight": "해의 높이"
+    },
+    "choices": {
+      "lens": {
+        "spherical": "구면",
+        "anamorphic": "아나모픽"
+      }
+    },
+    "readouts": {
+      "sunShowing": "보이는 해"
+    }
+  },
+  "particles-with-own-sizes": {
+    "banner": "불꽃 하나하나가 고유한 크기를 가진 스프라이트입니다. 굵은 혜성, 고운 반짝임, 식으며 작아지는 불씨. 크기 편차를 넓히거나 폭죽을 쏘아 보세요.",
+    "controls": {
+      "shells": "폭죽",
+      "sizeSpread": "크기 편차",
+      "rate": "발사 빈도",
+      "launch": "발사"
+    },
+    "choices": {
+      "shells": {
+        "mixed": "혼합",
+        "peony": "모란",
+        "ring": "고리",
+        "willow": "버들",
+        "chrysanthemum": "국화"
+      }
+    },
+    "readouts": {
+      "sparks": "불꽃",
+      "sizes": "고유 크기"
+    }
+  },
+  "an-atmospheric-sky": {
+    "banner": "드래그해서 둘러보세요. 하늘은 공기 자체로부터 계산됩니다: 시간을 움직이고, 연무나 공기를 짙게 해 보세요.",
+    "controls": {
+      "hour": "시각",
+      "run": "하루 흐르기",
+      "haze": "연무",
+      "air": "공기 밀도",
+      "adaptEyes": "눈 적응"
+    },
+    "readouts": {
+      "clock": "시간",
+      "sunHeight": "태양 고도",
+      "sunThroughAir": "공기를 지난 햇빛"
+    }
+  },
+  "lit-by-an-hdr-image": {
+    "banner": "드래그해서 둘러 돌아보세요. 각 장소는 실제 HDR 사진입니다: 그 태양은 그림자를 드리우는 빛이 되고, 나머지는 사방에서 오는 부드러운 빛이 됩니다.",
+    "controls": {
+      "place": "장소",
+      "turn": "회전",
+      "exposure": "노출",
+      "sunFromImage": "태양을 광원으로",
+      "spin": "돌리기"
+    },
+    "choices": {
+      "place": {
+        "plains": "햇살 가득한 평원",
+        "sunset": "해 질 녘 베네치아",
+        "harbour": "밤의 항구"
+      }
+    },
+    "readouts": {
+      "sunFound": "태양 고도",
+      "sunShare": "태양의 빛",
+      "range": "이미지의 범위"
+    },
+    "words": {
+      "noSun": "없음",
+      "stops": "{n} 스톱",
+      "credit": "HDR 이미지: Rosendal Plains 2, Venice Sunset, Golden Bay — Poly Haven, CC0"
+    }
+  },
+  "adjusting-the-environment": {
+    "banner": "드래그해서 둘러 돌아보세요. 세트를 둘러싼 빛을 돌리고, 따뜻하게, 채도를 높이거나, 어둡게 해 보세요: 모든 변화는 몇 개의 숫자이며, 빛과 그림자와 배경에 함께 적용됩니다.",
+    "controls": {
+      "rig": "조명",
+      "turn": "회전",
+      "strength": "세기",
+      "warmth": "따뜻함",
+      "saturation": "채도",
+      "exposure": "노출",
+      "toneMapping": "톤 곡선",
+      "backgroundBlur": "배경 흐림",
+      "background": "배경",
+      "spin": "돌리기"
+    },
+    "choices": {
+      "rig": {
+        "studio": "사진 스튜디오",
+        "stage": "컬러 필터 무대"
+      },
+      "toneMapping": {
+        "aces": "aces",
+        "agx": "agx",
+        "neutral": "중립",
+        "reinhard": "reinhard",
+        "cineon": "cineon",
+        "linear": "선형"
+      }
+    },
+    "readouts": {
+      "lightOnTop": "위에서 오는 빛"
     }
   }
 }

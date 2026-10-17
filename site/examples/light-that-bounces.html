@@ -1,0 +1,91 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Light that bounces</title>
+    <meta name="thumbnail" content="9" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #07080b;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, light, math } from '../runtime/engine.js';
+      import { controls, ease, opening } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#07080b');
+      // The compiled room, cut open at the front like a doll's house: a red wall, a blue wall
+      // with a tall window, white plaster everywhere else, and white sculptures to catch what the
+      // walls send back. The compiler wrote a coarse copy of it beside the drawn one, the proxy,
+      // with each surface's colour: the bounced light is traced against that copy.
+      await world.scene.load('../assets/examples/light-that-bounces/cache/native/full/manifest.json');
+
+      // ONE SUN, through the window, and nothing else but a faint night sky. Without bounce the
+      // room is black but for the patch the sun draws on the floor; with it, that patch lights
+      // the room: the white turns pink beside the red wall, cool beside the blue one.
+      const sun = light.directional({ color: '#fff1dc', intensity: 7, castShadow: true });
+      const sky = light.hemisphere({ color: '#30405e', groundColor: '#0a0806', intensity: 0.08 });
+      world.scene.add(sun, sky);
+      world.exposure = 1.5;
+
+      world.controls.target.set(-0.5, 2, 0);
+      world.controls.minDistance = 6;
+      world.controls.maxDistance = 16;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.02;
+      // The orbit stays in front of the open side: no drag ever looks at the back of a wall.
+      world.controls.minAzimuthAngle = -1.1;
+      world.controls.maxAzimuthAngle = 1.1;
+
+      // The opening: a slow push in from far in front of the room to the doorway.
+      opening(world, (time) => {
+        const t = ease.inOut(time / 5);
+        const distance = 18 - 5.5 * t, turn = -0.1 + 0.34 * t;
+        world.camera.position.set(Math.sin(turn) * distance, 2.8 + 2 * (1 - t), Math.cos(turn) * distance);
+        world.camera.lookAt(world.controls.target);
+        return time < 5;
+      });
+
+      // THE CONTROLS: bounce on or off (`world.bounce`), the sun's height and its turn, which
+      // walk the patch of sunlight from the floor up the red wall; the sweep moves it on its own,
+      // and the bounced light follows it live, frame after frame.
+      let along = 0;
+      const ui = controls(
+        {
+          bounce: true,
+          sunHeight: [6, 60, 15, 1],
+          sunTurn: [-40, 40, -12, 1],
+          sweep: true,
+          sunColour: '#fff1dc',
+        },
+        (values) => {
+          world.bounce = values.bounce;
+          sun.color.set(values.sunColour);
+          world.invalidate();
+        },
+        world,
+      );
+      world.onFrame(({ delta }) => {
+        if (ui.sweep) along += Math.min(delta, 0.05);
+        // The sun stands off the blue wall's side (+x), a little behind the room, so it enters
+        // only through the window.
+        const height = math.degToRad(Math.max(5, ui.sunHeight + (ui.sweep ? 6 * Math.sin(along * 0.25) : 0)));
+        const turn = math.degToRad(ui.sunTurn + (ui.sweep ? 14 * Math.sin(along * 0.17) : 0));
+        sun.position.set(Math.cos(height) * Math.cos(turn) * 20, Math.sin(height) * 20, Math.cos(height) * Math.sin(turn) * 20);
+        // Only a moving sun asks for the next frame: a still one lets the bounce settle and rest.
+        if (ui.sweep) world.invalidate();
+      });
+    </script>
+  </body>
+</html>

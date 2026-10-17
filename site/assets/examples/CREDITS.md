@@ -90,3 +90,39 @@ its cache (`full`, 4 threads, 8 GB, `qem-endpoints`); only the cache is publishe
   the engine refuses a triangle spanning more periods than a page holds (`T3D-E041`). The file as
   converted, `bistro-exterior.glb`, stays beside it in the release. Used by
   `a-walk-down-the-bistro-street`.
+
+## Files written for their example
+
+These files were made for their example and are released under
+[CC0](https://creativecommons.org/publicdomain/zero/1.0/): nothing in them was taken from another
+work. Each was generated once, from seeded noise or geometry, and is committed as is; the page reads
+it as a user would read their own file.
+
+| Folder | Files | What |
+| --- | --- | --- |
+| `shapes-from-an-svg/` | `dusk.svg` | a landscape at dusk in layered filled paths, the papercut's source |
+| `avif-textures/` | `landscape-q90.avif` … `landscape-q10.avif`, `branch.avif` | a mountain lake at dusk, 1600×800, at four AVIF qualities, and an olive branch with alpha, painted from seeded noise and encoded with ImageMagick (libheif, AV1) |
+| `printable-parts/` | `gear.stl`, `vase.ply`, `bolt.amf`, `knot.3mf` | an 18-tooth involute spur gear (binary STL), a twisted nine-lobed vase with vertex colours (binary PLY), an M10 bolt and its nut in two materials (zipped AMF), a trefoil knot tube (3MF package) |
+| `voxel-models/` | `lighthouse.vox`, `castle.vox`, `balloon.vox` | three MagicaVoxel models, format version 150 (`SIZE`, `XYZI`, `RGBA`) |
+| `a-toolpath-in-lines/` | `star-tower.gcode` | a twisted six-point star tower with a round bore, sliced for a 220 mm Marlin printer: walls, infill, skins, skirt, retractions, arcs, Cura-style `;LAYER:` and `;TYPE:` comments |
+| `light-that-bounces/` | `source/room.gltf`, `source/room.bin` | a room for bounced light, cooked with `qem-endpoints` from `COMMITTED_SOURCES` (`scripts/site-caches.ts`) |
+
+`compressed-mesh-input/source/` holds Marble Bust 01 by Rico Cilliers
+([Poly Haven](https://polyhaven.com/a/marble_bust_01), CC0, 1k textures), the mesh of
+`models/marble-bust/` in one glTF three ways: its original floats (`plain.bin`, the same bytes),
+`KHR_draco_mesh_compression` (`draco.bin`, draco-core 2.1.0) and `EXT_meshopt_compression` with
+`KHR_mesh_quantization` normals and texture coordinates (`meshopt.bin`, meshoptimizer 0.25). It is
+cooked from `COMMITTED_SOURCES`.
+
+## HDR images
+
+`lit-by-an-hdr-image/` holds three equirectangular Radiance images (`.hdr`, 1024×512, the 1k
+downloads), unchanged, from [Poly Haven](https://polyhaven.com/license), CC0:
+
+| File | Image | Authors |
+| --- | --- | --- |
+| `plains.hdr` | [Rosendal Plains 2](https://polyhaven.com/a/rosendal_plains_2) | Dimitrios Savva (photography), Jarod Guest (processing) |
+| `sunset.hdr` | [Venice Sunset](https://polyhaven.com/a/venice_sunset) | Greg Zaal |
+| `harbour.hdr` | [Golden Bay](https://polyhaven.com/a/golden_bay) | Greg Zaal |
+
+`motion-retargeting` reuses CesiumMan (`cesium-man/`, above).

@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Shapes from an SVG</title>
+    <meta name="thumbnail" content="5" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #12141c;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      // An SVG drawing read path by path and cut out of card: each filled element becomes an
+      // extruded solid with its holes, and the elements stand one behind the other, a papercut
+      // diorama. Any SVG of your own can be dropped on the page.
+      import { createWorld, geometry, material, object, light, loader, math } from '../runtime/engine.js';
+      import { controls, readout, opening, ease, mix, language } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#12141c');
+
+      // READING A PATH. `d` is a list of commands, each a letter and its numbers: absolute in
+      // capitals, relative to the pen in lower case. They are read into four kinds only — move,
+      // line, quadratic and cubic curve — the ones `math.shape` draws: H and V are lines, S and T
+      // curves whose first control point mirrors the last one, A an elliptical arc cut into
+      // cubic curves of a quarter turn at most.
+      function readPath(d) {
+        let at = 0;
+        const space = () => {
+          while (at < d.length && /[\s,]/.test(d[at])) at++;
+        };
+        const number = () => {
+          space();
+          const found = /^[-+]?(?:\d+\.?\d*|\.\d+)(?:[eE][-+]?\d+)?/.exec(d.slice(at, at + 40));
+          if (!found) throw new Error(`a number at ${at} of the path`);
+          at += found[0].length;
+          return Number(found[0]);
+        };
+        // An arc's two flags may be written with nothing between them: "01".
+        const flag = () => {
+          space();
+          return d[at++] === '1';
+        };
+        const loops = [];
+        let loop = null, x = 0, y = 0, startX = 0, startY = 0, mirror = null, command = '';
+        const add = (segment) => loop.segments.push(segment);
+        for (space(); at < d.length; space()) {
+          if (/[a-zA-Z]/.test(d[at])) command = d[at++];
+          else if (!command) throw new Error('a path starts with a command');
+          const relative = command === command.toLowerCase(), C = command.toUpperCase();
+          const dx = relative ? x : 0, dy = relative ? y : 0;
+          let control = null;
+          if (C === 'M') {
+            x = number() + dx;
+            y = number() + dy;
+            loop = { start: [x, y], segments: [] };
+            loops.push(loop);
+            [startX, startY] = [x, y];
+            // Pairs after a move are lines.
+            command = relative ? 'l' : 'L';
+          } else if (C === 'Z') {
+            x = startX;
+            y = startY;
+            loop = null;
+          } else {
+            // A drawing command after a close starts a new outline where the last one began.
+            if (!loop) {
+              loop = { start: [x, y], segments: [] };
+              loops.push(loop);
+            }
+            if (C === 'L' || C === 'H' || C === 'V') {
+              if (C !== 'V') x = number() + dx;
+              if (C !== 'H') y = number() + dy;
+              add(['L', x, y]);
+            } else if (C === 'C' || C === 'S') {
+              const first = C === 'C' ? [number() + dx, number() + dy] : mirror?.[0] === 'C' ? [2 * x - mirror[1], 2 * y - mirror[2]] : [x, y];
+              const second = [number() + dx, number() + dy];
+              x = number() + dx;
+              y = number() + dy;
+              add(['C', ...first, ...second, x, y]);
+              control = ['C', ...second];
+            } else if (C === 'Q' || C === 'T') {
+              const bend = C === 'Q' ? [number() + dx, number() + dy] : mirror?.[0] === 'Q' ? [2 * x - mirror[1], 2 * y - mirror[2]] : [x, y];
+              x = number() + dx;
+              y = number() + dy;
+              add(['Q', ...bend, x, y]);
+              control = ['Q', ...bend];
+            } else if (C === 'A') {
+              const rx = number(), ry = number(), turn = number(), large = flag(), sweep = flag();
+              const tx = number() + dx, ty = number() + dy;
+              for (const piece of arcToCubics(x, y, rx, ry, turn, large, sweep, tx, ty)) add(piece);
+              x = tx;
+              y = ty;
+            } else throw new Error(`the command ${command}`);
+          }
+          mirror = control;
+        }
+        return loops;
+      }
+
+      // An elliptical arc in the SVG's own terms — two ends, two radii, a tilt, which of the four
+      // possible arcs — turned into its centre and angles (SVG 1.1, appendix F.6), then cut into
+      // pieces of at most a quarter turn, each a cubic curve that runs within a hair of the arc.
+      function arcToCubics(x1, y1, rx, ry, turnDegrees, large, sweep, x2, y2) {
+        if (!rx || !ry) return [['L', x2, y2]];
+        const phi = (turnDegrees * Math.PI) / 180, cos = Math.cos(phi), sin = Math.sin(phi);
+        const hx = (x1 - x2) / 2, hy = (y1 - y2) / 2;
+        const px = cos * hx + sin * hy, py = -sin * hx + cos * hy;
+        rx = Math.abs(rx);
+        ry = Math.abs(ry);
+        const grow = (px * px) / (rx * rx) + (py * py) / (ry * ry);
+        if (grow > 1) {
+          rx *= Math.sqrt(grow);
+          ry *= Math.sqrt(grow);
+        }
+        const num = rx * rx * ry * ry - rx * rx * py * py - ry * ry * px * px;
+        const k = (large === sweep ? -1 : 1) * Math.sqrt(Math.max(0, num / (rx * rx * py * py + ry * ry * px * px)));
+        const cx_ = (k * rx * py) / ry, cy_ = (-k * ry * px) / rx;
+        const cx = cos * cx_ - sin * cy_ + (x1 + x2) / 2, cy = sin * cx_ + cos * cy_ + (y1 + y2) / 2;
+        const angle = (ux, uy, vx, vy) => Math.atan2(ux * vy - uy * vx, ux * vx + uy * vy);
+        const start = angle(1, 0, (px - cx_) / rx, (py - cy_) / ry);
+        let span = angle((px - cx_) / rx, (py - cy_) / ry, (-px - cx_) / rx, (-py - cy_) / ry);
+        if (!sweep && span > 0) span -= Math.PI * 2;
+        if (sweep && span < 0) span += Math.PI * 2;
+        const count = Math.ceil(Math.abs(span) / (Math.PI / 2) - 1e-9), step = span / count;
+        const handle = (4 / 3) * Math.tan(step / 4);
+        const point = (a) => [cx + rx * Math.cos(a) * cos - ry * Math.sin(a) * sin, cy + rx * Math.cos(a) * sin + ry * Math.sin(a) * cos];
+        const slope = (a) => [-rx * Math.sin(a) * cos - ry * Math.cos(a) * sin, -rx * Math.sin(a) * sin + ry * Math.cos(a) * cos];
+        const pieces = [];
+        for (let n = 0; n < count; n++) {
+          const a = start + n * step, b = a + step, [ax, ay] = point(a), [bx, by] = point(b), [sa, ta] = slope(a), [sb, tb] = slope(b);
+          pieces.push(['C', ax + handle * sa, ay + handle * ta, bx - handle * sb, by - handle * tb, ...(n === count - 1 ? [x2, y2] : [bx, by])]);
+        }
+        return pieces;
+      }
+
+      // The other filled elements, written as the path they stand for.
+      const attr = (element, name) => Number(element.getAttribute(name) ?? 0);
+      function pathOf(element) {
+        const tag = element.tagName.toLowerCase();
+        if (tag === 'path') return element.getAttribute('d') ?? '';
+        if (tag === 'circle' || tag === 'ellipse') {
+          const cx = attr(element, 'cx'), cy = attr(element, 'cy');
+          const rx = tag === 'circle' ? attr(element, 'r') : attr(element, 'rx'), ry = tag === 'circle' ? rx : attr(element, 'ry');
+          return `M ${cx - rx} ${cy} A ${rx} ${ry} 0 1 0 ${cx + rx} ${cy} A ${rx} ${ry} 0 1 0 ${cx - rx} ${cy} Z`;
+        }
+        if (tag === 'rect') {
+          const x = attr(element, 'x'), y = attr(element, 'y'), w = attr(element, 'width'), h = attr(element, 'height');
+          const r = Math.min(w / 2, h / 2, element.hasAttribute('rx') ? attr(element, 'rx') : attr(element, 'ry'));
+          if (!r) return `M ${x} ${y} H ${x + w} V ${y + h} H ${x} Z`;
+          return `M ${x + r} ${y} H ${x + w - r} A ${r} ${r} 0 0 1 ${x + w} ${y + r} V ${y + h - r} A ${r} ${r} 0 0 1 ${x + w - r} ${y + h}`
+            + ` H ${x + r} A ${r} ${r} 0 0 1 ${x} ${y + h - r} V ${y + r} A ${r} ${r} 0 0 1 ${x + r} ${y} Z`;
+        }
+        return `M ${element.getAttribute('points') ?? ''} Z`;
+      }
+
+      // A point inside a closed polygon: the even–odd count of the edges a ray to the right crosses.
+      function inside([x, y], polygon) {
+        let odd = false;
+        for (let i = 0, j = polygon.length - 1; i < polygon.length; j = i++) {
+          const [ax, ay] = polygon[i], [bx, by] = polygon[j];
+          if (ay > y !== by > y && x < ((bx - ax) * (y - ay)) / (by - ay) + ax) odd = !odd;
+        }
+        return odd;
+      }
+      const area = (polygon) => Math.abs(polygon.reduce((sum, [x, y], i) => {
+        const [nx, ny] = polygon[(i + 1) % polygon.length];
+        return sum + x * ny - nx * y;
+      }, 0)) / 2;
+
+      // READING THE DRAWING. The SVG is laid in the page, out of sight, so the browser resolves
+      // its styles and transforms: every filled element's fill colour, and the matrix that takes
+      // its own units to the drawing's. Each outline of an element is sampled once to see which
+      // lies inside which: one inside an even number of others is a solid, one inside an odd
+      // number a hole in the outline just around it — the drawing's look under either fill rule
+      // for the usual drawings, where holes run the other way round or lie inside their solid.
+      function readDrawing(text) {
+        const holder = document.createElement('div');
+        holder.style.cssText = 'position:fixed;left:-10000px;top:0;width:10px;height:10px;overflow:hidden;opacity:0;pointer-events:none';
+        holder.innerHTML = text;
+        document.body.append(holder);
+        try {
+          const svg = holder.querySelector('svg');
+          if (!svg) throw new Error('no <svg>');
+          const root = svg.getScreenCTM()?.inverse();
+          const layers = [];
+          for (const element of svg.querySelectorAll('path, rect, circle, ellipse, polygon, polyline')) {
+            if (element.closest('defs, clipPath, mask, symbol, pattern, marker')) continue;
+            const style = getComputedStyle(element);
+            if (style.fill === 'none' || style.display === 'none' || style.visibility === 'hidden') continue;
+            const colour = /^rgba?\((\d+),\s*(\d+),\s*(\d+)/.exec(style.fill);
+            const own = element.getScreenCTM();
+            const m = own && root ? root.multiply(own) : new DOMMatrix();
+            const map = (px, py) => [m.a * px + m.c * py + m.e, m.b * px + m.d * py + m.f];
+            const loops = readPath(pathOf(element)).map(({ start, segments }) => ({
+              start: map(...start),
+              segments: segments.map(([kind, ...xy]) => [kind, ...Array.from({ length: xy.length / 2 }, (_, k) => map(xy[k * 2], xy[k * 2 + 1])).flat()]),
+            }));
+            if (loops.length) layers.push({ colour: colour ? `rgb(${colour[1]}, ${colour[2]}, ${colour[3]})` : '#9aa3b5', loops });
+          }
+          if (!layers.length) throw new Error('no filled shape');
+          return layers;
+        } finally {
+          holder.remove();
+        }
+      }
+
+      // From SVG units, y down, to metres, y up, the drawing fitted in an 8 × 6 frame and centred.
+      function fitting(layers) {
+        let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+        for (const { loops } of layers)
+          for (const { start, segments } of loops)
+            for (const [, ...xy] of [['M', ...start], ...segments])
+              for (let k = 0; k < xy.length; k += 2) {
+                x0 = Math.min(x0, xy[k]);
+                x1 = Math.max(x1, xy[k]);
+                y0 = Math.min(y0, xy[k + 1]);
+                y1 = Math.max(y1, xy[k + 1]);
+              }
+        const scale = Math.min(8 / (x1 - x0 || 1), 6 / (y1 - y0 || 1));
+        return (x, y) => [(x - (x0 + x1) / 2) * scale, -(y - (y0 + y1) / 2) * scale];
+      }
+
+      // One outline as a `math.shape`, drawn with the shape's own pen: its curves stay curves,
+      // sampled into `curveSegments` pieces when the solid is built. Y is flipped, so the outline
+      // runs the other way round, which the triangulation does not mind.
+      function shapeOf({ start, segments }, to) {
+        const outline = math.shape().moveTo(...to(...start));
+        for (const [kind, ...xy] of segments) {
+          const p = Array.from({ length: xy.length / 2 }, (_, k) => to(xy[k * 2], xy[k * 2 + 1])).flat();
+          if (kind === 'L') outline.lineTo(...p);
+          else if (kind === 'Q') outline.quadraticCurveTo(...p);
+          else outline.bezierCurveTo(...p);
+        }
+        return outline;
+      }
+
+      // Every element's solids with their holes. Nesting is read on an outline sampled finely
+      // enough to tell, independently of the detail the solid is built at.
+      function solidsOf(layer, to) {
+        const shapes = layer.loops.map((loop) => shapeOf(loop, to));
+        const polygons = shapes.map((shape) => shape.getPoints(6).map((p) => [p.x, p.y]));
+        const sizes = polygons.map(area);
+        const parent = polygons.map((polygon, i) => {
+          let best = -1;
+          polygons.forEach((other, j) => {
+            if (j !== i && sizes[j] > sizes[i] && polygon.length && inside(polygon[0], other) && (best < 0 || sizes[j] < sizes[best])) best = j;
+          });
+          return best;
+        });
+        const depth = (i) => (parent[i] < 0 ? 0 : 1 + depth(parent[i]));
+        const solids = [];
+        let holes = 0;
+        shapes.forEach((shape, i) => {
+          if (sizes[i] < 1e-6 || depth(i) % 2) return;
+          shapes.forEach((hole, j) => {
+            if (parent[j] === i && depth(j) % 2) {
+              shape.holes.push(hole);
+              holes++;
+            }
+          });
+          solids.push(shape);
+        });
+        return { solids, holes };
+      }
+
+      // THE DIORAMA. One group a layer, front faces toward the viewer, stacked back to front
+      // in the order the drawing paints them; spreading them is moving the groups apart. One
+      // card material a colour, made the first time the colour is met and kept for rebuilds.
+      const cards = new Map();
+      const cardOf = (colour) => {
+        if (!cards.has(colour)) cards.set(colour, material.meshStandard({ color: colour, roughness: 0.82 }));
+        return cards.get(colour);
+      };
+      const diorama = object.group();
+      world.scene.add(diorama);
+      let layers = [], read = null;
+      function build(values) {
+        for (const layer of layers) {
+          diorama.remove(layer.group);
+          for (const mesh of layer.group.children) mesh.geometry.dispose();
+        }
+        const to = fitting(read);
+        let triangles = 0, outlines = 0, holes = 0;
+        layers = read.map(({ colour, loops }, index) => {
+          const group = object.group();
+          const card = cardOf(colour);
+          const cut = solidsOf({ loops }, to);
+          holes += cut.holes;
+          outlines += loops.length;
+          for (const outline of cut.solids) {
+            const solid = geometry.extrude(outline, {
+              depth: values.depth,
+              curveSegments: values.detail,
+              bevelEnabled: values.bevel > 0,
+              bevelThickness: values.bevel,
+              bevelSize: values.bevel,
+              bevelSegments: 2,
+            });
+            triangles += (solid.index ? solid.index.count : solid.attributes.position.count) / 3;
+            const mesh = object.mesh(solid, card);
+            mesh.receiveShadow = true;
+            group.add(mesh);
+          }
+          diorama.add(group);
+          return { group, index };
+        });
+        spread();
+        const count = (n) => n.toLocaleString(language());
+        shown.paths(count(read.length));
+        shown.outlines(count(outlines));
+        shown.holes(count(holes));
+        shown.triangles(count(Math.round(triangles)));
+      }
+      // The layers apart by `spread` metres in all, from the back one; `lift` opens them up.
+      let lift = 0;
+      const spread = () => {
+        const gap = (ui.spread * lift) / Math.max(1, layers.length - 1);
+        for (const { group, index } of layers) group.position.z = (index - (layers.length - 1) / 2) * gap;
+      };
+
+      // A table, a wall behind, a low warm lamp from the left raking across the cards so each
+      // throws its shadow on the one behind, and a cool fill.
+      const table = object.mesh(geometry.box(30, 0.4, 14), material.meshStandard({ color: '#3b2a20', roughness: 0.6 }));
+      table.position.y = -3.2;
+      table.receiveShadow = true;
+      const wall = object.mesh(geometry.box(30, 16, 0.4), material.meshStandard({ color: '#262a36', roughness: 0.95 }));
+      wall.position.set(0, 4, -4);
+      wall.receiveShadow = true;
+      world.scene.add(table, wall);
+      world.scene.add(
+        light.directional({ color: '#ffe2bf', intensity: 3.6, position: [-7, 6, 8], castShadow: true }),
+        light.directional({ color: '#9fb4ff', intensity: 0.6, position: [6, 2, 6] }),
+        light.hemisphere({ color: '#b0bce0', groundColor: '#2a1e18', intensity: 0.45 }),
+      );
+      world.camera.position.set(3.6, 1.1, 11.6);
+      world.camera.lookAt(0, -0.3, 0);
+      world.controls.target.set(0, -0.3, 0);
+      world.controls.minDistance = 4;
+      world.controls.maxDistance = 20;
+
+      // Settings that change the solids rebuild them on the next frame, once a frame at most;
+      // the spread only moves the layers.
+      let stale = false;
+      const pick = () => {
+        const input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.svg,image/svg+xml';
+        input.addEventListener('change', () => input.files?.[0] && openFile(input.files[0]));
+        input.click();
+      };
+      const ui = controls({
+        spread: [0, 3, 1.4, 0.05],
+        depth: [0.01, 0.3, 0.06, 0.01],
+        bevel: [0, 0.03, 0.008, 0.002],
+        detail: [1, 24, 10, 1],
+        sway: true,
+        yourSvg: pick,
+      }, (values, key) => {
+        if (key === 'spread') spread();
+        else if (key !== 'sway' && key !== 'yourSvg' && key !== undefined) stale = true;
+        world.invalidate();
+      }, world);
+      const shown = {
+        paths: readout('paths'),
+        outlines: readout('outlines'),
+        holes: readout('holes'),
+        triangles: readout('triangles'),
+      };
+      world.beforeFrame(() => {
+        if (!stale || !read) return;
+        stale = false;
+        build(ui);
+      });
+
+      // A file of the viewer's, picked or dropped on the page, replaces the drawing; one that
+      // cannot be read leaves the drawing as it was, and says why.
+      const say = readout('file');
+      async function openFile(file) {
+        try {
+          read = readDrawing(await file.text());
+          lift = 0;
+          build(ui);
+          say(file.name);
+        } catch (error) {
+          say(`✕ ${error.message}`);
+        }
+        world.invalidate();
+      }
+      addEventListener('dragover', (event) => event.preventDefault());
+      addEventListener('drop', (event) => {
+        event.preventDefault();
+        const file = event.dataTransfer?.files?.[0];
+        if (file) openFile(file);
+      });
+
+      read = readDrawing(await loader.file('../assets/examples/shapes-from-an-svg/dusk.svg'));
+      say('dusk.svg');
+      build(ui);
+
+      // The cards open out of the flat drawing as the camera comes round, then sway gently, so
+      // the depth between them shows.
+      const from = [0, 0.2, 14], to = [3.6, 1.1, 11.6];
+      opening(world, (time) => {
+        const k = ease.inOut(Math.min(1, time / 3));
+        world.camera.position.set(...mix({ math }, from, to, k));
+        return time < 3;
+      });
+      let time = 0;
+      world.onFrame(({ delta }) => {
+        const step = Math.min(delta, 0.05);
+        if (lift < 1) {
+          lift = Math.min(1, lift + step / 2.5);
+          spread();
+        }
+        if (ui.sway) {
+          time += step;
+          diorama.rotation.y = Math.sin(time * 0.45) * 0.28;
+        }
+        if (lift < 1 || ui.sway) world.invalidate();
+      });
+    </script>
+  </body>
+</html>

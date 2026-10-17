@@ -1,0 +1,243 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Compressed mesh input</title>
+    <meta name="thumbnail" content="4" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #17130f;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      p {
+        position: absolute;
+        bottom: 0;
+        margin: 0.5rem;
+        color: white;
+        font: 12px system-ui;
+      }
+      a {
+        color: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <p>
+      Marble Bust 01 by Rico Cilliers —
+      <a href="https://polyhaven.com/a/marble_bust_01">Poly Haven</a>, CC0.
+    </p>
+    <script type="module">
+      import {
+        createWorld,
+        effect,
+        geometry,
+        light,
+        material,
+        math,
+        object,
+      } from '../runtime/engine.js';
+      import { controls, ease, mix, opening, readout } from '../runtime/kit.js';
+
+      // One glTF holds the same marble bust three times, each mesh written its own way: plain
+      // floats, a Draco bitstream (KHR_draco_mesh_compression), and meshopt-coded streams
+      // (EXT_meshopt_compression, its normals octahedral bytes under KHR_mesh_quantization).
+      // The native compiler decodes both codecs while it cooks the file, so the browser needs no
+      // decoder: it streams the same cooked pages for all three.
+      const SOURCE = '../assets/examples/compressed-mesh-input/source/geometry.gltf';
+      const world = createWorld('view', { controls: 'orbit' });
+      const dusk = math.color('#17130f');
+      world.scene.background = dusk;
+      world.scene.fog = { color: dusk, near: 6, far: 12 };
+
+      // A gallery: a polished stone floor, a warm plaster wall, three dark plinths a pace apart.
+      const floor = object.mesh(
+        geometry.box(12, 0.2, 8),
+        material.meshPhysical({ color: '#2a2622', roughness: 0.28, clearcoat: 0.5 }),
+      );
+      floor.position.set(0, -0.1, 0);
+      const wall = object.mesh(
+        geometry.box(12, 5, 0.2),
+        material.meshStandard({ color: '#8a7360', roughness: 0.9 }),
+      );
+      wall.position.set(0, 2.5, -1.4);
+      world.scene.add(floor, wall);
+      const stone = material.meshPhysical({ color: '#4a4641', roughness: 0.4, clearcoat: 0.4 });
+      const brass = material.meshStandard({ color: '#c9a25a', metalness: 1, roughness: 0.3 });
+      // The three busts: where each stands, and the name of its node and mesh in the glTF.
+      const BUSTS = {
+        plain: { x: -0.75, name: 'Plain' },
+        draco: { x: 0, name: 'Draco' },
+        meshopt: { x: 0.75, name: 'Meshopt' },
+      };
+      const HEIGHT = 1.05;
+      for (const { x } of Object.values(BUSTS)) {
+        const plinth = object.mesh(geometry.box(0.42, HEIGHT - 0.04, 0.42), stone);
+        plinth.position.set(x, (HEIGHT - 0.04) / 2, 0);
+        const cap = object.mesh(geometry.box(0.48, 0.04, 0.48), brass);
+        cap.position.set(x, HEIGHT - 0.02, 0);
+        world.scene.add(plinth, cap);
+      }
+
+      // Each bust under its own narrow spot, a dim sky over the room, a warm lamp to its side.
+      const spots = Object.fromEntries(
+        Object.entries(BUSTS).map(([key, { x }]) => {
+          const spot = light.spot({
+            color: '#ffe7c7',
+            intensity: 26,
+            distance: 7,
+            angle: 0.32,
+            penumbra: 0.65,
+            position: [x + 0.5, 3.4, 1.4],
+            target: [x, HEIGHT + 0.2, 0],
+            castShadow: true,
+          });
+          world.scene.add(spot);
+          return [key, spot];
+        }),
+      );
+      world.scene.add(
+        light.hemisphere({ intensity: 0.8, color: '#ffe9d0', groundColor: '#2a2018' }),
+        light.point({ color: '#ffb36b', intensity: 4, distance: 6, position: [-2.6, 1.8, 1.6] }),
+      );
+      world.effects.add(effect.bloom({ intensity: 0.05 }));
+
+      // The cooked file, lifted onto the plinths; its three nodes found by the names the glTF
+      // gives them, each to turn on its own.
+      const [model, file] = await Promise.all([
+        world.scene.load(
+          '../assets/examples/compressed-mesh-input/cache/native/full/manifest.json',
+        ),
+        fetch(SOURCE).then((response) => response.json()),
+      ]);
+      model.position.y = HEIGHT;
+      const busts = Object.fromEntries(
+        Object.entries(BUSTS).map(([key, { name }]) => {
+          const node = model.getObjectByName(name);
+          if (!node) throw new Error(`The cooked file must keep its node ${name}`);
+          return [key, node];
+        }),
+      );
+
+      // What each mesh is in the source file, read from the glTF itself: the bytes its buffer
+      // stores, the bytes its accessors hold once decoded, its extension and its triangles.
+      const SIZES = { 5120: 1, 5121: 1, 5122: 2, 5123: 2, 5125: 4, 5126: 4 };
+      const WIDTHS = { SCALAR: 1, VEC2: 2, VEC3: 3, VEC4: 4 };
+      const facts = Object.fromEntries(
+        Object.entries(BUSTS).map(([key, { name }]) => {
+          const mesh = file.meshes.find((one) => one.name === name);
+          const primitive = mesh.primitives[0];
+          const draco = primitive.extensions?.KHR_draco_mesh_compression;
+          const reads = [...Object.values(primitive.attributes), primitive.indices].map(
+            (index) => file.accessors[index],
+          );
+          // The views a mesh reads lead to the buffer that stores it: Draco's one bitstream, or
+          // the buffer meshopt's views are compressed into.
+          const view = file.bufferViews[draco ? draco.bufferView : reads[0].bufferView];
+          const stored = view.extensions?.EXT_meshopt_compression?.buffer ?? view.buffer;
+          const decoded = reads.reduce(
+            (sum, { componentType, type, count }) =>
+              sum + SIZES[componentType] * WIDTHS[type] * count,
+            0,
+          );
+          const extension = draco
+            ? 'KHR_draco_mesh_compression'
+            : view.extensions
+              ? 'EXT_meshopt_compression'
+              : '—';
+          const triangles = reads.at(-1).count / 3;
+          return [key, { stored: file.buffers[stored].byteLength, decoded, extension, triangles }];
+        }),
+      );
+      const bytes = (count) =>
+        count < 1024 * 1024
+          ? `${(count / 1024).toFixed(1)} KiB`
+          : `${(count / 1024 / 1024).toFixed(2)} MiB`;
+
+      // The camera's places: all three from the room, or one close up.
+      const VIEWS = {
+        all: { at: [0.1, 1.55, 2.75], look: [0, 1.2, 0] },
+        ...Object.fromEntries(
+          Object.entries(BUSTS).map(([key, { x }]) => [
+            key,
+            { at: [x + 0.32, 1.42, 1.05], look: [x, 1.27, 0] },
+          ]),
+        ),
+      };
+      let glide = null;
+      const choose = (key) => {
+        const from = [...world.camera.position.toArray(), ...world.controls.target.toArray()];
+        const { at, look } = VIEWS[key];
+        glide = { from, to: [...at, ...look], time: 0 };
+        world.invalidate();
+      };
+
+      const show = (values) => {
+        // The chosen bust in full light, the others half lit.
+        for (const [key, spot] of Object.entries(spots))
+          spot.intensity = values.bust === 'all' || values.bust === key ? 26 : 9;
+        // One bust's facts, or the whole file's: the three summed, no single extension.
+        const chosen = values.bust === 'all' ? Object.values(facts) : [facts[values.bust]];
+        const total = (key) => chosen.reduce((sum, fact) => sum + fact[key], 0);
+        stored(bytes(total('stored')));
+        decoded(bytes(total('decoded')));
+        extension(chosen.length === 1 ? chosen[0].extension : '—');
+        triangles(total('triangles').toLocaleString());
+        if (!intro.gliding) choose(values.bust);
+        world.invalidate();
+      };
+      const ui = controls(
+        { bust: ['all', ...Object.keys(BUSTS)], turn: true },
+        (values, key) => {
+          // The panel's first call comes before its readouts exist: `show(ui)` below draws the start.
+          if (key !== undefined) show(values);
+        },
+        world,
+      );
+      const stored = readout('stored');
+      const decoded = readout('decoded');
+      const extension = readout('extension');
+      const triangles = readout('triangles');
+
+      // The opening: in from the room's far corner to the three plinths.
+      const start = [-2.6, 2.4, 5.2],
+        { at, look } = VIEWS.all;
+      const intro = opening(world, (time) => {
+        const k = ease.inOut(time / 3);
+        world.camera.position.set(...mix({ math }, start, at, k));
+        world.controls.target.set(...look);
+        return time < 3;
+      });
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
+      show(ui);
+
+      let angle = 0;
+      world.onFrame(({ delta }) => {
+        const step = Math.min(delta, 0.05);
+        if (glide) {
+          glide.time += step;
+          const k = ease.inOut(glide.time / 1.4);
+          const pose = mix({ math }, glide.from, glide.to, k);
+          world.camera.position.set(...pose.slice(0, 3));
+          world.controls.target.set(...pose.slice(3));
+          if (k >= 1) glide = null;
+          world.invalidate();
+        }
+        if (!ui.turn) return;
+        // Each turns at its own pace: none of the three is a frozen copy of another.
+        angle += step * 0.35;
+        Object.values(busts).forEach((node, index) => {
+          node.rotation.y = Math.sin(angle + index * 2.1) * 0.9;
+        });
+        world.invalidate();
+      });
+    </script>
+  </body>
+</html>

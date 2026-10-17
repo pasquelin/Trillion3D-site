@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>A map of what the engine draws</title>
+    <meta name="thumbnail" content="12" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #b7cde6;
+      }
+      body {
+        display: grid;
+        grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+        gap: 2px;
+        background: #0d1117;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      #map {
+        position: relative;
+        overflow: hidden;
+      }
+      #map canvas {
+        position: absolute;
+        inset: 0;
+      }
+      #marks {
+        pointer-events: none;
+      }
+      p,
+      ul {
+        position: absolute;
+        margin: 0.5rem;
+        font: 12px system-ui;
+      }
+      p {
+        top: 0;
+        color: #1d2a3a;
+      }
+      ul {
+        right: 0;
+        bottom: 0;
+        padding: 0.4rem 0.6rem;
+        list-style: none;
+        border-radius: 6px;
+        background: #0d1117cc;
+        color: #e6edf3;
+        pointer-events: none;
+      }
+      li {
+        display: flex;
+        align-items: center;
+        gap: 0.4rem;
+        line-height: 1.5;
+      }
+      i {
+        display: inline-block;
+        width: 0.8rem;
+        height: 0.8rem;
+        border: 1px solid #fff4;
+      }
+      .ramp {
+        width: 4rem;
+        background: linear-gradient(90deg, #0ea5e9, #3b82f6, #6366f1, #8b5cf6, #a855f7, #c026d3, #be185d, #881337);
+      }
+      @media (max-width: 640px) {
+        body {
+          grid-template-columns: minmax(0, 1fr);
+          grid-template-rows: minmax(0, 1fr) minmax(0, 1fr);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <div id="map">
+      <canvas id="top"></canvas>
+      <canvas id="marks"></canvas>
+      <ul>
+        <li><span data-words="fine"></span><i class="ramp"></i><span data-words="coarse"></span></li>
+        <li><i style="background: #9ca3af"></i><span data-words="occluded"></span></li>
+        <li><i style="background: #000; border-color: #fff"></i><span data-words="missing"></span></li>
+        <li><i style="background: #f97316"></i><span data-words="pageDrawn"></span></li>
+        <li><i style="border-color: #fbbf24"></i><span data-words="pageCached"></span></li>
+        <li><i style="background: #4ade80"></i><span data-words="rayHit"></span></li>
+        <li><i style="background: #e5e7eb"></i><span data-words="rayMissed"></span></li>
+        <li><i style="background: #ef4444"></i><span data-words="camera"></span></li>
+        <li><i style="background: #fff"></i><span data-words="frozenCut"></span></li>
+      </ul>
+    </div>
+    <p data-words="credit"></p>
+    <script type="module">
+      import { camera, CLUSTER_STATE, createWorld, light, math } from '../runtime/engine.js';
+      import { controls, readout } from '../runtime/kit.js';
+
+      // Emerald Square walked on the left; on the right, the same world drawn from straight above
+      // by a second view of it, and over that map what the left view computed this frame, read
+      // back by `world.diagnostic.inspect()`: its frustum, the clusters its cut chose by level of
+      // detail — grey where the occlusion test threw them out —, the sun's shadow pages, where the
+      // reflection rays left and what they met, and the lights.
+      const world = createWorld('view', { controls: 'firstPerson' });
+      world.scene.background = math.color('#b7cde6');
+      world.scene.add(
+        light.directional({ intensity: 3.4, color: '#fff1d6', position: [40, 90, 30], castShadow: true }),
+        light.hemisphere({ intensity: 1.6, color: '#d6e6ff', groundColor: '#8a7c64' }),
+      );
+      // Kept on one line so the shared example proof checks this published manifest and its credit.
+      // prettier-ignore
+      await world.scene.load('../assets/examples/emerald-square/cache/native/full/manifest.json');
+      world.camera.near = 0.05;
+      world.camera.far = 400;
+      world.camera.set({ position: [-30, 2.2, 45], target: [-10, 2.6, 10] });
+
+      // The map: an orthographic lens looking straight down, north up, above the walker's eye.
+      const lens = camera.orthographic({ near: 1, far: 2000, top: 80, bottom: -80, fitAspect: true });
+      lens.rotation.set(-Math.PI / 2, 0, 0);
+      world.addView({ canvas: 'top', camera: lens, temporalAntialiasing: false });
+      const ABOVE = 600;
+      const marks = document.getElementById('marks');
+      const pen = marks.getContext('2d');
+
+      const LEVELS = ['#0ea5e9', '#3b82f6', '#6366f1', '#8b5cf6', '#a855f7', '#c026d3', '#be185d', '#881337'];
+      const fill = (colour, alpha) => colour + Math.round(alpha * 255).toString(16).padStart(2, '0');
+      let latest = null, layers = {};
+
+      // World x and z to the overlay's pixels: x to the right, z down, the lens at the centre.
+      function projector() {
+        const { width, height } = marks, half = lens.top;
+        const scale = height / (2 * half);
+        return (x, z) => [width / 2 + (x - lens.position.x) * scale, height / 2 + (z - lens.position.z) * scale];
+      }
+
+      function drawClusters(at, { clusters }) {
+        const { bounds, level, state } = clusters;
+        // Coarse first, so the fine clusters lie on top.
+        const order = [...level.keys()].sort((a, b) => level[b] - level[a]);
+        for (const k of order) {
+          const [x0, z0] = at(bounds[6 * k], bounds[6 * k + 2]), [x1, z1] = at(bounds[6 * k + 3], bounds[6 * k + 5]);
+          const colour = state[k] === CLUSTER_STATE.occluded ? '#9ca3af' : state[k] === CLUSTER_STATE.missing ? '#000000' : LEVELS[Math.min(level[k], LEVELS.length - 1)];
+          pen.fillStyle = fill(colour, state[k] === CLUSTER_STATE.missing ? 0.8 : 0.16);
+          pen.strokeStyle = fill(colour, 0.7);
+          pen.fillRect(x0, z0, Math.max(x1 - x0, 1), Math.max(z1 - z0, 1));
+          pen.strokeRect(x0, z0, Math.max(x1 - x0, 1), Math.max(z1 - z0, 1));
+        }
+      }
+
+      // A sun's pages lie on a plane facing it: each corner slid along the light onto the ground.
+      // The clipmap's coarse levels, whose pages are wider than a tenth of the map, are left out.
+      function drawShadows(at, { shadows }) {
+        for (const { pages, rendered, direction } of shadows) {
+          const down = direction[1] < -1e-3 ? direction[1] : -1;
+          if (pages.length && Math.hypot(pages[3] - pages[0], pages[5] - pages[2]) > lens.top / 5) continue;
+          for (let page = 0; page < rendered.length && pages.length; page++) {
+            pen.beginPath();
+            for (let corner = 0; corner < 4; corner++) {
+              const p = 12 * page + 3 * corner, t = -pages[p + 1] / down;
+              pen.lineTo(...at(pages[p] + direction[0] * t, pages[p + 2] + direction[2] * t));
+            }
+            pen.closePath();
+            if (rendered[page]) {
+              pen.fillStyle = '#f9731633';
+              pen.fill();
+            }
+            pen.strokeStyle = rendered[page] ? '#f97316' : '#fbbf2466';
+            pen.stroke();
+          }
+        }
+      }
+
+      function drawReflections(at, { reflections }) {
+        if (!reflections) return;
+        const { count, origins, directions, distances } = reflections;
+        for (let k = 0; k < count; k++) {
+          const [x, z] = at(origins[3 * k], origins[3 * k + 2]), far = distances[k];
+          if (Number.isFinite(far)) {
+            pen.strokeStyle = '#4ade8088';
+            pen.beginPath();
+            pen.moveTo(x, z);
+            pen.lineTo(...at(origins[3 * k] + directions[3 * k] * far, origins[3 * k + 2] + directions[3 * k + 2] * far));
+            pen.stroke();
+          }
+          pen.fillStyle = Number.isFinite(far) ? '#4ade80' : '#e5e7ebaa';
+          pen.fillRect(x - 1, z - 1, 2, 2);
+        }
+      }
+
+      // The frustum's four edges seen from above, from the near corners out past the map.
+      function drawFrustum(at, view, colour, dash) {
+        const { nearCorners: n, edges: e } = view, reach = 4 * lens.top;
+        pen.strokeStyle = colour;
+        pen.lineWidth = 2;
+        pen.setLineDash(dash);
+        for (let c = 0; c < 4; c++) {
+          pen.beginPath();
+          pen.moveTo(...at(n[3 * c], n[3 * c + 2]));
+          pen.lineTo(...at(n[3 * c] + e[3 * c] * reach, n[3 * c + 2] + e[3 * c + 2] * reach));
+          pen.stroke();
+        }
+        pen.setLineDash([]);
+        pen.lineWidth = 1;
+      }
+
+      // A light with a place: a dot and the circle of its reach; a sun: an arrow from the centre.
+      function drawLights(at, { lights }) {
+        for (const { position, range, direction } of lights) {
+          pen.strokeStyle = pen.fillStyle = '#facc15';
+          if (position) {
+            const [x, z] = at(position[0], position[2]);
+            pen.beginPath();
+            pen.arc(x, z, 4, 0, 2 * Math.PI);
+            pen.fill();
+            if (range) {
+              pen.beginPath();
+              pen.arc(x, z, range * (marks.height / (2 * lens.top)), 0, 2 * Math.PI);
+              pen.stroke();
+            }
+          } else if (direction) {
+            const [x, z] = [marks.width / 2, marks.height / 2], length = Math.hypot(direction[0], direction[2]) || 1, arm = 0.25 * marks.height;
+            pen.lineWidth = 3;
+            pen.beginPath();
+            pen.moveTo(x, z);
+            pen.lineTo(x + (direction[0] / length) * arm, z + (direction[2] / length) * arm);
+            pen.stroke();
+            pen.lineWidth = 1;
+          }
+        }
+      }
+
+      function draw() {
+        const box = marks.getBoundingClientRect(), ratio = devicePixelRatio;
+        marks.width = Math.round(box.width * ratio);
+        marks.height = Math.round(box.height * ratio);
+        if (!latest) return;
+        const at = projector();
+        if (layers.clusters) drawClusters(at, latest);
+        if (layers.shadows) drawShadows(at, latest);
+        if (layers.reflections) drawReflections(at, latest);
+        if (layers.lights) drawLights(at, latest);
+        if (layers.frustum) {
+          if (latest.frozen) drawFrustum(at, latest.cutCamera, '#ffffff', [8, 6]);
+          drawFrustum(at, latest.camera, '#ef4444', []);
+        }
+      }
+
+      function report({ clusters, shadows, reflections }) {
+        const by = [0, 0, 0];
+        for (const state of clusters.state) by[state]++;
+        shown.count(String(clusters.count));
+        shown.occluded(String(by[CLUSTER_STATE.occluded]));
+        shown.missing(String(by[CLUSTER_STATE.missing]));
+        const drawn = shadows.reduce((sum, map) => sum + map.renderedCount, 0), mapped = shadows.reduce((sum, map) => sum + map.mappedCount, 0);
+        shown.pages(`${drawn} / ${mapped}`);
+        shown.rays(reflections ? `${reflections.missed} / ${reflections.count}` : '—');
+      }
+
+      controls(
+        {
+          freeze: false,
+          frustum: true,
+          clusters: true,
+          shadows: true,
+          reflections: true,
+          lights: true,
+          mapSize: [40, 800, 160, 10],
+        },
+        (values, key) => {
+          layers = values;
+          if (key === undefined || key === 'freeze') world.diagnostic.freeze = values.freeze;
+          if (key === undefined || key === 'mapSize') {
+            lens.top = values.mapSize / 2;
+            lens.bottom = -values.mapSize / 2;
+          }
+          world.invalidate();
+          draw();
+        },
+        world,
+      );
+
+      // Below the panel, what the last inspection counted.
+      const shown = { count: readout('clusters'), occluded: readout('occluded'), missing: readout('missing'), pages: readout('shadowPages'), rays: readout('raysMissed') };
+
+      // The map follows the walker; a frame that moved it asks one more for the map to catch up.
+      world.onFrame(() => {
+        const eye = world.camera.position;
+        if (lens.position.x === eye.x && lens.position.z === eye.z) return;
+        lens.position.set(eye.x, eye.y + ABOVE, eye.z);
+        world.invalidate();
+      });
+      addEventListener('resize', draw);
+
+      // One inspection at a time, four a second at most: each one reads the next image of the walk.
+      // Nothing (`null`) while the device is lost and the world opens its session again.
+      for (;;) {
+        const seen = await world.diagnostic.inspect();
+        if (seen) {
+          latest = seen;
+          draw();
+          report(seen);
+        }
+        await new Promise((done) => setTimeout(done, 250));
+      }
+    </script>
+  </body>
+</html>

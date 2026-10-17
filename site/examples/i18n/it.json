@@ -1454,6 +1454,38 @@
       "credit": "Amazon Lumberyard Bistro (NVIDIA ORCA), CC BY 4.0 — vedi assets/examples/CREDITS.md"
     }
   },
+  "a-map-of-what-the-engine-draws": {
+    "banner": "Fai clic sulla vista di sinistra e cammina con W A S D; la mappa a destra mostra dall'alto ciò che quella vista ha calcolato in questa immagine. Congela il taglio, poi esci da esso.",
+    "controls": {
+      "freeze": "Congela",
+      "frustum": "Frustum",
+      "clusters": "Cluster",
+      "shadows": "Pagine d'ombra",
+      "reflections": "Raggi dei riflessi",
+      "lights": "Luci",
+      "mapSize": "Dimensione mappa (m)"
+    },
+    "readouts": {
+      "clusters": "Cluster",
+      "occluded": "Occlusi",
+      "missing": "Non caricati",
+      "shadowPages": "Pagine d'ombra disegnate",
+      "raysMissed": "Raggi senza impatto"
+    },
+    "words": {
+      "credit": "Emerald Square di Nicholas Hull e Kate Anderson (NVIDIA ORCA), vegetazione di SpeedTree, CC BY-NC-SA 3.0 — vedi assets/examples/CREDITS.md",
+      "fine": "fine",
+      "coarse": "grossolano",
+      "occluded": "occluso",
+      "missing": "non caricato",
+      "pageDrawn": "pagina d'ombra disegnata",
+      "pageCached": "pagina d'ombra in cache",
+      "rayHit": "raggio e il suo impatto",
+      "rayMissed": "raggio senza impatto",
+      "camera": "camera",
+      "frozenCut": "taglio congelato"
+    }
+  },
   "a-bust-a-crate-and-a-glass-ball": {
     "banner": "Trascina per girare intorno al busto. La cassa e la sfera di vetro girano sul loro piatto.",
     "words": {
@@ -2726,6 +2758,739 @@
       "height": "Diradamento",
       "base": "Base",
       "colour": "Colore"
+    }
+  },
+  "paint-where-you-click": {
+    "banner": "Premi sul vaso e trascina per dipingere. Resta fermo e il tornio traccia una fascia tutt'intorno. Trascina accanto per girare la vista.",
+    "controls": {
+      "colour": "Colore",
+      "brush": "Dimensione pennello",
+      "wheel": "Velocità del tornio",
+      "clear": "Cancella"
+    },
+    "readouts": {
+      "triangle": "Triangolo",
+      "uv": "Texture (u, v)",
+      "strokes": "Tratti"
+    }
+  },
+  "pixel-art-render": {
+    "banner": "Trascina per ruotare l'isola, rotella per lo zoom. Cambia la dimensione dei pixel e la tavolozza.",
+    "controls": {
+      "pixelSize": "Dimensione pixel",
+      "palette": "Tavolozza",
+      "upscale": "Ingrandimento",
+      "turn": "Rotazione"
+    },
+    "choices": {
+      "palette": {
+        "full": "colori pieni",
+        "posterized": "64 colori",
+        "handheld": "verde da console portatile",
+        "dusk": "quattro toni del tramonto"
+      },
+      "upscale": {
+        "nearest": "pixel più vicino",
+        "smooth": "sfumato"
+      }
+    },
+    "readouts": {
+      "resolution": "Risoluzione disegnata"
+    }
+  },
+  "a-line-that-draws-itself": {
+    "banner": "Uno spirografo la cui linea si disegna da sola: il tratto di un'unica linea cresce dietro la penna. Scegli una ruota e un foro; trascina per guardarti intorno.",
+    "controls": {
+      "wheel": "Denti della ruota",
+      "hole": "Foro della penna",
+      "speed": "Giri al secondo",
+      "width": "Spessore della linea",
+      "layers": "Strato successivo",
+      "clear": "Pulisci il foglio"
+    },
+    "readouts": {
+      "drawn": "Strato disegnato",
+      "laps": "Giri per chiudere",
+      "inkLaid": "Inchiostro steso"
+    }
+  },
+  "decals-on-a-surface": {
+    "banner": "Passa sul ciottolo per vedere la scatola di proiezione; clicca per ritagliare un adesivo dalla superficie sotto. Trascina per girare la vista.",
+    "controls": {
+      "sticker": "Adesivo",
+      "size": "Dimensione",
+      "turn": "Rotazione casuale",
+      "box": "Mostra la scatola",
+      "spin": "Rotazione",
+      "clear": "Staccali tutti"
+    },
+    "choices": {
+      "sticker": {
+        "mixed": "misti",
+        "star": "stella",
+        "bolt": "fulmine",
+        "heart": "cuore",
+        "target": "bersaglio",
+        "flag": "scacchi",
+        "smile": "sorriso",
+        "hazard": "pericolo",
+        "flower": "fiore"
+      }
+    },
+    "readouts": {
+      "decals": "Decalcomanie",
+      "kept": "Triangoli ritagliati"
+    }
+  },
+  "procedural-wood-and-noise": {
+    "banner": "Trascina per guardarti intorno. Ogni texel nasce da un rumore calcolato nella pagina: scegli un legno, sega nuovi tronchi.",
+    "controls": {
+      "wood": "Legno",
+      "rings": "Anelli ogni 10 cm",
+      "figure": "Venatura",
+      "varnish": "Vernice",
+      "newLogs": "Nuovi tronchi",
+      "turn": "Ruota la ciotola"
+    },
+    "choices": {
+      "wood": {
+        "oak": "rovere",
+        "walnut": "noce",
+        "cherry": "ciliegio",
+        "maple": "acero"
+      }
+    },
+    "readouts": {
+      "texels": "Texel calcolati",
+      "bakeTime": "Calcolati in"
+    }
+  },
+  "a-toolpath-in-lines": {
+    "banner": "Un vero file G-code, letto nella pagina e disegnato a linee mentre l’ugello lo stampa. Trascina per ruotare; abbassa lo strato superiore per tagliare il pezzo.",
+    "controls": {
+      "colour": "Colore per",
+      "topLayer": "Strato superiore",
+      "pace": "Ritmo",
+      "travel": "Spostamenti",
+      "reprint": "Ristampa"
+    },
+    "choices": {
+      "colour": {
+        "kind": "tipo di percorso",
+        "layer": "strato",
+        "speed": "velocità"
+      }
+    },
+    "readouts": {
+      "layer": "Strato",
+      "filament": "Filamento",
+      "printTime": "Tempo di stampa",
+      "gcodeLines": "Righe di G-code",
+      "segments": "Segmenti",
+      "lines": "Linee nella scena"
+    }
+  },
+  "pick-an-instance": {
+    "banner": "Punta un esagono per nominarlo tra i 1.519 posizionamenti di una sola forma; clicca per sceglierlo e mandare un'onda sull'isola.",
+    "controls": {
+      "ripple": "Onda",
+      "swell": "Mareggiata"
+    },
+    "readouts": {
+      "instance": "Istanza",
+      "cell": "Cella (q, r)",
+      "height": "Altezza",
+      "placements": "Posizionamenti",
+      "shapes": "Forme condivise"
+    }
+  },
+  "shapes-from-an-svg": {
+    "banner": "Un SVG letto tracciato per tracciato, ogni forma piena ritagliata nel cartoncino con i suoi fori. Allarga gli strati o trascina sulla pagina un tuo SVG.",
+    "controls": {
+      "spread": "Distanza",
+      "depth": "Spessore del cartoncino",
+      "bevel": "Smusso",
+      "detail": "Dettaglio delle curve",
+      "sway": "Oscillazione",
+      "yourSvg": "Apri il tuo SVG"
+    },
+    "readouts": {
+      "paths": "Forme lette",
+      "outlines": "Contorni",
+      "holes": "Fori ritagliati",
+      "triangles": "Triangoli",
+      "file": "File"
+    }
+  },
+  "boolean-shapes": {
+    "banner": "Trascina per girare intorno. Scegli un'operazione; attiva la deriva e un worker ritaglia la forma mentre si muove.",
+    "controls": {
+      "operation": "Operazione",
+      "ball": "Sfera",
+      "bore": "Foro",
+      "drifting": "Deriva",
+      "operands": "Operandi",
+      "spin": "Rotazione"
+    },
+    "choices": {
+      "operation": {
+        "carved": "(cubo ∩ sfera) − fori",
+        "subtract": "cubo − sfera",
+        "intersect": "cubo ∩ sfera",
+        "union": "cubo ∪ sfera"
+      }
+    },
+    "readouts": {
+      "triangles": "Triangoli",
+      "computedIn": "Calcolato in"
+    }
+  },
+  "a-convex-hull": {
+    "banner": "Il più piccolo solido convesso attorno a uno sciame in movimento, ricostruito da zero a ogni fotogramma. Cambia i punti e la nuvola; trascina per guardarti intorno.",
+    "controls": {
+      "points": "Punti",
+      "motion": "Movimento",
+      "cloud": "Nuvola",
+      "facets": "Facce",
+      "edges": "Spigoli"
+    },
+    "choices": {
+      "cloud": {
+        "ball": "sfera",
+        "cube": "cubo",
+        "torus": "anello",
+        "swarm": "tre sciami"
+      }
+    },
+    "readouts": {
+      "hullCorners": "Vertici dell'involucro",
+      "faces": "Facce",
+      "inside": "Punti interni",
+      "euler": "V − S + F",
+      "buildTime": "Involucro costruito in"
+    }
+  },
+  "contact-shadow-under-a-car": {
+    "banner": "Trascina per orbitare. Allarga la lampada, solleva l'auto o falla saltare: la sua ombra resta attaccata alle gomme.",
+    "controls": {
+      "lampWidth": "Larghezza lampada",
+      "rideHeight": "Altezza da terra",
+      "hop": "Salta",
+      "paint": "Vernice",
+      "drive": "Guida"
+    },
+    "readouts": {
+      "height": "Altezza"
+    }
+  },
+  "contact-shadows-from-the-screen": {
+    "banner": "Trascina per orbitare, scorri per avvicinarti. Ogni piedino e ogni pista conserva il suo filo d'ombra.",
+    "controls": {
+      "sunHeight": "Altezza del sole",
+      "sunTurn": "Rotazione del sole",
+      "sweep": "Scorrimento"
+    },
+    "readouts": {
+      "ray": "Raggio sullo schermo"
+    }
+  },
+  "light-that-bounces": {
+    "banner": "Trascina per guardare nella stanza. Spegni e riaccendi il rimbalzo: la chiazza di sole illumina tutta la stanza.",
+    "controls": {
+      "bounce": "Rimbalzo",
+      "sunHeight": "Altezza del sole",
+      "sunTurn": "Rotazione del sole",
+      "sweep": "Scorrimento",
+      "sunColour": "Colore del sole"
+    }
+  },
+  "voxel-models": {
+    "banner": "File MagicaVoxel letti nella pagina: facce nascoste scartate, angoli ombreggiati dai vicini. Trascina per ruotare; abbassa l’altezza per aprire il modello.",
+    "controls": {
+      "model": "Modello",
+      "height": "Altezza",
+      "occlusion": "Occlusione",
+      "spin": "Rotazione"
+    },
+    "choices": {
+      "model": {
+        "lighthouse": "faro",
+        "castle": "castello",
+        "balloon": "mongolfiera"
+      }
+    },
+    "readouts": {
+      "voxels": "Voxel",
+      "facesDrawn": "Facce disegnate",
+      "facesHidden": "Facce scartate",
+      "file": "File"
+    }
+  },
+  "red-cyan-anaglyph": {
+    "banner": "Indossa occhiali rosso-ciano, lente rossa sull'occhio sinistro. Trascina per ruotare, rotella per avvicinarti.",
+    "controls": {
+      "glasses": "Occhiali",
+      "separation": "Distanza tra gli occhi",
+      "screenPlane": "Piano dello schermo",
+      "swapEyes": "Scambia gli occhi",
+      "speed": "Velocità"
+    },
+    "choices": {
+      "glasses": {
+        "halfColour": "mezzo colore",
+        "colour": "colore pieno",
+        "grey": "grigio",
+        "none": "nessuno, solo occhio sinistro"
+      }
+    },
+    "readouts": {
+      "screenDistance": "Piano dello schermo a"
+    }
+  },
+  "cross-fade-between-scenes": {
+    "banner": "Due mondi, una telecamera. Trascina per ruotare; scegli come una scena lascia il posto all'altra.",
+    "controls": {
+      "transition": "Transizione",
+      "duration": "Durata (s)",
+      "hold": "Pausa (s)",
+      "autoplay": "Riproduzione automatica",
+      "switchScene": "Cambia scena"
+    },
+    "choices": {
+      "transition": {
+        "iris": "iride",
+        "wipe": "tendina",
+        "fade": "dissolvenza incrociata",
+        "blinds": "veneziana"
+      }
+    },
+    "readouts": {
+      "showing": "Scena",
+      "worldsDrawing": "Mondi che disegnano"
+    },
+    "words": {
+      "desert": "deserto",
+      "glacier": "ghiacciaio"
+    }
+  },
+  "a-refracting-pane": {
+    "banner": "Trascina per guardarti intorno. Il vetro devia ciò che sta dietro: cambia il rilievo, l'indice e lo spessore.",
+    "controls": {
+      "glass": "Vetro",
+      "refraction": "Indice di rifrazione",
+      "thickness": "Spessore",
+      "tint": "Tinta",
+      "slide": "Scorri"
+    },
+    "choices": {
+      "glass": {
+        "reeded": "cannettato",
+        "hammered": "martellato",
+        "rippled": "ondulato",
+        "bullseye": "a rulli",
+        "flat": "liscio"
+      }
+    }
+  },
+  "pick-lines-and-points": {
+    "banner": "Passa il puntatore sul globo: si accende la stella o la linea più vicina a portata. Il raycast del motore colpisce triangoli; punti e segmenti sono provati qui, in pixel.",
+    "controls": {
+      "reach": "Portata (px)",
+      "stars": "Scegli stelle",
+      "lines": "Scegli linee",
+      "turning": "Rotazione"
+    },
+    "readouts": {
+      "hit": "Scelto",
+      "place": "Dove",
+      "off": "Scarto",
+      "cost": "Costo"
+    },
+    "words": {
+      "nothing": "niente",
+      "star": "stella {n} di {total}",
+      "figure": "figura {n}",
+      "parallel": "parallelo {deg}°",
+      "meridian": "meridiano {deg}°",
+      "segment": "segmento {k} di {total}",
+      "place": "lon {lon}° · lat {lat}°",
+      "pixels": "{px} px",
+      "cost": "{n} prove · {us} µs"
+    }
+  },
+  "printable-parts": {
+    "banner": "File STL, PLY, AMF e 3MF, ciascuno letto da qualche decina di righe nella pagina. Trascina per ruotare; scegli un pezzo per vederlo da vicino.",
+    "controls": {
+      "focus": "Guarda",
+      "stlColour": "Filamento STL",
+      "wireframe": "Fil di ferro",
+      "spin": "Rotazione"
+    },
+    "choices": {
+      "focus": {
+        "all": "tutto il piatto",
+        "gear": "ingranaggio (STL)",
+        "vase": "vaso (PLY)",
+        "bolt": "vite e dado (AMF)",
+        "knot": "nodo (3MF)"
+      }
+    },
+    "readouts": {
+      "gear": "gear.stl",
+      "vase": "vase.ply",
+      "bolt": "bolt.amf",
+      "knot": "knot.3mf"
+    },
+    "words": {
+      "summary": "{size} kB · {triangles} triangoli"
+    }
+  },
+  "avif-textures": {
+    "banner": "Trascina per guardarti intorno. Il paesaggio e il ramo d'ulivo sono file AVIF: abbassa la qualità e guarda dalla finestra.",
+    "controls": {
+      "quality": "Qualità AVIF",
+      "lookAt": "Guarda"
+    },
+    "choices": {
+      "lookAt": {
+        "room": "la stanza",
+        "view": "il paesaggio",
+        "branch": "il ramo"
+      }
+    },
+    "readouts": {
+      "view": "Paesaggio",
+      "branch": "Ramo",
+      "decoded": "Pixel decodificati"
+    },
+    "words": {
+      "alpha": "trasparente"
+    }
+  },
+  "smoothing-by-subdivision": {
+    "banner": "Trascina per girare intorno. Alza il livello per tagliare ogni triangolo in quattro; gli spigoli ambra sono pieghe e restano vivi.",
+    "controls": {
+      "shape": "Gabbia",
+      "level": "Livello",
+      "creases": "Pieghe",
+      "creaseAngle": "Angolo di piega",
+      "cage": "Mostra gabbia",
+      "spin": "Rotazione"
+    },
+    "choices": {
+      "shape": {
+        "knot": "nodo",
+        "goblet": "calice",
+        "ball": "icosaedro",
+        "cube": "cubo"
+      }
+    },
+    "readouts": {
+      "triangles": "Triangoli",
+      "cageTriangles": "Triangoli della gabbia"
+    }
+  },
+  "motion-retargeting": {
+    "banner": "Trascina per girare intorno. La camminata di CesiumMan, riscritta per due scheletri con altri nomi delle ossa, altre misure e altre pose di riposo. Cambia metodo per vedere cosa corregge ogni passo.",
+    "controls": {
+      "method": "Metodo",
+      "speed": "Velocità"
+    },
+    "choices": {
+      "method": {
+        "directions": "Allineare le ossa",
+        "turns": "Riportare le rotazioni del mondo",
+        "copy": "Copiare le rotazioni locali"
+      }
+    },
+    "readouts": {
+      "bones": "Ossa associate",
+      "keys": "Chiavi precalcolate"
+    }
+  },
+  "breaking-things": {
+    "banner": "Fai clic per lanciare una palla di ferro. Il muro, il pilastro e il cristallo sono tagliati in pezzi di Voronoi, saldati da giunti che cedono oltre la loro resistenza.",
+    "controls": {
+      "pieces": "Pezzi",
+      "strength": "Resistenza (kN)",
+      "speed": "Velocità (m/s)",
+      "slowMotion": "Rallentatore",
+      "throwAtWall": "Lancia contro il muro",
+      "rebuild": "Ricostruisci"
+    },
+    "readouts": {
+      "pieces": "Pezzi",
+      "welds": "Saldature integre",
+      "broken": "Saldature rotte"
+    }
+  },
+  "a-ground-projected-sky": {
+    "banner": "Trascina per girare intorno alla sfera armillare: il pavimento dell'immagine resta sotto e ne riceve le ombre. Togli «A terra» per vedere scivolare una sfera semplice.",
+    "controls": {
+      "place": "Luogo",
+      "grounded": "A terra",
+      "height": "Altezza",
+      "radius": "Raggio",
+      "turning": "Rotazione"
+    },
+    "choices": {
+      "place": {
+        "plaza": "piazza di marmo",
+        "salt flat": "distesa di sale al tramonto",
+        "meadow": "prato"
+      }
+    },
+    "readouts": {
+      "flatFloor": "Portata del suolo piatto"
+    },
+    "words": {
+      "credit": "Panorami dipinti da questa pagina, in codice, all'apertura: non si scarica nulla."
+    }
+  },
+  "sound-in-space": {
+    "banner": "Premi Ascolta (meglio in cuffia), poi ruota e ingrandisci: ogni sorgente suona da dove brilla, posta attorno alla tua testa da un panner Web Audio che segue la camera.",
+    "controls": {
+      "listen": "Ascolta",
+      "silence": "Silenzio",
+      "volume": "Volume",
+      "distanceModel": "Attenuazione",
+      "rolloff": "Pendenza",
+      "panning": "Spazializzazione",
+      "moving": "Movimento"
+    },
+    "choices": {
+      "distanceModel": {
+        "inverse": "Inversa",
+        "exponential": "Esponenziale",
+        "linear": "Lineare"
+      },
+      "panning": {
+        "HRTF": "HRTF (3D)",
+        "equalpower": "Potenza uguale (stereo)"
+      }
+    },
+    "readouts": {
+      "bell": "Campana",
+      "horn": "Tromba",
+      "firefly": "Lucciola"
+    },
+    "words": {
+      "listening": "In ascolto: gira attorno a una sorgente, avvicinati o passa dietro la tromba per uscire dal suo cono.",
+      "silent": "Suono in pausa.",
+      "level": "{db} dB · {m} m",
+      "distance": "{m} m"
+    }
+  },
+  "drag-objects": {
+    "banner": "Trascina un pezzo sul palco, sopra un altro per impilarlo, o contro gli altri per spingerli. Tieni premuto Maiusc per sollevarlo su un piano verticale.",
+    "controls": {
+      "plane": "Piano",
+      "shove": "Spingi",
+      "home": "Rimetti a posto"
+    },
+    "choices": {
+      "plane": {
+        "floor": "orizzontale",
+        "wall": "verticale"
+      }
+    },
+    "readouts": {
+      "held": "Tenuto",
+      "surface": "Piano",
+      "height": "Altezza"
+    },
+    "words": {
+      "nothing": "niente",
+      "floor": "orizzontale",
+      "wall": "verticale",
+      "metres": "{m} m",
+      "ball": "sfera laccata",
+      "knot": "nodo di ceramica",
+      "crate": "cassa",
+      "glass": "colonna di vetro",
+      "cone": "cono rosso",
+      "gem": "gemma dorata",
+      "pill": "capsula rosa"
+    }
+  },
+  "oriented-boxes": {
+    "banner": "Trascina per girare intorno. Le scatole ciano ruotano con la forma, quelle ambra seguono gli assi del mondo; in rosso, due scatole si toccano.",
+    "controls": {
+      "boxes": "Scatole",
+      "fit": "Adattamento",
+      "speed": "Velocità",
+      "tumbling": "Capriole"
+    },
+    "choices": {
+      "boxes": {
+        "both": "entrambe",
+        "oriented": "orientate",
+        "aligned": "allineate",
+        "none": "nessuna"
+      },
+      "fit": {
+        "tightest": "la più stretta",
+        "principal axes": "assi principali"
+      }
+    },
+    "readouts": {
+      "orientedVolume": "Volume, orientate",
+      "alignedVolume": "Volume, allineate",
+      "orientedContacts": "Contatti, orientate",
+      "alignedContacts": "Contatti, allineate"
+    }
+  },
+  "edit-a-spline": {
+    "banner": "Trascina una maniglia dorata e la curva la segue; tieni premuto Maiusc per alzarla o abbassarla. Doppio clic sul pavimento per aggiungere una maniglia, su una maniglia per toglierla.",
+    "controls": {
+      "closed": "Anello chiuso",
+      "radius": "Raggio",
+      "speed": "Perle",
+      "polygon": "Linee di controllo",
+      "reset": "Ripristina"
+    },
+    "readouts": {
+      "handles": "Maniglie",
+      "length": "Lunghezza",
+      "triangles": "Triangoli"
+    },
+    "words": {
+      "metres": "{m} m"
+    }
+  },
+  "compressed-mesh-input": {
+    "banner": "Trascina per guardarti intorno. Un solo glTF contiene questo busto di marmo tre volte: in float non compressi, in Draco e in meshopt. Il compilatore decodifica entrambi i formati durante la cottura, quindi il browser non ha bisogno di alcun decoder. Scegli un busto per leggerne il file.",
+    "controls": {
+      "bust": "Busto",
+      "turn": "Rotazione"
+    },
+    "choices": {
+      "bust": {
+        "all": "Tutti e tre",
+        "plain": "Float non compressi",
+        "draco": "Draco",
+        "meshopt": "Meshopt"
+      }
+    },
+    "readouts": {
+      "stored": "Memorizzato",
+      "decoded": "Decodificato",
+      "extension": "Estensione",
+      "triangles": "Triangoli"
+    }
+  },
+  "lens-flares": {
+    "banner": "Trascina per ruotare la vista: i riflessi attraversano il centro dell’immagine e si attenuano ogni volta che una pala copre il sole.",
+    "controls": {
+      "flare": "Riflessi",
+      "lens": "Obiettivo",
+      "strength": "Intensità",
+      "sunHeight": "Altezza del sole"
+    },
+    "choices": {
+      "lens": {
+        "spherical": "sferico",
+        "anamorphic": "anamorfico"
+      }
+    },
+    "readouts": {
+      "sunShowing": "Sole visibile"
+    }
+  },
+  "particles-with-own-sizes": {
+    "banner": "Ogni scintilla è uno sprite con la sua dimensione: grosse comete, glitter sottile, braci che si rimpiccioliscono raffreddandosi. Allarga la varietà delle dimensioni o lancia una bomba.",
+    "controls": {
+      "shells": "Bombe",
+      "sizeSpread": "Varietà di dimensioni",
+      "rate": "Lanci",
+      "launch": "Lancia"
+    },
+    "choices": {
+      "shells": {
+        "mixed": "misto",
+        "peony": "peonia",
+        "ring": "anello",
+        "willow": "salice",
+        "chrysanthemum": "crisantemo"
+      }
+    },
+    "readouts": {
+      "sparks": "Scintille",
+      "sizes": "Dimensioni proprie"
+    }
+  },
+  "an-atmospheric-sky": {
+    "banner": "Trascina per guardarti intorno. Il cielo è calcolato dall’aria stessa: fai scorrere l’ora, infittisci la foschia o l’aria.",
+    "controls": {
+      "hour": "Ora",
+      "run": "Scorri la giornata",
+      "haze": "Foschia",
+      "air": "Densità dell’aria",
+      "adaptEyes": "Adatta gli occhi"
+    },
+    "readouts": {
+      "clock": "Ora",
+      "sunHeight": "Altezza del sole",
+      "sunThroughAir": "Sole attraverso l’aria"
+    }
+  },
+  "lit-by-an-hdr-image": {
+    "banner": "Trascina per girare intorno. Ogni luogo è una vera foto HDR: il suo sole diventa una luce con ombre, il resto una luce morbida da ogni lato.",
+    "controls": {
+      "place": "Luogo",
+      "turn": "Ruota",
+      "exposure": "Esposizione",
+      "sunFromImage": "Sole come luce",
+      "spin": "Rotazione"
+    },
+    "choices": {
+      "place": {
+        "plains": "pianura assolata",
+        "sunset": "Venezia al tramonto",
+        "harbour": "porto di notte"
+      }
+    },
+    "readouts": {
+      "sunFound": "Sole trovato a",
+      "sunShare": "Luce del sole",
+      "range": "Gamma dell’immagine"
+    },
+    "words": {
+      "noSun": "nessuno",
+      "stops": "{n} stop",
+      "credit": "Immagini HDR: Rosendal Plains 2, Venice Sunset, Golden Bay — Poly Haven, CC0"
+    }
+  },
+  "adjusting-the-environment": {
+    "banner": "Trascina per girare intorno. Ruota, scalda, satura o attenua la luce attorno al set: ogni modifica è qualche numero, applicato alla luce, alle ombre e allo sfondo insieme.",
+    "controls": {
+      "rig": "Luce",
+      "turn": "Ruota",
+      "strength": "Intensità",
+      "warmth": "Calore",
+      "saturation": "Saturazione",
+      "exposure": "Esposizione",
+      "toneMapping": "Curva tonale",
+      "backgroundBlur": "Sfocatura sfondo",
+      "background": "Sfondo",
+      "spin": "Rotazione"
+    },
+    "choices": {
+      "rig": {
+        "studio": "studio fotografico",
+        "stage": "palco con gelatine"
+      },
+      "toneMapping": {
+        "aces": "aces",
+        "agx": "agx",
+        "neutral": "neutra",
+        "reinhard": "reinhard",
+        "cineon": "cineon",
+        "linear": "lineare"
+      }
+    },
+    "readouts": {
+      "lightOnTop": "Luce dall’alto"
     }
   }
 }

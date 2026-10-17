@@ -1454,6 +1454,38 @@
       "credit": "Amazon Lumberyard Bistro (NVIDIA ORCA), CC BY 4.0 — lihat assets/examples/CREDITS.md"
     }
   },
+  "a-map-of-what-the-engine-draws": {
+    "banner": "Klik tampilan kiri lalu berjalan dengan W A S D; peta di kanan menunjukkan dari atas apa yang dihitung tampilan itu pada gambar ini. Bekukan pemilihan, lalu berjalan keluar darinya.",
+    "controls": {
+      "freeze": "Bekukan",
+      "frustum": "Frustum",
+      "clusters": "Klaster",
+      "shadows": "Halaman bayangan",
+      "reflections": "Sinar pantulan",
+      "lights": "Lampu",
+      "mapSize": "Ukuran peta (m)"
+    },
+    "readouts": {
+      "clusters": "Klaster",
+      "occluded": "Tertutup",
+      "missing": "Belum dimuat",
+      "shadowPages": "Halaman bayangan digambar",
+      "raysMissed": "Sinar tanpa tumbukan"
+    },
+    "words": {
+      "credit": "Emerald Square oleh Nicholas Hull dan Kate Anderson (NVIDIA ORCA), vegetasi oleh SpeedTree, CC BY-NC-SA 3.0 — lihat assets/examples/CREDITS.md",
+      "fine": "halus",
+      "coarse": "kasar",
+      "occluded": "tertutup",
+      "missing": "belum dimuat",
+      "pageDrawn": "halaman bayangan digambar",
+      "pageCached": "halaman bayangan dari cache",
+      "rayHit": "sinar dan tumbukannya",
+      "rayMissed": "sinar tanpa tumbukan",
+      "camera": "kamera",
+      "frozenCut": "pemilihan dibekukan"
+    }
+  },
   "a-bust-a-crate-and-a-glass-ball": {
     "banner": "Geser untuk mengelilingi patung dada. Peti dan bola kaca berputar di atas meja putarnya.",
     "words": {
@@ -2726,6 +2758,739 @@
       "height": "Penipisan",
       "base": "Dasar",
       "colour": "Warna"
+    }
+  },
+  "paint-where-you-click": {
+    "banner": "Tekan vas dan seret untuk melukis. Diam saja, roda yang berputar menggambar pita melingkar. Seret di sampingnya untuk memutar tampilan.",
+    "controls": {
+      "colour": "Warna",
+      "brush": "Ukuran kuas",
+      "wheel": "Kecepatan roda",
+      "clear": "Hapus"
+    },
+    "readouts": {
+      "triangle": "Segitiga",
+      "uv": "Tekstur (u, v)",
+      "strokes": "Goresan"
+    }
+  },
+  "pixel-art-render": {
+    "banner": "Seret untuk memutar pulau, gulir untuk zoom. Ubah ukuran piksel dan paletnya.",
+    "controls": {
+      "pixelSize": "Ukuran piksel",
+      "palette": "Palet",
+      "upscale": "Pembesaran",
+      "turn": "Putaran"
+    },
+    "choices": {
+      "palette": {
+        "full": "warna penuh",
+        "posterized": "64 warna",
+        "handheld": "hijau konsol genggam",
+        "dusk": "empat nada senja"
+      },
+      "upscale": {
+        "nearest": "piksel terdekat",
+        "smooth": "dihaluskan"
+      }
+    },
+    "readouts": {
+      "resolution": "Resolusi yang digambar"
+    }
+  },
+  "a-line-that-draws-itself": {
+    "banner": "Spirograf yang garisnya menggambar dirinya sendiri: garis putus dari satu garis tumbuh di belakang pena. Pilih roda dan lubang; seret untuk melihat sekeliling.",
+    "controls": {
+      "wheel": "Gigi roda",
+      "hole": "Lubang pena",
+      "speed": "Putaran per detik",
+      "width": "Tebal garis",
+      "layers": "Lapisan berikutnya",
+      "clear": "Bersihkan kertas"
+    },
+    "readouts": {
+      "drawn": "Lapisan tergambar",
+      "laps": "Putaran sampai tertutup",
+      "inkLaid": "Tinta tertoreh"
+    }
+  },
+  "decals-on-a-surface": {
+    "banner": "Arahkan ke kerikil untuk melihat kotak proyeksi; klik untuk memotong stiker dari permukaan di bawahnya. Seret untuk memutar tampilan.",
+    "controls": {
+      "sticker": "Stiker",
+      "size": "Ukuran",
+      "turn": "Putaran acak",
+      "box": "Tampilkan kotak",
+      "spin": "Putar",
+      "clear": "Lepas semua"
+    },
+    "choices": {
+      "sticker": {
+        "mixed": "campur",
+        "star": "bintang",
+        "bolt": "petir",
+        "heart": "hati",
+        "target": "sasaran",
+        "flag": "kotak-kotak",
+        "smile": "senyum",
+        "hazard": "peringatan",
+        "flower": "bunga"
+      }
+    },
+    "readouts": {
+      "decals": "Decal",
+      "kept": "Segitiga dipotong"
+    }
+  },
+  "procedural-wood-and-noise": {
+    "banner": "Seret untuk melihat sekeliling. Setiap texel tumbuh dari noise yang dihitung di halaman: pilih kayu, gergaji batang baru.",
+    "controls": {
+      "wood": "Kayu",
+      "rings": "Lingkar per 10 cm",
+      "figure": "Serat",
+      "varnish": "Pernis",
+      "newLogs": "Batang baru",
+      "turn": "Putar mangkuk"
+    },
+    "choices": {
+      "wood": {
+        "oak": "ek",
+        "walnut": "walnut",
+        "cherry": "ceri",
+        "maple": "maple"
+      }
+    },
+    "readouts": {
+      "texels": "Texel dihitung",
+      "bakeTime": "Dihitung dalam"
+    }
+  },
+  "a-toolpath-in-lines": {
+    "banner": "Berkas G-code sungguhan, dibaca di halaman dan digambar sebagai garis saat nosel mencetaknya. Seret untuk memutar; turunkan lapisan teratas untuk memotong benda.",
+    "controls": {
+      "colour": "Warna menurut",
+      "topLayer": "Lapisan teratas",
+      "pace": "Laju",
+      "travel": "Gerak kosong",
+      "reprint": "Cetak ulang"
+    },
+    "choices": {
+      "colour": {
+        "kind": "jenis gerak",
+        "layer": "lapisan",
+        "speed": "kecepatan"
+      }
+    },
+    "readouts": {
+      "layer": "Lapisan",
+      "filament": "Filamen",
+      "printTime": "Waktu cetak",
+      "gcodeLines": "Baris G-code",
+      "segments": "Segmen",
+      "lines": "Garis dalam adegan"
+    }
+  },
+  "pick-an-instance": {
+    "banner": "Arahkan ke sebuah heksagon untuk menamainya di antara 1.519 penempatan satu bentuk; klik untuk memilihnya dan mengirim riak ke seluruh pulau.",
+    "controls": {
+      "ripple": "Riak",
+      "swell": "Alun laut"
+    },
+    "readouts": {
+      "instance": "Instans",
+      "cell": "Sel (q, r)",
+      "height": "Tinggi",
+      "placements": "Penempatan",
+      "shapes": "Bentuk bersama"
+    }
+  },
+  "shapes-from-an-svg": {
+    "banner": "Sebuah SVG dibaca jalur demi jalur, setiap bentuk berisi dipotong dari karton beserta lubangnya. Renggangkan lapisannya, atau jatuhkan SVG milik Anda ke halaman.",
+    "controls": {
+      "spread": "Jarak lapisan",
+      "depth": "Tebal karton",
+      "bevel": "Bevel",
+      "detail": "Detail kurva",
+      "sway": "Ayunan",
+      "yourSvg": "Buka SVG Anda"
+    },
+    "readouts": {
+      "paths": "Bentuk terbaca",
+      "outlines": "Garis luar",
+      "holes": "Lubang terpotong",
+      "triangles": "Segitiga",
+      "file": "Berkas"
+    }
+  },
+  "boolean-shapes": {
+    "banner": "Seret untuk berputar mengelilingi. Pilih operasi; nyalakan hanyut dan sebuah worker memotong ulang bentuk saat bergerak.",
+    "controls": {
+      "operation": "Operasi",
+      "ball": "Bola",
+      "bore": "Lubang",
+      "drifting": "Hanyut",
+      "operands": "Operan",
+      "spin": "Putar"
+    },
+    "choices": {
+      "operation": {
+        "carved": "(kubus ∩ bola) − lubang",
+        "subtract": "kubus − bola",
+        "intersect": "kubus ∩ bola",
+        "union": "kubus ∪ bola"
+      }
+    },
+    "readouts": {
+      "triangles": "Segitiga",
+      "computedIn": "Dihitung dalam"
+    }
+  },
+  "a-convex-hull": {
+    "banner": "Benda cembung terkecil di sekitar kawanan yang bergerak, dibangun ulang dari nol di setiap bingkai. Ubah titik dan awannya; seret untuk melihat sekeliling.",
+    "controls": {
+      "points": "Titik",
+      "motion": "Gerak",
+      "cloud": "Awan",
+      "facets": "Faset",
+      "edges": "Rusuk"
+    },
+    "choices": {
+      "cloud": {
+        "ball": "bola",
+        "cube": "kubus",
+        "torus": "cincin",
+        "swarm": "tiga kawanan"
+      }
+    },
+    "readouts": {
+      "hullCorners": "Sudut selubung",
+      "faces": "Sisi",
+      "inside": "Titik di dalam",
+      "euler": "T − R + S",
+      "buildTime": "Selubung dibangun dalam"
+    }
+  },
+  "contact-shadow-under-a-car": {
+    "banner": "Seret untuk mengitari. Lebarkan lampu, angkat mobil, atau buat ia melompat: bayangannya menempel pada ban.",
+    "controls": {
+      "lampWidth": "Lebar lampu",
+      "rideHeight": "Jarak ke tanah",
+      "hop": "Lompat",
+      "paint": "Cat",
+      "drive": "Jalan"
+    },
+    "readouts": {
+      "height": "Tinggi"
+    }
+  },
+  "contact-shadows-from-the-screen": {
+    "banner": "Seret untuk mengitari, gulir untuk mendekat. Setiap kaki dan jalur tetap memiliki bayangan setipis rambut.",
+    "controls": {
+      "sunHeight": "Tinggi matahari",
+      "sunTurn": "Arah matahari",
+      "sweep": "Sapuan"
+    },
+    "readouts": {
+      "ray": "Sinar layar"
+    }
+  },
+  "light-that-bounces": {
+    "banner": "Seret untuk melihat ke dalam ruangan. Matikan lalu nyalakan pantulan: bercak matahari menerangi seluruh ruangan.",
+    "controls": {
+      "bounce": "Pantulan",
+      "sunHeight": "Tinggi matahari",
+      "sunTurn": "Arah matahari",
+      "sweep": "Sapuan",
+      "sunColour": "Warna matahari"
+    }
+  },
+  "voxel-models": {
+    "banner": "Berkas MagicaVoxel dibaca di halaman: sisi tersembunyi dibuang, sudut diberi bayangan oleh tetangganya. Seret untuk memutar; turunkan tinggi untuk membelah model.",
+    "controls": {
+      "model": "Model",
+      "height": "Tinggi",
+      "occlusion": "Oklusi",
+      "spin": "Putar"
+    },
+    "choices": {
+      "model": {
+        "lighthouse": "mercusuar",
+        "castle": "kastel",
+        "balloon": "balon udara"
+      }
+    },
+    "readouts": {
+      "voxels": "Voxel",
+      "facesDrawn": "Sisi digambar",
+      "facesHidden": "Sisi dibuang",
+      "file": "Berkas"
+    }
+  },
+  "red-cyan-anaglyph": {
+    "banner": "Pakai kacamata merah-sian, lensa merah di mata kiri. Seret untuk memutar, gulir untuk mendekat.",
+    "controls": {
+      "glasses": "Kacamata",
+      "separation": "Jarak mata",
+      "screenPlane": "Bidang layar",
+      "swapEyes": "Tukar mata",
+      "speed": "Kecepatan"
+    },
+    "choices": {
+      "glasses": {
+        "halfColour": "setengah warna",
+        "colour": "warna penuh",
+        "grey": "abu-abu",
+        "none": "tanpa, mata kiri saja"
+      }
+    },
+    "readouts": {
+      "screenDistance": "Bidang layar di"
+    }
+  },
+  "cross-fade-between-scenes": {
+    "banner": "Dua dunia, satu kamera. Seret untuk memutar; pilih cara satu adegan berganti ke yang lain.",
+    "controls": {
+      "transition": "Transisi",
+      "duration": "Durasi (d)",
+      "hold": "Jeda (d)",
+      "autoplay": "Putar otomatis",
+      "switchScene": "Ganti adegan"
+    },
+    "choices": {
+      "transition": {
+        "iris": "iris",
+        "wipe": "sapuan",
+        "fade": "pudar silang",
+        "blinds": "kerai"
+      }
+    },
+    "readouts": {
+      "showing": "Adegan",
+      "worldsDrawing": "Dunia yang menggambar"
+    },
+    "words": {
+      "desert": "gurun",
+      "glacier": "gletser"
+    }
+  },
+  "a-refracting-pane": {
+    "banner": "Seret untuk melihat sekeliling. Kaca membelokkan apa yang ada di belakangnya: ubah relief, indeks, dan ketebalannya.",
+    "controls": {
+      "glass": "Kaca",
+      "refraction": "Indeks bias",
+      "thickness": "Ketebalan",
+      "tint": "Rona",
+      "slide": "Geser"
+    },
+    "choices": {
+      "glass": {
+        "reeded": "beralur",
+        "hammered": "tempa",
+        "rippled": "bergelombang",
+        "bullseye": "mata sapi",
+        "flat": "datar"
+      }
+    }
+  },
+  "pick-lines-and-points": {
+    "banner": "Gerakkan penunjuk di atas bola dunia: bintang atau garis terdekat dalam jangkauan menyala. Raycast mesin mengenai segitiga; titik dan segmen diuji di sini, dalam piksel.",
+    "controls": {
+      "reach": "Jangkauan (px)",
+      "stars": "Pilih bintang",
+      "lines": "Pilih garis",
+      "turning": "Berputar"
+    },
+    "readouts": {
+      "hit": "Terpilih",
+      "place": "Di mana",
+      "off": "Selisih",
+      "cost": "Biaya"
+    },
+    "words": {
+      "nothing": "tidak ada",
+      "star": "bintang {n} dari {total}",
+      "figure": "figur {n}",
+      "parallel": "garis lintang {deg}°",
+      "meridian": "meridian {deg}°",
+      "segment": "segmen {k} dari {total}",
+      "place": "buj {lon}° · lin {lat}°",
+      "pixels": "{px} px",
+      "cost": "{n} uji · {us} µs"
+    }
+  },
+  "printable-parts": {
+    "banner": "Berkas STL, PLY, AMF, dan 3MF, masing-masing dibaca oleh beberapa puluh baris di halaman. Seret untuk memutar; pilih satu benda untuk melihatnya dari dekat.",
+    "controls": {
+      "focus": "Lihat",
+      "stlColour": "Filamen STL",
+      "wireframe": "Kerangka",
+      "spin": "Putar"
+    },
+    "choices": {
+      "focus": {
+        "all": "seluruh pelat",
+        "gear": "roda gigi (STL)",
+        "vase": "vas (PLY)",
+        "bolt": "baut dan mur (AMF)",
+        "knot": "simpul (3MF)"
+      }
+    },
+    "readouts": {
+      "gear": "gear.stl",
+      "vase": "vase.ply",
+      "bolt": "bolt.amf",
+      "knot": "knot.3mf"
+    },
+    "words": {
+      "summary": "{size} kB · {triangles} segitiga"
+    }
+  },
+  "avif-textures": {
+    "banner": "Seret untuk melihat sekeliling. Pemandangan dan ranting zaitun adalah berkas AVIF: turunkan kualitas dan lihat ke luar jendela.",
+    "controls": {
+      "quality": "Kualitas AVIF",
+      "lookAt": "Lihat"
+    },
+    "choices": {
+      "lookAt": {
+        "room": "ruangan",
+        "view": "pemandangan",
+        "branch": "ranting"
+      }
+    },
+    "readouts": {
+      "view": "Pemandangan",
+      "branch": "Ranting",
+      "decoded": "Piksel terdekode"
+    },
+    "words": {
+      "alpha": "transparan"
+    }
+  },
+  "smoothing-by-subdivision": {
+    "banner": "Seret untuk berputar mengelilingi. Naikkan level untuk memotong tiap segitiga menjadi empat; tepi kuning ambar adalah lipatan dan tetap tajam.",
+    "controls": {
+      "shape": "Sangkar",
+      "level": "Level",
+      "creases": "Lipatan",
+      "creaseAngle": "Sudut lipatan",
+      "cage": "Tampilkan sangkar",
+      "spin": "Putar"
+    },
+    "choices": {
+      "shape": {
+        "knot": "simpul",
+        "goblet": "piala",
+        "ball": "ikosahedron",
+        "cube": "kubus"
+      }
+    },
+    "readouts": {
+      "triangles": "Segitiga",
+      "cageTriangles": "Segitiga sangkar"
+    }
+  },
+  "motion-retargeting": {
+    "banner": "Seret untuk mengitari. Langkah CesiumMan, ditulis ulang untuk dua kerangka dengan nama tulang, ukuran, dan pose diam yang berbeda. Ganti metodenya untuk melihat apa yang diperbaiki setiap langkah.",
+    "controls": {
+      "method": "Metode",
+      "speed": "Kecepatan"
+    },
+    "choices": {
+      "method": {
+        "directions": "Samakan arah tulang",
+        "turns": "Bawa putaran dunia",
+        "copy": "Salin rotasi lokal"
+      }
+    },
+    "readouts": {
+      "bones": "Tulang dipetakan",
+      "keys": "Kunci dipanggang"
+    }
+  },
+  "breaking-things": {
+    "banner": "Klik untuk melempar bola besi. Dinding, pilar, dan kristal dipotong menjadi kepingan Voronoi, dilas oleh sambungan yang putus melebihi kekuatannya.",
+    "controls": {
+      "pieces": "Kepingan",
+      "strength": "Kekuatan (kN)",
+      "speed": "Kecepatan (m/s)",
+      "slowMotion": "Gerak lambat",
+      "throwAtWall": "Lempar ke dinding",
+      "rebuild": "Bangun ulang"
+    },
+    "readouts": {
+      "pieces": "Kepingan",
+      "welds": "Las utuh",
+      "broken": "Las putus"
+    }
+  },
+  "a-ground-projected-sky": {
+    "banner": "Seret untuk mengitari bola armila: lantai gambar tetap di bawahnya dan menerima bayangannya. Hapus centang «Membumi» untuk melihat bola biasa bergeser.",
+    "controls": {
+      "place": "Tempat",
+      "grounded": "Membumi",
+      "height": "Tinggi",
+      "radius": "Jari-jari",
+      "turning": "Berputar"
+    },
+    "choices": {
+      "place": {
+        "plaza": "alun-alun marmer",
+        "salt flat": "dataran garam saat senja",
+        "meadow": "padang rumput"
+      }
+    },
+    "readouts": {
+      "flatFloor": "Jangkauan lantai datar"
+    },
+    "words": {
+      "credit": "Panorama dilukis oleh halaman ini, dalam kode, saat dibuka: tidak ada yang diunduh."
+    }
+  },
+  "sound-in-space": {
+    "banner": "Tekan Dengar (lebih baik dengan headphone), lalu putar dan perbesar: setiap sumber terdengar dari tempat ia bercahaya, ditempatkan di sekitar kepala Anda oleh panner Web Audio yang mengikuti kamera.",
+    "controls": {
+      "listen": "Dengar",
+      "silence": "Hening",
+      "volume": "Volume",
+      "distanceModel": "Peluruhan",
+      "rolloff": "Laju peluruhan",
+      "panning": "Panning",
+      "moving": "Bergerak"
+    },
+    "choices": {
+      "distanceModel": {
+        "inverse": "Terbalik",
+        "exponential": "Eksponensial",
+        "linear": "Linear"
+      },
+      "panning": {
+        "HRTF": "HRTF (3D)",
+        "equalpower": "Daya setara (stereo)"
+      }
+    },
+    "readouts": {
+      "bell": "Lonceng",
+      "horn": "Corong",
+      "firefly": "Kunang-kunang"
+    },
+    "words": {
+      "listening": "Mendengarkan: putari sebuah sumber, mendekatlah, atau pindah ke belakang corong untuk keluar dari kerucutnya.",
+      "silent": "Suara dijeda.",
+      "level": "{db} dB · {m} m",
+      "distance": "{m} m"
+    }
+  },
+  "drag-objects": {
+    "banner": "Seret sebuah benda di atas panggung, ke atas benda lain untuk menumpuknya, atau ke benda lain untuk mendorongnya. Tahan Shift untuk mengangkatnya pada bidang tegak.",
+    "controls": {
+      "plane": "Bidang",
+      "shove": "Dorong",
+      "home": "Kembalikan"
+    },
+    "choices": {
+      "plane": {
+        "floor": "datar",
+        "wall": "tegak"
+      }
+    },
+    "readouts": {
+      "held": "Dipegang",
+      "surface": "Bidang",
+      "height": "Tinggi"
+    },
+    "words": {
+      "nothing": "tidak ada",
+      "floor": "datar",
+      "wall": "tegak",
+      "metres": "{m} m",
+      "ball": "bola berpernis",
+      "knot": "simpul keramik",
+      "crate": "peti",
+      "glass": "tiang kaca",
+      "cone": "kerucut merah",
+      "gem": "permata emas",
+      "pill": "kapsul merah muda"
+    }
+  },
+  "oriented-boxes": {
+    "banner": "Seret untuk berputar mengelilingi. Kotak sian berputar bersama bentuknya, kotak ambar mengikuti sumbu dunia; merah berarti dua kotak bersentuhan.",
+    "controls": {
+      "boxes": "Kotak",
+      "fit": "Pencocokan",
+      "speed": "Kecepatan",
+      "tumbling": "Berjungkir"
+    },
+    "choices": {
+      "boxes": {
+        "both": "keduanya",
+        "oriented": "berorientasi",
+        "aligned": "sejajar sumbu",
+        "none": "tidak ada"
+      },
+      "fit": {
+        "tightest": "paling rapat",
+        "principal axes": "sumbu utama"
+      }
+    },
+    "readouts": {
+      "orientedVolume": "Volume, berorientasi",
+      "alignedVolume": "Volume, sejajar",
+      "orientedContacts": "Kontak, berorientasi",
+      "alignedContacts": "Kontak, sejajar"
+    }
+  },
+  "edit-a-spline": {
+    "banner": "Seret pegangan emas dan kurva mengikutinya; tahan Shift untuk menaikkan atau menurunkannya. Klik dua kali lantai untuk menambah pegangan, atau sebuah pegangan untuk menghapusnya.",
+    "controls": {
+      "closed": "Lingkar tertutup",
+      "radius": "Jari-jari",
+      "speed": "Manik-manik",
+      "polygon": "Garis kendali",
+      "reset": "Atur ulang"
+    },
+    "readouts": {
+      "handles": "Pegangan",
+      "length": "Panjang",
+      "triangles": "Segitiga"
+    },
+    "words": {
+      "metres": "{m} m"
+    }
+  },
+  "compressed-mesh-input": {
+    "banner": "Seret untuk melihat sekeliling. Satu glTF menyimpan patung dada marmer ini tiga kali: float polos, Draco, dan meshopt. Kompiler mendekode kedua format saat memanggang, jadi peramban tidak memerlukan dekoder. Pilih satu patung untuk membaca berkasnya.",
+    "controls": {
+      "bust": "Patung",
+      "turn": "Putar"
+    },
+    "choices": {
+      "bust": {
+        "all": "Ketiganya",
+        "plain": "Float polos",
+        "draco": "Draco",
+        "meshopt": "Meshopt"
+      }
+    },
+    "readouts": {
+      "stored": "Tersimpan",
+      "decoded": "Terdekode",
+      "extension": "Ekstensi",
+      "triangles": "Segitiga"
+    }
+  },
+  "lens-flares": {
+    "banner": "Seret untuk memutar pandangan: pantulan melintasi tengah gambar dan meredup setiap kali bilah menutupi matahari.",
+    "controls": {
+      "flare": "Suar lensa",
+      "lens": "Lensa",
+      "strength": "Kekuatan",
+      "sunHeight": "Tinggi matahari"
+    },
+    "choices": {
+      "lens": {
+        "spherical": "sferis",
+        "anamorphic": "anamorfik"
+      }
+    },
+    "readouts": {
+      "sunShowing": "Matahari terlihat"
+    }
+  },
+  "particles-with-own-sizes": {
+    "banner": "Setiap percikan adalah sprite dengan ukurannya sendiri: komet besar, kilau halus, bara yang mengecil saat mendingin. Lebarkan sebaran ukuran, atau luncurkan sebuah peluru.",
+    "controls": {
+      "shells": "Peluru",
+      "sizeSpread": "Sebaran ukuran",
+      "rate": "Peluncuran",
+      "launch": "Luncurkan"
+    },
+    "choices": {
+      "shells": {
+        "mixed": "campuran",
+        "peony": "peoni",
+        "ring": "cincin",
+        "willow": "dedalu",
+        "chrysanthemum": "krisan"
+      }
+    },
+    "readouts": {
+      "sparks": "Percikan",
+      "sizes": "Ukuran sendiri"
+    }
+  },
+  "an-atmospheric-sky": {
+    "banner": "Seret untuk melihat sekeliling. Langit dihitung dari udaranya sendiri: geser jamnya, pertebal kabut atau udaranya.",
+    "controls": {
+      "hour": "Jam",
+      "run": "Jalankan hari",
+      "haze": "Kabut",
+      "air": "Kepadatan udara",
+      "adaptEyes": "Adaptasi mata"
+    },
+    "readouts": {
+      "clock": "Waktu",
+      "sunHeight": "Tinggi matahari",
+      "sunThroughAir": "Matahari menembus udara"
+    }
+  },
+  "lit-by-an-hdr-image": {
+    "banner": "Seret untuk berputar. Setiap tempat adalah foto HDR asli: mataharinya menjadi cahaya dengan bayangan, sisanya cahaya lembut dari segala arah.",
+    "controls": {
+      "place": "Tempat",
+      "turn": "Putar",
+      "exposure": "Eksposur",
+      "sunFromImage": "Matahari sbg cahaya",
+      "spin": "Berputar"
+    },
+    "choices": {
+      "place": {
+        "plains": "padang cerah",
+        "sunset": "Venesia saat senja",
+        "harbour": "pelabuhan malam"
+      }
+    },
+    "readouts": {
+      "sunFound": "Matahari pada",
+      "sunShare": "Cahaya matahari",
+      "range": "Rentang gambar"
+    },
+    "words": {
+      "noSun": "tidak ada",
+      "stops": "{n} stop",
+      "credit": "Gambar HDR: Rosendal Plains 2, Venice Sunset, Golden Bay — Poly Haven, CC0"
+    }
+  },
+  "adjusting-the-environment": {
+    "banner": "Seret untuk berputar. Putar, hangatkan, jenuhkan, atau redupkan cahaya di sekitar set: setiap perubahan hanyalah beberapa angka, diterapkan pada cahaya, bayangan, dan latar sekaligus.",
+    "controls": {
+      "rig": "Pencahayaan",
+      "turn": "Putar",
+      "strength": "Kekuatan",
+      "warmth": "Kehangatan",
+      "saturation": "Saturasi",
+      "exposure": "Eksposur",
+      "toneMapping": "Kurva nada",
+      "backgroundBlur": "Buram latar",
+      "background": "Latar",
+      "spin": "Berputar"
+    },
+    "choices": {
+      "rig": {
+        "studio": "studio foto",
+        "stage": "panggung dengan filter warna"
+      },
+      "toneMapping": {
+        "aces": "aces",
+        "agx": "agx",
+        "neutral": "netral",
+        "reinhard": "reinhard",
+        "cineon": "cineon",
+        "linear": "linear"
+      }
+    },
+    "readouts": {
+      "lightOnTop": "Cahaya dari atas"
     }
   }
 }

@@ -20,12 +20,21 @@ announceWhatToDo()
 
 export { announce } from './banner.ts'
 export { controls, type ControlSpec, type ControlValues } from './controls.ts'
+export {
+  addSource,
+  irradianceAt,
+  luminance,
+  panoramaDirection,
+  projectBands,
+  srgbByte,
+  turnBands,
+} from './irradiance.ts'
 export { playPickedVideo } from './media.ts'
 export { leafTexture, matcapBall } from './painted.ts'
 export { circling, ease, flights, mix, opening } from './opening.ts'
 export { physicsReadouts } from './physicsReadouts.ts'
 export { perFrame } from './perFrame.ts'
-export { onClick, pointerOnPlane } from './pointer.ts'
+export { canvasRay, onClick, pointerOnPlane, pointerRay } from './pointer.ts'
 export { profiling } from './profile.ts'
 export { seeded, sineHash, valueNoise } from './random.ts'
 export { readout } from './readout.ts'

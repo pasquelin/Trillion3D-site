@@ -9,6 +9,12 @@ const DECLARED_ERRORS: readonly { page: string; error: string; why: string }[] =
     error: 'effect.outline is not a function',
     why: 'parked, written against the outline pass the engine does not ship',
   },
+  {
+    page: 'a-map-of-what-the-engine-draws',
+    error:
+      "The requested module '../runtime/engine.js' does not provide an export named 'CLUSTER_STATE'",
+    why: 'parked, written against the frame inspection of engine issue 1527, not in the pinned engine',
+  },
 ]
 
 /** Whether `error`, raised or logged by the example `page`, is one declared for it. */

@@ -1,0 +1,275 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Adjusting the environment</title>
+    <meta name="thumbnail" content="4" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #15161a;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, geometry, material, object, light, math, texture, side } from '../runtime/engine.js';
+      import { controls, readout, opening, ease, panoramaDirection, projectBands, turnBands, irradianceAt, luminance, srgbByte } from '../runtime/kit.js';
+
+      // THE ENVIRONMENT: the light arriving from every direction, as a function from a direction
+      // (y up) to a radiance. Here a photographer's studio, or a stage under coloured gels: dark
+      // walls and softboxes, panels of light given by the bearing and height of their centre,
+      // their half width and half height in degrees, and their radiance. The first is the key.
+      const RIGS = {
+        studio: {
+          walls: [0.016, 0.016, 0.019],
+          floor: [0.14, 0.14, 0.15],
+          boxes: [
+            [135, 32, 16, 12, [26, 24, 21]],
+            [-60, 20, 26, 14, [0.8, 0.85, 0.95]],
+            [0, 78, 40, 8, [6, 6, 6]],
+            [-150, 22, 4, 22, [10, 12, 15]],
+          ],
+        },
+        stage: {
+          walls: [0.012, 0.01, 0.03],
+          floor: [0.14, 0.14, 0.15],
+          boxes: [
+            [120, 28, 12, 10, [30, 7, 22]],
+            [-100, 18, 5, 26, [3, 18, 24]],
+            [0, 75, 30, 6, [9, 5, 1.6]],
+            [-20, 10, 40, 3, [0.4, 0.6, 2.4]],
+          ],
+        },
+      };
+      // Each softbox is a flat panel facing the eye: a direction is projected on the plane of the
+      // panel, and lands inside it or not, its edge softened over a degree.
+      function panelOf(box) {
+        const [bearing, height, halfWidth, halfHeight] = box.slice(0, 4).map(math.degToRad);
+        const centre = [Math.cos(height) * Math.cos(bearing), Math.sin(height), Math.cos(height) * Math.sin(bearing)];
+        const right = [-Math.sin(bearing), 0, Math.cos(bearing)];
+        const up = [-Math.sin(height) * Math.cos(bearing), Math.cos(height), -Math.sin(height) * Math.sin(bearing)];
+        return { centre, right, up, width: Math.tan(halfWidth), height: Math.tan(halfHeight), light: box[4] };
+      }
+      const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+      function cover(d, panel) {
+        const { centre, right, up, width, height } = panel, facing = dot(d, centre);
+        if (facing <= 0) return 0;
+        const edge = (offset, half) => math.clamp((half - Math.abs(offset)) / 0.0175 + 0.5, 0, 1);
+        return edge(dot(d, right) / facing, width) * edge(dot(d, up) / facing, height);
+      }
+      // The rig's light from `d`, the key left out when `withKey` is false: the directional light
+      // that stands for it then carries it. Below the horizon, the floor's.
+      function radiance(lit, d, withKey) {
+        if (d[1] < 0) return lit.floorLight;
+        const out = lit.walls.map((c) => c * (0.6 + 0.4 * d[1]));
+        lit.panels.forEach((panel, k) => {
+          if (k === 0 && !withKey) return;
+          const share = cover(d, panel);
+          if (share) for (let c = 0; c < 3; c++) out[c] = out[c] * (1 - share) + panel.light[c] * share;
+        });
+        return out;
+      }
+
+      // THE NINE NUMBERS. The soft light a surface receives is the environment projected into the
+      // first three bands of spherical harmonics, 27 numbers. And every adjustment below — a turn,
+      // a strength, a white balance, a saturation — is linear in light, so it applies to those
+      // numbers directly: nothing is projected again when a slider moves. The bands, their
+      // projection, their turn and the irradiance they give are the kit's (`kit/irradiance.ts`),
+      // in the order the engine's probe reads them.
+      // The key softbox as a directional light: its direction, the irradiance it gives a surface
+      // facing it (its radiance times its solid angle) and its angular radius, for soft shadows.
+      function keyOf({ centre, width, height, light }) {
+        // A flat rectangle of half sides w and h at unit distance spans 4·atan(wh / √(1 + w² + h²)).
+        const solid = 4 * Math.atan((width * height) / Math.sqrt(1 + width * width + height * height));
+        return { direction: centre, light: light.map((c) => c * solid), radius: Math.sqrt(solid / Math.PI) };
+      }
+      // The floor bounces what falls on it: its colour times the light from above, over π. Worked
+      // out once from the walls and boxes, then given to the bands from below.
+      function prepare(rig) {
+        const lit = { walls: rig.walls, panels: rig.boxes.map(panelOf), floorLight: [0, 0, 0] }, key = keyOf(lit.panels[0]);
+        const project = () => projectBands((d) => radiance(lit, d, false));
+        // First with a dark floor, for the light that falls on it; then with the floor's bounce.
+        const above = irradianceAt(project(), [0, 1, 0]);
+        lit.floorLight = rig.floor.map((albedo, c) => (albedo * (above[c] + key.light[c] * key.direction[1])) / Math.PI);
+        return { ...lit, key, sh: project(), panorama: null };
+      }
+
+      // THE BACKGROUND: the same environment, key included, painted on a 512 × 256 panorama on a
+      // sphere round the eye. It is stored divided by its brightest softbox, in 8-bit sRGB, and
+      // multiplied back by the sphere's `emissiveIntensity`; blurring it is a canvas filter run on
+      // three copies side by side, so that the seam behind closes. The rig's light in each texel
+      // is worked out once; a new saturation only encodes it again.
+      const W = 512, H = 256;
+      const paper = document.createElement('canvas'), sharp = document.createElement('canvas'), wide = document.createElement('canvas');
+      paper.width = sharp.width = W;
+      paper.height = sharp.height = wide.height = H;
+      wide.width = W * 3;
+      const out = paper.getContext('2d'), backgroundMap = texture.canvas(paper);
+      function paintBackground(prepared, saturation) {
+        if (!prepared.panorama) {
+          prepared.panorama = new Float32Array(W * H * 3);
+          for (let row = 0; row < H; row++)
+            for (let column = 0; column < W; column++)
+              prepared.panorama.set(radiance(prepared, panoramaDirection((column + 0.5) / W, (row + 0.5) / H), true), (row * W + column) * 3);
+        }
+        const light = prepared.panorama, peak = Math.max(...prepared.panels.flatMap((panel) => panel.light));
+        const image = sharp.getContext('2d').createImageData(W, H);
+        for (let k = 0; k < W * H; k++) {
+          const grey = luminance(light, k * 3);
+          for (let c = 0; c < 3; c++) image.data[k * 4 + c] = srgbByte(Math.max(0, grey + saturation * (light[k * 3 + c] - grey)) / peak);
+          image.data[k * 4 + 3] = 255;
+        }
+        sharp.getContext('2d').putImageData(image, 0, 0);
+        return peak;
+      }
+      function blurBackground(amount) {
+        const brush = wide.getContext('2d');
+        brush.filter = 'none';
+        for (let k = 0; k < 3; k++) brush.drawImage(sharp, k * W, 0);
+        out.filter = amount > 0 ? `blur(${amount * 12}px)` : 'none';
+        out.drawImage(wide, -W, 0);
+        backgroundMap.needsUpdate = true;
+      }
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#000000');
+      world.camera.far = 200;
+      const backdrop = object.mesh(geometry.sphere(80, 128, 64), material.meshLambert({ color: '#000000', emissive: '#ffffff', emissiveMap: backgroundMap, side: side.back }));
+      backdrop.castShadow = backdrop.receiveShadow = false;
+      world.scene.add(backdrop);
+
+      // THE SET: a round dark platform; the look-development pair, a matte grey ball and a chrome
+      // ball, which show the light and its reflection; a glazed vase and a black glossy knot;
+      // and a colour chart of 24 patches, whose whites and skins show the white balance at a glance.
+      const floor = object.mesh(geometry.cylinder(2.7, 2.74, 0.12, 160), material.meshLambert({ color: '#3a3b3f' }));
+      floor.position.y = -0.06;
+      floor.receiveShadow = true;
+      world.scene.add(floor);
+      const put = (mesh, x, y, z) => {
+        mesh.position.set(x, y, z);
+        mesh.receiveShadow = true;
+        world.scene.add(mesh);
+        return mesh;
+      };
+      const stand = geometry.cylinder(0.05, 0.12, 0.5, 32);
+      put(object.mesh(stand, material.meshLambert({ color: '#2a2b2e' })), -1.6, 0.25, 0.3);
+      put(object.mesh(stand, material.meshLambert({ color: '#2a2b2e' })), -0.95, 0.25, -0.3);
+      put(object.mesh(geometry.sphere(0.26, 96, 48), material.meshLambert({ color: '#777777' })), -1.6, 0.76, 0.3);
+      put(object.mesh(geometry.sphere(0.26, 96, 48), material.meshStandard({ color: '#ffffff', metalness: 1, roughness: 0.03 })), -0.95, 0.76, -0.3);
+      const vase = geometry.lathe([[0, 0], [0.22, 0], [0.3, 0.1], [0.34, 0.35], [0.24, 0.75], [0.12, 0.95], [0.11, 1.1], [0.16, 1.18], [0, 1.18]], 96);
+      put(object.mesh(vase, material.meshStandard({ color: '#f1ece2', roughness: 0.14 })), -0.05, 0, 0.1);
+      const knot = put(object.mesh(geometry.torusKnot(0.28, 0.09, 260, 36), material.meshStandard({ color: '#16171a', roughness: 0.1 })), 0.85, 0.55, -0.35);
+      const CHART = ['#735244', '#c29682', '#627a9d', '#576c43', '#8580b1', '#67bdaa', '#d67e2c', '#505ba6', '#c15a63', '#5e3c6c', '#9dbc40', '#e0a32e', '#383d96', '#469449', '#af363c', '#e7c71f', '#bb5695', '#0885a1', '#f3f3f2', '#c8c8c8', '#a0a0a0', '#7a7a79', '#555555', '#343434'];
+      const chart = object.group();
+      const board = object.mesh(geometry.box(1.04, 0.72, 0.03), material.meshLambert({ color: '#141414' }));
+      board.receiveShadow = true;
+      chart.add(board);
+      const patch = geometry.box(0.15, 0.15, 0.01);
+      CHART.forEach((colour, k) => {
+        const tile = object.mesh(patch, material.meshLambert({ color: colour }));
+        tile.position.set(-0.4 + (k % 6) * 0.16, 0.24 - Math.floor(k / 6) * 0.16, 0.02);
+        tile.receiveShadow = true;
+        chart.add(tile);
+      });
+      chart.position.set(1.75, 0.5, 0.35);
+      chart.rotation.set(-0.12, -0.55, 0);
+      world.scene.add(chart);
+      put(object.mesh(geometry.box(0.06, 0.5, 0.06), material.meshLambert({ color: '#2a2b2e' })), 1.75, 0.13, 0.3);
+
+      const key = light.directional({ castShadow: true });
+      const probe = light.probe({ sh: new Array(27).fill(0) });
+      world.scene.add(key, probe);
+      world.controls.target.set(0, 0.55, 0);
+      world.controls.minDistance = 2;
+      world.controls.maxDistance = 9;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
+
+      // THE ADJUSTMENTS. A turn about the vertical; a strength; a white balance, from candle-warm
+      // to shade-blue, as a gain per channel; a saturation, each colour pulled toward or pushed
+      // away from its own grey. They act on the light, and so on the bands, the key and the
+      // background alike. Exposure and the display curve act after, on the finished image.
+      const prepared = Object.fromEntries(Object.keys(RIGS).map((name) => [name, prepare(RIGS[name])]));
+      const balance = (warmth) => {
+        const gain = [1 + 0.32 * warmth, 1 + 0.04 * warmth, 1 - 0.38 * warmth], grey = luminance(gain);
+        return gain.map((g) => g / grey);
+      };
+      // The three adjustments on one colour, in the order a grading tool applies them.
+      const adjust = (rgb, values) => {
+        const gain = balance(values.warmth), warmed = rgb.map((c, k) => c * gain[k]), grey = luminance(warmed);
+        return warmed.map((c) => (grey + values.saturation * (c - grey)) * values.strength);
+      };
+      let painted = null, onTop = () => {};
+      function apply(values) {
+        const current = prepared[values.rig];
+        // The background is painted again only for what a gain cannot do: another rig, another
+        // saturation, another blur. Strength and white balance are its emissive colour.
+        const look = `${values.rig}:${values.saturation}`;
+        if (painted?.look !== look) painted = { look, peak: paintBackground(current, values.saturation), blur: -1 };
+        if (painted.blur !== values.backgroundBlur) blurBackground((painted.blur = values.backgroundBlur));
+        const tint = adjust([1, 1, 1], { ...values, saturation: 1 });
+        backdrop.material.emissive.setRGB(...tint.map((c) => c / Math.max(...tint)));
+        backdrop.material.emissiveIntensity = painted.peak * Math.max(...tint);
+        backdrop.visible = values.background;
+        const turn = math.degToRad(values.turn);
+        backdrop.rotation.y = -turn;
+        // The bands: turned, then each of its nine RGB triples adjusted like a colour.
+        const turned = turnBands(current.sh, turn);
+        const sh = Array.from({ length: 9 }, (_, k) => adjust(turned.slice(k * 3, k * 3 + 3), values)).flat();
+        probe.sh = sh;
+        probe.needsUpdate = true;
+        const d = current.key.direction, c = Math.cos(turn), s = Math.sin(turn);
+        key.position.set((c * d[0] - s * d[2]) * 20, d[1] * 20, (s * d[0] + c * d[2]) * 20);
+        const light = adjust(current.key.light, values), strongest = Math.max(...light, 1e-6);
+        key.color.setRGB(...light.map((v) => v / strongest));
+        key.intensity = strongest;
+        key.angularRadius = current.key.radius;
+        world.exposure = 0.4 * 2 ** values.exposure;
+        world.toneMapping = values.toneMapping;
+        const top = irradianceAt(sh, [0, 1, 0]).map((v, k) => v + light[k] * Math.max(0, d[1]));
+        // Its luminance: what a level white card would read, before exposure.
+        onTop(luminance(top).toFixed(2));
+        world.invalidate();
+      }
+      const ui = controls(
+        {
+          rig: Object.keys(RIGS),
+          turn: [0, 360, 0, 1],
+          strength: [0, 3, 1, 0.05],
+          warmth: [-1, 1, 0, 0.05],
+          saturation: [0, 2, 1, 0.05],
+          exposure: [-3, 3, 0, 0.1],
+          toneMapping: ['aces', 'agx', 'neutral', 'reinhard', 'cineon', 'linear'],
+          backgroundBlur: [0, 1, 0.2, 0.05],
+          background: true,
+          spin: true,
+        },
+        apply,
+        world,
+      );
+      onTop = readout('lightOnTop');
+      apply(ui);
+
+      // The opening: in close on the vase, then back to the whole set, turning slowly.
+      opening(world, (time) => {
+        const azimuth = 0.35 + time * 0.05, settle = ease.out(time / 4), reach = 2.4 + 1.8 * settle, rise = 0.16 + 0.1 * settle, { target } = world.controls;
+        world.camera.position.set(target.x + Math.sin(azimuth) * Math.cos(rise) * reach, target.y + Math.sin(rise) * reach, target.z + Math.cos(azimuth) * Math.cos(rise) * reach);
+      });
+      // The background is infinitely far: it moves with the eye, before each frame is drawn.
+      world.beforeFrame(() => backdrop.position.copy(world.camera.position));
+      world.onFrame(({ delta }) => {
+        if (!ui.spin) return;
+        knot.rotation.y += Math.min(delta, 0.05) * 0.4;
+        world.invalidate();
+      });
+    </script>
+  </body>
+</html>

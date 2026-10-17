@@ -1,0 +1,399 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>A ground-projected sky</title>
+    <meta name="thumbnail" content="4" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #d9c7a8;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      p {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        margin: 0.5rem;
+        color: #fff;
+        font: 12px system-ui;
+        text-shadow: 0 1px 3px #000;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <p data-words="credit"></p>
+    <script type="module">
+      import { createWorld, geometry, material, object, light, buffer, math, texture, side } from '../runtime/engine.js';
+      import { controls, readout, opening, ease, panoramaDirection, projectBands, irradianceAt, luminance } from '../runtime/kit.js';
+
+      // A panorama is the light of every direction seen from one point. Put on a great sphere it
+      // shows the sky well, but its floor stays at the sphere's distance: walk a step and the
+      // ground slides under your feet. Grounded, the lower half of the sphere is flattened onto
+      // the floor at the height the picture was taken from, so each pixel of the ground lands
+      // where it was on the real floor, and things placed in the scene stand on it.
+
+      // ─── The pictures ──────────────────────────────────────────────────────────────────────
+      // Painted here pixel by pixel, as a camera EYE metres above a floor would see them: every
+      // pixel below the horizon is the ray from the eye to the floor, and the floor's pattern is
+      // read where that ray lands.
+      const W = 2048, H = 1024, EYE = 1.7;
+      const clamp01 = (x) => math.clamp(x, 0, 1);
+      const smooth = (a, b, x) => ease.smooth((x - a) / (b - a));
+      // The colours are painted as they are written, sRGB: no conversion to linear light.
+      const rgb = (hex) => [1, 3, 5].map((at) => parseInt(hex.slice(at, at + 2), 16) / 255);
+      // Two million pixels each mix colours and sum noise dozens of times: the page keeps its own
+      // blend of three numbers and its own 2D value noise (the kit's `valueNoise` lattice, read on
+      // a plane), which paint a picture two to three times faster than the kit's general ones.
+      const mix = (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t];
+      const hash = (i, j) => {
+        let h = Math.imul(i, 374761393) ^ Math.imul(j, 668265263);
+        h = Math.imul(h ^ (h >>> 13), 1274126177);
+        return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
+      };
+      const noise = (x, y) => {
+        const i = Math.floor(x), j = Math.floor(y), u = x - i, v = y - j, su = u * u * (3 - 2 * u), sv = v * v * (3 - 2 * v);
+        const a = hash(i, j), b = hash(i + 1, j), c = hash(i, j + 1), d = hash(i + 1, j + 1);
+        return a + (b - a) * su + (c - a) * sv + (a - b - c + d) * su * sv;
+      };
+      const fbm = (x, y, octaves) => {
+        let sum = 0, amplitude = 0.5;
+        for (let k = 0; k < octaves; k++) {
+          sum += noise(x, y) * amplitude;
+          x *= 2.03;
+          y *= 2.03;
+          amplitude *= 0.5;
+        }
+        return sum;
+      };
+      // A direction from its place in the picture, `panoramaDirection` (the kit's, the way the
+      // engine's sphere lays a picture): across is the turn, down the angle from up.
+      const sunOf = (place) => panoramaDirection(place.sun.turn, 0.5 - place.sun.height / 180);
+
+      // The air: zenith to horizon, a sun with its glow, clouds on a ceiling far overhead, and a
+      // skyline of hills or peaks along the horizon, hazed by the distance.
+      // A skyline's height at each turn, read from a table of 8192 turns made once per place.
+      const TURNS = 8192;
+      function topOf(place, k, phi) {
+        place.tops ??= place.skyline.map(([, ridge]) => Float32Array.from({ length: TURNS }, (_, at) => ridge(((at + 0.5) / TURNS) * Math.PI * 2 - Math.PI)));
+        return place.tops[k][(Math.floor(((phi + Math.PI) / (Math.PI * 2)) * TURNS) % TURNS + TURNS) % TURNS];
+      }
+      function sky(place, d, sun, pixel = 0.03) {
+        const up = Math.max(d[1], 0), elevation = Math.asin(up), phi = Math.atan2(d[2], d[0]);
+        let colour = mix(place.horizon, place.zenith, smooth(0, 0.85, up) ** 0.7);
+        const facing = d[0] * sun[0] + d[1] * sun[1] + d[2] * sun[2];
+        colour = mix(colour, place.glow, clamp01(Math.exp((facing - 1) / 0.18) * 0.55 + Math.exp((facing - 1) / 0.02) * 0.4));
+        if (up > 0.015) {
+          const far = 0.9 / up, cover = smooth(place.clouds, place.clouds + 0.28, fbm(d[0] * far + 11, d[2] * far + 3, 5)) * smooth(0.015, 0.2, up);
+          const lit = mix(place.cloudShade, place.cloudLit, clamp01(facing * 0.5 + 0.5) ** 2);
+          colour = mix(colour, lit, cover * 0.9);
+        }
+        colour = mix(colour, place.glow, smooth(0.99955, 0.99975, facing));
+        // Two skylines: the far one pale in the haze, the near one darker. Each edge is
+        // smoothed over the pixel, four samples across, so a tree's flank does not stair-step.
+        place.skyline.forEach(([height, , tone], k) => {
+          let cover = 0;
+          for (let sample = -1.5; sample <= 1.5; sample++) cover += clamp01((topOf(place, k, phi + sample * pixel / 4) * height - elevation) / pixel + 0.5) / 4;
+          if (cover > 0) colour = mix(colour, mix(place.horizon, tone, 0.85 - 0.25 * clamp01(elevation / (topOf(place, k, phi) * height))), cover);
+        });
+        return colour;
+      }
+
+      // Three places, each a sky and a floor. `floor(x, z, blur)` is the floor's colour at that
+      // point, `blur` the size one pixel covers there, so a pattern fades to its mean before it
+      // would flicker.
+      const bumps = (k, seed) => (phi) => 0.55 + 0.25 * Math.sin(k * phi + seed) + 0.12 * Math.sin(3 * k * phi + 2 * seed) + 0.08 * Math.sin(7 * k * phi + seed);
+      const peaks = (seed) => (phi) => { let top = 0; for (let k = 0; k < 9; k++) { const centre = (hash(k, seed) - 0.5) * Math.PI * 2, width = 0.12 + hash(k, seed + 1) * 0.3; top = Math.max(top, (0.4 + hash(k, seed + 2) * 0.6) * (1 - Math.min(1, Math.abs(Math.atan2(Math.sin(phi - centre), Math.cos(phi - centre))) / width))); } return 0.15 + top; };
+      const cypresses = (phi) => { let top = bumps(3, 1)(phi) * 0.6; for (let k = 0; k < 14; k++) { const centre = (hash(k, 77) - 0.5) * Math.PI * 2, offset = Math.abs(Math.atan2(Math.sin(phi - centre), Math.cos(phi - centre))); const width = 0.008 + hash(k, 79) * 0.006; if (offset < width) top = Math.max(top, (1.5 + hash(k, 78)) * Math.sqrt(1 - (offset / width) ** 1.5)); } return top; };
+
+      const PLACES = {
+        plaza: {
+          zenith: rgb('#2f6fc8'), horizon: rgb('#f2e4cc'), glow: rgb('#fff1d2'), cloudLit: rgb('#fff6ea'), cloudShade: rgb('#b8b4c4'), clouds: 0.5,
+          sun: { turn: 0.62, height: 34 }, haze: rgb('#e7d3b4'), hazeReach: 260,
+          skyline: [[0.07, bumps(2, 0.4), rgb('#a6a8b4')], [0.035, cypresses, rgb('#3e4a2c')]],
+          key: ['#ffe2b8', 5.5], skyLight: 0.9,
+          floor(x, z, blur) {
+            const r = Math.hypot(x, z), angle = Math.atan2(z, x), vein = fbm(x * 0.9, z * 0.9, 4);
+            if (r < 4.6) {
+              // A mosaic rose under the eye: rings of gold and blue, a sixteen-point star.
+              if (r > 4.35 || (r > 3.05 && r < 3.2)) return rgb('#b08a3e');
+              const point = Math.abs(Math.cos(angle * 8)), star = r < 0.5 + 2.5 * point ** 3;
+              if (star) return Math.cos(angle * 8) > 0 ? rgb('#b4553c') : rgb('#2f5d8c');
+              return mix(rgb('#ece0c8'), rgb('#d8c6a4'), vein);
+            }
+            if (r < 26) {
+              // Checked marble, 1.2 m tiles in two stones, joined by a thin grout.
+              const tx = x / 1.2, tz = z / 1.2, odd = (Math.floor(tx) + Math.floor(tz)) & 1;
+              let colour = odd ? mix(rgb('#cbb594'), rgb('#ac9472'), vein) : mix(rgb('#f0e6d2'), rgb('#dccbae'), vein);
+              const joint = Math.min(Math.abs(tx - Math.round(tx)), Math.abs(tz - Math.round(tz))) * 1.2;
+              colour = mix(colour, rgb('#8c7a62'), (1 - smooth(0.012, 0.03 + blur * 0.5, joint)) * (1 - smooth(0.05, 0.3, blur)));
+              return mix(colour, rgb('#d6c3a2'), smooth(0.2, 1.4, blur));
+            }
+            if (r < 27.5) return rgb('#9a8466');
+            // Beyond the kerb, dry grass.
+            return mix(rgb('#8f8a52'), rgb('#b6a76a'), fbm(x * 0.15, z * 0.15, 4));
+          },
+        },
+        'salt flat': {
+          zenith: rgb('#2a2f6a'), horizon: rgb('#f7b49a'), glow: rgb('#ffd2a6'), cloudLit: rgb('#ffc0a8'), cloudShade: rgb('#6a5a8c'), clouds: 0.55,
+          sun: { turn: 0.28, height: 11 }, haze: rgb('#e9b6a8'), hazeReach: 420,
+          skyline: [[0.06, peaks(5), rgb('#8a6f98')], [0.022, bumps(4, 2), rgb('#5c4a72')]],
+          key: ['#ffb684', 7], skyLight: 0.75, mirror: true,
+          floor(x, z, blur) {
+            // Salt crust in polygons: the distance to the nearest two seeds of a jittered grid,
+            // the ridge where they are equal.
+            const s = 1.6, gx = Math.floor(x / s), gz = Math.floor(z / s);
+            let f1 = 9, f2 = 9;
+            for (let i = -1; i <= 1; i++) for (let j = -1; j <= 1; j++) {
+              const cx = (gx + i + hash(gx + i, gz + j)) * s, cz = (gz + j + hash(gz + j + 31, gx + i)) * s, distance = Math.hypot(x - cx, z - cz);
+              if (distance < f1) { f2 = f1; f1 = distance; } else if (distance < f2) f2 = distance;
+            }
+            const ridge = (1 - smooth(0.02, 0.1 + blur, f2 - f1)) * (1 - smooth(0.1, 0.6, blur));
+            return mix(mix(rgb('#e8d6d6'), rgb('#f8eeea'), fbm(x * 0.5, z * 0.5, 3)), rgb('#fffaf6'), ridge);
+          },
+        },
+        meadow: {
+          zenith: rgb('#4f8fd8'), horizon: rgb('#dceaf2'), glow: rgb('#fffbe8'), cloudLit: rgb('#ffffff'), cloudShade: rgb('#a8b4c8'), clouds: 0.42,
+          sun: { turn: 0.85, height: 48 }, haze: rgb('#c8dce4'), hazeReach: 200,
+          skyline: [[0.05, bumps(3, 4), rgb('#8fa2b0')], [0.03, bumps(9, 1), rgb('#2f4a2a')]],
+          key: ['#fff6e4', 5], skyLight: 1,
+          floor(x, z, blur) {
+            const r = Math.hypot(x, z), grain = fbm(x * 2, z * 2, 3);
+            // Flagstones round the eye, a ring of gravel, then a lawn mown in stripes.
+            if (r < 2.6) {
+              const cell = Math.floor(r / 0.65) * 7 + Math.floor((Math.atan2(z, x) / Math.PI + 1) * (3 + Math.floor(r / 0.65) * 3));
+              return r % 0.65 < 0.035 ? rgb('#6e6a60') : mix(rgb('#b8b2a2'), rgb('#d2ccbc'), hash(cell, 5) * 0.7 + grain * 0.3);
+            }
+            if (r < 2.75) return rgb('#6e6a60');
+            if (r > 6 && r < 7.4) return mix(rgb('#c8bca0'), rgb('#e0d6bc'), grain);
+            // The stripes' edge is as soft as one pixel there, and they melt away far off.
+            const stripe = clamp01(0.5 + Math.sin((x / 3) * Math.PI) / (blur + 0.05)), fade = smooth(0.4, 2.5, blur);
+            const lawn = mix(mix(rgb('#7aa84a'), rgb('#5e8f3a'), stripe), rgb('#6c9c42'), fade);
+            return mix(lawn, rgb('#4a7a2c'), (fbm(x * 0.4, z * 0.4, 3) - 0.3) * 0.5);
+          },
+        },
+      };
+
+      // The colour of one direction in a place: sky above, the floor below where the ray from the
+      // eye lands, with the haze of the distance it crosses. On the salt flat a sheet of water
+      // mirrors the sky, more as the ray grazes it.
+      function seen(place, d, sun, blur) {
+        if (d[1] >= 0) return sky(place, d, sun, blur);
+        const down = -d[1], reach = EYE / down, x = d[0] * reach, z = d[2] * reach;
+        let colour = place.floor(x, z, reach * blur / down);
+        if (place.mirror) {
+          const wet = smooth(0.35, 0.65, fbm(x * 0.08 + 5, z * 0.08, 3));
+          colour = mix(colour, sky(place, [d[0], down, d[2]], sun, blur), (0.25 + 0.7 * wet) * (0.35 + 0.65 * (1 - down) ** 5));
+        }
+        return mix(place.haze, colour, Math.exp(-reach / place.hazeReach) * smooth(0, 0.02, down));
+      }
+
+      const painted = new Map();
+      function paint(name) {
+        if (painted.has(name)) return painted.get(name);
+        const place = PLACES[name], sun = sunOf(place), canvas = document.createElement('canvas');
+        canvas.width = W;
+        canvas.height = H;
+        const brush = canvas.getContext('2d'), image = brush.createImageData(W, H), data = image.data, blur = Math.PI / H;
+        for (let py = 0; py < H; py++) for (let px = 0; px < W; px++) {
+          const colour = seen(place, panoramaDirection((px + 0.5) / W, (py + 0.5) / H), sun, blur), at = (py * W + px) * 4;
+          data[at] = colour[0] * 255;
+          data[at + 1] = colour[1] * 255;
+          data[at + 2] = colour[2] * 255;
+          data[at + 3] = 255;
+        }
+        brush.putImageData(image, 0, 0);
+        const picture = texture.canvas(canvas);
+        painted.set(name, picture);
+        return picture;
+      }
+
+      // ─── The light ─────────────────────────────────────────────────────────────────────────
+      // The same picture lights the scene: projected onto the first three bands of spherical
+      // harmonics, 27 numbers a probe holds, and the sun the picture shows becomes a lamp shining
+      // from where it is painted, so the shadows fall the way the picture's own shadows would. The
+      // projection is the kit's (`projectBands`, in the order the engine's probe reads the bands),
+      // on a 48 × 96 grid, each colour turned back into linear light first.
+      function project(place) {
+        const sun = sunOf(place);
+        return projectBands((d) => seen(place, d, sun, 0.2).map((c) => c ** 2.2), 48, 96);
+      }
+
+      // ─── The dome ──────────────────────────────────────────────────────────────────────────
+      // A sphere written by hand, its picture laid by the same `panoramaDirection` that painted it. With
+      // `grounded`, a corner below the horizon is pushed along its ray to the floor `height`
+      // under the centre, but never past the sphere: a flat disc near, curving up to the sky far.
+      // The triangles of the flat disc are kept apart: they are the floor things stand on.
+      const COLUMNS = 256, ROWS = 192;
+      function dome(radius, height, grounded) {
+        const positions = [], normals = [], uvs = [], flat = [], sky = [], floor = [];
+        for (let i = 0; i <= ROWS; i++) for (let j = 0; j <= COLUMNS; j++) {
+          const d = panoramaDirection(j / COLUMNS, i / ROWS), onFloor = grounded && d[1] < 0 && height / -d[1] <= radius;
+          const reach = onFloor ? height / -d[1] : radius;
+          positions.push(d[0] * reach, d[1] * reach, d[2] * reach);
+          normals.push(...(onFloor ? [0, 1, 0] : [-d[0], -d[1], -d[2]]));
+          uvs.push(j / COLUMNS, 1 - i / ROWS);
+          flat.push(onFloor);
+        }
+        for (let i = 0; i < ROWS; i++) for (let j = 0; j < COLUMNS; j++) {
+          const a = i * (COLUMNS + 1) + j, b = a + COLUMNS + 1, corners = [a, b, a + 1, a + 1, b, b + 1];
+          (corners.every((at) => flat[at]) ? floor : sky).push(...corners);
+        }
+        // Each part keeps only the corners its own triangles use, numbered again in order.
+        const part = (corners) => {
+          const number = new Int32Array(flat.length).fill(-1), used = [];
+          const index = corners.map((at) => (number[at] < 0 ? (number[at] = used.push(at) - 1) : number[at]));
+          const pick = (values, size) => {
+            const picked = new Float32Array(used.length * size);
+            used.forEach((at, k) => {
+              for (let c = 0; c < size; c++) picked[k * size + c] = values[at * size + c];
+            });
+            return picked;
+          };
+          return geometry.createBuffer({ position: buffer.float32(pick(positions, 3), 3), normal: buffer.float32(pick(normals, 3), 3), uv: buffer.float32(pick(uvs, 2), 2), index: buffer.uint32(index, 1) });
+        };
+        return { sky: part(sky), floor: part(floor.length ? floor : [0, 0, 0]) };
+      }
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#d9c7a8');
+      // A curve that keeps the painted colours as they are, where ACES would wash them.
+      world.toneMapping = 'neutral';
+      // The sky keeps the picture as it is: unlit.
+      const skyMaterial = material.meshBasic({ map: paint('plaza'), side: side.double });
+      const skyMesh = object.mesh(geometry.box(1, 1, 1), skyMaterial);
+      skyMesh.castShadow = skyMesh.receiveShadow = false;
+      // THE FLOOR IS LIT. The picture's floor already holds the light that fell on it: its
+      // sunlit pixels are the stone's colour times the sun and the sky together. Worn by a matte
+      // surface lit by the same sun and the same probe, divided back by that sum (`color`), a
+      // sunlit pixel shows exactly as painted, and where a thing stands in the sun's way only the
+      // sky's share is left: a real shadow on the photograph, tinted by its sky.
+      const floorMaterial = material.meshLambert({ map: skyMaterial.map });
+      const floorMesh = object.mesh(geometry.box(1, 1, 1), floorMaterial);
+      floorMesh.castShadow = false;
+      floorMesh.receiveShadow = true;
+      world.scene.add(skyMesh, floorMesh);
+
+      // ─── What stands on it ─────────────────────────────────────────────────────────────────
+      // An armillary sphere on a stepped plinth over the rose, four stone balls on their blocks.
+      const stone = material.meshStandard({ color: '#e4dccd', roughness: 0.7 });
+      const darkStone = material.meshStandard({ color: '#9d9384', roughness: 0.8 });
+      const bronze = material.meshStandard({ color: '#c08a4a', metalness: 1, roughness: 0.32 });
+      const verdigris = material.meshStandard({ color: '#5f9a88', metalness: 0.6, roughness: 0.45 });
+      const place = (mesh, x, y, z) => {
+        mesh.position.set(x, y, z);
+        mesh.receiveShadow = true;
+        world.scene.add(mesh);
+        return mesh;
+      };
+      place(object.mesh(geometry.cylinder(1.25, 1.3, 0.16, 96), darkStone), 0, 0.08, 0);
+      place(object.mesh(geometry.cylinder(0.95, 1, 0.16, 96), stone), 0, 0.24, 0);
+      place(object.mesh(geometry.lathe([[0, 0], [0.34, 0], [0.34, 0.06], [0.22, 0.14], [0.17, 0.5], [0.15, 0.8], [0.24, 0.88], [0.26, 0.94], [0, 0.94]], 64), stone), 0, 0.32, 0);
+      const armillary = object.group();
+      armillary.position.set(0, 1.86, 0);
+      world.scene.add(armillary);
+      const ring = (radius, tube, matter) => {
+        const piece = object.mesh(geometry.torus(radius, tube, 16, 160), matter);
+        piece.receiveShadow = true;
+        return piece;
+      };
+      // The outer meridian holds the tilted axis; the equator and the ecliptic turn within it.
+      const meridian = ring(0.58, 0.024, bronze);
+      const axisFrame = object.group();
+      axisFrame.rotation.z = math.degToRad(-40);
+      armillary.add(meridian, axisFrame);
+      axisFrame.add(object.mesh(geometry.cylinder(0.012, 0.012, 1.34, 16), bronze));
+      const spinner = object.group();
+      axisFrame.add(spinner);
+      const equator = ring(0.5, 0.02, verdigris), ecliptic = ring(0.5, 0.016, bronze), colure = ring(0.44, 0.014, verdigris);
+      equator.rotation.x = Math.PI / 2;
+      ecliptic.rotation.set(Math.PI / 2 + math.degToRad(23.4), 0, 0);
+      colure.rotation.y = Math.PI / 2;
+      spinner.add(equator, ecliptic, colure);
+      spinner.add(object.mesh(geometry.sphere(0.08, 32, 16), bronze));
+      const crescent = place(object.mesh(geometry.torus(0.6, 0.03, 12, 96, Math.PI), bronze), 0, 1.26, 0);
+      crescent.rotation.z = Math.PI;
+      for (let k = 0; k < 4; k++) {
+        const angle = Math.PI / 4 + (k * Math.PI) / 2, x = Math.cos(angle) * 3.6, z = Math.sin(angle) * 3.6;
+        place(object.mesh(geometry.box(0.6, 0.55, 0.6), darkStone), x, 0.275, z).rotation.y = -angle;
+        place(object.mesh(geometry.sphere(0.32, 48, 24), stone), x, 0.87, z);
+      }
+
+      const sun = light.directional({ castShadow: true }), probe = light.probe({ sh: new Array(27).fill(0) });
+      world.scene.add(sun, probe);
+      world.camera.far = 400;
+      world.controls.target.set(0, 1.1, 0);
+      world.controls.minDistance = 2.5;
+      world.controls.maxDistance = 14;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.06;
+
+      // ─── The controls ──────────────────────────────────────────────────────────────────────
+      // A place repaints the dome and relights the scene; the radius and the height rebuild it.
+      // `height` is where the picture is put above the floor: at the eye's own 1.7 m the tiles
+      // keep their size, lower they shrink toward the centre, higher they spread out.
+      let floorReach = null, reachText = '';
+      const ui = controls({
+        place: Object.keys(PLACES),
+        grounded: true,
+        height: [0.4, 6, EYE, 0.1],
+        radius: [12, 120, 40, 1],
+        turning: true,
+      }, (values, key) => {
+        if (key === undefined || key === 'place') {
+          const chosen = PLACES[values.place], [x, y, z] = sunOf(chosen);
+          skyMaterial.map = floorMaterial.map = paint(values.place);
+          skyMaterial.needsUpdate = floorMaterial.needsUpdate = true;
+          sun.position.set(x * 30, y * 30, z * 30);
+          sun.color.set(chosen.key[0]);
+          sun.intensity = chosen.key[1];
+          probe.sh = project(chosen);
+          probe.needsUpdate = true;
+          // What falls on a floor facing up, per colour: the sun times its height, and the
+          // probe's irradiance at the normal (0, 1, 0), its bands times their cosine-lobe factors
+          // (`irradianceAt`, the kit's, with the engine's `IRRADIANCE_BAND`). A Lambert surface
+          // sends back colour · E / π: its colour π / E makes a sunlit pixel the picture's own.
+          const upward = irradianceAt(probe.sh, [0, 1, 0]);
+          // The probe's strength sets the sky's share of the floor's light, `skyLight` of it.
+          probe.intensity = chosen.skyLight / luminance(upward);
+          floorMaterial.color.setRGB(...[0, 1, 2].map((ch) => Math.PI / (sun.color.toArray()[ch] * sun.intensity * y + upward[ch] * probe.intensity)));
+          world.scene.background.set(`rgb(${chosen.haze.map((c) => Math.round(c * 255)).join()})`);
+        }
+        if (key === undefined || key === 'grounded' || key === 'height' || key === 'radius') {
+          const worn = [skyMesh.geometry, floorMesh.geometry], built = dome(values.radius, values.height, values.grounded);
+          skyMesh.geometry = built.sky;
+          floorMesh.geometry = built.floor;
+          for (const old of worn) old.dispose();
+          skyMesh.position.y = floorMesh.position.y = values.height;
+          floorMesh.visible = values.grounded;
+          // How far the flat floor runs before it bends up into the sphere.
+          reachText = values.grounded ? `${Math.sqrt(Math.max(0, values.radius ** 2 - values.height ** 2)).toFixed(1)} m` : '—';
+          floorReach?.(reachText);
+        }
+        world.invalidate();
+      }, world);
+      floorReach = readout('flatFloor');
+      floorReach(reachText);
+
+      // The opening: low beside a stone ball, the camera rises and draws back round the plinth,
+      // turning until the first press or wheel on the canvas.
+      opening(world, (time) => {
+        const azimuth = 2.4 + time * 0.07, settle = ease.out(time / 4), reach = 4.5 + 5.5 * settle, rise = 0.06 + 0.2 * settle, { target } = world.controls;
+        world.camera.position.set(target.x + Math.sin(azimuth) * Math.cos(rise) * reach, target.y + Math.sin(rise) * reach, target.z + Math.cos(azimuth) * Math.cos(rise) * reach);
+      });
+      world.onFrame(({ delta }) => {
+        if (!ui.turning) return;
+        const step = Math.min(delta, 0.05);
+        spinner.rotation.y += step * 0.35;
+        meridian.rotation.y += step * 0.12;
+        world.invalidate();
+      });
+    </script>
+  </body>
+</html>

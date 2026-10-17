@@ -1,0 +1,389 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Sound in space</title>
+    <meta name="thumbnail" content="3" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #070a14;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { buffer, createWorld, effect, geometry, material, object, light, math } from '../runtime/engine.js';
+      import { announce, controls, readout, seeded, words, circling } from '../runtime/kit.js';
+      const say = words();
+
+      // Three sources of sound in a stone circle at night: a bell that circles, a horn that turns
+      // and a firefly that loops overhead. Each plays through its own Web Audio panner placed on
+      // it, and the listener, the ears, is the camera: copied from it before every frame, so
+      // orbiting or zooming moves the sounds round your head. The engine draws; the browser hears.
+      const world = createWorld('view', { controls: 'orbit' });
+      const night = math.color('#070a14');
+      world.scene.background = night;
+      world.scene.fog = { color: night, density: 0.035, heightFalloff: 0.25 };
+      world.camera.far = 900;
+
+      // The ground, the stone circle and the stars.
+      const ground = object.mesh(geometry.cylinder(40, 40, 0.2, 128), material.meshStandard({ color: '#2b3350', roughness: 0.9 }));
+      ground.position.y = -0.1;
+      ground.receiveShadow = true;
+      const dais = object.mesh(geometry.cylinder(1.6, 1.8, 0.16, 64), material.meshStandard({ color: '#2a3047', roughness: 0.4 }));
+      dais.position.y = 0.08;
+      world.scene.add(ground, dais);
+      // Faint circles a metre apart on the ground, to read distances by.
+      const chalk = material.meshBasic({ color: '#3a4570' });
+      for (let r = 2; r <= 8; r += 1) {
+        const circle = object.mesh(geometry.ring(r - 0.015, r + 0.015, 192), chalk);
+        circle.rotation.x = -Math.PI / 2;
+        circle.position.y = 0.005;
+        circle.castShadow = false;
+        world.scene.add(circle);
+      }
+      const next = seeded(5), granite = material.meshStandard({ color: '#7a8198', roughness: 0.8 }), slab = geometry.box(0.7, 1, 0.35);
+      for (let k = 0; k < 14; k++) {
+        const angle = (k / 14) * Math.PI * 2 + next() * 0.1, height = 1.8 + next() * 1.8, stone = object.mesh(slab, granite);
+        stone.scale.y = height;
+        stone.position.set(Math.cos(angle) * 9.5, height / 2, Math.sin(angle) * 9.5);
+        stone.rotation.set((next() - 0.5) * 0.08, -angle + Math.PI / 2, (next() - 0.5) * 0.08);
+        stone.receiveShadow = true;
+        world.scene.add(stone);
+      }
+      const sky = [];
+      for (let k = 0; k < 1600; k++) {
+        const y = 0.05 + next() * 0.95, around = next() * Math.PI * 2, ring = Math.sqrt(1 - y * y);
+        sky.push(ring * Math.cos(around) * 500, y * 500, ring * Math.sin(around) * 500);
+      }
+      world.scene.add(object.points(geometry.createBuffer({ position: buffer.float32(new Float32Array(sky), 3) }), material.points({ color: '#cfd8ff', size: 1.6 })));
+      world.scene.add(
+        light.directional({ intensity: 2, color: '#9fb2ff', position: [-6, 12, 8], castShadow: true }),
+        light.hemisphere({ intensity: 1.1, color: '#6a7fc0', groundColor: '#1a1f30' }),
+      );
+      world.effects.add(effect.bloom({ intensity: 0.12 }));
+
+      // A glowing body and its light, in one colour.
+      const glow = (color, strength) => material.meshStandard({ color: '#000000', emissive: color, emissiveIntensity: strength });
+      const SOURCES = {
+        bell: { color: '#ffb547' },
+        horn: { color: '#3fe0d0' },
+        firefly: { color: '#ff5fd2' },
+      };
+      for (const [name, source] of Object.entries(SOURCES)) {
+        source.name = name;
+        source.lamp = light.point({ color: source.color, intensity: 20, distance: 10 });
+        source.node = object.group();
+        source.node.add(source.lamp);
+        source.level = 0;
+        source.flash = 0;
+        world.scene.add(source.node);
+      }
+      // The bell: a golden ball in a ring, circling the stones' middle.
+      const { bell, horn, firefly } = SOURCES;
+      bell.skin = glow(bell.color, 2);
+      bell.node.add(object.mesh(geometry.sphere(0.3, 32, 16), bell.skin));
+      const hoop = object.mesh(geometry.torus(0.5, 0.035, 12, 64), material.meshStandard({ color: '#d9a441', roughness: 0.25, metalness: 1 }));
+      hoop.rotation.x = Math.PI / 2;
+      bell.node.add(hoop);
+      // The horn: a flared bell turned on the lathe, on a post, pointing along its node's +x.
+      const flare = [];
+      for (let k = 0; k <= 16; k++) {
+        const t = k / 16;
+        flare.push([0.08 + 0.55 * t ** 3, t * 1.2]);
+      }
+      horn.skin = glow(horn.color, 1.4);
+      const throat = object.mesh(geometry.lathe(flare, 48), material.meshStandard({ color: '#c8d4d8', roughness: 0.2, metalness: 1, side: 'double' }));
+      throat.rotation.z = -Math.PI / 2;
+      throat.position.x = -0.5;
+      const mouth = object.mesh(geometry.ring(0.05, 0.6, 48), horn.skin);
+      mouth.rotation.y = Math.PI / 2;
+      mouth.position.x = 0.68;
+      const post = object.mesh(geometry.cylinder(0.05, 0.08, 1.6, 16), granite);
+      post.position.y = -0.8;
+      horn.node.add(throat, mouth, post);
+      horn.node.position.set(-3.4, 1.6, -2.2);
+      horn.lamp.position.x = 1;
+      // What the horn's panner hears straight ahead, drawn as a faint cone of light: inside its
+      // inner angle the horn is heard in full, outside its outer angle at a tenth.
+      const INNER = 70, OUTER = 160, CONE = 6;
+      const beam = geometry.cone(CONE * Math.tan(((INNER / 2) * Math.PI) / 180), CONE, 48, 1, true);
+      beam.translate(0, -CONE / 2, 0);
+      beam.rotateZ(Math.PI / 2);
+      const air = material.meshBasic({ color: horn.color, transparent: true, opacity: 0.05, depthWrite: false, side: 'back', blending: 'additive' });
+      const shaft = object.mesh(beam, air);
+      shaft.position.x = 0.6;
+      shaft.castShadow = false;
+      horn.node.add(shaft);
+      // The firefly: a small bright ball that loops overhead.
+      firefly.skin = glow(firefly.color, 2.5);
+      firefly.node.add(object.mesh(geometry.sphere(0.12, 24, 12), firefly.skin));
+      for (const source of Object.values(SOURCES)) source.node.traverse((part) => (part.castShadow = false));
+
+      // Rings of sound: each note sends one out from its source, flat, widening and fading. A pool
+      // of rings is reused, each with its own glaze taking its note's colour and fading out; a
+      // spent ring is shrunk away until its next note.
+      const band = geometry.ring(0.965, 1, 160);
+      const rings = Array.from({ length: 36 }, () => {
+        const mesh = object.mesh(band, material.meshBasic({ transparent: true, opacity: 0, depthWrite: false, side: 'double' }));
+        mesh.rotation.x = -Math.PI / 2;
+        mesh.scale.setScalar(1e-4);
+        mesh.castShadow = mesh.receiveShadow = false;
+        world.scene.add(mesh);
+        return { mesh, age: 1, reach: 1, live: false };
+      });
+      let nextRing = 0;
+      function sendRing(source, loudness, reach) {
+        const ring = rings[nextRing++ % rings.length];
+        ring.mesh.position.copy(source.node.position);
+        ring.mesh.material.color.set(source.color);
+        Object.assign(ring, { age: 0, reach, loudness, live: true, source });
+        source.flash = Math.max(source.flash, loudness);
+      }
+
+      // Where the sources are at time `t`: the bell circles, the horn turns, the firefly loops a
+      // figure of eight overhead.
+      function place(t) {
+        bell.node.position.set(Math.cos(t * 0.3 + 0.6) * 4.6, 1.5 + Math.sin(t * 0.9) * 0.15, Math.sin(t * 0.3 + 0.6) * 4.6);
+        horn.node.rotation.y = Math.sin(t * 0.25) * 1.3 - 0.6;
+        firefly.node.position.set(Math.sin(t * 0.55) * 3.4, 2.8 + Math.sin(t * 1.1) * 0.7, Math.sin(t * 1.1) * 1.8 + 0.8);
+      }
+
+      // The sound. Nothing plays before the reader asks, as browsers require; until then a page
+      // clock times the notes, so the rings already pulse. Each source: its notes into a gain,
+      // the gain into a panner that sits on the source, the panner into an analyser that measures
+      // what reaches the ears, and every analyser into one master volume.
+      let audio = null, master = null;
+      const pageClock = () => performance.now() / 1000;
+      const now = () => (audio ? audio.currentTime : pageClock());
+      const notes = [];
+      const PENTA = [0, 2, 4, 7, 9, 12, 14, 16];
+      const pitch = (steps, root = 440) => root * 2 ** (steps / 12);
+      // A glide to each new value; a value already written is not written again, so a still
+      // scene books nothing.
+      const written = new WeakMap();
+      const write = (param, value, at) => {
+        if (written.get(param) === value) return;
+        written.set(param, value);
+        param.setTargetAtTime(value, at, 0.03);
+      };
+
+      function makePanner(source) {
+        const panner = new PannerNode(audio, { refDistance: 1.5, maxDistance: 40 });
+        const voice = audio.createGain(), meter = Object.assign(audio.createAnalyser(), { fftSize: 1024 });
+        voice.connect(panner).connect(meter).connect(master);
+        Object.assign(source, { voice, panner, meter, samples: new Float32Array(1024) });
+      }
+      function startSound() {
+        if (audio) return audio.resume();
+        audio = new AudioContext();
+        master = audio.createGain();
+        master.gain.value = ui.volume;
+        master.connect(audio.destination);
+        for (const source of Object.values(SOURCES)) makePanner(source);
+        // The horn's cone: full inside its inner angle, a tenth outside its outer one.
+        Object.assign(horn.panner, { coneInnerAngle: INNER, coneOuterAngle: OUTER, coneOuterGain: 0.1 });
+        // The horn holds a chord: three detuned saw pairs, softened by a low-pass filter.
+        const soft = Object.assign(audio.createBiquadFilter(), { type: 'lowpass' });
+        soft.frequency.value = 900;
+        soft.connect(horn.voice);
+        horn.voice.gain.value = 0.16;
+        horn.oscillators = [0, 1, 2, 3, 4, 5].map((k) => {
+          const osc = Object.assign(audio.createOscillator(), { type: 'sawtooth' });
+          osc.detune.value = k % 2 ? 7 : -7;
+          osc.connect(soft);
+          osc.start();
+          return osc;
+        });
+        for (const source of [bell, firefly]) source.next = audio.currentTime + 0.1;
+        horn.next = audio.currentTime + 0.05;
+        notes.length = 0;
+        applySettings();
+      }
+
+      // The scores, booked a little ahead on the sound's own clock (the page's, while silent).
+      const CHORDS = [[-12, -5, 0], [-15, -8, -3], [-17, -10, -5], [-14, -7, -2]];
+      let chord = 0;
+      bell.next = firefly.next = horn.next = pageClock() + 0.3;
+      function bellNote(at) {
+        const f = pitch(PENTA[Math.floor(next() * PENTA.length)], 523.25);
+        if (audio) {
+          // A bell: a struck sine and two inharmonic partials, the higher dying first.
+          for (const [ratio, loud, fall] of [[1, 0.35, 2.2], [2.76, 0.12, 0.9], [5.4, 0.06, 0.4]]) {
+            const osc = new OscillatorNode(audio, { frequency: f * ratio }), gain = new GainNode(audio, { gain: 0 });
+            gain.gain.setValueAtTime(0, at);
+            gain.gain.linearRampToValueAtTime(loud, at + 0.004);
+            gain.gain.exponentialRampToValueAtTime(0.0001, at + fall);
+            osc.connect(gain).connect(bell.voice);
+            osc.start(at);
+            osc.stop(at + fall + 0.05);
+          }
+        }
+        notes.push({ source: bell, at, loudness: 1, reach: 6 });
+        return 0.55 + Math.floor(next() * 3) * 0.3;
+      }
+      function fireflyNote(at, step) {
+        const f = pitch(PENTA[(step * 3) % PENTA.length] + 12, 880);
+        if (audio) {
+          const osc = new OscillatorNode(audio, { type: 'triangle', frequency: f }), gain = new GainNode(audio, { gain: 0 });
+          osc.frequency.exponentialRampToValueAtTime(f * 0.5, at + 0.09);
+          gain.gain.setValueAtTime(0, at);
+          gain.gain.linearRampToValueAtTime(0.25, at + 0.003);
+          gain.gain.exponentialRampToValueAtTime(0.0001, at + 0.12);
+          osc.connect(gain).connect(firefly.voice);
+          osc.start(at);
+          osc.stop(at + 0.15);
+        }
+        notes.push({ source: firefly, at, loudness: 0.7, reach: 2.6 });
+        return step % 4 === 3 ? 0.5 : 0.18;
+      }
+      function hornChord(at) {
+        if (audio) horn.oscillators.forEach((osc, k) => osc.frequency.setTargetAtTime(pitch(CHORDS[chord][Math.floor(k / 2)], 220), at, 0.4));
+        notes.push({ source: horn, at, loudness: 0.9, reach: 5 });
+        chord = (chord + 1) % CHORDS.length;
+        return 4;
+      }
+      let fireflyStep = 0;
+      function book() {
+        const ahead = now() + 0.15;
+        // A tab put aside, or a slow start, books no backlog: a late score resumes from now.
+        for (const source of [bell, firefly, horn]) source.next = Math.max(source.next, now());
+        while (bell.next < ahead) bell.next += bellNote(bell.next);
+        while (firefly.next < ahead) firefly.next += fireflyNote(firefly.next, fireflyStep++);
+        while (horn.next < ahead) horn.next += hornChord(horn.next);
+      }
+      setInterval(book, 25);
+
+      function applySettings() {
+        if (!audio) return;
+        master.gain.setTargetAtTime(ui.volume, audio.currentTime, 0.05);
+        for (const source of Object.values(SOURCES))
+          Object.assign(source.panner, { panningModel: ui.panning, distanceModel: ui.distanceModel, rolloffFactor: ui.distanceModel === 'linear' ? Math.min(1, ui.rolloff) : ui.rolloff });
+      }
+
+      world.camera.position.set(0, 6.4, 10.8);
+      world.controls.target.set(0, 1.4, 0);
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.03;
+      world.controls.minDistance = 1.5;
+      world.controls.maxDistance = 30;
+      function listen() {
+        startSound();
+        announce('', say('listening'));
+      }
+      const ui = controls(
+        {
+          listen,
+          silence: () => {
+            audio?.suspend();
+            announce('', say('silent'));
+          },
+          volume: [0, 1, 0.7],
+          distanceModel: ['inverse', 'exponential', 'linear'],
+          rolloff: [0, 3, 1, 0.1],
+          panning: ['HRTF', 'equalpower'],
+          moving: true,
+        },
+        applySettings,
+        world,
+      );
+      // The first press on the scene turns the sound on too.
+      world.canvas.addEventListener('pointerdown', () => {
+        if (!audio) listen();
+      });
+
+      const heard = Object.fromEntries(Object.keys(SOURCES).map((name) => [name, readout(name)]));
+      circling(world, -0.12);
+
+      // The ears follow the eye: the camera's place, its forward (−z) and its up (+y), written to
+      // the listener before every frame; each panner sits on its source and faces where it faces.
+      const forward = math.vector3(), up = math.vector3(), at = math.vector3();
+      const placeEars = (listener, t) => {
+        world.camera.updateMatrixWorld(true);
+        const e = world.camera.matrixWorld.elements;
+        forward.set(-e[8], -e[9], -e[10]).normalize();
+        up.set(e[4], e[5], e[6]).normalize();
+        // Firefox's listener has no position parameters yet, only the older setters.
+        if (listener.positionX) {
+          for (const [param, value] of [[listener.positionX, e[12]], [listener.positionY, e[13]], [listener.positionZ, e[14]], [listener.forwardX, forward.x], [listener.forwardY, forward.y], [listener.forwardZ, forward.z], [listener.upX, up.x], [listener.upY, up.y], [listener.upZ, up.z]])
+            write(param, value, t);
+        } else {
+          listener.setPosition(e[12], e[13], e[14]);
+          listener.setOrientation(forward.x, forward.y, forward.z, up.x, up.y, up.z);
+        }
+      };
+      const placePanner = (source, t) => {
+        const { panner, node } = source;
+        node.getWorldPosition(at);
+        for (const [param, value] of [[panner.positionX, at.x], [panner.positionY, at.y], [panner.positionZ, at.z]]) write(param, value, t);
+        if (source === horn) {
+          const yaw = node.rotation.y;
+          for (const [param, value] of [[panner.orientationX, Math.cos(yaw)], [panner.orientationY, 0], [panner.orientationZ, -Math.sin(yaw)]]) write(param, value, t);
+        }
+      };
+
+      let time = 0;
+      world.beforeFrame(({ delta }) => {
+        if (ui.moving) time += Math.min(delta, 0.05);
+        place(time);
+        if (!audio) return;
+        placeEars(audio.listener, audio.currentTime);
+        for (const source of Object.values(SOURCES)) placePanner(source, audio.currentTime);
+      });
+
+      // Every frame: the notes now due send their rings; the rings widen and fade; each source
+      // glows with what the ears receive of it, and its readout gives that level and its distance.
+      world.onFrame(({ delta }) => {
+        const step = Math.min(delta, 0.05), clock = now();
+        for (let k = notes.length - 1; k >= 0; k--)
+          if (notes[k].at <= clock) {
+            const { source, at, loudness, reach } = notes[k];
+            // A note long past, booked while no frame was drawn (a tab put aside), sends no ring.
+            if (clock - at < 0.5) sendRing(source, loudness, reach);
+            notes.splice(k, 1);
+          }
+        for (const ring of rings) {
+          if (!ring.live) continue;
+          ring.age += step / 2.2;
+          if (ring.age >= 1) {
+            ring.live = false;
+            ring.mesh.scale.setScalar(1e-4);
+            continue;
+          }
+          ring.mesh.scale.setScalar(0.2 + ring.reach * Math.sqrt(ring.age));
+          ring.mesh.material.opacity = ring.loudness * (1 - ring.age) ** 1.5 * 0.8;
+        }
+        for (const source of Object.values(SOURCES)) {
+          source.node.getWorldPosition(at);
+          const distance = at.distanceTo(world.camera.position);
+          let level = -Infinity;
+          if (audio && audio.state === 'running') {
+            source.meter.getFloatTimeDomainData(source.samples);
+            let sum = 0;
+            for (const v of source.samples) sum += v * v;
+            level = 10 * Math.log10(sum / source.samples.length + 1e-12);
+            source.level = math.lerp(source.level, math.clamp((level + 60) / 50, 0, 1), Math.min(1, step * 12));
+          } else source.level = math.lerp(source.level, 0, Math.min(1, step * 4));
+          source.flash = Math.max(0, source.flash - step * 2.5);
+          const shine = 0.35 + source.level * 1.2 + source.flash;
+          source.lamp.intensity = 12 + shine * 30;
+          source.skin.emissiveIntensity = (source === firefly ? 1.6 : 1.2) * (0.6 + shine);
+          // The readout holds each peak and lets it sink 24 dB a second, so a short note reads.
+          source.peak = Math.max(level, (source.peak ?? -Infinity) - step * 24);
+          heard[source.name](source.peak > -90 ? say('level', { db: Math.round(source.peak), m: distance.toFixed(1) }) : say('distance', { m: distance.toFixed(1) }));
+        }
+        air.opacity = 0.02 + horn.level * 0.06;
+        world.invalidate();
+      });
+    </script>
+  </body>
+</html>

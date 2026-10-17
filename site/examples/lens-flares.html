@@ -1,0 +1,395 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Lens flares</title>
+    <meta name="thumbnail" content="6" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #1a1830;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, effect, geometry, light, material, math, object, texture, buffer } from '../runtime/engine.js';
+      import { controls, readout, opening, ease, mix, valueNoise } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#1a1830');
+      world.camera.near = 0.1;
+      world.camera.far = 4000;
+
+      // The sun, low over a ridge of wind turbines at the end of the day: its direction is all a
+      // flare needs, since the sun is as good as infinitely far away.
+      const sunDir = math.vector3();
+      const placeSun = (height) => {
+        const up = math.degToRad(height), bearing = -0.25;
+        sunDir.set(Math.sin(bearing) * Math.cos(up), Math.sin(up), -Math.cos(bearing) * Math.cos(up));
+      };
+      placeSun(7);
+
+      // The sky: a dome of vertex colours, deep violet overhead, amber at the horizon and a warm
+      // glow round the sun, painted again whenever the sun moves. It follows the camera, so its
+      // horizon never comes nearer.
+      const dome = geometry.sphere(1500, 64, 32);
+      const domeColours = buffer.float32(new Float32Array(dome.attributes.position.count * 3), 3);
+      dome.setAttribute('color', domeColours);
+      const sky = object.mesh(dome, material.meshBasic({ vertexColors: true, side: 'back', depthWrite: false }));
+      world.scene.add(sky);
+      const ZENITH = math.color('#231d4a'), MIDDLE = math.color('#8a4f86'), HORIZON = math.color('#ffab5e'), HALO = math.color('#fff0c8');
+      const paintSky = () => {
+        const p = dome.attributes.position, c = math.color();
+        for (let v = 0; v < p.count; v++) {
+          const x = p.getX(v) / 1500, y = p.getY(v) / 1500, z = p.getZ(v) / 1500;
+          const up = Math.max(y, 0);
+          c.copy(HORIZON).lerp(MIDDLE, Math.min(1, up / 0.22)).lerp(ZENITH, math.clamp((up - 0.22) / 0.5, 0, 1));
+          const toSun = Math.max(0, x * sunDir.x + y * sunDir.y + z * sunDir.z);
+          c.lerp(HALO, Math.pow(toSun, 24) * 0.85 + Math.pow(toSun, 4) * 0.12);
+          if (y < 0) c.lerp(HORIZON, 0.4);
+          domeColours.setXYZ(v, c.r, c.g, c.b);
+        }
+        domeColours.needsUpdate = true;
+      };
+
+      // The sun's disc: far brighter than white, so the bloom spreads it into the haze round it.
+      const sunDisc = object.mesh(geometry.sphere(16, 32, 16), material.meshStandard({ color: '#000000', emissive: '#ffe2a8', emissiveIntensity: 40 }));
+      world.scene.add(sunDisc);
+
+      // The land: rolling hills of value noise, a long ridge where the turbines stand.
+      const noise = valueNoise({ math });
+      const groundAt = (x, z) => {
+        const ridge = Math.exp(-(((z + 50) / 40) ** 2)) * 6;
+        const hills = noise(x / 90, z / 90) * 9 + noise(x / 30, z / 30, 0, 3) * 2.5;
+        return ridge + hills * Math.min(1, Math.hypot(x, z - 20) / 70) - 1;
+      };
+      const land = geometry.plane(1400, 1400, 180, 180);
+      {
+        const p = land.attributes.position;
+        for (let v = 0; v < p.count; v++) {
+          const x = p.getX(v), y = p.getY(v);
+          p.setXYZ(v, x, y, groundAt(x, -y));
+        }
+        p.needsUpdate = true;
+        land.computeVertexNormals();
+      }
+      const ground = object.mesh(land, material.meshLambert({ color: '#9a7a48' }));
+      // The plane is laid in x–y; its y is written as −z, so the quarter turn lays it flat as drawn.
+      ground.rotation.set(-Math.PI / 2, 0, 0);
+      world.scene.add(ground);
+
+      // The turbines: a white tower, a nacelle, a hub and three slender blades on a rotor that
+      // turns. The rotors are what cross the sun — and what the flare must notice.
+      const white = material.meshStandard({ color: '#e9e4dc', roughness: 0.45, metalness: 0.1 });
+      const bladeShape = math.shape([[0, -0.9], [1.4, -0.6], [15.5, -0.15], [16, 0], [15.5, 0.25], [2, 0.9], [0, 0.9]]);
+      const blade = geometry.extrude(bladeShape, { depth: 0.25, bevelEnabled: false });
+      const rotors = [];
+      // One set of shapes for every turbine, each scaled to its own size.
+      const towerShape = geometry.cylinder(0.55, 1.1, 26, 20), headShape = geometry.box(1.6, 1.6, 4.2), hubShape = geometry.sphere(1.05, 24, 16);
+      const turbine = (x, z, size, spin) => {
+        const y = groundAt(x, z);
+        const mast = object.mesh(towerShape, white);
+        mast.position.set(x, y + 13 * size, z);
+        mast.scale.setScalar(size);
+        const head = object.mesh(headShape, white);
+        head.position.set(x, y + 26.6 * size, z - 0.6 * size);
+        head.scale.setScalar(size);
+        const rotor = object.group();
+        rotor.position.set(x, y + 26.6 * size, z + 1.9 * size);
+        rotor.scale.setScalar(size);
+        const hub = object.mesh(hubShape, white);
+        hub.scale.set(1, 1, 1.5);
+        rotor.add(hub);
+        for (let k = 0; k < 3; k++) {
+          const arm = object.group();
+          arm.rotation.set(0, 0, (k * Math.PI * 2) / 3);
+          const piece = object.mesh(blade, white);
+          piece.position.set(0.6, 0, -0.12);
+          piece.rotation.set(0.18, 0, 0);
+          arm.add(piece);
+          rotor.add(arm);
+        }
+        world.scene.add(mast, head, rotor);
+        rotors.push({ rotor, spin, phase: x * 0.13 });
+        return [mast, head, rotor];
+      };
+      // The nearest one stands where the low sun, seen from the first view, crosses its rotor
+      // beside the hub, clear of the tower, so its blades sweep across the sun every few seconds.
+      const VIEW = [4, 7, 44];
+      const nearest = (() => {
+        const t = 85, x = VIEW[0] + sunDir.x * t - 8.5, y = VIEW[1] + sunDir.y * t, z = VIEW[2] + sunDir.z * t;
+        return [x, z, (y + 2.5 - groundAt(x, z)) / 26.6];
+      })();
+      const occluders = [
+        ...turbine(nearest[0], nearest[1] - 1.9 * nearest[2], nearest[2], 0.42),
+        ...turbine(-62, -70, 1.1, 0.5),
+        ...turbine(14, -82, 1.05, 0.62),
+        ...turbine(52, -60, 0.95, 0.47),
+        ...turbine(-110, -120, 1.2, 0.52),
+        ...turbine(95, -140, 1.15, 0.58),
+      ];
+
+      // The light the sun gives the land, and the sky's fill from above.
+      const sunLight = light.directional({ color: '#ffc58a', intensity: 2.4, castShadow: false });
+      world.scene.add(sunLight, light.hemisphere({ color: '#b28fd0', groundColor: '#3a2a22', intensity: 0.75 }));
+
+      // The glow: a bloom pass spreads the sun's disc. The flare itself is no image pass — it is
+      // sprites, laid along the line from the sun through the middle of the picture.
+      world.effects.add(effect.bloom({ intensity: 0.1, radius: 1.4 }));
+
+      // The flare's pictures, drawn once in white on canvases: a starburst with its halo, the
+      // hexagon the aperture's six blades leave in each ghost, a soft disc, a rainbow ring and a
+      // thin streak.
+      const picture = (size, draw) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = size;
+        const context = canvas.getContext('2d');
+        context.translate(size / 2, size / 2);
+        draw(context, size / 2);
+        return canvas;
+      };
+      const radial = (context, radius, stops) => {
+        const fill = context.createRadialGradient(0, 0, 0, 0, 0, radius);
+        for (const [at, colour] of stops) fill.addColorStop(at, colour);
+        context.fillStyle = fill;
+        context.fillRect(-radius, -radius, radius * 2, radius * 2);
+      };
+      const STAR = picture(256, (context, r) => {
+        radial(context, r, [[0, 'rgba(255,255,255,1)'], [0.08, 'rgba(255,255,255,0.8)'], [0.25, 'rgba(255,255,255,0.18)'], [1, 'rgba(255,255,255,0)']]);
+        context.globalCompositeOperation = 'lighter';
+        for (let k = 0; k < 12; k++) {
+          context.save();
+          context.rotate((k / 12) * Math.PI * 2 + (k % 2) * 0.13);
+          const long = k % 2 ? 0.6 : 0.98, beam = context.createLinearGradient(0, 0, r * long, 0);
+          beam.addColorStop(0, 'rgba(255,255,255,0.55)');
+          beam.addColorStop(1, 'rgba(255,255,255,0)');
+          context.fillStyle = beam;
+          context.beginPath();
+          context.moveTo(0, -r * 0.018);
+          context.lineTo(r * long, 0);
+          context.lineTo(0, r * 0.018);
+          context.fill();
+          context.restore();
+        }
+      });
+      const HEXAGON = picture(128, (context, r) => {
+        const path = (scale) => {
+          context.beginPath();
+          for (let k = 0; k < 6; k++) context.lineTo(Math.cos((k * Math.PI) / 3) * r * scale, Math.sin((k * Math.PI) / 3) * r * scale);
+          context.closePath();
+        };
+        context.filter = 'blur(2px)';
+        path(0.9);
+        context.fillStyle = 'rgba(255,255,255,0.35)';
+        context.fill();
+        context.lineWidth = r * 0.06;
+        context.strokeStyle = 'rgba(255,255,255,0.7)';
+        context.stroke();
+      });
+      const DISC = picture(128, (context, r) => radial(context, r, [[0, 'rgba(255,255,255,0.9)'], [0.55, 'rgba(255,255,255,0.45)'], [0.8, 'rgba(255,255,255,0.12)'], [1, 'rgba(255,255,255,0)']]));
+      const RING = picture(256, (context, r) => {
+        const hues = ['255,60,60', '255,190,40', '120,255,90', '60,190,255', '160,90,255'];
+        hues.forEach((hue, k) => {
+          context.beginPath();
+          context.arc(0, 0, r * (0.62 + k * 0.06), 0, Math.PI * 2);
+          context.lineWidth = r * 0.07;
+          context.filter = 'blur(3px)';
+          context.strokeStyle = `rgba(${hue},0.32)`;
+          context.stroke();
+        });
+      });
+      const STREAK = picture(256, (context, r) => {
+        const across = context.createLinearGradient(-r, 0, r, 0);
+        across.addColorStop(0, 'rgba(255,255,255,0)');
+        across.addColorStop(0.5, 'rgba(255,255,255,1)');
+        across.addColorStop(1, 'rgba(255,255,255,0)');
+        context.fillStyle = across;
+        context.filter = 'blur(6px)';
+        context.globalAlpha = 0.5;
+        context.fillRect(-r, -r * 0.1, r * 2, r * 0.2);
+        context.filter = 'blur(1.5px)';
+        context.globalAlpha = 1;
+        context.fillRect(-r, -r * 0.02, r * 2, r * 0.04);
+      });
+
+      // The elements: `along` 0 sits on the sun, 1 at the middle of the picture, 2 as far again
+      // on the other side; `size` is a share of the picture's height; `glow` its brightness.
+      // Each is a sprite with an additive material, so it adds its light to the scene's like
+      // light bouncing inside the lens. A transparent material is laid out once, when the world
+      // opens: what changes every frame — how bright, what tint — is painted into the element's
+      // own canvas texture instead, whose new picture the world uploads in place.
+      const ELEMENTS = [
+        { base: STAR, along: 0, size: 0.6, colour: '#ffe9c8', glow: 1 },
+        { base: STREAK, along: 0, size: 1.6, colour: '#ffd9b0', glow: 1.6, streak: true },
+        { base: DISC, along: 0.22, size: 0.05, colour: '#ffb46a', glow: 0.6 },
+        { base: HEXAGON, along: 0.42, size: 0.07, colour: '#ffcf7a', glow: 0.7 },
+        { base: HEXAGON, along: 0.66, size: 0.1, colour: '#6cf0c2', glow: 0.35 },
+        { base: DISC, along: 0.84, size: 0.035, colour: '#9fdcff', glow: 0.7 },
+        { base: RING, along: 1.12, size: 0.42, colour: null, glow: 0.8 },
+        { base: HEXAGON, along: 1.32, size: 0.06, colour: '#c58cff', glow: 0.7 },
+        { base: HEXAGON, along: 1.55, size: 0.15, colour: '#5ea2ff', glow: 0.32 },
+        { base: DISC, along: 1.78, size: 0.09, colour: '#ff8a5c', glow: 0.55 },
+        { base: HEXAGON, along: 2.05, size: 0.24, colour: '#ffb25a', glow: 0.22 },
+      ].map((element) => {
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = element.base.width;
+        const map = texture.canvas(canvas);
+        const sprite = object.sprite(material.sprite({ map, blending: 'additive', transparent: true, depthWrite: false, rotation: element.base === HEXAGON ? 0.26 : 0 }));
+        world.scene.add(sprite);
+        return { ...element, canvas, map, sprite, painted: '' };
+      });
+      // Paints an element at `level` (0 to 1) in `colour`: its white picture faded, then tinted
+      // where it is drawn. Only a level that moved by a step is painted again.
+      const paint = (element, level, colour) => {
+        const step = Math.round(Math.min(1, level) * 48), key = `${step}${colour}`;
+        if (key === element.painted) return;
+        element.painted = key;
+        const context = element.canvas.getContext('2d'), side = element.canvas.width;
+        context.globalCompositeOperation = 'source-over';
+        context.clearRect(0, 0, side, side);
+        context.globalAlpha = step / 48;
+        context.drawImage(element.base, 0, 0);
+        context.globalAlpha = 1;
+        if (colour) {
+          context.globalCompositeOperation = 'source-atop';
+          context.fillStyle = colour;
+          context.fillRect(0, 0, side, side);
+        }
+        element.map.needsUpdate = true;
+      };
+
+      // Two lenses: a spherical one gives round ghosts and a short streak; an anamorphic one
+      // squeezes the picture, so its ghosts are ovals and its streak a long blue line.
+      const LENSES = {
+        spherical: { stretch: 1, streak: 1, streakColour: '#ffd9b0', tint: null },
+        anamorphic: { stretch: 1.7, streak: 2.6, streakColour: '#6fb6ff', tint: '#8fc4ff' },
+      };
+
+      // How much of the sun shows: rays from the eye to sixteen points spread over its disc,
+      // each tested against the hills, whose height is known, and against the turbines
+      // (`world.raycast`). The share that reaches the sun dims the flare, so a blade crossing it
+      // flickers it. The hills stand still: their answer is kept until the eye or the sun moves;
+      // the blades turn, so they are asked every frame.
+      const SAMPLES = Array.from({ length: 16 }, (_, k) => {
+        const angle = k * 2.39996, reach = Math.sqrt((k + 0.5) / 16) * 0.0105;
+        return { a: Math.cos(angle) * reach, b: Math.sin(angle) * reach, direction: math.vector3(), behindHill: false };
+      });
+      // Whether the hills stand between the eye and the sun along `direction`: the ray is marched
+      // out in growing steps and compared with the ground's height under it.
+      const hillsBlock = (eye, direction) => {
+        for (let t = 4; t < 600; t *= 1.08)
+          if (eye.y + direction.y * t < groundAt(eye.x + direction.x * t, eye.z + direction.z * t)) return true;
+        return false;
+      };
+      const UP = math.vector3(0, 1, 0), side = math.vector3(), lift = math.vector3();
+      const hillsEye = math.vector3(Infinity, 0, 0), hillsSun = math.vector3();
+      const ray = math.ray(math.vector3(), math.vector3(0, 0, -1));
+      const sunShows = (eye) => {
+        if (!eye.equals(hillsEye) || !sunDir.equals(hillsSun)) {
+          hillsEye.copy(eye);
+          hillsSun.copy(sunDir);
+          side.crossVectors(sunDir, UP).normalize();
+          lift.crossVectors(side, sunDir).normalize();
+          for (const sample of SAMPLES) {
+            sample.direction.copy(sunDir).addScaledVector(side, sample.a).addScaledVector(lift, sample.b).normalize();
+            sample.behindHill = hillsBlock(eye, sample.direction);
+          }
+        }
+        let clear = 0;
+        ray.origin.copy(eye);
+        for (const { direction, behindHill } of SAMPLES) {
+          if (behindHill) continue;
+          ray.direction.copy(direction);
+          if (!world.raycast(ray, { objects: occluders })) clear++;
+        }
+        return clear / SAMPLES.length;
+      };
+
+      // The settings: the flare on or off, the lens it comes from, its strength and the sun's
+      // height. A drag of the view slides the flare: its ghosts always run through the middle.
+      const ui = controls(
+        { flare: true, lens: Object.keys(LENSES), strength: [0, 2, 1], sunHeight: [1, 20, 7] },
+        (values, key) => {
+          if (key === undefined || key === 'sunHeight') {
+            placeSun(values.sunHeight);
+            paintSky();
+          }
+          world.invalidate();
+        },
+        world,
+      );
+      const counter = readout('sunShowing');
+
+      world.camera.position.set(...VIEW);
+      world.controls.target.set(-2, 5, 0);
+      world.controls.minDistance = 10;
+      world.controls.maxDistance = 140;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.02;
+
+      // The opening: the camera rises from behind the hill until the sun comes out from behind
+      // the nearest rotor.
+      const from = [26, 3, 70];
+      opening(world, (time) => {
+        const e = ease.inOut(time / 5);
+        world.camera.position.set(...mix({ math }, from, VIEW, e));
+        return time < 5;
+      });
+
+      const eye = math.vector3(), at = math.vector3(), local = math.vector3();
+      let time = 0, shows = 1;
+      const frame = (delta) => {
+        const step = Math.min(delta, 0.05);
+        time += step;
+        for (const { rotor, spin, phase } of rotors) rotor.rotation.set(0, 0, -(time * spin + phase));
+        const camera = world.camera;
+        camera.updateWorldMatrix(true, false);
+        eye.setFromMatrixPosition(camera.matrixWorld);
+        sky.position.copy(eye);
+        sunDisc.position.copy(eye).addScaledVector(sunDir, 1200);
+        sunLight.position.copy(sunDir).multiplyScalar(120);
+
+        // Where the sun falls in the picture: its direction in the camera's frame, divided by
+        // the depth, over the slope of the lens; the flare runs from there through the middle.
+        const canvas = world.canvas, aspect = canvas.clientWidth / Math.max(1, canvas.clientHeight);
+        const slope = Math.tan((camera.fov * Math.PI) / 360) / (camera.zoom || 1);
+        local.copy(sunDir).transformDirection(camera.matrixWorldInverse);
+        const ahead = -local.z;
+        const sx = local.x / Math.max(ahead, 1e-4) / (slope * aspect), sy = local.y / Math.max(ahead, 1e-4) / slope;
+        // Off the picture, or behind the camera, the flare fades: a lens sees no sun it cannot see.
+        const inside = ahead <= 0 ? 0 : Math.max(0, 1 - Math.max(Math.abs(sx), Math.abs(sy) * 1.1) ** 4 * 0.7);
+        const target = inside > 0 ? sunShows(eye) : 0;
+        shows += (target - shows) * (1 - Math.exp(-step * 18));
+        counter(`${Math.round(target * 100)} %`);
+
+        const lens = LENSES[ui.lens], depth = 2, size = 2 * slope * depth;
+        const strength = ui.flare ? ui.strength * shows * inside : 0;
+        // The nearer the sun to the middle, the brighter the ghosts: the light bounces straighter.
+        const centred = 1 - Math.min(1, Math.hypot(sx, sy) * 0.45);
+        for (const element of ELEMENTS) {
+          const x = sx * (1 - element.along), y = sy * (1 - element.along);
+          at.set(x * slope * aspect * depth, y * slope * depth, -depth).applyMatrix4(camera.matrixWorld);
+          element.sprite.position.copy(at);
+          const ghost = element.along > 0;
+          const wide = element.streak ? lens.streak : ghost ? lens.stretch : 1;
+          const tall = element.streak ? (lens.stretch > 1 ? 0.5 : 1) : 1;
+          element.sprite.scale.set(element.size * size * wide, element.size * size * tall, 1);
+          const colour = element.streak ? lens.streakColour : ghost && lens.tint && element.colour ? lens.tint : element.colour;
+          paint(element, element.glow * strength * (ghost ? 0.4 + 0.6 * centred : 1), colour);
+        }
+        world.invalidate();
+      };
+      // The first picture is placed before the world's loop runs, so it already shows the sun.
+      frame(0);
+      world.beforeFrame(({ delta }) => frame(delta));
+    </script>
+  </body>
+</html>

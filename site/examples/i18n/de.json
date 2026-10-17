@@ -1454,6 +1454,38 @@
       "credit": "Amazon Lumberyard Bistro (NVIDIA ORCA), CC BY 4.0 — siehe assets/examples/CREDITS.md"
     }
   },
+  "a-map-of-what-the-engine-draws": {
+    "banner": "Klicke in die linke Ansicht und laufe mit W A S D; die Karte rechts zeigt von oben, was diese Ansicht in diesem Bild berechnet hat. Friere den Schnitt ein und lauf dann aus ihm heraus.",
+    "controls": {
+      "freeze": "Einfrieren",
+      "frustum": "Sichtkegel",
+      "clusters": "Cluster",
+      "shadows": "Schattenseiten",
+      "reflections": "Spiegelungsstrahlen",
+      "lights": "Lichter",
+      "mapSize": "Kartengröße (m)"
+    },
+    "readouts": {
+      "clusters": "Cluster",
+      "occluded": "Verdeckt",
+      "missing": "Nicht geladen",
+      "shadowPages": "Gezeichnete Schattenseiten",
+      "raysMissed": "Strahlen ohne Treffer"
+    },
+    "words": {
+      "credit": "Emerald Square von Nicholas Hull und Kate Anderson (NVIDIA ORCA), Vegetation von SpeedTree, CC BY-NC-SA 3.0 — siehe assets/examples/CREDITS.md",
+      "fine": "fein",
+      "coarse": "grob",
+      "occluded": "verdeckt",
+      "missing": "nicht geladen",
+      "pageDrawn": "Schattenseite gezeichnet",
+      "pageCached": "Schattenseite aus dem Cache",
+      "rayHit": "Strahl und sein Treffer",
+      "rayMissed": "Strahl ohne Treffer",
+      "camera": "Kamera",
+      "frozenCut": "eingefrorener Schnitt"
+    }
+  },
   "a-bust-a-crate-and-a-glass-ball": {
     "banner": "Ziehe, um die Büste zu umkreisen. Die Kiste und die Glaskugel drehen sich auf ihrem Drehteller.",
     "words": {
@@ -2726,6 +2758,739 @@
       "height": "Abnahme",
       "base": "Basis",
       "colour": "Farbe"
+    }
+  },
+  "paint-where-you-click": {
+    "banner": "Auf die Vase drücken und ziehen, um zu malen. Still halten, und die drehende Scheibe zieht ein Band rundherum. Daneben ziehen, um die Ansicht zu drehen.",
+    "controls": {
+      "colour": "Farbe",
+      "brush": "Pinselgröße",
+      "wheel": "Scheibentempo",
+      "clear": "Löschen"
+    },
+    "readouts": {
+      "triangle": "Dreieck",
+      "uv": "Textur (u, v)",
+      "strokes": "Striche"
+    }
+  },
+  "pixel-art-render": {
+    "banner": "Ziehen dreht die Insel, Mausrad zoomt. Ändere Pixelgröße und Palette.",
+    "controls": {
+      "pixelSize": "Pixelgröße",
+      "palette": "Palette",
+      "upscale": "Vergrößerung",
+      "turn": "Drehung"
+    },
+    "choices": {
+      "palette": {
+        "full": "alle Farben",
+        "posterized": "64 Farben",
+        "handheld": "Handheld-Grün",
+        "dusk": "vier Abendtöne"
+      },
+      "upscale": {
+        "nearest": "nächster Pixel",
+        "smooth": "geglättet"
+      }
+    },
+    "readouts": {
+      "resolution": "Gezeichnete Auflösung"
+    }
+  },
+  "a-line-that-draws-itself": {
+    "banner": "Ein Spirograph, dessen Linie sich selbst zeichnet: Der Strich einer einzigen Linie wächst hinter dem Stift. Wähle ein Rad und ein Loch; ziehe, um dich umzusehen.",
+    "controls": {
+      "wheel": "Zähne des Rads",
+      "hole": "Stiftloch",
+      "speed": "Runden pro Sekunde",
+      "width": "Linienbreite",
+      "layers": "Nächste Schicht",
+      "clear": "Papier leeren"
+    },
+    "readouts": {
+      "drawn": "Schicht gezeichnet",
+      "laps": "Runden bis zum Schluss",
+      "inkLaid": "Tinte gelegt"
+    }
+  },
+  "decals-on-a-surface": {
+    "banner": "Über den Kiesel fahren zeigt den Projektionskasten; ein Klick schneidet einen Aufkleber aus der Fläche darunter. Ziehen dreht die Ansicht.",
+    "controls": {
+      "sticker": "Aufkleber",
+      "size": "Größe",
+      "turn": "Zufällig gedreht",
+      "box": "Kasten zeigen",
+      "spin": "Drehen",
+      "clear": "Alle abziehen"
+    },
+    "choices": {
+      "sticker": {
+        "mixed": "gemischt",
+        "star": "Stern",
+        "bolt": "Blitz",
+        "heart": "Herz",
+        "target": "Zielscheibe",
+        "flag": "Karo",
+        "smile": "Lächeln",
+        "hazard": "Warnung",
+        "flower": "Blume"
+      }
+    },
+    "readouts": {
+      "decals": "Aufkleber",
+      "kept": "Geschnittene Dreiecke"
+    }
+  },
+  "procedural-wood-and-noise": {
+    "banner": "Ziehen, um sich umzusehen. Jedes Texel wächst aus Rauschen, das die Seite berechnet: Holz wählen, neue Stämme sägen.",
+    "controls": {
+      "wood": "Holz",
+      "rings": "Jahresringe pro 10 cm",
+      "figure": "Maserung",
+      "varnish": "Lack",
+      "newLogs": "Neue Stämme",
+      "turn": "Schale drehen"
+    },
+    "choices": {
+      "wood": {
+        "oak": "Eiche",
+        "walnut": "Nussbaum",
+        "cherry": "Kirsche",
+        "maple": "Ahorn"
+      }
+    },
+    "readouts": {
+      "texels": "Berechnete Texel",
+      "bakeTime": "Berechnet in"
+    }
+  },
+  "a-toolpath-in-lines": {
+    "banner": "Eine echte G-Code-Datei, in der Seite gelesen und als Linien gezeichnet, während die Düse sie druckt. Ziehen zum Drehen; oberste Schicht senken, um das Teil zu schneiden.",
+    "controls": {
+      "colour": "Farbe nach",
+      "topLayer": "Oberste Schicht",
+      "pace": "Tempo",
+      "travel": "Leerfahrten",
+      "reprint": "Erneut drucken"
+    },
+    "choices": {
+      "colour": {
+        "kind": "Bahnart",
+        "layer": "Schicht",
+        "speed": "Geschwindigkeit"
+      }
+    },
+    "readouts": {
+      "layer": "Schicht",
+      "filament": "Filament",
+      "printTime": "Druckzeit",
+      "gcodeLines": "G-Code-Zeilen",
+      "segments": "Segmente",
+      "lines": "Linien in der Szene"
+    }
+  },
+  "pick-an-instance": {
+    "banner": "Auf ein Sechseck zeigen nennt es unter den 1.519 Platzierungen einer Form; ein Klick wählt es und schickt eine Welle über die Insel.",
+    "controls": {
+      "ripple": "Welle",
+      "swell": "Dünung"
+    },
+    "readouts": {
+      "instance": "Instanz",
+      "cell": "Feld (q, r)",
+      "height": "Höhe",
+      "placements": "Platzierungen",
+      "shapes": "Geteilte Formen"
+    }
+  },
+  "shapes-from-an-svg": {
+    "banner": "Ein SVG, Pfad für Pfad gelesen, jede gefüllte Form samt Löchern aus Karton geschnitten. Fächere die Schichten auf oder lege ein eigenes SVG auf die Seite.",
+    "controls": {
+      "spread": "Abstand",
+      "depth": "Kartonstärke",
+      "bevel": "Fase",
+      "detail": "Kurvendetail",
+      "sway": "Schwingen",
+      "yourSvg": "Eigenes SVG öffnen"
+    },
+    "readouts": {
+      "paths": "Gelesene Formen",
+      "outlines": "Umrisse",
+      "holes": "Geschnittene Löcher",
+      "triangles": "Dreiecke",
+      "file": "Datei"
+    }
+  },
+  "boolean-shapes": {
+    "banner": "Ziehen, um herumzugehen. Wählen Sie eine Operation; mit Driften schneidet ein Worker die Form während der Bewegung neu.",
+    "controls": {
+      "operation": "Operation",
+      "ball": "Kugel",
+      "bore": "Bohrung",
+      "drifting": "Driften",
+      "operands": "Operanden",
+      "spin": "Drehen"
+    },
+    "choices": {
+      "operation": {
+        "carved": "(Würfel ∩ Kugel) − Bohrungen",
+        "subtract": "Würfel − Kugel",
+        "intersect": "Würfel ∩ Kugel",
+        "union": "Würfel ∪ Kugel"
+      }
+    },
+    "readouts": {
+      "triangles": "Dreiecke",
+      "computedIn": "Berechnet in"
+    }
+  },
+  "a-convex-hull": {
+    "banner": "Der kleinste konvexe Körper um einen bewegten Schwarm, in jedem Bild von Grund auf neu gebaut. Ändere Punkte und Wolke; ziehe, um dich umzusehen.",
+    "controls": {
+      "points": "Punkte",
+      "motion": "Bewegung",
+      "cloud": "Wolke",
+      "facets": "Facetten",
+      "edges": "Kanten"
+    },
+    "choices": {
+      "cloud": {
+        "ball": "Kugel",
+        "cube": "Würfel",
+        "torus": "Ring",
+        "swarm": "drei Schwärme"
+      }
+    },
+    "readouts": {
+      "hullCorners": "Ecken der Hülle",
+      "faces": "Flächen",
+      "inside": "Punkte innen",
+      "euler": "E − K + F",
+      "buildTime": "Hülle gebaut in"
+    }
+  },
+  "contact-shadow-under-a-car": {
+    "banner": "Ziehen zum Umkreisen. Verbreitere die Lampe, heb das Auto an oder lass es hüpfen: sein Schatten haftet an den Reifen.",
+    "controls": {
+      "lampWidth": "Lampenbreite",
+      "rideHeight": "Bodenfreiheit",
+      "hop": "Hüpfen",
+      "paint": "Lack",
+      "drive": "Fahren"
+    },
+    "readouts": {
+      "height": "Höhe"
+    }
+  },
+  "contact-shadows-from-the-screen": {
+    "banner": "Ziehen zum Umkreisen, scrollen zum Heranfahren. Jedes Beinchen und jede Leiterbahn behält ihren hauchdünnen Schatten.",
+    "controls": {
+      "sunHeight": "Sonnenhöhe",
+      "sunTurn": "Sonnenrichtung",
+      "sweep": "Schwenk"
+    },
+    "readouts": {
+      "ray": "Bildschirmstrahl"
+    }
+  },
+  "light-that-bounces": {
+    "banner": "Ziehen, um in den Raum zu schauen. Schalte die Reflexion aus und wieder an: der Sonnenfleck erhellt den ganzen Raum.",
+    "controls": {
+      "bounce": "Reflexion",
+      "sunHeight": "Sonnenhöhe",
+      "sunTurn": "Sonnenrichtung",
+      "sweep": "Schwenk",
+      "sunColour": "Sonnenfarbe"
+    }
+  },
+  "voxel-models": {
+    "banner": "MagicaVoxel-Dateien, in der Seite gelesen: verdeckte Flächen entfallen, Ecken werden von ihren Nachbarn verschattet. Ziehen zum Drehen; Höhe senken, um das Modell aufzuschneiden.",
+    "controls": {
+      "model": "Modell",
+      "height": "Höhe",
+      "occlusion": "Verdeckung",
+      "spin": "Drehen"
+    },
+    "choices": {
+      "model": {
+        "lighthouse": "Leuchtturm",
+        "castle": "Burg",
+        "balloon": "Heißluftballon"
+      }
+    },
+    "readouts": {
+      "voxels": "Voxel",
+      "facesDrawn": "Gezeichnete Flächen",
+      "facesHidden": "Entfallene Flächen",
+      "file": "Datei"
+    }
+  },
+  "red-cyan-anaglyph": {
+    "banner": "Setze eine Rot-Cyan-Brille auf, das rote Glas vor dem linken Auge. Ziehen dreht, Mausrad nähert.",
+    "controls": {
+      "glasses": "Brille",
+      "separation": "Augenabstand",
+      "screenPlane": "Bildschirmebene",
+      "swapEyes": "Augen tauschen",
+      "speed": "Tempo"
+    },
+    "choices": {
+      "glasses": {
+        "halfColour": "Halbfarbe",
+        "colour": "Vollfarbe",
+        "grey": "Grau",
+        "none": "keine, nur linkes Auge"
+      }
+    },
+    "readouts": {
+      "screenDistance": "Bildschirmebene bei"
+    }
+  },
+  "cross-fade-between-scenes": {
+    "banner": "Zwei Welten, eine Kamera. Ziehen dreht; wähle, wie eine Szene der anderen weicht.",
+    "controls": {
+      "transition": "Übergang",
+      "duration": "Dauer (s)",
+      "hold": "Halten (s)",
+      "autoplay": "Automatisch",
+      "switchScene": "Szene wechseln"
+    },
+    "choices": {
+      "transition": {
+        "iris": "Iris",
+        "wipe": "Wischblende",
+        "fade": "Überblendung",
+        "blinds": "Jalousie"
+      }
+    },
+    "readouts": {
+      "showing": "Zu sehen",
+      "worldsDrawing": "Zeichnende Welten"
+    },
+    "words": {
+      "desert": "Wüste",
+      "glacier": "Gletscher"
+    }
+  },
+  "a-refracting-pane": {
+    "banner": "Ziehen, um sich umzusehen. Das Glas lenkt ab, was dahinter liegt: Relief, Brechzahl und Dicke ändern.",
+    "controls": {
+      "glass": "Glas",
+      "refraction": "Brechzahl",
+      "thickness": "Dicke",
+      "tint": "Tönung",
+      "slide": "Gleiten"
+    },
+    "choices": {
+      "glass": {
+        "reeded": "geriffelt",
+        "hammered": "gehämmert",
+        "rippled": "gewellt",
+        "bullseye": "Butzenscheibe",
+        "flat": "glatt"
+      }
+    }
+  },
+  "pick-lines-and-points": {
+    "banner": "Führe den Zeiger über den Globus: der nächste Stern oder die nächste Linie in Reichweite leuchtet auf. Der Raycast der Engine trifft Dreiecke; Punkte und Segmente werden hier in Pixeln geprüft.",
+    "controls": {
+      "reach": "Reichweite (px)",
+      "stars": "Sterne wählen",
+      "lines": "Linien wählen",
+      "turning": "Drehung"
+    },
+    "readouts": {
+      "hit": "Gewählt",
+      "place": "Wo",
+      "off": "Abstand",
+      "cost": "Aufwand"
+    },
+    "words": {
+      "nothing": "nichts",
+      "star": "Stern {n} von {total}",
+      "figure": "Figur {n}",
+      "parallel": "Breitenkreis {deg}°",
+      "meridian": "Meridian {deg}°",
+      "segment": "Segment {k} von {total}",
+      "place": "Länge {lon}° · Breite {lat}°",
+      "pixels": "{px} px",
+      "cost": "{n} Tests · {us} µs"
+    }
+  },
+  "printable-parts": {
+    "banner": "STL-, PLY-, AMF- und 3MF-Dateien, jede von ein paar Dutzend Zeilen in der Seite gelesen. Ziehen zum Drehen; ein Teil wählen, um es aus der Nähe zu sehen.",
+    "controls": {
+      "focus": "Ansehen",
+      "stlColour": "STL-Filament",
+      "wireframe": "Drahtgitter",
+      "spin": "Drehen"
+    },
+    "choices": {
+      "focus": {
+        "all": "die ganze Platte",
+        "gear": "Zahnrad (STL)",
+        "vase": "Vase (PLY)",
+        "bolt": "Schraube und Mutter (AMF)",
+        "knot": "Knoten (3MF)"
+      }
+    },
+    "readouts": {
+      "gear": "gear.stl",
+      "vase": "vase.ply",
+      "bolt": "bolt.amf",
+      "knot": "knot.3mf"
+    },
+    "words": {
+      "summary": "{size} kB · {triangles} Dreiecke"
+    }
+  },
+  "avif-textures": {
+    "banner": "Ziehen, um sich umzusehen. Die Aussicht und der Olivenzweig sind AVIF-Dateien: Qualität senken und aus dem Fenster schauen.",
+    "controls": {
+      "quality": "AVIF-Qualität",
+      "lookAt": "Ansehen"
+    },
+    "choices": {
+      "lookAt": {
+        "room": "den Raum",
+        "view": "die Aussicht",
+        "branch": "den Zweig"
+      }
+    },
+    "readouts": {
+      "view": "Aussicht",
+      "branch": "Zweig",
+      "decoded": "Dekodierte Pixel"
+    },
+    "words": {
+      "alpha": "transparent"
+    }
+  },
+  "smoothing-by-subdivision": {
+    "banner": "Ziehen, um herumzugehen. Erhöhen Sie die Stufe, um jedes Dreieck in vier zu teilen; bernsteinfarbene Kanten sind Falten und bleiben scharf.",
+    "controls": {
+      "shape": "Käfig",
+      "level": "Stufe",
+      "creases": "Falten",
+      "creaseAngle": "Faltenwinkel",
+      "cage": "Käfig zeigen",
+      "spin": "Drehen"
+    },
+    "choices": {
+      "shape": {
+        "knot": "Knoten",
+        "goblet": "Kelch",
+        "ball": "Ikosaeder",
+        "cube": "Würfel"
+      }
+    },
+    "readouts": {
+      "triangles": "Dreiecke",
+      "cageTriangles": "Käfig-Dreiecke"
+    }
+  },
+  "motion-retargeting": {
+    "banner": "Ziehen, um die Szene zu umkreisen. CesiumMans Gang, umgeschrieben für zwei Skelette mit anderen Knochennamen, Größen und Ruheposen. Wechsle die Methode, um zu sehen, was jeder Schritt behebt.",
+    "controls": {
+      "method": "Methode",
+      "speed": "Tempo"
+    },
+    "choices": {
+      "method": {
+        "directions": "Knochenrichtungen angleichen",
+        "turns": "Weltdrehungen übertragen",
+        "copy": "Lokale Drehungen kopieren"
+      }
+    },
+    "readouts": {
+      "bones": "Zugeordnete Knochen",
+      "keys": "Gebackene Schlüssel"
+    }
+  },
+  "breaking-things": {
+    "banner": "Klicken, um eine Eisenkugel zu werfen. Mauer, Säule und Kristall sind in Voronoi-Stücke zerlegt, verschweißt durch Gelenke, die über ihrer Festigkeit reißen.",
+    "controls": {
+      "pieces": "Stücke",
+      "strength": "Festigkeit (kN)",
+      "speed": "Tempo (m/s)",
+      "slowMotion": "Zeitlupe",
+      "throwAtWall": "Auf die Mauer werfen",
+      "rebuild": "Neu aufbauen"
+    },
+    "readouts": {
+      "pieces": "Stücke",
+      "welds": "Halten",
+      "broken": "Gerissen"
+    }
+  },
+  "a-ground-projected-sky": {
+    "banner": "Ziehen, um die Armillarsphäre zu umrunden: Der Boden des Bildes bleibt darunter und nimmt ihre Schatten an. „Am Boden“ abwählen, um eine einfache Kugel rutschen zu sehen.",
+    "controls": {
+      "place": "Ort",
+      "grounded": "Am Boden",
+      "height": "Höhe",
+      "radius": "Radius",
+      "turning": "Drehung"
+    },
+    "choices": {
+      "place": {
+        "plaza": "Marmorplatz",
+        "salt flat": "Salzwüste in der Dämmerung",
+        "meadow": "Wiese"
+      }
+    },
+    "readouts": {
+      "flatFloor": "Reichweite des flachen Bodens"
+    },
+    "words": {
+      "credit": "Panoramen, die diese Seite beim Öffnen in Code malt: Nichts wird heruntergeladen."
+    }
+  },
+  "sound-in-space": {
+    "banner": "Drücken Sie Anhören (am besten mit Kopfhörern), dann drehen und zoomen: Jede Quelle klingt dort, wo sie leuchtet, um Ihren Kopf verteilt von einem Web-Audio-Panner, der der Kamera folgt.",
+    "controls": {
+      "listen": "Anhören",
+      "silence": "Stille",
+      "volume": "Lautstärke",
+      "distanceModel": "Abfall",
+      "rolloff": "Abfallrate",
+      "panning": "Panning",
+      "moving": "Bewegung"
+    },
+    "choices": {
+      "distanceModel": {
+        "inverse": "Invers",
+        "exponential": "Exponentiell",
+        "linear": "Linear"
+      },
+      "panning": {
+        "HRTF": "HRTF (3D)",
+        "equalpower": "Gleiche Leistung (Stereo)"
+      }
+    },
+    "readouts": {
+      "bell": "Glocke",
+      "horn": "Horn",
+      "firefly": "Glühwürmchen"
+    },
+    "words": {
+      "listening": "Hören: Umkreisen Sie eine Quelle, gehen Sie näher heran oder hinter das Horn, um seinen Kegel zu verlassen.",
+      "silent": "Ton pausiert.",
+      "level": "{db} dB · {m} m",
+      "distance": "{m} m"
+    }
+  },
+  "drag-objects": {
+    "banner": "Ziehe ein Stück über die Bühne, auf ein anderes, um es zu stapeln, oder gegen die anderen, um sie wegzuschieben. Halte Umschalt, um es auf einer senkrechten Ebene anzuheben.",
+    "controls": {
+      "plane": "Ebene",
+      "shove": "Schieben",
+      "home": "Zurücksetzen"
+    },
+    "choices": {
+      "plane": {
+        "floor": "waagerecht",
+        "wall": "senkrecht"
+      }
+    },
+    "readouts": {
+      "held": "Gehalten",
+      "surface": "Ebene",
+      "height": "Höhe"
+    },
+    "words": {
+      "nothing": "nichts",
+      "floor": "waagerecht",
+      "wall": "senkrecht",
+      "metres": "{m} m",
+      "ball": "lackierte Kugel",
+      "knot": "Keramikknoten",
+      "crate": "Kiste",
+      "glass": "Glassäule",
+      "cone": "roter Kegel",
+      "gem": "goldener Edelstein",
+      "pill": "rosa Kapsel"
+    }
+  },
+  "oriented-boxes": {
+    "banner": "Ziehen, um herumzugehen. Cyanfarbene Boxen drehen sich mit ihrer Form, bernsteinfarbene bleiben an den Weltachsen; Rot heißt, zwei Boxen berühren sich.",
+    "controls": {
+      "boxes": "Boxen",
+      "fit": "Anpassung",
+      "speed": "Tempo",
+      "tumbling": "Taumeln"
+    },
+    "choices": {
+      "boxes": {
+        "both": "beide",
+        "oriented": "orientiert",
+        "aligned": "achsparallel",
+        "none": "keine"
+      },
+      "fit": {
+        "tightest": "am engsten",
+        "principal axes": "Hauptachsen"
+      }
+    },
+    "readouts": {
+      "orientedVolume": "Volumen, orientiert",
+      "alignedVolume": "Volumen, achsparallel",
+      "orientedContacts": "Kontakte, orientiert",
+      "alignedContacts": "Kontakte, achsparallel"
+    }
+  },
+  "edit-a-spline": {
+    "banner": "Ziehe einen goldenen Griff, und die Kurve folgt; halte Umschalt, um ihn zu heben oder zu senken. Doppelklicke auf den Boden, um einen Griff hinzuzufügen, auf einen Griff, um ihn zu entfernen.",
+    "controls": {
+      "closed": "Geschlossene Schleife",
+      "radius": "Radius",
+      "speed": "Perlen",
+      "polygon": "Kontrolllinien",
+      "reset": "Zurücksetzen"
+    },
+    "readouts": {
+      "handles": "Griffe",
+      "length": "Länge",
+      "triangles": "Dreiecke"
+    },
+    "words": {
+      "metres": "{m} m"
+    }
+  },
+  "compressed-mesh-input": {
+    "banner": "Ziehen, um sich umzusehen. Ein einziges glTF enthält diese Marmorbüste dreimal: als reine Gleitkommazahlen, mit Draco und mit meshopt. Der Compiler dekodiert beide Verfahren beim Backen, der Browser braucht keinen Decoder. Wähle eine Büste, um ihre Datei zu lesen.",
+    "controls": {
+      "bust": "Büste",
+      "turn": "Drehen"
+    },
+    "choices": {
+      "bust": {
+        "all": "Alle drei",
+        "plain": "Reine Gleitkommazahlen",
+        "draco": "Draco",
+        "meshopt": "Meshopt"
+      }
+    },
+    "readouts": {
+      "stored": "Gespeichert",
+      "decoded": "Dekodiert",
+      "extension": "Erweiterung",
+      "triangles": "Dreiecke"
+    }
+  },
+  "lens-flares": {
+    "banner": "Ziehen, um die Ansicht zu schwenken: Die Geisterbilder wandern durch die Bildmitte und verblassen, sobald ein Rotorblatt die Sonne verdeckt.",
+    "controls": {
+      "flare": "Blendenfleck",
+      "lens": "Objektiv",
+      "strength": "Stärke",
+      "sunHeight": "Sonnenhöhe"
+    },
+    "choices": {
+      "lens": {
+        "spherical": "sphärisch",
+        "anamorphic": "anamorphotisch"
+      }
+    },
+    "readouts": {
+      "sunShowing": "Sichtbare Sonne"
+    }
+  },
+  "particles-with-own-sizes": {
+    "banner": "Jeder Funke ist ein Sprite mit eigener Größe: dicke Kometen, feiner Glitzer, Glut, die beim Abkühlen schrumpft. Weite die Größenstreuung oder schieß eine Bombe ab.",
+    "controls": {
+      "shells": "Bomben",
+      "sizeSpread": "Größenstreuung",
+      "rate": "Abschüsse",
+      "launch": "Abschießen"
+    },
+    "choices": {
+      "shells": {
+        "mixed": "gemischt",
+        "peony": "Päonie",
+        "ring": "Ring",
+        "willow": "Weide",
+        "chrysanthemum": "Chrysantheme"
+      }
+    },
+    "readouts": {
+      "sparks": "Funken",
+      "sizes": "Eigene Größen"
+    }
+  },
+  "an-atmospheric-sky": {
+    "banner": "Ziehen, um sich umzusehen. Der Himmel wird aus der Luft selbst berechnet: Verschiebe die Uhrzeit, verdichte den Dunst oder die Luft.",
+    "controls": {
+      "hour": "Uhrzeit",
+      "run": "Tag läuft",
+      "haze": "Dunst",
+      "air": "Luftdichte",
+      "adaptEyes": "Augen anpassen"
+    },
+    "readouts": {
+      "clock": "Zeit",
+      "sunHeight": "Sonnenhöhe",
+      "sunThroughAir": "Sonne durch die Luft"
+    }
+  },
+  "lit-by-an-hdr-image": {
+    "banner": "Ziehen zum Umrunden. Jeder Ort ist ein echtes HDR-Foto: Seine Sonne wird zu einem Licht mit Schatten, der Rest zu weichem Licht von allen Seiten.",
+    "controls": {
+      "place": "Ort",
+      "turn": "Drehen",
+      "exposure": "Belichtung",
+      "sunFromImage": "Sonne als Licht",
+      "spin": "Drehung"
+    },
+    "choices": {
+      "place": {
+        "plains": "sonnige Ebene",
+        "sunset": "Venedig bei Sonnenuntergang",
+        "harbour": "Hafen bei Nacht"
+      }
+    },
+    "readouts": {
+      "sunFound": "Sonne gefunden bei",
+      "sunShare": "Licht der Sonne",
+      "range": "Umfang des Bildes"
+    },
+    "words": {
+      "noSun": "keine",
+      "stops": "{n} Blendenstufen",
+      "credit": "HDR-Bilder: Rosendal Plains 2, Venice Sunset, Golden Bay — Poly Haven, CC0"
+    }
+  },
+  "adjusting-the-environment": {
+    "banner": "Ziehen zum Umrunden. Dreh, wärme, sättige oder dimme das Licht um das Set: Jede Änderung sind ein paar Zahlen, angewandt auf Licht, Schatten und Hintergrund zugleich.",
+    "controls": {
+      "rig": "Licht",
+      "turn": "Drehen",
+      "strength": "Stärke",
+      "warmth": "Wärme",
+      "saturation": "Sättigung",
+      "exposure": "Belichtung",
+      "toneMapping": "Tonkurve",
+      "backgroundBlur": "Hintergrundunschärfe",
+      "background": "Hintergrund",
+      "spin": "Drehung"
+    },
+    "choices": {
+      "rig": {
+        "studio": "Fotostudio",
+        "stage": "Bühne mit Farbfiltern"
+      },
+      "toneMapping": {
+        "aces": "aces",
+        "agx": "agx",
+        "neutral": "neutral",
+        "reinhard": "reinhard",
+        "cineon": "cineon",
+        "linear": "linear"
+      }
+    },
+    "readouts": {
+      "lightOnTop": "Licht von oben"
     }
   }
 }

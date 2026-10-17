@@ -1,0 +1,330 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Drag objects</title>
+    <meta name="thumbnail" content="4" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #1a1e27;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { buffer, createWorld, effect, geometry, light, material, math, object, texture, wrap } from '../runtime/engine.js';
+      import { controls, ease, language, pointerRay, readout, words } from '../runtime/kit.js';
+
+      const say = words();
+      const world = createWorld('view', { controls: 'orbit' });
+      const sky = math.color('#1a1e27');
+      world.scene.background = sky;
+      world.scene.fog = { color: sky, near: 16, far: 34 };
+      world.camera.position.set(0.8, 5.2, 7.6);
+      world.camera.lookAt(0, 0.4, 0);
+      world.controls.target.set(0, 0.4, 0);
+      world.controls.maxPolarAngle = 1.45;
+      world.controls.minDistance = 5;
+      world.controls.maxDistance = 20;
+
+      // The stage: a round plinth of pale stone tiles, each a little different, in the dark.
+      const sheet = document.createElement('canvas');
+      sheet.width = sheet.height = 512;
+      const pen = sheet.getContext('2d');
+      pen.fillStyle = '#8c8478';
+      pen.fillRect(0, 0, 512, 512);
+      for (let x = 0; x < 8; x++)
+        for (let y = 0; y < 8; y++) {
+          const shade = 188 + ((x * 37 + y * 61) % 23) - ((x + y) % 2) * 10;
+          pen.fillStyle = `rgb(${shade}, ${shade - 6}, ${shade - 16})`;
+          pen.fillRect(x * 64 + 2, y * 64 + 2, 60, 60);
+        }
+      const tiles = texture.canvas(sheet);
+      tiles.repeat.set(2, 2);
+      tiles.wrap = wrap.repeat;
+      const STAGE = 4.4;
+      const plinth = object.mesh(geometry.cylinder(STAGE, STAGE + 0.15, 0.3, 128), material.meshStandard({ map: tiles, roughness: 0.42 }));
+      plinth.position.y = -0.15;
+      world.scene.add(plinth);
+
+      // The pieces, each with its own look. `r` is how far it reaches round its axis, `h` half its
+      // height: a piece rests at `h` above whatever holds it up.
+      const planks = (() => {
+        const wood = document.createElement('canvas');
+        wood.width = wood.height = 128;
+        const p = wood.getContext('2d');
+        for (let k = 0; k < 4; k++) {
+          p.fillStyle = k % 2 ? '#c8955c' : '#b98549';
+          p.fillRect(0, k * 32, 128, 32);
+        }
+        p.strokeStyle = '#7a4f28';
+        p.lineWidth = 14;
+        p.strokeRect(7, 7, 114, 114);
+        return texture.canvas(wood);
+      })();
+      const T = (1 + Math.sqrt(5)) / 2;
+      // prettier-ignore
+      const icosahedron = geometry.polyhedron(
+        [-1, T, 0, 1, T, 0, -1, -T, 0, 1, -T, 0, 0, -1, T, 0, 1, T, 0, -1, -T, 0, 1, -T, T, 0, -1, T, 0, 1, -T, 0, -1, -T, 0, 1],
+        [0, 11, 5, 0, 5, 1, 0, 1, 7, 0, 7, 10, 0, 10, 11, 1, 5, 9, 5, 11, 4, 11, 10, 2, 10, 7, 6, 7, 1, 8, 3, 9, 4, 3, 4, 2, 3, 2, 6, 3, 6, 8, 3, 8, 9, 4, 9, 5, 2, 4, 11, 6, 2, 10, 8, 6, 7, 9, 8, 1],
+        0.62,
+      );
+      const PIECES = [
+        { name: 'ball', shape: geometry.sphere(0.6, 64, 32), look: material.meshPhysical({ color: '#2448c8', roughness: 0.25, clearcoat: 1, clearcoatRoughness: 0.04 }), r: 0.6, h: 0.6, at: [-1.6, 1.4] },
+        { name: 'knot', shape: geometry.torusKnot(0.42, 0.15, 240, 32), look: material.meshStandard({ color: '#2fb3a4', roughness: 0.25 }), r: 0.8, h: 0.36, at: [0.4, 1.9], turn: Math.PI / 2 },
+        { name: 'crate', shape: geometry.box(1.1, 1.1, 1.1), look: material.meshStandard({ map: planks, roughness: 0.8 }), r: 0.7, h: 0.55, at: [1.9, 0.2] },
+        { name: 'glass', shape: geometry.cylinder(0.45, 0.45, 1.4, 64), look: material.meshPhysical({ color: '#dff4ff', roughness: 0.03, transmission: 1, ior: 1.5, thickness: 0.9 }), r: 0.45, h: 0.7, at: [-0.3, -0.4] },
+        { name: 'cone', shape: geometry.cone(0.55, 1.3, 64), look: material.meshPhysical({ color: '#d2302a', roughness: 0.35, clearcoat: 1, clearcoatRoughness: 0.05 }), r: 0.55, h: 0.65, at: [-2.4, -0.9] },
+        { name: 'gem', shape: icosahedron, look: material.meshStandard({ color: '#e8b04a', metalness: 0.85, roughness: 0.32, flatShading: true }), r: 0.6, h: 0.56, at: [2.2, -1.9] },
+        { name: 'pill', shape: geometry.capsule(0.36, 0.7, 12, 32), look: material.meshStandard({ color: '#f07ab4', roughness: 0.4 }), r: 0.36, h: 0.71, at: [0.2, -2.4] },
+      ];
+      const pieces = PIECES.map((piece) => {
+        const mesh = object.mesh(piece.shape, piece.look);
+        mesh.position.set(piece.at[0], piece.h, piece.at[1]);
+        mesh.rotation.x = piece.turn ?? 0;
+        world.scene.add(mesh);
+        return { ...piece, mesh, fall: 0, last: [piece.at[0], piece.h, piece.at[1]], lean: [0, 0], base: mesh.rotation.x };
+      });
+
+      // While a piece is held: a ring where it would land, and a thin upright line from the ring
+      // to the piece. A line's positions are cut once into what it draws; this one stays the unit
+      // line from 0 to 1, and its height is its scale.
+      const marker = object.mesh(geometry.ring(0.86, 1, 64).rotateX(-Math.PI / 2), material.meshBasic({ color: '#ffe6a8' }));
+      marker.castShadow = false;
+      const plumb = object.line(geometry.createBuffer({ position: buffer.float32(new Float32Array([0, 0, 0, 0, 1, 0]), 3) }), material.line({ color: '#ffe6a8', linewidth: 2 }));
+      marker.visible = plumb.visible = false;
+      world.scene.add(marker, plumb);
+
+      world.scene.add(
+        light.directional({ intensity: 2.3, color: '#fff1dc', position: [4, 9, 5], castShadow: true }),
+        light.hemisphere({ intensity: 0.6, color: '#c8d8ff', groundColor: '#3a2c20' }),
+        light.point({ intensity: 30, color: '#6fa4ff', position: [-5, 3, -3], distance: 14 }),
+        light.point({ intensity: 24, color: '#ff9a5a', position: [5, 2.5, -4], distance: 14 }),
+      );
+      world.effects.add(effect.bloom({ intensity: 0.05 }));
+
+      // ---- Holding a piece. `world.raycast` finds the piece under the pointer and the point
+      // where the pointer touched it; the piece then follows the pointer on a plane through that
+      // point — level (the floor's) or upright and facing the camera (a wall's) — so the point
+      // stays under the pointer: the camera's ray meets the plane (`Ray.distanceToPlane`).
+      const meshes = pieces.map((piece) => piece.mesh);
+      const plane = math.plane();
+      const up = math.vector3(0, 1, 0), facing = math.vector3(), meet = math.vector3();
+      let held = null, hovered = null, shift = false;
+      const wall = () => (ui.plane === 'wall') !== shift;
+      // The plane through `point`: level, or upright and turned to the camera.
+      function planeThrough(point) {
+        if (wall()) {
+          facing.copy(world.camera.position).sub(point);
+          facing.y = 0;
+          facing.normalize();
+          plane.setFromNormalAndCoplanarPoint(facing, point);
+        } else plane.setFromNormalAndCoplanarPoint(up, point);
+      }
+      function grab(event) {
+        const hit = world.raycast({ x: event.offsetX, y: event.offsetY }, { objects: meshes });
+        if (!hit) return false;
+        const piece = pieces.find((p) => p.mesh === hit.object);
+        held = { piece, pointerId: event.pointerId, grip: hit.point.clone(), offset: piece.mesh.position.clone().sub(hit.point), target: piece.mesh.position.clone(), event };
+        planeThrough(held.grip);
+        piece.fall = 0;
+        return true;
+      }
+      // Where the held piece goes for the pointer of `event`: on the plane, kept on the stage and
+      // never below what holds it up.
+      function follow(event) {
+        const ray = pointerRay(world, event), reach = ray?.distanceToPlane(plane) ?? null;
+        if (reach === null || reach < 0 || reach > 60) return;
+        ray.at(reach, meet);
+        const { piece, target } = held;
+        target.copy(meet).add(held.offset);
+        keepOnStage(piece, target);
+        target.y = Math.max(target.y, support(piece, target.x, target.z));
+      }
+      // Pulls `position` back in so the piece stays whole on the stage.
+      function keepOnStage(piece, position) {
+        const out = Math.hypot(position.x, position.z), edge = STAGE - piece.r;
+        if (out > edge) {
+          position.x *= edge / out;
+          position.z *= edge / out;
+        }
+      }
+      // The height a piece rests at over (x, z): on the stage, or on top of a piece below it
+      // whose round it overlaps — the pieces stack.
+      function support(piece, x, z, below = Infinity) {
+        let rest = piece.h;
+        for (const other of pieces) {
+          if (other === piece) continue;
+          const top = other.mesh.position.y + other.h;
+          if (top > below + 0.05) continue;
+          if (Math.hypot(other.mesh.position.x - x, other.mesh.position.z - z) < (other.r + piece.r) * 0.72) rest = Math.max(rest, top + piece.h);
+        }
+        return rest;
+      }
+
+      const hover = (piece) => {
+        if (piece === hovered) return;
+        hovered?.look.emissive.set('#000000');
+        piece?.look.emissive.set('#3a2a10');
+        hovered = piece;
+        world.canvas.style.cursor = piece ? 'grab' : '';
+      };
+      world.canvas.addEventListener('pointerdown', (event) => {
+        if (demo) endDemo();
+        if (event.button !== 0 || held || !grab(event)) return;
+        hover(held.piece);
+        world.canvas.style.cursor = 'grabbing';
+        world.controls.enabled = false;
+        world.canvas.setPointerCapture(event.pointerId);
+        world.invalidate();
+      });
+      world.canvas.addEventListener('pointermove', (event) => {
+        if (!held) {
+          if (!event.buttons) hover(pieces.find((p) => p.mesh === world.raycast({ x: event.offsetX, y: event.offsetY }, { objects: meshes })?.object) ?? null);
+          return;
+        }
+        if (event.pointerId !== held.pointerId) return;
+        held.event = event;
+        follow(event);
+        world.invalidate();
+      });
+      const release = (event) => {
+        if (!held || event.pointerId !== held.pointerId) return;
+        const { pointerId } = held;
+        held = null;
+        world.controls.enabled = true;
+        world.canvas.style.cursor = hovered ? 'grab' : '';
+        if (world.canvas.hasPointerCapture(pointerId)) world.canvas.releasePointerCapture(pointerId);
+        world.invalidate();
+      };
+      world.canvas.addEventListener('pointerup', release);
+      world.canvas.addEventListener('pointercancel', release);
+      world.canvas.addEventListener('lostpointercapture', release);
+      world.canvas.addEventListener('pointerleave', () => held || hover(null));
+      // Shift swaps the plane while held: the grip point stays, the plane turns about it.
+      const swap = (event) => {
+        if (event.key !== 'Shift' || shift === (event.type === 'keydown')) return;
+        shift = event.type === 'keydown';
+        if (held?.event) {
+          const at = held.piece.mesh.position.clone().sub(held.offset);
+          planeThrough(at);
+          follow(held.event);
+        }
+        world.invalidate();
+      };
+      addEventListener('keydown', swap);
+      addEventListener('keyup', swap);
+
+      const ui = controls({
+        plane: ['floor', 'wall'],
+        shove: true,
+        home: () => {
+          for (const piece of pieces) piece.mesh.position.set(piece.at[0], piece.h, piece.at[1]);
+          world.invalidate();
+        },
+      }, world);
+      const shownHeld = readout('held'), shownPlane = readout('surface'), shownHeight = readout('height');
+
+      // ---- Each frame: the held piece springs toward its target and leans with its speed, as a
+      // thing carried swings; the others fall onto what holds them, bounce a little and settle,
+      // and are shoved aside, rather than passed through, by any piece that comes at them.
+      const g = 18;
+      // Until the viewer's first press, the page shows a hold of its own: it lifts the pill,
+      // carries it over the crate and lets it go there, onto the crate's lid.
+      const pill = pieces.find((piece) => piece.name === 'pill'), crate = pieces.find((piece) => piece.name === 'crate');
+      let demo = { time: 0 };
+      const endDemo = () => {
+        demo = null;
+        held = null;
+      };
+      function demoStep(dt) {
+        demo.time += dt;
+        const t = demo.time;
+        if (t < 0.8 || t > 4.6) {
+          if (t > 4.6) endDemo();
+          return;
+        }
+        if (!held) held = { piece: pill, pointerId: 'demo', target: pill.mesh.position.clone(), offset: math.vector3() };
+        const lift = Math.min(1, (t - 0.8) / 0.8), e = ease.smooth((t - 1.6) / 1.7);
+        const [x0, z0] = pill.at, x1 = crate.mesh.position.x, z1 = crate.mesh.position.z;
+        held.target.set(x0 + (x1 - x0) * e, pill.h + 1.45 * Math.sin((lift * Math.PI) / 2), z0 + (z1 - z0) * e);
+      }
+      world.onFrame(({ delta }) => {
+        const dt = Math.min(delta, 1 / 30);
+        if (demo) demoStep(dt);
+        let moving = Boolean(demo);
+        for (const piece of pieces) {
+          const p = piece.mesh.position;
+          if (held?.piece === piece) {
+            p.lerp(held.target, 1 - Math.exp(-dt * 16));
+          } else {
+            const rest = support(piece, p.x, p.z, p.y - piece.h);
+            if (p.y > rest + 1e-3 || piece.fall > 0) {
+              piece.fall -= g * dt;
+              p.y += piece.fall * dt;
+              if (p.y <= rest) {
+                p.y = rest;
+                piece.fall = piece.fall < -2.5 ? -piece.fall * 0.3 : 0;
+              }
+            } else p.y = rest;
+          }
+        }
+        // Shoves: two pieces at the same height whose rounds overlap are pushed apart in the
+        // floor's plane; a held piece gives no ground, and pushes the other the whole way.
+        if (ui.shove)
+          for (let pass = 0; pass < 3; pass++)
+            for (let i = 0; i < pieces.length; i++)
+              for (let j = i + 1; j < pieces.length; j++) {
+                const a = pieces[i], b = pieces[j], pa = a.mesh.position, pb = b.mesh.position;
+                if (Math.abs(pa.y - pb.y) >= a.h + b.h - 0.05) continue;
+                const dx = pb.x - pa.x, dz = pb.z - pa.z, gap = Math.hypot(dx, dz) || 1e-4, overlap = a.r + b.r - gap;
+                if (overlap <= 0) continue;
+                const share = held?.piece === a ? 1 : held?.piece === b ? 0 : 0.5;
+                pa.x -= (dx / gap) * overlap * (1 - share);
+                pa.z -= (dz / gap) * overlap * (1 - share);
+                pb.x += (dx / gap) * overlap * share;
+                pb.z += (dz / gap) * overlap * share;
+                keepOnStage(a, pa);
+                keepOnStage(b, pb);
+              }
+        // The lean: each piece tips toward where it is going, with a spring back to upright.
+        for (const piece of pieces) {
+          const p = piece.mesh.position, [lx, ly, lz] = piece.last;
+          const vx = (p.x - lx) / Math.max(dt, 1e-4), vz = (p.z - lz) / Math.max(dt, 1e-4);
+          const k = 1 - Math.exp(-dt * 10);
+          piece.lean[0] += (math.clamp(vz * 0.06, -0.5, 0.5) - piece.lean[0]) * k;
+          piece.lean[1] += (math.clamp(-vx * 0.06, -0.5, 0.5) - piece.lean[1]) * k;
+          piece.mesh.rotation.x = piece.base + piece.lean[0];
+          piece.mesh.rotation.z = piece.lean[1];
+          if (Math.abs(p.x - lx) + Math.abs(p.y - ly) + Math.abs(p.z - lz) > 1e-5 || Math.abs(piece.lean[0]) + Math.abs(piece.lean[1]) > 1e-3) moving = true;
+          piece.last = [p.x, p.y, p.z];
+        }
+        marker.visible = plumb.visible = Boolean(held);
+        if (held) {
+          const { piece } = held, p = piece.mesh.position, floor = support(piece, p.x, p.z, p.y - piece.h) - piece.h;
+          marker.position.set(p.x, floor + 0.01, p.z);
+          marker.scale.setScalar(piece.r * 1.15);
+          plumb.position.set(p.x, floor, p.z);
+          plumb.scale.set(1, Math.max(0.001, p.y - piece.h - floor), 1);
+          shownHeld(say(piece.name));
+          shownHeight(say('metres', { m: (p.y - piece.h).toLocaleString(language(), { minimumFractionDigits: 2, maximumFractionDigits: 2 }) }));
+        } else {
+          shownHeld(say('nothing'));
+          shownHeight('—');
+        }
+        shownPlane(say(wall() ? 'wall' : 'floor'));
+        if (moving || held) world.invalidate();
+      });
+    </script>
+  </body>
+</html>

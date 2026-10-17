@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Screen-space shadows</title>
+    <meta name="thumbnail" content="6" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #0c0d10;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, geometry, material, object, light, math, effect } from '../runtime/engine.js';
+      import { controls, readout, ease, opening, seeded } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#0c0d10');
+      // Everything here is at its real size, in metres: a board 16 cm wide, parts of a millimetre
+      // or two. The camera comes close, so its near plane does too.
+      world.camera.near = 0.004;
+      const MM = 0.001;
+
+      // THE DESK and THE BOARD: a dark walnut top and a green circuit board lying on it.
+      const desk = object.mesh(geometry.box(1.2, 0.02, 0.8), material.meshStandard({ color: '#5a4030', roughness: 0.6 }));
+      desk.position.y = -0.01;
+      const BOARD = { width: 160 * MM, depth: 100 * MM, thick: 1.6 * MM };
+      const board = object.mesh(
+        geometry.box(BOARD.width, BOARD.thick, BOARD.depth),
+        material.meshStandard({ color: '#127048', roughness: 0.3 }),
+      );
+      board.position.y = BOARD.thick / 2;
+      world.scene.add(desk, board);
+      const TOP = BOARD.thick;
+
+      // The parts' matter: black epoxy, tinned legs, gold pads and copper, ceramic, aluminium.
+      const look = {
+        epoxy: material.meshStandard({ color: '#18191b', roughness: 0.6 }),
+        tin: material.meshStandard({ color: '#d2d3d0', metalness: 1, roughness: 0.28 }),
+        gold: material.meshStandard({ color: '#e0b553', metalness: 1, roughness: 0.3 }),
+        copper: material.meshStandard({ color: '#b98a3c', metalness: 0.9, roughness: 0.35 }),
+        ceramic: material.meshStandard({ color: '#b8885a', roughness: 0.5 }),
+        white: material.meshStandard({ color: '#e9e6dd', roughness: 0.6 }),
+        aluminium: material.meshStandard({ color: '#c3c8cf', metalness: 1, roughness: 0.25 }),
+        sleeve: material.meshStandard({ color: '#1d2f5c', roughness: 0.4 }),
+        plastic: material.meshStandard({ color: '#121214', roughness: 0.45 }),
+      };
+      // A part: `shape` in `matter`, its centre at `[x, z]` on the board and `y` mm above it.
+      // Every part casts a shadow (meshes do by default) and receives the others'.
+      const place = (shape, matter, x, z, y) => {
+        const mesh = object.mesh(shape, matter);
+        mesh.position.set(x * MM, TOP + y * MM, z * MM);
+        mesh.receiveShadow = true;
+        world.scene.add(mesh);
+        return mesh;
+      };
+      // A box `[w, h, d]` in millimetres, its foot at `[x, z]` on the board, `y` mm above it.
+      const shapes = new Map();
+      const block = (size, matter, x, z, y = 0, turn = 0) => {
+        const key = size.join(',');
+        if (!shapes.has(key)) shapes.set(key, geometry.box(...size.map((value) => value * MM)));
+        const mesh = place(shapes.get(key), matter, x, z, y + size[1] / 2);
+        mesh.rotation.y = turn;
+        return mesh;
+      };
+
+      // A flat chip with gull-wing legs on its four sides (a QFP): `count` legs a side at `pitch`.
+      // Each leg is two tinned boxes — the foot on its pad, and the shoulder up into the body —
+      // a few tenths of a millimetre thick, far finer than any shadow map's texel.
+      const ends = [];
+      const dimpleShape = geometry.cylinder(0.6 * MM, 0.6 * MM, 0.05 * MM, 24);
+      function quadChip(x, z, side, count, pitch) {
+        block([side, 1.4, side], look.epoxy, x, z, 0.25);
+        // The pin-one dimple, a shallow ring on the top.
+        place(dimpleShape, look.plastic, x - side / 2 + 1.6, z - side / 2 + 1.6, 1.66);
+        for (let k = 0; k < count; k++) {
+          const along = (k - (count - 1) / 2) * pitch;
+          for (const [dx, dz, turn] of [[0, 1, 0], [0, -1, 0], [1, 0, Math.PI / 2], [-1, 0, Math.PI / 2]]) {
+            const out = side / 2 + 0.75;
+            const lx = x + (dx ? dx * out : along), lz = z + (dz ? dz * out : along);
+            block([0.28, 0.15, 1.0], look.tin, lx, lz, 0, turn);
+            const sx = x + (dx ? dx * (side / 2 + 0.15) : along), sz = z + (dz ? dz * (side / 2 + 0.15) : along);
+            block([0.28, 0.75, 0.3], look.tin, sx, sz, 0.1, turn);
+            ends.push([lx + dx * 0.6, lz + dz * 0.6, dx, dz]);
+          }
+        }
+      }
+      // A small-outline chip (SOIC): legs on two long sides.
+      function smallChip(x, z, length, count, turn = 0) {
+        block([length, 1.5, 3.9], look.epoxy, x, z, 0.2, turn);
+        const [c, s] = [Math.cos(turn), Math.sin(turn)];
+        for (let k = 0; k < count; k++) {
+          const along = (k - (count - 1) / 2) * 1.27;
+          for (const side of [-1, 1]) {
+            const [u, v] = [along, side * 2.75];
+            block([0.42, 0.18, 1.1], look.tin, x + u * c + v * s, z - u * s + v * c, 0, turn);
+          }
+        }
+      }
+      // A chip resistor or capacitor (1206): a body between two tinned end caps.
+      function chipPart(x, z, turn, body) {
+        const [c, s] = [Math.cos(turn), Math.sin(turn)];
+        block([2.4, 0.6, 1.6], body, x, z, 0, turn);
+        for (const side of [-1, 1]) block([0.45, 0.66, 1.62], look.tin, x + side * 1.4 * c, z - side * 1.4 * s, 0, turn);
+        if (body === look.epoxy) block([1.6, 0.02, 1.1], look.white, x, z, 0.6, turn);
+      }
+      // An electrolytic can: a blue sleeve under a bare aluminium top with its scored cross.
+      function capacitor(x, z, radius, height) {
+        place(geometry.cylinder(radius * MM, radius * MM, height * MM, 48), look.sleeve, x, z, height / 2 + 0.3);
+        place(geometry.cylinder((radius - 0.2) * MM, radius * MM, 0.3 * MM, 48), look.aluminium, x, z, height + 0.45);
+        place(geometry.box((radius * 2 + 0.6) * MM, 0.3 * MM, (radius * 2 + 0.6) * MM), look.plastic, x, z, 0.15);
+        for (const turn of [0, Math.PI / 2]) block([radius * 1.4, 0.06, 0.3], look.plastic, x, z, height + 0.6, turn);
+      }
+
+      // THE BOARD'S PARTS. A processor in the middle, memory and drivers around it, a row of
+      // decoupling parts, four cans, a crystal and a pin header — some 900 meshes, the finest a
+      // fifth of a millimetre across.
+      const random = seeded(7);
+      quadChip(-8, 2, 20, 20, 0.8);
+      quadChip(36, -16, 10, 10, 0.8);
+      for (const [x, z, turn] of [[34, 16, 0], [34, 30, 0], [-45, -24, Math.PI / 2], [-56, -24, Math.PI / 2]]) smallChip(x, z, 9.9, 8, turn);
+      for (let k = 0; k < 14; k++) chipPart(-30 + k * 3.4, -22, Math.PI / 2, k % 3 ? look.ceramic : look.epoxy);
+      for (let k = 0; k < 10; k++) chipPart(16 + (k % 2) * 4.2, -6 + Math.floor(k / 2) * 6.2, 0, k % 2 ? look.epoxy : look.ceramic);
+      for (let k = 0; k < 18; k++) {
+        const x = -70 + random() * 40, z = 12 + random() * 30;
+        chipPart(x, z, random() > 0.5 ? 0 : Math.PI / 2, random() > 0.4 ? look.epoxy : look.ceramic);
+      }
+      for (const [x, z, r, h] of [[60, 30, 4, 7], [60, 15, 4, 7], [62, -30, 3, 5.5], [-62, -38, 3.2, 6]]) capacitor(x, z, r, h);
+      // The crystal: a low oval can on two pads.
+      const crystal = place(geometry.capsule(1.8 * MM, 7.5 * MM, 8, 24), look.aluminium, 14, 26, 1.2);
+      crystal.rotation.z = Math.PI / 2;
+      crystal.scale.set(1, 1, 0.55);
+      // A pin header, two rows of ten: gold posts 6 mm tall on a black plastic strip.
+      block([25.4, 2.5, 5.1], look.plastic, -30, 40);
+      for (let k = 0; k < 10; k++)
+        for (const row of [-1.27, 1.27]) block([0.64, 8.5, 0.64], look.gold, -30 + (k - 4.5) * 2.54, 40 + row, 0);
+      // Mounting holes: gold rings at the corners.
+      const ringShape = geometry.ring(1.6 * MM, 3 * MM, 32);
+      for (const [x, z] of [[-74, -44], [74, -44], [-74, 44], [74, 44]]) {
+        const ring = place(ringShape, look.gold, x, z, 0.02);
+        ring.rotation.x = -Math.PI / 2;
+      }
+
+      // THE TRACES: copper lines raised a tenth of a millimetre from the board, run from the
+      // processor's legs outwards in two straight legs each, ending on a via. Lit at a slant, each
+      // keeps a hairline of shade on its far side.
+      const trace = (x0, z0, x1, z1) => {
+        const length = Math.hypot(x1 - x0, z1 - z0);
+        if (length < 0.1) return;
+        block([0.25, 0.1, length + 0.25], look.copper, (x0 + x1) / 2, (z0 + z1) / 2, 0, Math.atan2(x1 - x0, z1 - z0));
+      };
+      const viaShape = geometry.cylinder(0.45 * MM, 0.45 * MM, 0.1 * MM, 16);
+      const via = (x, z) => place(viaShape, look.gold, x, z, 0.05);
+      ends.forEach(([x, z, dx, dz], k) => {
+        if (k % 3) return;
+        const run = 3 + random() * 9, bend = (random() - 0.5) * 10;
+        const [mx, mz] = [x + dx * run, z + dz * run];
+        const [ex, ez] = dx ? [mx, mz + bend] : [mx + bend, mz];
+        trace(x, z, mx, mz);
+        trace(mx, mz, ex, ez);
+        via(ex, ez);
+      });
+
+      // THE SUN: one low light that casts the shadows, and a faint cool sky. Every pixel the light
+      // falls on also marches a short ray across the screen towards it, 1.5% of the view's height
+      // at the pixel's depth, and is shaded if the depth it walks over rises in front of it: that
+      // catches the hairlines under a leg, a trace or a cap's edge, which no shadow map is fine
+      // enough to hold.
+      const sun = light.directional({ color: '#ffe2b8', intensity: 10, castShadow: true, angularRadius: 0.03 });
+      world.scene.add(sun, light.hemisphere({ color: '#8fa6d6', groundColor: '#3a2a1e', intensity: 0.7 }));
+      world.effects.add(effect.bloom({ intensity: 0.03 }));
+
+      const target = [-4 * MM, 2 * MM, 2 * MM];
+      world.controls.target.set(...target);
+      world.controls.minDistance = 0.02;
+      world.controls.maxDistance = 0.45;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
+
+      // The opening: from above the whole board down to a slant a few centimetres from the
+      // processor's legs, where each leg stands in its own sliver of shade.
+      opening(world, (time) => {
+        const t = ease.inOut(time / 5.5);
+        const turn = 0.6 - 1.5 * t, distance = 0.3 - 0.225 * t, height = 0.27 - 0.235 * t;
+        world.camera.position.set(target[0] + Math.sin(turn) * distance, height, target[2] + Math.cos(turn) * distance);
+        world.camera.lookAt(world.controls.target);
+        return time < 5.5;
+      });
+
+      // THE CONTROLS: the sun's height and turn; low, every part throws a long shadow and the
+      // finest ones only the screen's ray can see. The readout is the length of that ray where the
+      // camera looks: it shortens as the camera comes close, so the contact stays as fine as the view.
+      let turn = 0.7;
+      const ui = controls(
+        {
+          sunHeight: [3, 60, 14, 1],
+          sunTurn: [0, 360, 40, 1],
+          sweep: true,
+        },
+        (values) => {
+          turn = math.degToRad(values.sunTurn);
+          world.invalidate();
+        },
+        world,
+      );
+      const rayLength = readout('ray');
+      // A frame is asked for only while the sun sweeps; a still sun and camera draw nothing more.
+      world.onFrame(({ delta }) => {
+        if (ui.sweep) turn += Math.min(delta, 0.05) * 0.12;
+        const height = math.degToRad(ui.sunHeight);
+        sun.position.set(Math.cos(height) * Math.sin(turn), Math.sin(height), Math.cos(height) * Math.cos(turn));
+        const distance = world.camera.position.distanceTo(world.controls.target);
+        // 0.015: the engine's VSM_SCREEN_RAY_SHARE (sdk-browser/src/vsm/constants.ts), the share of
+        // the view's height the ray walks; copied here, so check it when the engine pin moves.
+        const span = 2 * Math.tan(math.degToRad(world.camera.fov) / 2) * distance * 0.015;
+        rayLength(`${(span / MM).toFixed(2)} mm`);
+        if (ui.sweep) world.invalidate();
+      });
+    </script>
+  </body>
+</html>

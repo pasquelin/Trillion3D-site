@@ -1,0 +1,276 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Particles, own sizes</title>
+    <meta name="thumbnail" content="7" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #04060d;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, effect, geometry, light, material, math, object, texture, buffer } from '../runtime/engine.js';
+      import { controls, readout, seeded, opening, ease, mix } from '../runtime/kit.js';
+
+      const next = seeded(7);
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#04060d');
+      world.camera.far = 3000;
+
+      // A harbour at night: still dark water, a skyline of towers with lit windows across it, and
+      // a few stars. The fireworks are the only real light.
+      const water = object.mesh(geometry.plane(2400, 2400), material.meshStandard({ color: '#0a1424', roughness: 0.12, metalness: 0.2 }));
+      water.rotation.set(-Math.PI / 2, 0, 0);
+      world.scene.add(water);
+      const quay = object.mesh(geometry.box(420, 3, 40), material.meshStandard({ color: '#151820', roughness: 0.8 }));
+      quay.position.set(0, 1.5, -40);
+      world.scene.add(quay);
+      const towerMatter = [material.meshStandard({ color: '#0d1019', roughness: 0.6 }), material.meshStandard({ color: '#111522', roughness: 0.5, metalness: 0.3 })];
+      const block = geometry.box(1, 1, 1), pane = geometry.box(1, 1, 1);
+      const lit = [material.meshStandard({ color: '#000000', emissive: '#ffcf8a', emissiveIntensity: 2.2 }), material.meshStandard({ color: '#000000', emissive: '#9fc4ff', emissiveIntensity: 1.6 })];
+      for (let k = 0; k < 46; k++) {
+        const x = -200 + k * 8.8 + next() * 4, z = -48 - next() * 50, w = 6 + next() * 7, d = 6 + next() * 7;
+        const h = 14 + next() ** 2 * (Math.abs(x) < 70 ? 70 : 40);
+        const tower = object.mesh(block, towerMatter[k % 2]);
+        tower.position.set(x, h / 2 + 3, z);
+        tower.scale.set(w, h, d);
+        world.scene.add(tower);
+        // Windows on the face toward the water, a few rows lit.
+        for (let row = 0; row < Math.floor(h / 3.2) - 1; row++)
+          for (let col = 0; col < Math.floor(w / 1.8); col++) {
+            if (next() > 0.28) continue;
+            const glass = object.mesh(pane, lit[next() < 0.75 ? 0 : 1]);
+            glass.position.set(x - w / 2 + 1 + col * 1.8, 5 + row * 3.2, z + d / 2 + 0.05);
+            glass.scale.set(0.9, 1.3, 0.1);
+            world.scene.add(glass);
+          }
+      }
+      const stars = [];
+      for (let k = 0; k < 1400; k++) {
+        const y = 0.06 + next() * 0.94, around = next() * Math.PI * 2, ring = Math.sqrt(1 - y * y), r = 1400;
+        stars.push(ring * Math.cos(around) * r, y * r, ring * Math.sin(around) * r);
+      }
+      world.scene.add(object.points(geometry.createBuffer({ position: buffer.float32(new Float32Array(stars), 3) }), material.points({ color: '#c9d4ff', size: 1.6 })));
+      world.scene.add(light.hemisphere({ color: '#3a4a78', groundColor: '#05070c', intensity: 0.35 }));
+
+      // Three lights that flash with the bursts and fade, in the colour of each, so the water
+      // and the towers take the fireworks' light.
+      const flashes = Array.from({ length: 3 }, () => {
+        const lamp = light.point({ color: '#ffffff', intensity: 0, distance: 260, position: [0, 60, 0] });
+        world.scene.add(lamp);
+        return { lamp, power: 0 };
+      });
+      let nextFlash = 0;
+
+      // The glow every spark wears: a hot white core in a soft halo, drawn once.
+      const glowCanvas = document.createElement('canvas');
+      glowCanvas.width = glowCanvas.height = 64;
+      {
+        const context = glowCanvas.getContext('2d'), glow = context.createRadialGradient(32, 32, 0, 32, 32, 32);
+        glow.addColorStop(0, 'rgba(255,255,255,1)');
+        glow.addColorStop(0.3, 'rgba(255,255,255,1)');
+        glow.addColorStop(0.55, 'rgba(255,255,255,0.4)');
+        glow.addColorStop(1, 'rgba(255,255,255,0)');
+        context.fillStyle = glow;
+        context.fillRect(0, 0, 64, 64);
+      }
+      const GLOW = texture.canvas(glowCanvas);
+
+      // One additive sprite material a colour, brighter than white so the bloom spreads it, and a
+      // pool of sprites for each. Every sprite of a pool shares one square and one material, so
+      // the world draws a whole pool together; what each spark owns is its place and its SIZE,
+      // its scale, written every frame — big comets, fine glitter, embers that shrink as they
+      // cool. A spark is never re-dressed: it takes a sprite from its colour's pool.
+      const PALETTE = {
+        gold: [3, 1.25, 0.06], red: [3.2, 0.1, 0.05], green: [0.1, 2.8, 0.2], blue: [0.1, 0.5, 3.6],
+        violet: [2.2, 0.08, 3.4], white: [2.6, 2.5, 2.3], cyan: [0.04, 2.4, 3.2], orange: [3.4, 0.6, 0.02],
+      };
+      // A sprite waiting in its pool is parked out of sight, under the water and shrunk to a dot.
+      const PER_COLOUR = 520;
+      const stow = (sprite) => {
+        sprite.position.set(0, -400, 0);
+        sprite.scale.set(0.001, 0.001, 1);
+      };
+      const pools = Object.fromEntries(Object.entries(PALETTE).map(([name, rgb]) => {
+        const matter = material.sprite({ map: GLOW, color: rgb, blending: 'additive', transparent: true, depthWrite: false });
+        const free = Array.from({ length: PER_COLOUR }, () => {
+          const sprite = object.sprite(matter);
+          stow(sprite);
+          world.scene.add(sprite);
+          return sprite;
+        });
+        return [name, free];
+      }));
+
+      // A live spark: its sprite, where it is and goes, how long it lives, its own size and how
+      // that size moves over its life. `trail` drops embers behind it; `glitter` makes it twinkle.
+      const live = [];
+      const spawn = (colour, x, y, z, vx, vy, vz, life, size, options = {}) => {
+        const sprite = pools[colour].pop();
+        if (!sprite) return null;
+        const spark = { sprite, colour, x, y, z, vx, vy, vz, age: 0, life, size, drag: 0.9, fall: 7, shrink: 1, ...options };
+        live.push(spark);
+        return spark;
+      };
+      const park = (spark) => {
+        stow(spark.sprite);
+        pools[spark.colour].push(spark.sprite);
+      };
+
+      // The shells. Each bursts at the top of its climb into a shape of sparks, each spark given
+      // its own size: `spread` 0 gives them all one size, 1 lets them range from fine dust to fat
+      // comets.
+      const NAMES = Object.keys(PALETTE);
+      const pick = (list) => list[Math.floor(next() * list.length)];
+      const sizeOf = (base, spread) => 2.4 * base * (1 + (next() * 2 - 1) * spread * 0.85) * (next() < 0.08 * spread ? 1.6 : 1);
+      const onSphere = () => {
+        const u = next() * 2 - 1, a = next() * Math.PI * 2, r = Math.sqrt(1 - u * u);
+        return [r * Math.cos(a), u, r * Math.sin(a)];
+      };
+      const SHELLS = {
+        peony(at, spread, colour) {
+          for (let k = 0; k < 300; k++) {
+            const [dx, dy, dz] = onSphere(), speed = 44 + next() * 5;
+            spawn(colour, ...at, dx * speed, dy * speed, dz * speed, 1.8 + next() * 0.8, sizeOf(1.1, spread), { glitter: next() < 0.3 });
+          }
+        },
+        ring(at, spread, colour) {
+          const tilt = next() * 0.9, turn = next() * Math.PI, second = pick(NAMES);
+          for (let k = 0; k < 150; k++) {
+            const a = (k / 150) * Math.PI * 2, c = Math.cos(a), s = Math.sin(a), speed = 42;
+            const dx = c * Math.cos(turn) - s * Math.sin(tilt) * Math.sin(turn), dy = s * Math.cos(tilt), dz = c * Math.sin(turn) + s * Math.sin(tilt) * Math.cos(turn);
+            spawn(colour, ...at, dx * speed, dy * speed, dz * speed, 2.2, sizeOf(1.2, spread));
+          }
+          for (let k = 0; k < 40; k++) {
+            const [dx, dy, dz] = onSphere(), speed = 6 + next() * 4;
+            spawn(second, ...at, dx * speed, dy * speed, dz * speed, 1.6, sizeOf(0.9, spread), { glitter: true });
+          }
+        },
+        willow(at, spread) {
+          for (let k = 0; k < 130; k++) {
+            const [dx, dy, dz] = onSphere(), speed = 30 + next() * 5;
+            spawn('gold', ...at, dx * speed, dy * speed, dz * speed, 3.6 + next() * 1.2, sizeOf(0.9, spread), { drag: 1.6, fall: 5, trail: 0.06, shrink: 0.6 });
+          }
+        },
+        chrysanthemum(at, spread, colour) {
+          for (let k = 0; k < 120; k++) {
+            const [dx, dy, dz] = onSphere(), speed = 38 + next() * 4;
+            spawn(colour, ...at, dx * speed, dy * speed, dz * speed, 2 + next() * 0.6, sizeOf(1.3, spread), { trail: 0.05 });
+          }
+        },
+      };
+
+      // A launch: a rocket from the quay, its trail of embers, then its burst at the top. `climbed`
+      // starts it that share of the way up: the show opens with shells already in the air.
+      const rockets = [];
+      const launch = (kind, climbed = 0) => {
+        const shell = kind === 'mixed' ? pick(Object.keys(SHELLS)) : kind;
+        const x = (next() * 2 - 1) * 80, z = -30 + next() * 10, height = 82 + next() * 36;
+        const head = spawn('white', x, 3 + height * climbed, z, (next() * 2 - 1) * 3, Math.sqrt(2 * 7 * height * (1 - climbed)), 0, 30, 1.8, { drag: 0, fall: 7, trail: 0.025, trailColour: 'orange', rocket: true });
+        if (head) rockets.push({ head, shell, colour: pick(NAMES.filter((name) => name !== 'white')) });
+      };
+
+      const ui = controls(
+        { shells: ['mixed', ...Object.keys(SHELLS)], sizeSpread: [0, 1, 0.8], rate: [0.2, 3, 1.5], launch: () => launch(ui.shells) },
+        () => world.invalidate(),
+        world,
+      );
+      launch('peony', 0.85);
+      launch('ring', 0.6);
+      launch('willow', 0.35);
+      const counter = readout('sparks');
+      const sizes = readout('sizes');
+
+      world.camera.position.set(0, 10, 130);
+      world.controls.target.set(0, 78, 0);
+      world.controls.minDistance = 40;
+      world.controls.maxDistance = 320;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.03;
+      opening(world, (time) => {
+        const e = ease.out(time / 6);
+        world.camera.position.set(...mix({ math }, [-60, 6, 200], [0, 10, 130], e));
+        return time < 6;
+      });
+
+      // The glow that spreads every spark brighter than white, and no temporal smoothing: it
+      // blends each frame with the last, which would smear a spark that crosses pixels so fast.
+      world.effects.add(effect.bloom({ intensity: 0.14, radius: 1.2 }));
+      world.temporalAntialiasing = false;
+
+      // Every frame: rockets climb and burst at their top, sparks fly with drag and gravity, drop
+      // their embers, shrink as they cool and go back to their pool when spent.
+      let clock = 0.6, time = 0;
+      world.beforeFrame(({ delta }) => {
+        const step = Math.min(delta, 0.05);
+        time += step;
+        clock -= step * ui.rate;
+        if (clock <= 0) {
+          launch(ui.shells);
+          clock += 0.6 + next() * 0.8;
+        }
+        for (let k = rockets.length - 1; k >= 0; k--) {
+          const { head, shell, colour } = rockets[k];
+          if (head.vy > 2) continue;
+          SHELLS[shell]([head.x, head.y, head.z], ui.sizeSpread, colour);
+          const flash = flashes[nextFlash++ % flashes.length];
+          flash.lamp.position.set(head.x, head.y, head.z + 10);
+          flash.lamp.color.setRGB(...PALETTE[shell === 'willow' ? 'gold' : colour].map((v) => v / 3.6));
+          flash.power = 1;
+          head.age = head.life;
+          rockets.splice(k, 1);
+        }
+        let smallest = Infinity, largest = 0;
+        for (let k = live.length - 1; k >= 0; k--) {
+          const s = live[k];
+          s.age += step;
+          if (s.age >= s.life) {
+            park(s);
+            live[k] = live[live.length - 1];
+            live.pop();
+            continue;
+          }
+          const slow = Math.exp(-s.drag * step);
+          s.vx *= slow;
+          s.vy = s.vy * slow - s.fall * step;
+          s.vz *= slow;
+          s.x += s.vx * step;
+          s.y += s.vy * step;
+          s.z += s.vz * step;
+          if (s.trail && (s.since = (s.since ?? 0) + step) > s.trail) {
+            s.since = 0;
+            spawn(s.trailColour ?? s.colour, s.x, s.y, s.z, s.vx * 0.05, s.vy * 0.05, s.vz * 0.05, 0.5 + next() * 0.5, s.size * 0.35, { drag: 2, fall: 3, ember: true });
+          }
+          // Its size over its life: full at first, then cooling to nothing; glitter twinkles.
+          const left = 1 - s.age / s.life;
+          let size = s.size * (s.rocket ? 1 : Math.pow(left, s.shrink) * (1.15 - 0.15 * left));
+          if (s.glitter && left < 0.6) size *= Math.sin(time * 40 + s.x) > 0.2 ? 1.3 : 0.35;
+          s.sprite.position.set(s.x, s.y, s.z);
+          s.sprite.scale.set(size, size, 1);
+          if (!s.rocket && !s.ember) {
+            smallest = Math.min(smallest, s.size);
+            largest = Math.max(largest, s.size);
+          }
+        }
+        for (const flash of flashes) {
+          flash.power *= Math.exp(-step * 2.6);
+          flash.lamp.intensity = 60000 * flash.power;
+        }
+        counter(String(live.length));
+        sizes(largest > 0 ? `${smallest.toFixed(2)} – ${largest.toFixed(2)} m` : '–');
+        world.invalidate();
+      });
+    </script>
+  </body>
+</html>

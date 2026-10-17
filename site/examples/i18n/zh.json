@@ -1454,6 +1454,38 @@
       "credit": "Amazon Lumberyard Bistro (NVIDIA ORCA), CC BY 4.0 — 见 assets/examples/CREDITS.md"
     }
   },
+  "a-map-of-what-the-engine-draws": {
+    "banner": "点击左侧视图，用 W A S D 行走；右侧地图从上方显示该视图在这一帧计算出的内容。冻结裁选，然后走出它的范围。",
+    "controls": {
+      "freeze": "冻结",
+      "frustum": "视锥体",
+      "clusters": "簇",
+      "shadows": "阴影页",
+      "reflections": "反射光线",
+      "lights": "灯光",
+      "mapSize": "地图大小（米）"
+    },
+    "readouts": {
+      "clusters": "簇",
+      "occluded": "被遮挡",
+      "missing": "未加载",
+      "shadowPages": "已绘制的阴影页",
+      "raysMissed": "未击中任何物体的光线"
+    },
+    "words": {
+      "credit": "Emerald Square：Nicholas Hull、Kate Anderson（NVIDIA ORCA），植被 SpeedTree，CC BY-NC-SA 3.0 — 见 assets/examples/CREDITS.md",
+      "fine": "精细",
+      "coarse": "粗糙",
+      "occluded": "被遮挡",
+      "missing": "未加载",
+      "pageDrawn": "已绘制的阴影页",
+      "pageCached": "缓存的阴影页",
+      "rayHit": "光线及其击中点",
+      "rayMissed": "未击中任何物体的光线",
+      "camera": "相机",
+      "frozenCut": "冻结的裁选"
+    }
+  },
   "a-bust-a-crate-and-a-glass-ball": {
     "banner": "拖动绕着胸像转。木箱和玻璃球在转台上转圈。",
     "words": {
@@ -2726,6 +2758,739 @@
       "height": "衰减",
       "base": "起始高度",
       "colour": "颜色"
+    }
+  },
+  "paint-where-you-click": {
+    "banner": "按住花瓶并拖动即可作画。保持不动，旋转的转盘会画出一整圈色带。在旁边拖动可旋转视角。",
+    "controls": {
+      "colour": "颜色",
+      "brush": "笔刷大小",
+      "wheel": "转盘速度",
+      "clear": "清除"
+    },
+    "readouts": {
+      "triangle": "三角形",
+      "uv": "纹理 (u, v)",
+      "strokes": "笔画"
+    }
+  },
+  "pixel-art-render": {
+    "banner": "拖动旋转小岛，滚轮缩放。调整像素大小和调色板。",
+    "controls": {
+      "pixelSize": "像素大小",
+      "palette": "调色板",
+      "upscale": "放大方式",
+      "turn": "旋转"
+    },
+    "choices": {
+      "palette": {
+        "full": "全彩",
+        "posterized": "64 色",
+        "handheld": "掌机绿",
+        "dusk": "四种暮色"
+      },
+      "upscale": {
+        "nearest": "最近邻像素",
+        "smooth": "平滑"
+      }
+    },
+    "readouts": {
+      "resolution": "绘制分辨率"
+    }
+  },
+  "a-line-that-draws-itself": {
+    "banner": "一个线条自己画出来的万花尺：同一条线的虚线段在笔后不断伸长。选一个齿轮和一个孔；拖动即可环顾四周。",
+    "controls": {
+      "wheel": "齿轮齿数",
+      "hole": "笔孔",
+      "speed": "每秒圈数",
+      "width": "线宽",
+      "layers": "下一层",
+      "clear": "清空画纸"
+    },
+    "readouts": {
+      "drawn": "本层已画",
+      "laps": "闭合所需圈数",
+      "inkLaid": "已画墨线"
+    }
+  },
+  "decals-on-a-surface": {
+    "banner": "将指针移到卵石上可看到投影盒；点击即可从其下方的表面切出一张贴纸。拖动可旋转视角。",
+    "controls": {
+      "sticker": "贴纸",
+      "size": "大小",
+      "turn": "随机旋转",
+      "box": "显示投影盒",
+      "spin": "旋转",
+      "clear": "全部揭下"
+    },
+    "choices": {
+      "sticker": {
+        "mixed": "混合",
+        "star": "星星",
+        "bolt": "闪电",
+        "heart": "爱心",
+        "target": "靶心",
+        "flag": "棋盘格",
+        "smile": "笑脸",
+        "hazard": "警告",
+        "flower": "花朵"
+      }
+    },
+    "readouts": {
+      "decals": "贴花",
+      "kept": "切出的三角形"
+    }
+  },
+  "procedural-wood-and-noise": {
+    "banner": "拖动环顾四周。每个纹素都由页面内计算的噪声生长而成：选一种木材，锯开新的原木。",
+    "controls": {
+      "wood": "木材",
+      "rings": "每 10 厘米年轮数",
+      "figure": "纹理",
+      "varnish": "清漆",
+      "newLogs": "新原木",
+      "turn": "转动木碗"
+    },
+    "choices": {
+      "wood": {
+        "oak": "橡木",
+        "walnut": "胡桃木",
+        "cherry": "樱桃木",
+        "maple": "枫木"
+      }
+    },
+    "readouts": {
+      "texels": "已计算纹素",
+      "bakeTime": "计算用时"
+    }
+  },
+  "a-toolpath-in-lines": {
+    "banner": "一个真实的 G-code 文件，在页面中读取，随着喷嘴打印画成线条。拖动可旋转；调低顶层可剖开零件。",
+    "controls": {
+      "colour": "着色依据",
+      "topLayer": "顶层",
+      "pace": "播放速度",
+      "travel": "空驶路径",
+      "reprint": "重新打印"
+    },
+    "choices": {
+      "colour": {
+        "kind": "路径类型",
+        "layer": "层",
+        "speed": "速度"
+      }
+    },
+    "readouts": {
+      "layer": "层",
+      "filament": "耗材",
+      "printTime": "打印时间",
+      "gcodeLines": "G-code 行数",
+      "segments": "线段",
+      "lines": "场景中的线条"
+    }
+  },
+  "pick-an-instance": {
+    "banner": "指向一个六边形，即可在同一形状的 1519 个摆放中认出它；点击选中它，并在岛上掀起一圈波纹。",
+    "controls": {
+      "ripple": "波纹",
+      "swell": "海浪起伏"
+    },
+    "readouts": {
+      "instance": "实例",
+      "cell": "格子 (q, r)",
+      "height": "高度",
+      "placements": "摆放数",
+      "shapes": "共享形状"
+    }
+  },
+  "shapes-from-an-svg": {
+    "banner": "逐条读取 SVG 路径，每个填充图形连同它的孔一起从卡纸上剪出。拉开各层，或把你自己的 SVG 拖到页面上。",
+    "controls": {
+      "spread": "层间距",
+      "depth": "卡纸厚度",
+      "bevel": "倒角",
+      "detail": "曲线细分",
+      "sway": "摆动",
+      "yourSvg": "打开你的 SVG"
+    },
+    "readouts": {
+      "paths": "已读图形",
+      "outlines": "轮廓",
+      "holes": "剪出的孔",
+      "triangles": "三角形",
+      "file": "文件"
+    }
+  },
+  "boolean-shapes": {
+    "banner": "拖动以环绕观察。选择一种运算；打开漂移，worker 会在形状移动时重新切割。",
+    "controls": {
+      "operation": "运算",
+      "ball": "球",
+      "bore": "钻孔",
+      "drifting": "漂移",
+      "operands": "操作数",
+      "spin": "旋转"
+    },
+    "choices": {
+      "operation": {
+        "carved": "(立方体 ∩ 球) − 钻孔",
+        "subtract": "立方体 − 球",
+        "intersect": "立方体 ∩ 球",
+        "union": "立方体 ∪ 球"
+      }
+    },
+    "readouts": {
+      "triangles": "三角形",
+      "computedIn": "计算耗时"
+    }
+  },
+  "a-convex-hull": {
+    "banner": "包住一群运动点的最小凸体，每一帧都从零重建。改变点数和点云形状；拖动即可环顾四周。",
+    "controls": {
+      "points": "点数",
+      "motion": "运动",
+      "cloud": "点云",
+      "facets": "面",
+      "edges": "棱"
+    },
+    "choices": {
+      "cloud": {
+        "ball": "球",
+        "cube": "立方体",
+        "torus": "圆环",
+        "swarm": "三个群"
+      }
+    },
+    "readouts": {
+      "hullCorners": "凸包顶点",
+      "faces": "面",
+      "inside": "内部的点",
+      "euler": "V − E + F",
+      "buildTime": "凸包构建耗时"
+    }
+  },
+  "contact-shadow-under-a-car": {
+    "banner": "拖动以环绕。加宽灯光、抬高汽车或让它跳起：它的影子紧贴着轮胎。",
+    "controls": {
+      "lampWidth": "灯的宽度",
+      "rideHeight": "离地高度",
+      "hop": "跳起",
+      "paint": "车漆",
+      "drive": "行驶"
+    },
+    "readouts": {
+      "height": "高度"
+    }
+  },
+  "contact-shadows-from-the-screen": {
+    "banner": "拖动以环绕，滚动以靠近。每一根引脚、每一条走线都留着发丝般的细影。",
+    "controls": {
+      "sunHeight": "太阳高度",
+      "sunTurn": "太阳方向",
+      "sweep": "扫动"
+    },
+    "readouts": {
+      "ray": "屏幕射线"
+    }
+  },
+  "light-that-bounces": {
+    "banner": "拖动以观察房间内部。关闭再打开反弹光：一块阳光照亮了整个房间。",
+    "controls": {
+      "bounce": "反弹光",
+      "sunHeight": "太阳高度",
+      "sunTurn": "太阳方向",
+      "sweep": "扫动",
+      "sunColour": "太阳颜色"
+    }
+  },
+  "voxel-models": {
+    "banner": "在页面中读取的 MagicaVoxel 文件：舍弃被遮住的面，按相邻体素为角点着暗。拖动可旋转；调低高度可剖开模型。",
+    "controls": {
+      "model": "模型",
+      "height": "高度",
+      "occlusion": "遮蔽",
+      "spin": "旋转"
+    },
+    "choices": {
+      "model": {
+        "lighthouse": "灯塔",
+        "castle": "城堡",
+        "balloon": "热气球"
+      }
+    },
+    "readouts": {
+      "voxels": "体素",
+      "facesDrawn": "绘制的面",
+      "facesHidden": "舍弃的面",
+      "file": "文件"
+    }
+  },
+  "red-cyan-anaglyph": {
+    "banner": "戴上红青立体眼镜，红色镜片在左眼。拖动旋转，滚轮靠近。",
+    "controls": {
+      "glasses": "眼镜",
+      "separation": "双眼间距",
+      "screenPlane": "屏幕平面",
+      "swapEyes": "交换双眼",
+      "speed": "速度"
+    },
+    "choices": {
+      "glasses": {
+        "halfColour": "半彩色",
+        "colour": "全彩色",
+        "grey": "灰度",
+        "none": "无，仅左眼"
+      }
+    },
+    "readouts": {
+      "screenDistance": "屏幕平面位于"
+    }
+  },
+  "cross-fade-between-scenes": {
+    "banner": "两个世界，一台相机。拖动旋转；选择一个场景如何过渡到另一个。",
+    "controls": {
+      "transition": "转场",
+      "duration": "时长（秒）",
+      "hold": "停留（秒）",
+      "autoplay": "自动播放",
+      "switchScene": "切换场景"
+    },
+    "choices": {
+      "transition": {
+        "iris": "光圈",
+        "wipe": "擦除",
+        "fade": "交叉淡化",
+        "blinds": "百叶窗"
+      }
+    },
+    "readouts": {
+      "showing": "当前场景",
+      "worldsDrawing": "正在绘制的世界"
+    },
+    "words": {
+      "desert": "沙漠",
+      "glacier": "冰川"
+    }
+  },
+  "a-refracting-pane": {
+    "banner": "拖动环顾四周。玻璃会折射它身后的景物：改变它的纹样、折射率和厚度。",
+    "controls": {
+      "glass": "玻璃",
+      "refraction": "折射率",
+      "thickness": "厚度",
+      "tint": "色调",
+      "slide": "滑动"
+    },
+    "choices": {
+      "glass": {
+        "reeded": "长虹玻璃",
+        "hammered": "锤纹",
+        "rippled": "水波纹",
+        "bullseye": "牛眼",
+        "flat": "平板"
+      }
+    }
+  },
+  "pick-lines-and-points": {
+    "banner": "在天球上移动指针：范围内最近的星或线会亮起。引擎的 raycast 命中三角形；点和线段在这里以像素为单位检测。",
+    "controls": {
+      "reach": "范围 (px)",
+      "stars": "拾取星",
+      "lines": "拾取线",
+      "turning": "旋转"
+    },
+    "readouts": {
+      "hit": "选中",
+      "place": "位置",
+      "off": "偏差",
+      "cost": "开销"
+    },
+    "words": {
+      "nothing": "无",
+      "star": "星 {n} / {total}",
+      "figure": "星座 {n}",
+      "parallel": "纬线 {deg}°",
+      "meridian": "经线 {deg}°",
+      "segment": "线段 {k} / {total}",
+      "place": "经度 {lon}° · 纬度 {lat}°",
+      "pixels": "{px} px",
+      "cost": "{n} 次检测 · {us} µs"
+    }
+  },
+  "printable-parts": {
+    "banner": "STL、PLY、AMF 和 3MF 文件，各由页面里几十行代码读取。拖动可旋转；选择一个零件可近看。",
+    "controls": {
+      "focus": "查看",
+      "stlColour": "STL 耗材颜色",
+      "wireframe": "线框",
+      "spin": "旋转"
+    },
+    "choices": {
+      "focus": {
+        "all": "整块打印板",
+        "gear": "齿轮（STL）",
+        "vase": "花瓶（PLY）",
+        "bolt": "螺栓和螺母（AMF）",
+        "knot": "绳结（3MF）"
+      }
+    },
+    "readouts": {
+      "gear": "gear.stl",
+      "vase": "vase.ply",
+      "bolt": "bolt.amf",
+      "knot": "knot.3mf"
+    },
+    "words": {
+      "summary": "{size} kB · {triangles} 个三角形"
+    }
+  },
+  "avif-textures": {
+    "banner": "拖动环顾四周。窗外的风景和橄榄枝都是 AVIF 文件：降低质量，再看看窗外。",
+    "controls": {
+      "quality": "AVIF 质量",
+      "lookAt": "查看"
+    },
+    "choices": {
+      "lookAt": {
+        "room": "房间",
+        "view": "风景",
+        "branch": "橄榄枝"
+      }
+    },
+    "readouts": {
+      "view": "风景",
+      "branch": "橄榄枝",
+      "decoded": "解码后像素"
+    },
+    "words": {
+      "alpha": "透明"
+    }
+  },
+  "smoothing-by-subdivision": {
+    "banner": "拖动以环绕观察。提高级别，每个三角形一分为四；琥珀色的边是折痕，始终保持锐利。",
+    "controls": {
+      "shape": "控制网格",
+      "level": "级别",
+      "creases": "折痕",
+      "creaseAngle": "折痕角度",
+      "cage": "显示控制网格",
+      "spin": "旋转"
+    },
+    "choices": {
+      "shape": {
+        "knot": "绳结",
+        "goblet": "高脚杯",
+        "ball": "二十面体",
+        "cube": "立方体"
+      }
+    },
+    "readouts": {
+      "triangles": "三角形",
+      "cageTriangles": "控制网格三角形"
+    }
+  },
+  "motion-retargeting": {
+    "banner": "拖动可环绕观察。CesiumMan 的行走动作被改写给两副骨骼，它们的骨骼名称、体型和静止姿势都不同。切换方法，看看每一步修正了什么。",
+    "controls": {
+      "method": "方法",
+      "speed": "速度"
+    },
+    "choices": {
+      "method": {
+        "directions": "对齐骨骼方向",
+        "turns": "传递世界旋转",
+        "copy": "复制局部旋转"
+      }
+    },
+    "readouts": {
+      "bones": "已映射骨骼",
+      "keys": "已烘焙关键帧"
+    }
+  },
+  "breaking-things": {
+    "banner": "点击投出一颗铁球。墙、柱子和水晶被切成沃罗诺伊碎块，由超过强度就会断开的关节焊在一起。",
+    "controls": {
+      "pieces": "碎块数",
+      "strength": "强度 (kN)",
+      "speed": "速度 (m/s)",
+      "slowMotion": "慢动作",
+      "throwAtWall": "砸向墙",
+      "rebuild": "重建"
+    },
+    "readouts": {
+      "pieces": "碎块",
+      "welds": "完好焊点",
+      "broken": "断裂焊点"
+    }
+  },
+  "a-ground-projected-sky": {
+    "banner": "拖动以绕着浑天仪行走：画面中的地面始终在它下方，并承接它的影子。取消“贴地”可看到普通球体时地面的滑移。",
+    "controls": {
+      "place": "地点",
+      "grounded": "贴地",
+      "height": "高度",
+      "radius": "半径",
+      "turning": "转动"
+    },
+    "choices": {
+      "place": {
+        "plaza": "大理石广场",
+        "salt flat": "黄昏盐沼",
+        "meadow": "草地"
+      }
+    },
+    "readouts": {
+      "flatFloor": "平地范围"
+    },
+    "words": {
+      "credit": "全景图由本页面打开时用代码绘制：无需下载任何内容。"
+    }
+  },
+  "sound-in-space": {
+    "banner": "点击“聆听”（最好戴耳机），然后旋转和缩放：每个声源都从它发光的地方发声，由跟随相机的 Web Audio 声像器放在你头部四周。",
+    "controls": {
+      "listen": "聆听",
+      "silence": "静音",
+      "volume": "音量",
+      "distanceModel": "距离衰减",
+      "rolloff": "衰减率",
+      "panning": "声像",
+      "moving": "移动"
+    },
+    "choices": {
+      "distanceModel": {
+        "inverse": "反比",
+        "exponential": "指数",
+        "linear": "线性"
+      },
+      "panning": {
+        "HRTF": "HRTF（3D）",
+        "equalpower": "等功率（立体声）"
+      }
+    },
+    "readouts": {
+      "bell": "钟",
+      "horn": "号角",
+      "firefly": "萤火虫"
+    },
+    "words": {
+      "listening": "正在聆听：绕着声源转、靠近它，或走到号角背后离开它的声锥。",
+      "silent": "声音已暂停。",
+      "level": "{db} dB · {m} 米",
+      "distance": "{m} 米"
+    }
+  },
+  "drag-objects": {
+    "banner": "在台上拖动物件：放到另一个上面就会叠起来，撞向其他物件就会把它们推开。按住 Shift 可在竖直平面上把它举起。",
+    "controls": {
+      "plane": "平面",
+      "shove": "推挤",
+      "home": "复位"
+    },
+    "choices": {
+      "plane": {
+        "floor": "水平",
+        "wall": "竖直"
+      }
+    },
+    "readouts": {
+      "held": "拿着",
+      "surface": "平面",
+      "height": "高度"
+    },
+    "words": {
+      "nothing": "无",
+      "floor": "水平",
+      "wall": "竖直",
+      "metres": "{m} 米",
+      "ball": "漆面球",
+      "knot": "陶瓷结",
+      "crate": "木箱",
+      "glass": "玻璃柱",
+      "cone": "红色圆锥",
+      "gem": "金色宝石",
+      "pill": "粉色胶囊"
+    }
+  },
+  "oriented-boxes": {
+    "banner": "拖动以环绕观察。青色包围盒随形状转动，琥珀色包围盒始终沿世界坐标轴；变红表示两个盒子相交。",
+    "controls": {
+      "boxes": "包围盒",
+      "fit": "拟合",
+      "speed": "速度",
+      "tumbling": "翻滚"
+    },
+    "choices": {
+      "boxes": {
+        "both": "两者",
+        "oriented": "有向",
+        "aligned": "轴对齐",
+        "none": "无"
+      },
+      "fit": {
+        "tightest": "最紧",
+        "principal axes": "主轴"
+      }
+    },
+    "readouts": {
+      "orientedVolume": "体积（有向）",
+      "alignedVolume": "体积（轴对齐）",
+      "orientedContacts": "接触（有向）",
+      "alignedContacts": "接触（轴对齐）"
+    }
+  },
+  "edit-a-spline": {
+    "banner": "拖动金色控制点，曲线随之变化；按住 Shift 可升高或降低它。双击地面添加控制点，双击控制点将其删除。",
+    "controls": {
+      "closed": "闭合环",
+      "radius": "半径",
+      "speed": "珠子",
+      "polygon": "控制线",
+      "reset": "重置"
+    },
+    "readouts": {
+      "handles": "控制点",
+      "length": "长度",
+      "triangles": "三角形"
+    },
+    "words": {
+      "metres": "{m} 米"
+    }
+  },
+  "compressed-mesh-input": {
+    "banner": "拖动可环顾四周。一个 glTF 文件里存放了这尊大理石胸像三次：未压缩的浮点数、Draco 和 meshopt。编译器在烘焙时就解码了这两种格式，因此浏览器无需任何解码器。选择一尊胸像，读取它的文件信息。",
+    "controls": {
+      "bust": "胸像",
+      "turn": "旋转"
+    },
+    "choices": {
+      "bust": {
+        "all": "全部三尊",
+        "plain": "未压缩浮点数",
+        "draco": "Draco",
+        "meshopt": "Meshopt"
+      }
+    },
+    "readouts": {
+      "stored": "存储大小",
+      "decoded": "解码后",
+      "extension": "扩展",
+      "triangles": "三角形"
+    }
+  },
+  "lens-flares": {
+    "banner": "拖动以转动视角：鬼影穿过画面中心滑动，每当叶片挡住太阳时便会变暗。",
+    "controls": {
+      "flare": "镜头光晕",
+      "lens": "镜头",
+      "strength": "强度",
+      "sunHeight": "太阳高度"
+    },
+    "choices": {
+      "lens": {
+        "spherical": "球面",
+        "anamorphic": "变形宽银幕"
+      }
+    },
+    "readouts": {
+      "sunShowing": "可见太阳"
+    }
+  },
+  "particles-with-own-sizes": {
+    "banner": "每颗火花都是一个拥有自身大小的精灵：粗大的彗星、细碎的闪光、冷却时缩小的余烬。拉大尺寸差异，或发射一枚礼花弹。",
+    "controls": {
+      "shells": "礼花弹",
+      "sizeSpread": "尺寸差异",
+      "rate": "发射频率",
+      "launch": "发射"
+    },
+    "choices": {
+      "shells": {
+        "mixed": "混合",
+        "peony": "牡丹",
+        "ring": "环形",
+        "willow": "垂柳",
+        "chrysanthemum": "菊花"
+      }
+    },
+    "readouts": {
+      "sparks": "火花",
+      "sizes": "自身大小"
+    }
+  },
+  "an-atmospheric-sky": {
+    "banner": "拖动环顾四周。天空由空气本身计算而来：拖动时刻，让雾霾或空气变浓。",
+    "controls": {
+      "hour": "时刻",
+      "run": "让一天流逝",
+      "haze": "雾霾",
+      "air": "空气密度",
+      "adaptEyes": "眼睛适应"
+    },
+    "readouts": {
+      "clock": "时间",
+      "sunHeight": "太阳高度",
+      "sunThroughAir": "穿过空气的阳光"
+    }
+  },
+  "lit-by-an-hdr-image": {
+    "banner": "拖动环绕观看。每个地点都是一张真实的 HDR 照片：其中的太阳变成投下阴影的光源，其余部分变成来自四面八方的柔光。",
+    "controls": {
+      "place": "地点",
+      "turn": "旋转",
+      "exposure": "曝光",
+      "sunFromImage": "太阳作为光源",
+      "spin": "自转"
+    },
+    "choices": {
+      "place": {
+        "plains": "阳光平原",
+        "sunset": "日落时的威尼斯",
+        "harbour": "夜晚的港口"
+      }
+    },
+    "readouts": {
+      "sunFound": "太阳高度",
+      "sunShare": "来自太阳的光",
+      "range": "图像的动态范围"
+    },
+    "words": {
+      "noSun": "无",
+      "stops": "{n} 档",
+      "credit": "HDR 图像：Rosendal Plains 2、Venice Sunset、Golden Bay — Poly Haven，CC0"
+    }
+  },
+  "adjusting-the-environment": {
+    "banner": "拖动环绕观看。旋转、加暖、增加饱和度或调暗布景周围的光：每次调整只是几个数字，同时作用于光、阴影和背景。",
+    "controls": {
+      "rig": "布光",
+      "turn": "旋转",
+      "strength": "强度",
+      "warmth": "色温",
+      "saturation": "饱和度",
+      "exposure": "曝光",
+      "toneMapping": "色调曲线",
+      "backgroundBlur": "背景模糊",
+      "background": "背景",
+      "spin": "自转"
+    },
+    "choices": {
+      "rig": {
+        "studio": "摄影棚",
+        "stage": "彩色滤光舞台"
+      },
+      "toneMapping": {
+        "aces": "aces",
+        "agx": "agx",
+        "neutral": "中性",
+        "reinhard": "reinhard",
+        "cineon": "cineon",
+        "linear": "线性"
+      }
+    },
+    "readouts": {
+      "lightOnTop": "来自上方的光"
     }
   }
 }

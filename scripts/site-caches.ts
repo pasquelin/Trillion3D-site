@@ -74,7 +74,13 @@ const orca = (name: string, download: Download): CookedScene => ({
 })
 
 /** The examples whose source is committed as is, written by no script. */
-const COMMITTED_SOURCES = ['hall', 'cesium-man', 'animated-morph-cube']
+const COMMITTED_SOURCES = [
+  'hall',
+  'cesium-man',
+  'animated-morph-cube',
+  'compressed-mesh-input',
+  'light-that-bounces',
+]
 
 /** Every cooked scene: the examples (`modelScenes` and `COMMITTED_SOURCES`), the terrain tiles'
  *  exact cook beside their simplified one, and the gallery's. */

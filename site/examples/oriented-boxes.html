@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Oriented boxes</title>
+    <meta name="thumbnail" content="4" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #0e131c;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, effect, geometry, helper, light, material, math, object } from '../runtime/engine.js';
+      import { controls, readout } from '../runtime/kit.js';
+
+      // Six long, thin shapes tumble around a ring. Each wears two boxes. The aligned one (amber)
+      // keeps to the world's axes: it is measured again every frame, and swells and shrinks as
+      // the shape turns. The oriented one (cyan) is found once, in the shape's own frame, along
+      // its principal axes, and then simply turns with it: always tight. Where two boxes meet
+      // they light up red — the oriented boxes by the separating axis test.
+
+      // The principal axes of a shape: the covariance of its surface, every triangle weighted by
+      // its area, then the three directions in which it spreads most, least and in between: the
+      // eigenvectors of that symmetric 3×3 matrix, found by Jacobi rotations. The shape is read
+      // unshared, every triangle its own three corners.
+      function principalAxes(shape) {
+        const flat = shape.toNonIndexed(), p = flat.attributes.position.array;
+        const sum = new Float64Array(9), mean = [0, 0, 0];
+        let total = 0;
+        for (let a = 0; a < p.length; a += 9) {
+          const b = a + 3, c = a + 6;
+          const u = [p[b] - p[a], p[b + 1] - p[a + 1], p[b + 2] - p[a + 2]], v = [p[c] - p[a], p[c + 1] - p[a + 1], p[c + 2] - p[a + 2]];
+          const area = Math.hypot(u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]) / 2;
+          if (!area) continue;
+          const corners = [a, b, c].map((k) => [p[k], p[k + 1], p[k + 2]]);
+          const centre = [0, 1, 2].map((i) => (corners[0][i] + corners[1][i] + corners[2][i]) / 3);
+          // A triangle's second moment: area / 12 × (9 c cᵀ + Σ corner cornerᵀ).
+          for (let i = 0; i < 3; i++)
+            for (let j = 0; j < 3; j++)
+              sum[i * 3 + j] += (area / 12) * (9 * centre[i] * centre[j] + corners.reduce((s, q) => s + q[i] * q[j], 0));
+          for (let i = 0; i < 3; i++) mean[i] += area * centre[i];
+          total += area;
+        }
+        flat.dispose();
+        for (let i = 0; i < 3; i++) mean[i] /= total;
+        // The engine's 3×3 matrix holds the covariance, row by row.
+        const covariance = math.matrix3().set(...Array.from({ length: 9 }, (_, k) => sum[k] / total - mean[Math.floor(k / 3)] * mean[k % 3]));
+        return jacobi(covariance);
+      }
+
+      // Eigenvectors of a symmetric 3×3 matrix: zero its largest off-diagonal number by one
+      // plane rotation, again and again, the rotations gathered as the axes.
+      // Turns columns p and q of a 3×3 array by the angle whose cosine is c and sine s.
+      function turnColumns(m, p, q, c, s) {
+        for (let k = 0; k < 3; k++) {
+          const mkp = m[k][p], mkq = m[k][q];
+          m[k][p] = c * mkp - s * mkq;
+          m[k][q] = s * mkp + c * mkq;
+        }
+      }
+      function jacobi(matrix) {
+        const e = matrix.elements; // column by column; symmetric, so the same read row by row
+        const a = [[e[0], e[3], e[6]], [e[1], e[4], e[7]], [e[2], e[5], e[8]]];
+        const v = [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+        for (let sweep = 0; sweep < 32; sweep++) {
+          let p = 0, q = 1;
+          if (Math.abs(a[0][2]) > Math.abs(a[p][q])) {
+            p = 0;
+            q = 2;
+          }
+          if (Math.abs(a[1][2]) > Math.abs(a[p][q])) {
+            p = 1;
+            q = 2;
+          }
+          if (Math.abs(a[p][q]) < 1e-12) break;
+          const theta = (a[q][q] - a[p][p]) / (2 * a[p][q]);
+          const t = Math.sign(theta || 1) / (Math.abs(theta) + Math.sqrt(theta * theta + 1));
+          const c = 1 / Math.sqrt(t * t + 1), s = t * c;
+          // The matrix turned on both sides (its columns, then its rows), the axes on one.
+          turnColumns(a, p, q, c, s);
+          for (let k = 0; k < 3; k++) {
+            const apk = a[p][k], aqk = a[q][k];
+            a[p][k] = c * apk - s * aqk;
+            a[q][k] = s * apk + c * aqk;
+          }
+          turnColumns(v, p, q, c, s);
+        }
+        // The columns of `v` are the axes; a right-handed frame, so it is a rotation.
+        const axes = [0, 1, 2].map((k) => [v[0][k], v[1][k], v[2][k]]);
+        const [x, y] = axes;
+        axes[2] = [x[1] * y[2] - x[2] * y[1], x[2] * y[0] - x[0] * y[2], x[0] * y[1] - x[1] * y[0]];
+        return axes;
+      }
+
+      // The box along `axes`: every corner of the shape projected on each axis, the extremes
+      // kept. Returns its centre, half sizes and volume, all in the shape's own frame.
+      function fit(points, axes) {
+        const low = [Infinity, Infinity, Infinity], high = [-Infinity, -Infinity, -Infinity];
+        for (let k = 0; k < points.length; k += 3)
+          for (let i = 0; i < 3; i++) {
+            const d = points[k] * axes[i][0] + points[k + 1] * axes[i][1] + points[k + 2] * axes[i][2];
+            if (d < low[i]) low[i] = d;
+            if (d > high[i]) high[i] = d;
+          }
+        const middle = [0, 1, 2].map((i) => (low[i] + high[i]) / 2);
+        const centre = [0, 1, 2].map((j) => axes[0][j] * middle[0] + axes[1][j] * middle[1] + axes[2][j] * middle[2]);
+        const half = [0, 1, 2].map((i) => (high[i] - low[i]) / 2);
+        return { axes, centre, half, volume: 8 * half[0] * half[1] * half[2] };
+      }
+
+      // Tighter still: the principal axes turned about each of themselves, in finer and finer
+      // steps, while the box shrinks.
+      function tightest(points, start) {
+        let best = fit(points, start);
+        for (const step of [8, 2, 0.5]) {
+          for (let pivot = 0; pivot < 3; pivot++) {
+            const i = (pivot + 1) % 3, j = (pivot + 2) % 3, from = best.axes;
+            for (let degrees = -45; degrees <= 45; degrees += step) {
+              const angle = (degrees * Math.PI) / 180, c = Math.cos(angle), s = Math.sin(angle);
+              const axes = from.map((axis) => axis.slice());
+              axes[i] = [0, 1, 2].map((k) => c * from[i][k] + s * from[j][k]);
+              axes[j] = [0, 1, 2].map((k) => -s * from[i][k] + c * from[j][k]);
+              const tried = fit(points, axes);
+              if (tried.volume < best.volume - 1e-9) best = tried;
+            }
+          }
+        }
+        return best;
+      }
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#0e131c');
+      const floor = object.mesh(geometry.cylinder(5.2, 5.4, 0.25, 128), material.meshStandard({ color: '#1b2230', roughness: 0.55, metalness: 0.2 }));
+      floor.position.y = -0.125;
+      const ground = object.mesh(geometry.cylinder(20, 20, 0.1, 96), material.meshStandard({ color: '#11161f', roughness: 0.95 }));
+      ground.position.y = -0.3;
+      const grid = helper.polarGrid(5, 24, 5, '#2c3850');
+      grid.position.y = 0.006;
+      world.scene.add(floor, ground, grid);
+      world.scene.add(light.directional({ intensity: 2.6, color: '#fff2e0', position: [5, 10, 4], castShadow: true }));
+      world.scene.add(light.point({ intensity: 30, color: '#ff9d6b', position: [-5, 4, -4], distance: 14 }));
+      world.scene.add(light.point({ intensity: 30, color: '#6bc4ff', position: [5, 3, -5], distance: 14 }));
+      world.scene.add(light.hemisphere({ color: '#a8b8e0', groundColor: '#2a221c', intensity: 0.6 }));
+      world.effects.add(effect.bloom({ intensity: 0.05 }));
+
+      // The shapes, each long one way and thin another, built off their own centre and turned
+      // askew in their own frame, so their principal axes are not their x, y and z.
+      const vase = [[0, 0], [0.32, 0], [0.42, 0.3], [0.2, 0.95], [0.15, 1.25], [0.26, 1.5], [0, 1.5]];
+      const SHAPES = [
+        [geometry.capsule(0.22, 1.5, 6, 16), '#e0663c'],
+        [geometry.torusKnot(0.42, 0.11, 160, 12, 2, 5).scale(1.6, 0.6, 1), '#2fb3a0'],
+        [geometry.box(1.9, 0.18, 0.6), '#efe4cf'],
+        [geometry.lathe(vase, 40).translate(0, -0.75, 0), '#d9a441'],
+        [geometry.torus(0.6, 0.12, 16, 64).scale(1.5, 1, 0.7), '#6f7dff'],
+        [geometry.cylinder(0.12, 0.2, 2.1, 24), '#c95bd6'],
+      ].map(([shape, colour], index) => {
+        shape.rotateX(index * 0.7 + 0.3).rotateY(index * 1.3).rotateZ(index * 0.5 + 0.2);
+        return { shape, colour };
+      });
+
+      // The unit box, outlined once; every box drawn below is a copy of it, moved and stretched.
+      const unit = math.box3(math.vector3(-0.5, -0.5, -0.5), math.vector3(0.5, 0.5, 0.5));
+      const CYAN = '#4ee6ff', AMBER = '#ffb347', RED = '#ff3d5a';
+      const pieces = SHAPES.map(({ shape, colour }, index) => {
+        const mesh = object.mesh(shape, material.meshStandard({ color: colour, roughness: 0.35, metalness: 0.15 }));
+        const points = Float64Array.from(shape.attributes.position.array);
+        const principal = fit(points, principalAxes(shape)), tight = tightest(points, principal.axes);
+        // The oriented box, a child of the mesh: it turns with it and is never measured again.
+        const oriented = helper.box(unit, CYAN);
+        mesh.add(oriented);
+        // The aligned box lives in the world, and is measured every frame.
+        const aligned = helper.box(unit, AMBER);
+        world.scene.add(mesh, aligned);
+        const spin = math.vector3(Math.sin(index * 2.1), 1, Math.cos(index * 1.7)).normalize();
+        return { mesh, points, principal, tight, oriented, aligned, spin, box: null, now: math.box3(), phase: (index / SHAPES.length) * Math.PI * 2 };
+      });
+
+      // Places a piece's oriented box from its fit: the axes as the columns of a rotation.
+      const turn = math.matrix4(), turned = math.quaternion();
+      function wear(piece, box) {
+        piece.box = box;
+        const [x, y, z] = box.axes;
+        turn.set(x[0], y[0], z[0], 0, x[1], y[1], z[1], 0, x[2], y[2], z[2], 0, 0, 0, 0, 1);
+        piece.oriented.quaternion.copy(turned.setFromRotationMatrix(turn));
+        piece.oriented.position.set(...box.centre);
+        piece.oriented.scale.set(box.half[0] * 2, box.half[1] * 2, box.half[2] * 2);
+      }
+
+      // The aligned box of a piece now: every corner carried into the world, the box grown to
+      // hold it.
+      const corner = math.vector3();
+      function measureAligned(piece) {
+        const p = piece.points, box = piece.now.makeEmpty();
+        for (let k = 0; k < p.length; k += 3) box.expandByPoint(corner.set(p[k], p[k + 1], p[k + 2]).applyMatrix4(piece.mesh.matrixWorld));
+        return box;
+      }
+
+      // A piece's oriented box in the world: its centre and its three axes carried by the mesh.
+      function worldBox(piece) {
+        const m = piece.mesh.matrixWorld.elements, { axes, centre, half } = piece.box;
+        const carry = (v, w) => [0, 1, 2].map((i) => m[i] * v[0] + m[4 + i] * v[1] + m[8 + i] * v[2] + w * m[12 + i]);
+        return { centre: carry(centre, 1), axes: axes.map((axis) => carry(axis, 0)), half };
+      }
+
+      // The separating axis test: two boxes are apart if their shadows on some axis are apart.
+      // Fifteen axes suffice: the three of each box and the nine crossings of one with the other.
+      const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+      const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+      function boxesMeet(a, b) {
+        const between = [0, 1, 2].map((i) => b.centre[i] - a.centre[i]);
+        const tests = [...a.axes, ...b.axes];
+        for (const u of a.axes) for (const v of b.axes) tests.push(cross(u, v));
+        for (const axis of tests) {
+          if (dot(axis, axis) < 1e-10) continue; // two parallel edges: no new axis
+          const reach = (box) => box.axes.reduce((sum, own, i) => sum + box.half[i] * Math.abs(dot(own, axis)), 0);
+          if (Math.abs(dot(between, axis)) > reach(a) + reach(b)) return false;
+        }
+        return true;
+      }
+
+      world.camera.position.set(0, 5.6, 8.8);
+      world.camera.lookAt(0, 0.9, 0);
+      world.controls.target.set(0, 0.9, 0);
+      world.controls.minDistance = 3;
+      world.controls.maxDistance = 18;
+      world.controls.maxPolarAngle = Math.PI * 0.49;
+
+      // Nothing moves while the speed is nought, so nothing is measured until a setting changes.
+      let dirty = true;
+      const say = {};
+      const ui = controls({
+        boxes: ['both', 'oriented', 'aligned', 'none'],
+        fit: ['tightest', 'principal axes'],
+        speed: [0, 2, 1, 0.05],
+        tumbling: true,
+      }, (values) => {
+        for (const piece of pieces) {
+          wear(piece, values.fit === 'tightest' ? piece.tight : piece.principal);
+          piece.oriented.visible = values.boxes === 'both' || values.boxes === 'oriented';
+          piece.aligned.visible = values.boxes === 'both' || values.boxes === 'aligned';
+        }
+        dirty = true;
+        world.invalidate();
+      }, world);
+      say.orientedVolume = readout('orientedVolume');
+      say.alignedVolume = readout('alignedVolume');
+      say.orientedContacts = readout('orientedContacts');
+      say.alignedContacts = readout('alignedContacts');
+
+      // The ring turns, each piece on its own tumble, its distance from the centre breathing so
+      // neighbours brush past each other.
+      let time = 0;
+      const size = math.vector3();
+      world.onFrame(({ delta }) => {
+        if (!ui.speed && !dirty) return;
+        dirty = false;
+        time += delta * ui.speed;
+        pieces.forEach((piece, index) => {
+          const angle = piece.phase + time * 0.25, radius = 1.95 + Math.sin(time * 0.7 + index * 1.9) * 0.85;
+          piece.mesh.position.set(Math.cos(angle) * radius, 1.25 + Math.sin(time * 0.9 + index) * 0.25, Math.sin(angle) * radius);
+          if (ui.tumbling) piece.mesh.quaternion.setFromAxisAngle(piece.spin, time * (0.5 + index * 0.08));
+          piece.mesh.updateMatrixWorld(true);
+          const box = measureAligned(piece);
+          box.getCenter(piece.aligned.position);
+          box.getSize(piece.aligned.scale);
+          piece.world = worldBox(piece);
+          piece.hitOriented = piece.hitAligned = false;
+        });
+        let orientedContacts = 0, alignedContacts = 0, orientedVolume = 0, alignedVolume = 0;
+        for (let i = 0; i < pieces.length; i++) {
+          const a = pieces[i];
+          orientedVolume += a.box.volume;
+          a.now.getSize(size);
+          alignedVolume += size.x * size.y * size.z;
+          for (let j = i + 1; j < pieces.length; j++) {
+            const b = pieces[j];
+            if (a.now.intersectsBox(b.now)) {
+              a.hitAligned = b.hitAligned = true;
+              alignedContacts++;
+            }
+            if (boxesMeet(a.world, b.world)) {
+              a.hitOriented = b.hitOriented = true;
+              orientedContacts++;
+            }
+          }
+        }
+        for (const piece of pieces) {
+          piece.oriented.material.color.set(piece.hitOriented ? RED : CYAN);
+          piece.aligned.material.color.set(piece.hitAligned ? RED : AMBER);
+        }
+        say.orientedVolume(orientedVolume.toFixed(2));
+        say.alignedVolume(alignedVolume.toFixed(2));
+        say.orientedContacts(String(orientedContacts));
+        say.alignedContacts(String(alignedContacts));
+        world.invalidate();
+      });
+    </script>
+  </body>
+</html>

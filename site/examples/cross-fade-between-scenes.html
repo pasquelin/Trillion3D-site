@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Scene cross-fade</title>
+    <meta name="thumbnail" content="3" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+      }
+      canvas {
+        position: absolute;
+        inset: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      #view {
+        touch-action: none;
+      }
+      /* The second world's picture lies over the first; the page uncovers it through its
+         opacity or a mask the transition moves. It never takes the pointer. */
+      #second {
+        pointer-events: none;
+        opacity: 0;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <canvas id="second"></canvas>
+    <script type="module">
+      import { createWorld, geometry, material, object, light, math, buffer, effect } from '../runtime/engine.js';
+      import { controls, readout, opening, seeded, ease, words } from '../runtime/kit.js';
+      const say = words();
+
+      // Two worlds, two whole scenes with their own lights, sky and fog, drawn into two canvases
+      // stacked on the page. Both stand round the same stone gate, so one camera frames them
+      // both: the first world takes the mouse, the second copies its camera every frame.
+      const add = (parent, shape, paint, x = 0, y = 0, z = 0) => {
+        const mesh = object.mesh(shape, paint);
+        mesh.position.set(x, y, z);
+        parent.add(mesh);
+        return mesh;
+      };
+      function gate(scene, stone, inner) {
+        const ring = add(scene, geometry.torus(3.2, 0.42, 20, 96), stone, 0, 3.7, 0);
+        const glow = add(scene, geometry.torus(2.75, 0.07, 8, 96), inner, 0, 3.7, 0);
+        add(scene, geometry.box(2.4, 0.7, 1.4), stone, 0, 0.35, 0);
+        for (const x of [-1.8, 1.8]) add(scene, geometry.box(0.9, 1.6, 1.2), stone, x, 0.8, 0);
+        return [ring, glow];
+      }
+
+      // The desert at dawn: sand dunes, wind-cut arches of red rock, a low sun in a warm haze.
+      function desert(world) {
+        const scene = world.scene, random = seeded(3);
+        scene.background = math.color('#f2b77e');
+        scene.fog = { color: math.color('#f2b77e'), near: 25, far: 95 };
+        const sand = material.meshStandard({ color: '#e9b77a', roughness: 1, metalness: 0 });
+        const rock = material.meshStandard({ color: '#b8583a', roughness: 0.85, flatShading: true });
+        add(scene, geometry.cylinder(120, 120, 0.2, 64), sand, 0, -0.1, 0);
+        // One unit sphere, scaled out flat into every dune.
+        const ball = geometry.sphere(1, 40, 20);
+        for (let k = 0; k < 26; k++) {
+          const a = random() * Math.PI * 2, r = 12 + random() * 50, dune = add(scene, ball, sand, Math.cos(a) * r, -0.2, Math.sin(a) * r);
+          dune.scale.set(5 + random() * 9, 1 + random() * 2.2, 3 + random() * 6);
+          dune.rotation.set(0, random() * Math.PI, 0);
+        }
+        for (const [x, z, s, turn] of [[-14, -18, 1.4, 0.4], [17, -26, 2, -0.3], [-30, 6, 1.6, 1.2], [26, 10, 1.1, 0.9]]) {
+          const arch = add(scene, geometry.torus(4, 1.1, 10, 24, Math.PI), rock, x, 0, z);
+          arch.scale.set(s, s, s);
+          arch.rotation.set(0, turn, 0);
+          add(scene, geometry.cylinder(1.6 * s, 2.4 * s, 9 * s, 7), rock, x + 9 * s, 4.5 * s - 0.5, z - 4 * s);
+        }
+        add(scene, geometry.sphere(6, 48, 24), material.meshStandard({ color: '#000000', emissive: '#fff0c8', emissiveIntensity: 4 }), -40, 9, -80);
+        const [, glow] = gate(scene, material.meshStandard({ color: '#d9b48a', roughness: 0.7 }), material.meshStandard({ color: '#000000', emissive: '#ffb050', emissiveIntensity: 3 }));
+        scene.add(
+          light.directional({ color: '#ffc58a', intensity: 3, position: [-30, 14, -40], castShadow: true }),
+          light.hemisphere({ color: '#ffd7a8', groundColor: '#9a5a3a', intensity: 1 }),
+        );
+        world.effects.add(effect.bloom({ intensity: 0.07 }));
+        return (time) => glow.rotation.set(0, 0, time * 0.4);
+      }
+
+      // The glacier at night: snow, shards of blue ice, a cold moon, stars and a gate that glows.
+      function glacier(world) {
+        const scene = world.scene, random = seeded(11);
+        scene.background = math.color('#08101f');
+        scene.fog = { color: math.color('#08101f'), near: 30, far: 110 };
+        const snow = material.meshStandard({ color: '#dfe9f5', roughness: 1, metalness: 0 });
+        const ice = material.meshStandard({ color: '#9fd4f0', roughness: 0.08, metalness: 0.1, flatShading: true });
+        const glowIce = material.meshStandard({ color: '#000000', emissive: '#58e0ff', emissiveIntensity: 2.5, flatShading: true });
+        add(scene, geometry.cylinder(120, 120, 0.2, 64), snow, 0, -0.1, 0);
+        for (let k = 0; k < 70; k++) {
+          const a = random() * Math.PI * 2, r = 7 + random() * 45, tall = 1 + random() * 7 * (r / 40 + 0.3);
+          const shard = add(scene, geometry.cone(0.4 + tall * 0.18, tall, 5), k % 9 ? ice : glowIce, Math.cos(a) * r, tall / 2 - 0.2, Math.sin(a) * r);
+          shard.rotation.set((random() - 0.5) * 0.5, random() * 6, (random() - 0.5) * 0.5);
+        }
+        const ball = geometry.sphere(1, 32, 16);
+        for (let k = 0; k < 14; k++) {
+          const a = random() * Math.PI * 2, r = 14 + random() * 40, drift = add(scene, ball, snow, Math.cos(a) * r, -0.3, Math.sin(a) * r);
+          drift.scale.set(3 + random() * 6, 0.8 + random() * 1.2, 2 + random() * 4);
+        }
+        add(scene, geometry.sphere(4, 48, 24), material.meshStandard({ color: '#000000', emissive: '#e6efff', emissiveIntensity: 3 }), 30, 26, -80);
+        const stars = new Float32Array(400 * 3);
+        for (let k = 0; k < 400; k++) {
+          const a = random() * Math.PI * 2, up = 0.08 + random() * 1.3, reach = 90;
+          stars.set([Math.cos(a) * Math.cos(up) * reach, Math.sin(up) * reach, Math.sin(a) * Math.cos(up) * reach], k * 3);
+        }
+        scene.add(object.points(geometry.createBuffer({ position: buffer.float32(stars, 3) }), material.meshStandard({ color: '#000000', emissive: '#ffffff', emissiveIntensity: 3, size: 0.35 })));
+        const [, glow] = gate(scene, material.meshStandard({ color: '#8d99ad', roughness: 0.6 }), material.meshStandard({ color: '#000000', emissive: '#58e0ff', emissiveIntensity: 5 }));
+        const portal = light.point({ color: '#58e0ff', intensity: 40, distance: 14, position: [0, 3.7, 1] });
+        scene.add(
+          portal,
+          light.directional({ color: '#9fb8ff', intensity: 1.2, position: [30, 26, -40], castShadow: true }),
+          light.hemisphere({ color: '#3a5a9a', groundColor: '#101828', intensity: 0.6 }),
+        );
+        world.effects.add(effect.bloom({ intensity: 0.12 }));
+        return (time) => {
+          glow.rotation.set(0, 0, -time * 0.6);
+          portal.intensity = 34 + Math.sin(time * 2.1) * 8;
+        };
+      }
+
+      const first = createWorld('view', { controls: 'orbit' });
+      const second = createWorld('second');
+      const scenes = [desert(first), glacier(second)];
+      const start = [-10, 6, 34], aim = [0, 3, 0];
+      first.camera.position.set(...start);
+      first.controls.target.set(...aim);
+      first.controls.minDistance = 6;
+      first.controls.maxDistance = 45;
+      first.controls.maxPolarAngle = Math.PI / 2 - 0.08;
+      first.controls.update();
+
+      // How much of the second picture shows, from 0 to 1, as each transition paints it.
+      const canvas = document.getElementById('second');
+      const TRANSITIONS = {
+        fade: (p) => ({ opacity: p, mask: 'none' }),
+        wipe: (p) => {
+          const edge = p * 130 - 15;
+          return { opacity: 1, mask: `linear-gradient(105deg, #000 ${edge - 15}%, transparent ${edge + 15}%)` };
+        },
+        iris: (p) => {
+          const radius = p * 72;
+          return { opacity: 1, mask: `radial-gradient(circle at 50% 46%, #000 ${radius - 6}vmax, transparent ${radius}vmax)` };
+        },
+        blinds: (p) => {
+          const shown = p * 64;
+          return { opacity: 1, mask: `repeating-linear-gradient(90deg, #000 0 ${shown}px, transparent ${shown + 1}px 64px)` };
+        },
+      };
+      // The style is written only when it changes: a scene at rest restyles nothing.
+      const painted = { opacity: 0, mask: 'none' };
+      function paint(kind, p) {
+        const look = p <= 0 ? { opacity: 0, mask: 'none' } : p >= 1 ? { opacity: 1, mask: 'none' } : TRANSITIONS[kind](p);
+        if (look.opacity !== painted.opacity) canvas.style.opacity = painted.opacity = look.opacity;
+        if (look.mask !== painted.mask) canvas.style.maskImage = canvas.style.webkitMaskImage = painted.mask = look.mask;
+      }
+
+      // The schedule: hold one scene, sweep to the other over the chosen duration, hold, sweep
+      // back. A press of the button starts the next sweep at once.
+      const state = { from: 0, to: 0, began: 0, hold: 0, sweep: 1, sweeps: 0 };
+      let clock = 0;
+      const go = () => {
+        state.from = mix();
+        state.to = state.to ? 0 : 1;
+        state.began = clock;
+        state.hold = 0;
+        // The first sweep, the opening's, takes its time; the next ones take the chosen duration.
+        state.sweep = state.sweeps++ ? ui.duration : Math.max(ui.duration, 3);
+      };
+      const ui = controls({
+        transition: ['iris', 'wipe', 'fade', 'blinds'],
+        duration: [0.3, 4, 1.6, 0.1],
+        hold: [1, 8, 2.5, 0.5],
+        autoplay: true,
+        switchScene: go,
+      }, () => first.invalidate(), first);
+      const shown = readout('showing'), drawing = readout('worldsDrawing');
+      function mix() {
+        const t = math.clamp((clock - state.began) / state.sweep, 0, 1);
+        return math.lerp(state.from, state.to, ease.smooth(t));
+      }
+
+      // The opening: the camera glides in towards the gate while the desert holds, then the
+      // first sweep shows the glacier through it; it keeps circling slowly until the viewer
+      // takes it.
+      const [x, y, z] = start.map((value, i) => value - aim[i]), far = Math.hypot(x, y, z);
+      opening(first, (time) => {
+        const closer = math.lerp(far, 17, ease.inOut(time / 4.5)) / far, turn = time * 0.08;
+        const [c, s] = [Math.cos(turn), Math.sin(turn)];
+        first.camera.position.set(aim[0] + (x * c - z * s) * closer, aim[1] + y * closer, aim[2] + (z * c + x * s) * closer);
+      });
+
+      // One clock for both scenes, kept by the page: each frame poses both, paints the mask and
+      // asks only the worlds that show for a new frame — a picture fully covered rests.
+      // The clock starts with the first picture drawn, so the first sweep is never spent loading.
+      let previous = performance.now(), started = false;
+      const stopWaiting = first.onFrame(() => {
+        started = true;
+        stopWaiting();
+      });
+      function frame(now) {
+        const step = started ? Math.min(0.05, (now - previous) / 1000) : 0;
+        previous = now;
+        clock += step;
+        const p = mix();
+        if (ui.autoplay && p === state.to && (state.hold += step) > (state.sweeps ? ui.hold : 2)) go();
+        paint(ui.transition, p);
+        for (const move of scenes) move(clock);
+        if (p < 1) first.invalidate();
+        if (p > 0) second.invalidate();
+        shown(say(p < 0.5 ? 'desert' : 'glacier'));
+        drawing(`${(p < 1 ? 1 : 0) + (p > 0 ? 1 : 0)} / 2`);
+        requestAnimationFrame(frame);
+      }
+      requestAnimationFrame(frame);
+      second.beforeFrame(() => {
+        second.camera.position.copy(first.camera.position);
+        second.camera.quaternion.copy(first.camera.quaternion);
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,388 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Breaking things</title>
+    <meta name="thumbnail" content="5" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #2a2230;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, buffer, geometry, material, object, light, math, joint } from '../runtime/engine.js';
+      import { controls, readout, onClick, seeded, opening, ease, mix, pointerRay, whiteNoise } from '../runtime/kit.js';
+
+      // A brick wall, a marble pillar and a crystal, each cut here into Voronoi cells: every cell is
+      // the part of the shape nearer to its seed than to any other, a convex piece the physics
+      // takes as a hull. Neighbouring pieces are welded by a fixed joint that breaks past its
+      // strength; an iron ball thrown from the camera does the rest.
+      const world = createWorld('view', { controls: 'orbit', physics: true });
+      const dusk = math.color('#2a2230');
+      world.scene.background = dusk;
+      world.scene.fog = { color: dusk, near: 28, far: 70 };
+      world.camera.far = 200;
+
+      // A few vector words on plain arrays, enough to cut a convex solid by planes.
+      const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+      const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+      const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+      const unit = (a) => {
+        const length = Math.hypot(...a) || 1;
+        return [a[0] / length, a[1] / length, a[2] / length];
+      };
+      const mean = (points) => points.reduce((s, p) => [s[0] + p[0], s[1] + p[1], s[2] + p[2]], [0, 0, 0]).map((v) => v / points.length);
+      const EPS = 1e-7;
+      // Two unit directions square to `n` and to each other: the axes of a face lying across it.
+      const basis = (n) => {
+        const u = unit(cross(n, Math.abs(n[1]) < 0.9 ? [0, 1, 0] : [1, 0, 0]));
+        return [u, cross(n, u)];
+      };
+
+      // A convex solid is a list of faces, each a loop of corners turning anticlockwise round its
+      // outward normal, and a tag: -1 for the shape's own skin, else the index of the neighbour
+      // whose plane cut it. Cutting keeps what lies behind the plane `n·p = d` and closes the
+      // wound with a new face, tagged `tag`.
+      function cut(faces, n, d, tag) {
+        const kept = [], rim = [];
+        for (const face of faces) {
+          const loop = [];
+          face.points.forEach((a, k) => {
+            const b = face.points[(k + 1) % face.points.length], da = dot(n, a) - d, db = dot(n, b) - d;
+            if (da <= EPS) loop.push(a);
+            if (Math.abs(da) <= EPS) rim.push(a);
+            if ((da < -EPS && db > EPS) || (da > EPS && db < -EPS)) {
+              const p = mix({ math }, a, b, da / (da - db));
+              loop.push(p);
+              rim.push(p);
+            }
+          });
+          if (loop.length >= 3) kept.push({ ...face, points: loop });
+        }
+        const corners = [];
+        for (const p of rim) if (!corners.some((q) => Math.hypot(...sub(p, q)) < 1e-6)) corners.push(p);
+        if (corners.length >= 3 && kept.length) {
+          // The new face's corners in turn round their middle, seen from outside.
+          const middle = mean(corners), [u, v] = basis(n);
+          const turn = (p) => Math.atan2(dot(sub(p, middle), v), dot(sub(p, middle), u));
+          kept.push({ points: corners.sort((a, b) => turn(a) - turn(b)), normal: n, tag });
+        }
+        return kept;
+      }
+      const area = (face) => {
+        let sum = [0, 0, 0];
+        for (let k = 1; k + 1 < face.points.length; k++) {
+          const c = cross(sub(face.points[k], face.points[0]), sub(face.points[k + 1], face.points[0]));
+          sum = [sum[0] + c[0], sum[1] + c[1], sum[2] + c[2]];
+        }
+        return Math.hypot(...sum) / 2;
+      };
+      // A cube far larger than anything cut, the block every cell is carved from.
+      const BIG = 50;
+      const block = () =>
+        [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]].map((n) => {
+          const [u, v] = basis(n);
+          const at = (a, b) => [0, 1, 2].map((i) => n[i] * BIG + (u[i] * a + v[i] * b) * BIG);
+          return { points: [at(1, 1), at(-1, 1), at(-1, -1), at(1, -1)], normal: n, tag: -1 };
+        });
+
+      // The three shapes, each the planes that bound it (`n·p ≤ d`) and a box to throw seeds in.
+      // A box between two corners is both at once.
+      const boxShape = ([x0, y0, z0], [x1, y1, z1]) => ({
+        planes: [[[1, 0, 0], x1], [[-1, 0, 0], -x0], [[0, 1, 0], y1], [[0, -1, 0], -y0], [[0, 0, 1], z1], [[0, 0, -1], -z0]],
+        bounds: [[x0, y0, z0], [x1, y1, z1]],
+      });
+      const crystalPlanes = () => {
+        // A six-sided prism capped by a pyramid: the six sides, then the six faces of the tip.
+        const planes = [[[0, -1, 0], 0]], R = 0.75, SIDE = 2.1, TIP = 1.1;
+        for (let k = 0; k < 6; k++) {
+          const a = (k / 6) * Math.PI * 2, n = [Math.cos(a), 0, Math.sin(a)];
+          planes.push([n, R]);
+          const slope = unit([n[0] * TIP, R, n[2] * TIP]);
+          planes.push([slope, dot(slope, [n[0] * R, SIDE, n[2] * R])]);
+        }
+        return planes;
+      };
+      const SHAPES = [
+        { name: 'wall', ...boxShape([-2.6, 0, -0.24], [2.6, 2.9, 0.24]), at: [0, 0, 0], turn: 0, skin: '#a8492f', flesh: '#f0a67c', look: { roughness: 0.9, physics: 'stone' }, share: 1.4 },
+        { name: 'pillar', ...boxShape([-0.45, 0, -0.45], [0.45, 3.6, 0.45]), at: [-4.6, 0, -1.8], turn: 0.4, skin: '#e7e1d6', flesh: '#fff8ec', look: { roughness: 0.35, physics: 'stone' }, share: 0.8 },
+        { name: 'crystal', planes: crystalPlanes(), bounds: [[-0.75, 0, -0.75], [0.75, 3.2, 0.75]], at: [4.6, 0, -1.8], turn: 0.2, skin: '#1f6f9c', flesh: '#a7f0ff', look: { roughness: 0.12, metalness: 0.15, physics: 'glass', emissive: '#0b2a3d' }, share: 0.8 },
+      ];
+      const inside = (planes, p) => planes.every(([n, d]) => dot(n, p) <= d - 0.02);
+
+      // One cell's faces into a mesh of its own: sharp edges, the skin in the shape's colour, the
+      // broken faces in a fresh, paler one that only shows once the piece comes away. The mesh
+      // stands at the cell's middle, its corners pulled in by a centimetre or so, so that welded
+      // neighbours never press on each other.
+      const SHRINK = 0.98;
+      function cellMesh(faces, skin, flesh, glaze, shade) {
+        const middle = mean(faces.flatMap((face) => face.points));
+        const positions = [], normals = [], colours = [];
+        for (const face of faces) {
+          const tint = face.tag < 0 ? skin : flesh, k = face.tag < 0 ? shade : 1;
+          for (let i = 1; i + 1 < face.points.length; i++)
+            for (const p of [face.points[0], face.points[i], face.points[i + 1]]) {
+              positions.push(...sub(p, middle).map((v) => v * SHRINK));
+              normals.push(...face.normal);
+              colours.push(tint.r * k, tint.g * k, tint.b * k);
+            }
+        }
+        const shape = geometry.createBuffer({ position: buffer.float32(positions, 3), normal: buffer.float32(normals, 3), color: buffer.float32(colours, 3) });
+        const mesh = object.mesh(shape, glaze);
+        mesh.position.set(...middle);
+        mesh.receiveShadow = true;
+        return mesh;
+      }
+
+      // Cuts one shape into `count` cells from seeded seeds and welds each pair that shares a face.
+      function fracture(shape, count, strength, random) {
+        const [lo, hi] = shape.bounds, seeds = [];
+        while (seeds.length < count) {
+          const p = [0, 1, 2].map((i) => lo[i] + (hi[i] - lo[i]) * random());
+          if (inside(shape.planes, p)) seeds.push(p);
+        }
+        const skin = math.color(shape.skin), flesh = math.color(shape.flesh);
+        const glaze = material.meshStandard({ vertexColors: true, ...shape.look });
+        const holder = object.group();
+        holder.position.set(...shape.at);
+        holder.rotation.y = shape.turn;
+        holder.updateMatrixWorld(true);
+        const cells = seeds.map((seed, i) => {
+          let faces = block();
+          for (const [n, d] of shape.planes) faces = cut(faces, n, d, -1);
+          // The other seeds nearest first: the cell shrinks fast and the far planes miss it. The
+          // plane between two seeds lies half their distance away; once that is past the cell's
+          // farthest corner, it and every plane after it miss, and the cell is done.
+          const others = seeds.map((s, j) => [j, Math.hypot(...sub(s, seed))]).filter(([j]) => j !== i).sort((a, b) => a[1] - b[1]);
+          for (const [j, apart] of others) {
+            if (apart / 2 > Math.max(...faces.flatMap((face) => face.points.map((p) => Math.hypot(...sub(p, seed))))) + 1e-6) break;
+            const n = unit(sub(seeds[j], seed)), d = dot(n, mean([seed, seeds[j]]));
+            faces = cut(faces, n, d, j);
+          }
+          return faces;
+        });
+        // Pieces in the world: the shape's turn and place applied to each cell's middle.
+        const meshes = cells.map((faces) => {
+          const mesh = cellMesh(faces, skin, flesh, glaze, 0.82 + 0.3 * random());
+          mesh.position.applyMatrix4(holder.matrixWorld);
+          mesh.rotation.y = shape.turn;
+          mesh.physics = 'dynamic';
+          return mesh;
+        });
+        const welds = [];
+        cells.forEach((faces, i) => {
+          for (const face of faces) {
+            // A face shared with a neighbour welds the two; a face on the ground is its mortar,
+            // welded to the world (`null`).
+            const onGround = face.tag < 0 && face.normal[1] < -0.99;
+            if ((face.tag > i || onGround) && area(face) > 1e-4) {
+              const anchor = math.vector3(...mean(face.points)).applyMatrix4(holder.matrixWorld);
+              welds.push(joint.fixed(meshes[i], onGround ? null : meshes[face.tag], { anchor: anchor.toArray(), breakForce: strength }));
+            }
+          }
+        });
+        return { meshes, welds, glaze };
+      }
+
+      // The yard: a dark stone floor, a low bank behind to catch what flies, a warm low sun and a
+      // cool sky.
+      const floor = object.mesh(geometry.box(60, 1, 60), material.meshStandard({ color: '#4a4048', roughness: 0.8, physics: 'stone' }));
+      floor.position.y = -0.5;
+      floor.physics = 'static';
+      floor.receiveShadow = true;
+      const ring = object.mesh(geometry.cylinder(9, 9, 0.06, 96), material.meshStandard({ color: '#5d5058', roughness: 0.85 }));
+      ring.position.y = 0.03;
+      ring.receiveShadow = true;
+      world.scene.add(floor, ring);
+      const sun = light.directional({ intensity: 3.6, color: '#ffc896', castShadow: true });
+      sun.position.set(-9, 11, 8);
+      world.scene.add(
+        sun,
+        light.hemisphere({ intensity: 1.1, color: '#9fb4ff', groundColor: '#4a3038' }),
+        light.point({ intensity: 30, color: '#6fd8ff', position: [5.6, 3.6, -3.4], distance: 7 }),
+        light.point({ intensity: 50, color: '#ff8a5c', position: [-3, 4, 4], distance: 12 }),
+      );
+
+      // Building and rebuilding: what one build placed — pieces, welds, glazes — is removed and
+      // disposed before the next. `standing` holds the welds not broken yet.
+      let built = { pieces: new Set(), welds: [], standing: [], glazes: [], strength: 1 };
+      const cracked = new Set(), broken = (weld) => weld.broken || cracked.has(weld);
+      function build(count, strength) {
+        for (const weld of built.welds) if (!cracked.has(weld)) world.physics.remove(weld);
+        cracked.clear();
+        for (const mesh of built.pieces) {
+          world.scene.remove(mesh);
+          mesh.geometry.dispose();
+        }
+        for (const glaze of built.glazes) glaze.dispose();
+        built = { pieces: new Set(), welds: [], standing: [], glazes: [], strength };
+        const random = seeded(7);
+        for (const shape of SHAPES) {
+          const { meshes, welds, glaze } = fracture(shape, Math.round((count * shape.share) / 3), strength, random);
+          world.scene.add(...meshes);
+          for (const weld of welds) world.physics.add(weld);
+          for (const mesh of meshes) built.pieces.add(mesh);
+          built.welds.push(...welds);
+          built.standing.push(...welds);
+          built.glazes.push(glaze);
+        }
+        clearBalls();
+      }
+
+      // The iron balls: heavy, fast, followed continuously so they never pass through a piece.
+      // A dozen at most: the oldest leaves when a new one comes.
+      const ballShape = geometry.sphere(0.3, 32, 16);
+      const iron = material.meshStandard({ color: '#2b2c30', roughness: 0.25, metalness: 0.9, physics: 'metal' });
+      const balls = [];
+      // A body joins the simulation with the frame after it joins the scene: its launch is
+      // written each frame until the simulation reports it flying at that speed.
+      const launches = [];
+      world.beforeFrame(() => {
+        for (let k = launches.length - 1; k >= 0; k--) {
+          const launch = launches[k], { velocity } = launch.ball.physics;
+          if (velocity.length() > launch.speed * 0.6 || ++launch.frames > 30) launches.splice(k, 1);
+          else velocity.set(...launch.velocity);
+        }
+      });
+      function clearBalls() {
+        for (const ball of balls.splice(0)) world.scene.remove(ball);
+      }
+      function throwBall(from, toward, speed) {
+        const ball = object.mesh(ballShape, iron);
+        ball.position.set(...from);
+        ball.physics = { type: 'dynamic', ccd: true, restitution: 0.05 };
+        world.scene.add(ball);
+        const way = unit(sub(toward, from)), velocity = way.map((v) => v * speed);
+        launches.push({ ball, velocity, speed, frames: 0 });
+        // Its first hard knock on a piece is the impact: see `impact`.
+        let spent = false;
+        ball.physics.on('contact', ({ other, impulse, point }) => {
+          if (spent || !built.pieces.has(other) || impulse < 200) return;
+          spent = true;
+          impact(point, impulse, velocity);
+        });
+        balls.push(ball);
+        if (balls.length > 12) world.scene.remove(balls.shift());
+        wakeSound();
+      }
+
+      // An impact: beside the welds that a pull past their strength snaps on its own, the ball's
+      // knock cracks every weld within a reach that grows with its impulse (N·s) over their
+      // strength (N), and throws the freed pieces on along its way, the nearest fastest.
+      function impact(point, impulse, velocity) {
+        const at = [point.x, point.y, point.z], reach = Math.min(2.6, 4.5 * Math.sqrt(impulse / built.strength));
+        for (const weld of built.welds) {
+          if (broken(weld) || Math.hypot(...sub(weld.options.anchor, at)) > reach) continue;
+          world.physics.remove(weld);
+          cracked.add(weld);
+        }
+        for (const piece of built.pieces) {
+          const away = sub(piece.position.toArray(), at), near = 1 - Math.hypot(...away) / reach;
+          if (near <= 0) continue;
+          const push = 0.45 * near, spread = unit(away);
+          piece.physics.velocity.set(...velocity.map((v, i) => v * push + spread[i] * 3 * near));
+        }
+      }
+
+      // The crack of each weld as it snaps: a burst of filtered noise, louder for more at once.
+      // No sound before the reader's first press, as browsers ask.
+      let audio = null, crack = null;
+      function wakeSound() {
+        if (audio) return void audio.resume();
+        audio = new AudioContext();
+        crack = whiteNoise(audio, 0.18, (at) => (1 - at) ** 3);
+      }
+      function snap(count) {
+        if (!audio || audio.state !== 'running') return;
+        const source = Object.assign(audio.createBufferSource(), { buffer: crack });
+        source.playbackRate.value = 0.6 + Math.random() * 0.8;
+        const tone = Object.assign(audio.createBiquadFilter(), { type: 'bandpass' });
+        tone.frequency.value = 900 + Math.random() * 1800;
+        tone.Q.value = 0.8;
+        const gain = audio.createGain();
+        gain.gain.value = Math.min(0.9, 0.12 + count * 0.05);
+        source.connect(tone).connect(gain).connect(audio.destination);
+        source.start();
+      }
+
+      world.camera.position.set(1.6, 4.6, 12.7);
+      world.controls.target.set(0, 1.6, -0.6);
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.04;
+      world.controls.minDistance = 3;
+      world.controls.maxDistance = 40;
+
+      // Debounced: a slider dragged rebuilds once it rests.
+      let pending = 0;
+      const settings = controls(
+        {
+          pieces: [24, 180, 90, 3],
+          strength: [2, 300, 60, 1],
+          speed: [8, 60, 30, 1],
+          slowMotion: false,
+          throwAtWall: () => throwBall(world.camera.position.toArray(), [0, 1.7, 0], settings.speed),
+          rebuild: () => rebuild(),
+        },
+        (values, key) => {
+          world.physics.timeScale = values.slowMotion ? 0.25 : 1;
+          if (key === 'pieces' || key === 'strength') {
+            clearTimeout(pending);
+            pending = setTimeout(rebuild, 350);
+          }
+        },
+        world,
+      );
+      // The strength slider reads kilonewtons; a weld's breakForce is in newtons.
+      const rebuild = () => build(settings.pieces, settings.strength * 1000);
+      rebuild();
+
+      // A click that is no drag throws a ball from the eye, through the point clicked.
+      onClick(world.canvas, (event) => {
+        const ray = pointerRay(world, event);
+        if (!ray) return;
+        const { origin, direction } = ray;
+        throwBall(origin.toArray(), [origin.x + direction.x, origin.y + direction.y, origin.z + direction.z], settings.speed);
+      });
+
+      // The opening: the camera settles in from high and wide, and once the simulation runs, a
+      // first ball flies at the wall.
+      opening(world, (time) => {
+        const t = ease.inOut(time / 4), around = math.lerp(-0.85, 0.12, t), reach = math.lerp(20, 13.4, t), up = math.lerp(9, 4.6, t);
+        world.camera.position.set(Math.sin(around) * reach, up, -0.6 + Math.cos(around) * reach);
+        return time < 4;
+      });
+      let firstThrow = 0.5;
+      const unhook = world.onFrame(({ delta }) => {
+        if (!world.physics.stats.bodies || (firstThrow -= Math.min(delta, 0.05)) > 0) return;
+        throwBall([0.6, 2.3, 9], [0.1, 1.6, 0], 34);
+        unhook();
+      });
+
+      const pieces = readout('pieces'), held = readout('welds'), snapped = readout('broken');
+      // Each frame the welds that broke since the last one leave `standing`, and crack.
+      world.onFrame(() => {
+        const { standing } = built, before = standing.length;
+        for (let k = standing.length - 1; k >= 0; k--)
+          if (broken(standing[k])) {
+            standing[k] = standing[standing.length - 1];
+            standing.pop();
+          }
+        if (standing.length < before) snap(before - standing.length);
+        pieces(String(built.pieces.size));
+        held(String(standing.length));
+        snapped(String(built.welds.length - standing.length));
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Voxel models</title>
+    <meta name="thumbnail" content="10" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #cfe3f2;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { buffer, createWorld, geometry, light, loader, material, math, object } from '../runtime/engine.js';
+      import { circling, controls, language, readout } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#cfe3f2');
+
+      // Three MagicaVoxel files, as the editor saves them: `VOX `, a version, then a MAIN chunk
+      // whose children are a SIZE (the grid's three sides), an XYZI (each voxel's x, y, z and the
+      // index of its colour, one byte each) and an RGBA (the 256 colours of the palette). The
+      // engine has no VOX reader: the page reads the bytes itself. Chunks it does not need —
+      // scene graph, materials, layers — are stepped over by their length.
+      const MODELS = ['castle', 'lighthouse', 'balloon'];
+      function readVox(bytes) {
+        const view = new DataView(bytes);
+        const tag = (at) => String.fromCharCode(...new Uint8Array(bytes, at, 4));
+        if (tag(0) !== 'VOX ') throw new Error('not a VOX file');
+        let size = null, voxels = null, palette = null;
+        // MAIN's children start after its 12-byte header; every chunk is id, content length,
+        // children length, then its content.
+        for (let at = 20; at < bytes.byteLength;) {
+          const id = tag(at), content = view.getInt32(at + 4, true), body = at + 12;
+          if (id === 'SIZE' && !size) size = [0, 4, 8].map((offset) => view.getInt32(body + offset, true));
+          else if (id === 'XYZI' && !voxels) voxels = new Uint8Array(bytes, body + 4, view.getInt32(body, true) * 4);
+          else if (id === 'RGBA') palette = new Uint8Array(bytes, body, 1024);
+          at = body + content + view.getInt32(at + 8, true);
+        }
+        // A file without RGBA uses the editor's default palette; these three each carry their own,
+        // and a missing one reads as greys rather than as made-up colours.
+        palette ??= Uint8Array.from({ length: 1024 }, (_, k) => (k % 4 === 3 ? 255 : 255 - (k >> 2)));
+        return { size, voxels, palette };
+      }
+
+      // The mesher. A voxel's face is drawn only when the cell beyond it is empty: the hidden
+      // faces between two voxels — most of them — never reach the GPU. Each corner of a drawn face
+      // looks at the three cells around it, on the face's open side: two sides and the diagonal.
+      // Fewer open cells, a darker corner — ambient occlusion, baked into the vertex colours once,
+      // with no light probe and no screen-space pass. A quad whose darker corners lie on one
+      // diagonal is split along the other, so the shade never shows the seam.
+      // The six faces: the axis they face along, its sign, and the two axes across them. A face's
+      // corners go round counter-clockwise seen from outside, so its triangles face out.
+      const FACES = [0, 1, 2].flatMap((axis) => [1, -1].map((sign) => {
+        const [b, c] = [(axis + 1) % 3, (axis + 2) % 3];
+        const square = sign > 0 ? [[0, 0], [1, 0], [1, 1], [0, 1]] : [[0, 0], [0, 1], [1, 1], [1, 0]];
+        const corners = square.map(([i, j]) => {
+          const corner = [0, 0, 0];
+          corner[axis] = sign > 0 ? 1 : 0;
+          corner[b] = i;
+          corner[c] = j;
+          return corner;
+        });
+        const normal = [0, 0, 0];
+        normal[axis] = sign;
+        return { axis, b, c, normal, corners };
+      }));
+      const SHADE = [0.3, 0.55, 0.78, 1];
+
+      // The model is meshed once, one mesh a layer of voxels, so the height control cuts it by
+      // hiding layers rather than meshing again. A face a voxel covers is dropped — with one
+      // exception kept apart: a layer's top faces under the layer above go into a second mesh, its
+      // lid, shown only when the cut falls on that layer. Under the cut nothing is above, so the
+      // lid's corners are all open, all lit.
+      function meshLayers(model) {
+        const [sx, sy, sz] = model.size;
+        // The file's Z stands up: the grid is indexed x, z (depth), y (height) in scene axes.
+        const index = (x, y, z) => x + sx * (z + sy * y);
+        const grid = new Uint8Array(sx * sy * sz);
+        const { voxels, palette } = model;
+        for (let k = 0; k < voxels.length; k += 4) grid[index(voxels[k], voxels[k + 2], sy - 1 - voxels[k + 1])] = voxels[k + 3];
+        const filled = (x, y, z) => x >= 0 && y >= 0 && z >= 0 && x < sx && y < sz && z < sy && grid[index(x, y, z)] > 0;
+        // Whether the cell `db` along axis b and `dc` along axis c from `from` holds a voxel: 1 or 0.
+        const cell = [0, 0, 0];
+        const beside = (from, b, db, c, dc) => {
+          cell[0] = from[0];
+          cell[1] = from[1];
+          cell[2] = from[2];
+          cell[b] += db;
+          cell[c] += dc;
+          return filled(cell[0], cell[1], cell[2]) ? 1 : 0;
+        };
+        const hex = (k) => '#' + [0, 1, 2].map((channel) => palette[k * 4 + channel].toString(16).padStart(2, '0')).join('');
+        const linear = Array.from({ length: 256 }, (_, k) => math.color(hex(k)));
+        const piece = () => ({ positions: [], normals: [], base: [], levels: [], indices: [] });
+        const finish = ({ positions, normals, base, levels, indices }) => {
+          if (!indices.length) return null;
+          const colours = buffer.float32(new Float32Array(base.length), 3);
+          const shape = geometry.createBuffer({
+            position: buffer.float32(new Float32Array(positions), 3),
+            normal: buffer.float32(new Float32Array(normals), 3),
+            color: colours,
+          });
+          shape.setIndex(indices);
+          return { shape, colours, base, levels, faces: indices.length / 6 };
+        };
+        let hidden = 0;
+        const layers = [];
+        for (let y = 0; y < sz; y++) {
+          const body = piece(), lid = piece();
+          let voxelCount = 0;
+          for (let z = 0; z < sy; z++)
+            for (let x = 0; x < sx; x++) {
+              const paint = grid[index(x, y, z)];
+              if (!paint) continue;
+              voxelCount++;
+              const colour = linear[paint - 1];
+              for (const { b, c, normal, corners } of FACES) {
+                const open = [x + normal[0], y + normal[1], z + normal[2]];
+                const covered = filled(...open);
+                if (covered) hidden++;
+                if (covered && normal[1] !== 1) continue;
+                const into = covered ? lid : body;
+                const first = into.positions.length / 3, shades = [];
+                for (const corner of corners) {
+                  // The three cells beside the open cell that touch this corner: one step along
+                  // each of the face's two axes, toward the corner, and the diagonal between them.
+                  const db = corner[b] ? 1 : -1, dc = corner[c] ? 1 : -1;
+                  const s1 = beside(open, b, db, c, 0), s2 = beside(open, b, 0, c, dc), diagonal = beside(open, b, db, c, dc);
+                  const level = covered ? 3 : s1 && s2 ? 0 : 3 - s1 - s2 - diagonal;
+                  shades.push(level);
+                  into.levels.push(level);
+                  into.positions.push(x + corner[0], y + corner[1], z + corner[2]);
+                  into.normals.push(...normal);
+                  into.base.push(colour.r, colour.g, colour.b);
+                }
+                if (shades[0] + shades[2] > shades[1] + shades[3]) into.indices.push(first, first + 1, first + 2, first, first + 2, first + 3);
+                else into.indices.push(first + 1, first + 2, first + 3, first + 1, first + 3, first);
+              }
+            }
+          layers.push({ body: finish(body), lid: finish(lid), voxels: voxelCount });
+        }
+        return { layers, hidden };
+      }
+
+      // The occlusion control rewrites the colours in place: base colour times the corner's shade.
+      function shade(layers, occlusion) {
+        for (const piece of layers.flatMap((layer) => [layer.body, layer.lid])) {
+          if (!piece) continue;
+          const { colours, base, levels } = piece;
+          for (let v = 0; v < levels.length; v++) {
+            const amount = 1 - (1 - SHADE[levels[v]]) * occlusion;
+            colours.setXYZ(v, base[v * 3] * amount, base[v * 3 + 1] * amount, base[v * 3 + 2] * amount);
+          }
+          colours.needsUpdate = true;
+        }
+      }
+
+      // Every layer is one mesh, its colours on its vertices, all sharing one material. Its
+      // longest side spans six units.
+      const SPAN = 6;
+      const paint = material.meshStandard({ vertexColors: true, roughness: 0.85 });
+      // A round plinth of pale stone under the model.
+      const plinth = object.mesh(geometry.cylinder(4.4, 4.6, 0.4, 96), material.meshStandard({ color: '#f1ece2', roughness: 0.7 }));
+      plinth.position.y = -0.2;
+      plinth.receiveShadow = true;
+      world.scene.add(plinth);
+
+      const sun = light.directional({ color: '#fff1da', intensity: 3, position: [6, 10, 5], castShadow: true, angularRadius: 0.03 });
+      world.scene.add(sun, light.hemisphere({ color: '#cfe6ff', groundColor: '#b59b7c', intensity: 1.1 }));
+
+      const placed = (piece) => {
+        piece.mesh = object.mesh(piece.shape, paint);
+        piece.mesh.receiveShadow = true;
+        return piece.mesh;
+      };
+      // Each file is fetched, read and meshed once, the first time it is picked.
+      const built = {};
+      const prepare = (name) => (built[name] ??= loader.file(`../assets/examples/voxel-models/${name}.vox`, 'arraybuffer').then((data) => {
+        const model = readVox(data), { layers, hidden } = meshLayers(model);
+        const [sx, sy, sz] = model.size, scale = SPAN / Math.max(sx, sy, sz);
+        const holder = object.group();
+        holder.scale.setScalar(scale);
+        holder.position.set((-sx / 2) * scale, 0, (-sy / 2) * scale);
+        // The bodies join the scene now; a lid only the first time a cut needs it, so the
+        // world cuts into pages only what it may draw.
+        for (const { body } of layers) if (body) holder.add(placed(body));
+        return { bytes: data.byteLength, model, layers, hidden, holder, occlusion: null };
+      }).catch((error) => {
+        // A failed load is forgotten, so the next pick tries again.
+        delete built[name];
+        throw error;
+      }));
+
+      world.camera.position.set(7.4, 5.2, 8.1);
+      world.controls.target.set(0, 1.9, 0);
+      world.camera.lookAt(0, 1.9, 0);
+      world.controls.minDistance = 3;
+      world.controls.maxDistance = 25;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
+      // The view circles the model until a press or a wheel takes it; Spin starts it again.
+      const turn = circling(world, 0.14);
+
+      // The height control hides the layers above the cut: every mesh is already made, so the
+      // cut follows the slider at once.
+      let current = null;
+      const ui = controls({
+        model: MODELS,
+        height: [0.05, 1, 1, 0.01],
+        occlusion: [0, 1, 1, 0.05],
+        spin: true,
+      }, async (values, key) => {
+        if (key === 'spin') {
+          if (values.spin) turn.restart();
+          else turn.stop();
+          return;
+        }
+        const next = await prepare(values.model);
+        if (values.model !== ui.model) return;
+        if (next !== current) {
+          if (current) world.scene.remove(current.holder);
+          current = next;
+          world.scene.add(current.holder);
+        }
+        if (current.occlusion !== values.occlusion) {
+          shade(current.layers, values.occlusion);
+          current.occlusion = values.occlusion;
+        }
+        showCut();
+      }, world);
+      const shownVoxels = readout('voxels');
+      const shownFaces = readout('facesDrawn');
+      const shownHidden = readout('facesHidden');
+      const shownFile = readout('file');
+      const say = (n) => n.toLocaleString(language());
+
+      // Shows the layers under the cut, and counts what they hold.
+      function showCut() {
+        const { model, layers } = current, [sx, sy, sz] = model.size;
+        const cut = Math.max(1, Math.round(ui.height * sz));
+        let voxels = 0, faces = 0;
+        layers.forEach(({ body, lid, voxels: inLayer }, y) => {
+          if (body) body.mesh.visible = y < cut;
+          if (lid && y === cut - 1 && !lid.mesh) current.holder.add(placed(lid));
+          if (lid?.mesh) lid.mesh.visible = y === cut - 1;
+          if (y >= cut) return;
+          voxels += inLayer;
+          faces += (body?.faces ?? 0) + (y === cut - 1 ? lid?.faces ?? 0 : 0);
+        });
+        shownVoxels(`${say(voxels)} / ${say(model.voxels.length / 4)}`);
+        shownFaces(say(faces));
+        shownHidden(say(current.hidden));
+        shownFile(`${say(Math.round(current.bytes / 1024))} kB · ${sx}×${sy}×${sz}`);
+        world.invalidate();
+      }
+      addEventListener('pagehide', () => world.dispose(), { once: true });
+    </script>
+  </body>
+</html>
