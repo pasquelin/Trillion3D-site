@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>A refracting pane</title>
+    <meta name="thumbnail" content="5" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #e9e2d6;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, geometry, material, object, light, math, texture, buffer, effect } from '../runtime/engine.js';
+      import { controls } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#e9e2d6');
+
+      // Behind the pane, something with sharp lines and loud colours to bend: a poster of
+      // circles, bands and a fine grid on the wall, and a still life on the sideboard.
+      const poster = document.createElement('canvas');
+      poster.width = 1600;
+      poster.height = 1000;
+      const pen = poster.getContext('2d');
+      pen.fillStyle = '#f4efe4';
+      pen.fillRect(0, 0, 1600, 1000);
+      pen.strokeStyle = '#1d2433';
+      pen.lineWidth = 2;
+      for (let x = 0; x <= 1600; x += 40) pen.strokeRect(x, 0, 0, 1000);
+      for (let y = 0; y <= 1000; y += 40) pen.strokeRect(0, y, 1600, 0);
+      const BANDS = ['#e0523c', '#f2b134', '#2fa38f', '#3c6ee0', '#8e4ad0', '#1d2433'];
+      BANDS.forEach((colour, k) => {
+        pen.fillStyle = colour;
+        pen.fillRect(80 + k * 70, 120, 46, 760);
+      });
+      for (const [x, y, radius, colours] of [[960, 380, 260, ['#1d2433', '#f2b134', '#e0523c', '#f4efe4', '#3c6ee0']], [1380, 760, 170, ['#2fa38f', '#f4efe4', '#1d2433', '#f2b134']]]) {
+        colours.forEach((colour, k) => {
+          pen.fillStyle = colour;
+          pen.beginPath();
+          pen.arc(x, y, radius * (1 - k / colours.length), 0, Math.PI * 2);
+          pen.fill();
+        });
+      }
+      pen.save();
+      pen.translate(1180, 120);
+      pen.rotate(0.5);
+      for (let k = 0; k < 9; k++) {
+        pen.fillStyle = k % 2 ? '#1d2433' : '#e0523c';
+        pen.fillRect(k * 34, 0, 34, 420);
+      }
+      pen.restore();
+      const wallPicture = texture.canvas(poster);
+      wallPicture.anisotropy = 8;
+      const wall = object.mesh(geometry.box(12, 5, 0.1), material.meshStandard({ color: '#e7dfd0', roughness: 0.9 }));
+      wall.position.set(0, 2.5, -1.65);
+      const print = object.mesh(geometry.box(3.6, 2.25, 0.02), material.meshStandard({ map: wallPicture, roughness: 0.8 }));
+      print.position.set(0, 1.85, -1.59);
+      const floor = object.mesh(geometry.box(12, 0.1, 9), material.meshStandard({ color: '#c9b79c', roughness: 0.75 }));
+      floor.position.y = -0.05;
+      const sideboard = object.mesh(geometry.box(3.4, 0.7, 0.6), material.meshStandard({ color: '#2b2f3a', roughness: 0.5 }));
+      sideboard.position.set(0, 0.35, -1.2);
+      world.scene.add(wall, print, floor, sideboard);
+      const still = [
+        [geometry.sphere(0.16, 48, 32), '#f2c230', [-0.9, 0.86, -1.15]],
+        [geometry.sphere(0.12, 48, 32), '#e0523c', [-0.62, 0.82, -1.05]],
+        [geometry.cylinder(0.09, 0.12, 0.62, 48), '#2f6fd0', [-0.15, 1.01, -1.2]],
+        [geometry.torus(0.15, 0.05, 32, 64), '#2fa38f', [0.35, 0.9, -1.15]],
+        [geometry.box(0.26, 0.26, 0.26), '#8e4ad0', [0.85, 0.83, -1.15]],
+        [geometry.cone(0.13, 0.4, 48), '#f4efe4', [1.25, 0.9, -1.2]],
+      ];
+      for (const [shape, colour, at] of still) {
+        const thing = object.mesh(shape, material.meshStandard({ color: colour, roughness: 0.35 }));
+        thing.position.set(...at);
+        thing.receiveShadow = true;
+        world.scene.add(thing);
+      }
+
+      // The pane: a slab of glass whose front face is carved by a relief, its back flat. The
+      // relief is a height over the face; its slopes are the normals the light bends on. Four
+      // glasses a glazier sells, and a plain one.
+      const PANE = [1.2, 1.5], DEPTH = 0.04;
+      const RELIEFS = {
+        reeded: { columns: 360, rows: 2, height: (x) => { const s = ((x / 0.05) % 1 + 1) % 1 * 2 - 1; return 0.012 * Math.sqrt(1 - s * s); } },
+        hammered: { columns: 200, rows: 250, height: (x, y) => { let h = 0; for (const [a, b, c] of [[61, 37, 0], [43, 71, 1.7], [89, 53, 3.1]]) h += Math.sin(x * a + Math.sin(y * 13 + c) * 2) * Math.sin(y * b + Math.cos(x * 11 + c) * 2); return 0.0025 * h; } },
+        rippled: { columns: 120, rows: 320, height: (x, y) => 0.0045 * Math.sin(y * 80 + 2.5 * Math.sin(x * 4 + y * 3)) + 0.002 * Math.sin(x * 21 - y * 13) },
+        bullseye: { columns: 240, rows: 300, height: (x, y) => { const r = Math.hypot(x, y - 0.12) / 0.38; return 0.11 * Math.max(0, 1 - r * r) ** 1.5 + 0.004 * Math.sin(r * 22) * Math.min(1, r); } },
+        flat: { columns: 2, rows: 2, height: () => 0 },
+      };
+      function slab(relief) {
+        const { columns, rows, height } = relief, [w, h] = PANE;
+        const positions = [], normals = [], uvs = [], index = [];
+        const at = (i, j) => [(i / columns - 0.5) * w, (j / rows - 0.5) * h];
+        // The front: a grid lifted by the relief, each normal from the relief's slope.
+        for (let j = 0; j <= rows; j++)
+          for (let i = 0; i <= columns; i++) {
+            const [x, y] = at(i, j), e = 0.0005;
+            positions.push(x, y, height(x, y));
+            uvs.push(i / columns, j / rows);
+            const dx = (height(x + e, y) - height(x - e, y)) / (2 * e), dy = (height(x, y + e) - height(x, y - e)) / (2 * e);
+            const length = Math.hypot(dx, dy, 1);
+            normals.push(-dx / length, -dy / length, 1 / length);
+          }
+        for (let j = 0; j < rows; j++)
+          for (let i = 0; i < columns; i++) {
+            const a = j * (columns + 1) + i, b = a + 1, c = a + columns + 1, d = c + 1;
+            index.push(a, b, d, a, d, c);
+          }
+        // The back and the four edges: flat.
+        const quad = (corners, normal) => {
+          const first = positions.length / 3;
+          for (const [k, corner] of corners.entries()) {
+            positions.push(...corner);
+            normals.push(...normal);
+            uvs.push(k === 1 || k === 2 ? 1 : 0, k > 1 ? 1 : 0);
+          }
+          index.push(first, first + 1, first + 2, first, first + 2, first + 3);
+        };
+        const [x0, x1, y0, y1, z] = [-w / 2, w / 2, -h / 2, h / 2, -DEPTH];
+        quad([[x1, y0, z], [x0, y0, z], [x0, y1, z], [x1, y1, z]], [0, 0, -1]);
+        quad([[x0, y0, z], [x1, y0, z], [x1, y0, 0], [x0, y0, 0]], [0, -1, 0]);
+        quad([[x1, y1, z], [x0, y1, z], [x0, y1, 0], [x1, y1, 0]], [0, 1, 0]);
+        quad([[x0, y1, z], [x0, y0, z], [x0, y0, 0], [x0, y1, 0]], [-1, 0, 0]);
+        quad([[x1, y0, z], [x1, y1, z], [x1, y1, 0], [x1, y0, 0]], [1, 0, 0]);
+        return geometry.createBuffer({ position: buffer.float32(positions, 3), normal: buffer.float32(normals, 3), uv: buffer.float32(uvs, 2), index: buffer.uint32(index, 1) });
+      }
+      // Each glass is built the first time it is chosen, then kept.
+      const shapes = {};
+      const shapeOf = (name) => (shapes[name] ??= slab(RELIEFS[name]));
+
+      // The glass bends what is behind it for real: `transmission` lets the light through, `ior`
+      // sets how sharply it turns at the surface, `thickness` how far it travels inside before it
+      // reads the scene behind, and the attenuation tints it more the longer that path.
+      const glass = material.meshPhysical({ color: '#ffffff', roughness: 0.03, transmission: 1, ior: 1.5, thickness: 0.12, attenuationColor: '#d8f0ea', attenuationDistance: 2 });
+      const pane = object.group();
+      const sheet = object.mesh(shapeOf('reeded'), glass);
+      sheet.position.z = DEPTH / 2;
+      // A brass frame and two oak feet hold it upright.
+      const brass = material.meshStandard({ color: '#c9a25a', metalness: 0.9, roughness: 0.3 });
+      const oak = material.meshStandard({ color: '#7a5034', roughness: 0.6 });
+      const rail = geometry.box(PANE[0] + 0.08, 0.04, 0.07), post = geometry.box(0.04, PANE[1], 0.07);
+      for (const y of [-1, 1]) {
+        const bar = object.mesh(rail, brass);
+        bar.position.y = (y * (PANE[1] + 0.04)) / 2;
+        pane.add(bar);
+      }
+      for (const x of [-1, 1]) {
+        const side = object.mesh(post, brass), foot = object.mesh(geometry.box(0.08, 0.06, 0.5), oak);
+        side.position.x = (x * (PANE[0] + 0.04)) / 2;
+        foot.position.set((x * (PANE[0] + 0.04)) / 2, -PANE[1] / 2 - 0.08, 0);
+        pane.add(side, foot);
+      }
+      pane.add(sheet);
+      pane.position.set(0, PANE[1] / 2 + 0.11, 0.2);
+      world.scene.add(pane);
+
+      // Daylight from a window on the left, a cool sky and a little bloom on the glints.
+      world.scene.add(light.directional({ color: '#fff1dc', intensity: 2.4, position: [-3, 5, 4], castShadow: true }));
+      world.scene.add(light.hemisphere({ color: '#dfe8ff', groundColor: '#8a7660', intensity: 1 }));
+      world.effects.add(effect.bloom({ intensity: 0.05 }));
+      world.camera.position.set(0.55, 1.1, 2.75);
+      world.controls.target.set(0, 0.95, -0.4);
+      world.controls.minDistance = 0.6;
+      world.controls.maxDistance = 6;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
+      world.controls.update();
+
+      const ui = controls({
+        glass: Object.keys(RELIEFS),
+        refraction: [1, 2.4, 1.5, 0.01],
+        thickness: [0, 0.6, 0.12, 0.01],
+        tint: '#d8f0ea',
+        slide: true,
+      }, (values) => {
+        sheet.geometry = shapeOf(values.glass);
+        glass.ior = values.refraction;
+        glass.thickness = values.thickness;
+        glass.attenuationColor.set(values.tint);
+        world.invalidate();
+      }, world);
+
+      // The pane glides along the sideboard and turns a little, so its edge crosses the poster:
+      // on one side the lines run straight, on the other the glass has moved them.
+      let time = 0;
+      world.onFrame(({ delta }) => {
+        if (!ui.slide) return;
+        time += delta;
+        pane.position.x = 0.75 * Math.sin(time * 0.35 - 1.4);
+        pane.rotation.y = 0.3 * Math.sin(time * 0.23 + 0.8);
+        world.invalidate();
+      });
+    </script>
+  </body>
+</html>

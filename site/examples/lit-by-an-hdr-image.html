@@ -1,0 +1,312 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Lit by an HDR image</title>
+    <meta name="thumbnail" content="5" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #27313f;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      p {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        margin: 0.5rem;
+        color: #fff;
+        font: 12px system-ui;
+        text-shadow: 0 1px 3px #000;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <p data-words="credit"></p>
+    <script type="module">
+      import { createWorld, geometry, material, object, light, math, texture, side, loader, effect, buffer } from '../runtime/engine.js';
+      import { controls, readout, words, opening, ease, panoramaDirection, projectBands, turnBands, addSource, irradianceAt, luminance, srgbByte } from '../runtime/kit.js';
+
+      const say = words();
+      // Three photographs of every direction at once, each from a camera bracketed over many
+      // exposures and merged: Radiance .hdr files, 1024 × 512, whose pixels are light itself — a
+      // sky pixel near 1, the sun's disc tens of thousands.
+      const PLACES = ['plains', 'sunset', 'harbour'];
+
+      // THE FILE. A Radiance picture: a few lines of text, then rows of pixels in four bytes,
+      // red, green, blue and a shared exponent (RGBE): the value is the byte times 2^(e − 136).
+      // Each row is run-length coded channel by channel: a count byte over 128 repeats the next
+      // byte, under it copies that many bytes.
+      function decodeHdr(buffer) {
+        const bytes = new Uint8Array(buffer);
+        let at = 0;
+        const line = () => {
+          let text = '';
+          while (at < bytes.length && bytes[at] !== 10) text += String.fromCharCode(bytes[at++]);
+          at++;
+          return text;
+        };
+        if (!line().startsWith('#?')) throw new Error('not a Radiance file');
+        while (line() !== '');
+        const [, height, width] = /-Y (\d+) \+X (\d+)/.exec(line()).map(Number);
+        const pixels = new Float32Array(width * height * 3), row = new Uint8Array(width * 4);
+        for (let y = 0; y < height; y++) {
+          if (bytes[at] !== 2 || bytes[at + 1] !== 2) throw new Error('only run-length rows are read here');
+          at += 4;
+          for (let channel = 0; channel < 4; channel++)
+            for (let x = 0; x < width; ) {
+              let count = bytes[at++];
+              if (count > 128) {
+                count -= 128;
+                const value = bytes[at++];
+                while (count--) row[(x++) * 4 + channel] = value;
+              } else while (count--) row[(x++) * 4 + channel] = bytes[at++];
+            }
+          for (let x = 0; x < width; x++) {
+            const e = row[x * 4 + 3], scale = e ? 2 ** (e - 136) : 0, out = (y * width + x) * 3;
+            pixels[out] = row[x * 4] * scale;
+            pixels[out + 1] = row[x * 4 + 1] * scale;
+            pixels[out + 2] = row[x * 4 + 2] * scale;
+          }
+        }
+        return { width, height, pixels };
+      }
+
+      // THE LIGHT IN IT. A pixel's direction is the kit's `panoramaDirection`, as the dome's sphere
+      // lays its picture: across, the turn from +x toward +z; down, the angle from straight up.
+      // Three things are read from the pixels once, when a picture arrives.
+      //  1. The sun, if there is one: the brightest pixels, kept if they lie close together. Their
+      //     light times the solid angle each covers is the sun's irradiance: a directional light,
+      //     with its colour, its strength and its sharp shadows.
+      //  2. All the rest, the sky, the clouds, the ground, the walls: projected into the nine
+      //     spherical-harmonic bands of a probe, the soft light from every side (`projectBands`,
+      //     the kit's, in the order the engine's probe reads them).
+      //  3. The picture to look at: divided by a bright level and stored in 8-bit sRGB, multiplied
+      //     back on the dome by its `emissiveIntensity`, so that it is radiance again on screen.
+      function study({ width, height, pixels }) {
+        const area = (y) => Math.sin(((y + 0.5) / height) * Math.PI) * (Math.PI / height) * ((2 * Math.PI) / width);
+        let brightest = 0;
+        const sorted = [];
+        for (let i = 0; i < pixels.length; i += 3) {
+          const l = luminance(pixels, i);
+          brightest = Math.max(brightest, l);
+          if ((i / 3) % 7 === 0) sorted.push(l);
+        }
+        sorted.sort((a, b) => a - b);
+        // The darkest is read a thousandth of the way up, past the noise of the blackest pixels.
+        const darkest = Math.max(sorted[Math.floor(sorted.length * 0.001)], 1e-6), typical = sorted[Math.floor(sorted.length * 0.5)], high = sorted[Math.floor(sorted.length * 0.995)];
+        // The sun's pixels: far above the brightest of the ordinary sky.
+        const threshold = Math.max(high * 8, brightest * 0.05);
+        const sum = [0, 0, 0], axis = [0, 0, 0];
+        let weight = 0;
+        for (let y = 0; y < height; y++) {
+          const a = area(y);
+          for (let x = 0; x < width; x++) {
+            const i = (y * width + x) * 3, l = luminance(pixels, i);
+            if (l < threshold) continue;
+            const d = panoramaDirection((x + 0.5) / width, (y + 0.5) / height);
+            for (let c = 0; c < 3; c++) sum[c] += pixels[i + c] * a;
+            for (let c = 0; c < 3; c++) axis[c] += d[c] * l * a;
+            weight += l * a;
+          }
+        }
+        // Close together: the mean of their directions is nearly a unit vector. Lamps scattered
+        // round a harbour make no sun, and their light stays in the probe.
+        const spread = Math.hypot(...axis) / Math.max(weight, 1e-9), found = weight > 0 && spread > 0.97;
+        // One pixel per cell of the projection's grid.
+        const light = [0, 0, 0];
+        const sh = projectBands((d, y, x) => {
+          const i = (y * width + x) * 3, l = luminance(pixels, i);
+          // A sun pixel given to the light keeps only the threshold in the probe.
+          const share = found && l >= threshold ? threshold / l : 1;
+          for (let c = 0; c < 3; c++) light[c] = pixels[i + c] * share;
+          return light;
+        }, height, width);
+        // The light falling on level ground: the sun's at its height, and the probe's from above,
+        // each band weighed by how a cosine spreads it (`irradianceAt`).
+        const fromProbe = irradianceAt(sh, [0, 1, 0]);
+        const fallen = [0, 1, 2].map((c) => Math.max((found ? sum[c] * Math.max(0, axis[1] / Math.hypot(...axis)) : 0) + fromProbe[c], 1e-6));
+        // The ground's colour: the light it sends back over the light it receives, times π.
+        const soil = document.createElement('canvas');
+        soil.width = width;
+        soil.height = height;
+        const soilBrush = soil.getContext('2d'), soilImage = soilBrush.createImageData(width, height);
+
+        // The picture, at a level that clips only the sun's disc and the brightest lamps.
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const brush = canvas.getContext('2d'), image = brush.createImageData(width, height), level = high * 1.5;
+        for (let k = 0, n = width * height; k < n; k++) {
+          for (let c = 0; c < 3; c++) {
+            image.data[k * 4 + c] = srgbByte(pixels[k * 3 + c] / level);
+            soilImage.data[k * 4 + c] = srgbByte((pixels[k * 3 + c] * Math.PI) / fallen[c]);
+          }
+          image.data[k * 4 + 3] = soilImage.data[k * 4 + 3] = 255;
+        }
+        brush.putImageData(image, 0, 0);
+        soilBrush.putImageData(soilImage, 0, 0);
+        // The sun's light against the sky's, the sky's counted from its constant band: π L₀₀.
+        const sunLight = luminance(sum), skyLight = Math.PI * luminance(sh);
+        return {
+          sh,
+          sun: found ? { direction: axis.map((v) => v / Math.hypot(...axis)), colour: sum.map((v) => v / Math.max(...sum)), strength: Math.max(...sum) } : null,
+          sunShare: found ? sunLight / (sunLight + skyLight) : 0,
+          stops: Math.log2(brightest / darkest),
+          typical,
+          map: texture.canvas(canvas),
+          albedo: texture.canvas(soil),
+          level,
+        };
+      }
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#000000');
+      world.camera.far = 400;
+      world.camera.fov = 50;
+
+      // THE SKY: the picture on a great sphere seen from inside, centred at the height the camera
+      // stood (1.7 m), giving off its light unlit.
+      const EYE = 1.7, RADIUS = 80;
+      const dome = object.mesh(geometry.sphere(RADIUS, 160, 80), material.meshLambert({ color: '#000000', emissive: '#ffffff', side: side.back }));
+      dome.position.y = EYE;
+      dome.castShadow = dome.receiveShadow = false;
+
+      // THE GROUND: the picture's lower half pressed flat. Each direction under the horizon is
+      // followed from the eye down to the plane y = 0 (out to the sphere, near the horizon), so the
+      // photographed ground lies under the objects instead of at infinity. And it is lit, not
+      // shown: its colour is the photographed light divided by the light that fell on it — the
+      // sun's on a level plane and the probe's from above — so the sun and the probe bring the
+      // picture back where nothing stands, and the objects' shadows fall into it.
+      const ROWS = 48, COLUMNS = 160, at = [], uv = [], up = [], index = [];
+      for (let i = 0; i <= ROWS; i++)
+        for (let j = 0; j <= COLUMNS; j++) {
+          const v = 0.5 + (i / ROWS) * 0.5, [x, y, z] = panoramaDirection(j / COLUMNS, v), reach = Math.min(RADIUS, EYE / Math.max(-y, 1e-6));
+          at.push(x * reach, EYE + y * reach, z * reach);
+          uv.push(j / COLUMNS, 1 - v);
+          up.push(0, 1, 0);
+        }
+      for (let i = 0; i < ROWS; i++)
+        for (let j = 0; j < COLUMNS; j++) {
+          const a = i * (COLUMNS + 1) + j, b = a + COLUMNS + 1;
+          index.push(a, b, b + 1, a, b + 1, a + 1);
+        }
+      const ground = object.mesh(
+        geometry.createBuffer({ position: buffer.float32(at, 3), uv: buffer.float32(uv, 2), normal: buffer.float32(up, 3), index: buffer.uint32(index, 1) }),
+        material.meshLambert({ color: '#ffffff' }),
+      );
+      ground.receiveShadow = true;
+      ground.castShadow = false;
+      // The ground turns with the sky: both hang from one pivot at the foot of the eye.
+      const pivot = object.group();
+      pivot.add(dome, ground);
+      world.scene.add(pivot);
+
+      // THE OBJECTS, one of each kind of surface: chalk, mirror, gold, glossy paint, terracotta,
+      // on a slate plinth. The matte ones show the probe's soft light; the shiny ones reflect the
+      // sky and the ground around them.
+      const put = (mesh, x, y, z) => {
+        mesh.position.set(x, y, z);
+        mesh.receiveShadow = true;
+        world.scene.add(mesh);
+        return mesh;
+      };
+      put(object.mesh(geometry.sphere(0.34, 96, 48), material.meshLambert({ color: '#f2f0ec' })), -1.35, 0.34, 0.2);
+      put(object.mesh(geometry.sphere(0.34, 96, 48), material.meshStandard({ color: '#ffffff', metalness: 1, roughness: 0.04 })), -0.55, 0.34, -0.2);
+      put(object.mesh(geometry.box(0.5, 0.06, 0.5), material.meshLambert({ color: '#3b3f46' })), 0.25, 0.03, -0.3);
+      const knot = put(object.mesh(geometry.torusKnot(0.24, 0.08, 240, 32), material.meshStandard({ color: '#d9a441', metalness: 1, roughness: 0.3 })), 0.25, 0.5, -0.3);
+      put(object.mesh(geometry.sphere(0.3, 96, 48), material.meshStandard({ color: '#b3122e', roughness: 0.25 })), 1.0, 0.3, 0.05);
+      put(object.mesh(geometry.lathe([[0, 0], [0.2, 0], [0.26, 0.12], [0.16, 0.5], [0.1, 0.62], [0.13, 0.7], [0, 0.7]], 64), material.meshLambert({ color: '#c46a45' })), 1.75, 0, -0.55);
+
+      // The sun found in the picture, and the probe of the rest.
+      const sun = light.directional({ castShadow: true });
+      const probe = light.probe({ sh: new Array(27).fill(0) });
+      world.scene.add(sun, probe);
+      world.effects.add(effect.bloom({ intensity: 0.03 }));
+
+      world.controls.target.set(0, 0.35, 0);
+      world.controls.minDistance = 1.6;
+      world.controls.maxDistance = 6;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.08;
+
+      const studied = {};
+      // The promise is kept, so a picture asked for twice loads once; a failed load is forgotten.
+      const read = (name) =>
+        (studied[name] ??= loader
+          .file(`../assets/examples/lit-by-an-hdr-image/${name}.hdr`, 'arraybuffer')
+          .then((bytes) => study(decodeHdr(bytes)))
+          .catch((error) => {
+            delete studied[name];
+            throw error;
+          }));
+      let place = null;
+      const parts = {};
+
+      // The turn is applied to everything read from the picture: the sky and the ground turn, and
+      // the sun's direction and the probe's bands are turned with them (`turnBands`).
+      function apply(values) {
+        if (!place) return;
+        const turn = math.degToRad(values.turn), c = Math.cos(turn), s = Math.sin(turn);
+        pivot.rotation.y = -turn;
+        dome.material.emissiveMap = place.map;
+        dome.material.emissiveIntensity = place.level;
+        ground.material.map = place.albedo;
+        // A direction turned by `turn` about the vertical, as the dome is.
+        const turned = ([x, y, z]) => [c * x - s * z, y, s * x + c * z];
+        sun.visible = Boolean(place.sun) && values.sunFromImage;
+        if (place.sun) {
+          const d = turned(place.sun.direction);
+          sun.position.set(d[0] * 20, d[1] * 20, d[2] * 20);
+          sun.color.setRGB(...place.sun.colour);
+          sun.intensity = place.sun.strength;
+        }
+        // Without the sun as a light, its light goes back into the probe: the same energy, spread.
+        const sh = turnBands(place.sh, turn);
+        if (place.sun && !values.sunFromImage) addSource(sh, turned(place.sun.direction), place.sun.colour.map((v) => v * place.sun.strength));
+        probe.sh = sh;
+        probe.needsUpdate = true;
+        world.exposure = (0.18 / place.typical) * 2 ** values.exposure;
+        parts.sun(place.sun ? `${math.radToDeg(Math.asin(place.sun.direction[1])).toFixed(1)}°` : say('noSun'));
+        parts.share(`${Math.round(place.sunShare * 100)} %`);
+        parts.range(say('stops', { n: place.stops.toFixed(0) }));
+        world.invalidate();
+      }
+
+      const ui = controls(
+        { place: PLACES, turn: [0, 360, 0, 1], exposure: [-3, 3, 0, 0.1], sunFromImage: true, spin: true },
+        async (values, key) => {
+          if (key === undefined || key === 'place') {
+            const name = values.place;
+            const studiedPlace = await read(name);
+            // A later choice wins over a slower load that ends after it.
+            if (name !== values.place) return;
+            place = studiedPlace;
+          }
+          apply(values);
+        },
+        world,
+      );
+      parts.sun = readout('sunFound');
+      parts.share = readout('sunShare');
+      parts.range = readout('range');
+
+      // The opening: close to the gold knot, the camera draws back to the whole group.
+      opening(world, (time) => {
+        const azimuth = 0.15 + time * 0.05, settle = ease.out(time / 4), reach = 2.2 + 1.8 * settle, rise = 0.1 + 0.16 * settle, { target } = world.controls;
+        world.camera.position.set(target.x + Math.sin(azimuth) * Math.cos(rise) * reach, target.y + Math.sin(rise) * reach, target.z + Math.cos(azimuth) * Math.cos(rise) * reach);
+      });
+      world.onFrame(({ delta }) => {
+        if (!ui.spin) return;
+        knot.rotation.y += Math.min(delta, 0.05) * 0.5;
+        world.invalidate();
+      });
+    </script>
+  </body>
+</html>

@@ -1,0 +1,219 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Red-cyan anaglyph</title>
+    <meta name="thumbnail" content="4" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        overflow: hidden;
+        background: #000;
+      }
+      /* The two eyes' pictures, one over the other in a group of their own: the bottom one keeps
+         only what the red lens lets through, the top one only what the cyan lens does, and the
+         top one is laid on with a screen blend, which adds channels that never overlap. */
+      #stack {
+        position: absolute;
+        inset: 0;
+        isolation: isolate;
+      }
+      canvas {
+        position: absolute;
+        inset: 0;
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      #view {
+        touch-action: none;
+      }
+      #right {
+        pointer-events: none;
+        mix-blend-mode: screen;
+      }
+      [data-glasses='colour'] #view,
+      [data-glasses='halfColour'] #view {
+        filter: url(#redOfColour);
+      }
+      [data-glasses='halfColour'] #view,
+      [data-glasses='grey'] #view {
+        filter: url(#redOfGrey);
+      }
+      [data-glasses='colour'] #right,
+      [data-glasses='halfColour'] #right {
+        filter: url(#cyanOfColour);
+      }
+      [data-glasses='grey'] #right {
+        filter: url(#cyanOfGrey);
+      }
+      [data-glasses='none'] #right {
+        visibility: hidden;
+      }
+      svg {
+        position: absolute;
+        width: 0;
+        height: 0;
+      }
+    </style>
+  </head>
+  <body data-glasses="halfColour">
+    <div id="stack">
+      <canvas id="view"></canvas>
+      <canvas id="right"></canvas>
+    </div>
+    <!-- What each lens passes, as colour matrices the browser runs on each eye's picture: the
+         red channel of the left eye (its colour, or its brightness so a red object does not
+         vanish from the other eye), the green and blue of the right eye. -->
+    <svg aria-hidden="true">
+      <filter id="redOfColour" color-interpolation-filters="sRGB">
+        <feColorMatrix type="matrix" values="1 0 0 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" />
+      </filter>
+      <filter id="redOfGrey" color-interpolation-filters="sRGB">
+        <feColorMatrix type="matrix" values="0.299 0.587 0.114 0 0  0 0 0 0 0  0 0 0 0 0  0 0 0 1 0" />
+      </filter>
+      <filter id="cyanOfColour" color-interpolation-filters="sRGB">
+        <feColorMatrix type="matrix" values="0 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 1 0" />
+      </filter>
+      <filter id="cyanOfGrey" color-interpolation-filters="sRGB">
+        <feColorMatrix type="matrix" values="0 0 0 0 0  0.299 0.587 0.114 0 0  0.299 0.587 0.114 0 0  0 0 0 1 0" />
+      </filter>
+    </svg>
+    <script type="module">
+      import { createWorld, geometry, material, object, light, math, effect, texture } from '../runtime/engine.js';
+      import { controls, ease, mix, opening, readout } from '../runtime/kit.js';
+
+      // A hall of depth: a colonnade running off into the dark, a chequered floor, a golden knot
+      // turning at the meeting point of the eyes, and a ring of glass beads swinging out of the
+      // screen towards the viewer. Built twice, once in each eye's world.
+      function hall(world) {
+        world.scene.background = math.color('#07080b');
+        world.scene.fog = { color: math.color('#07080b'), near: 22, far: 60 };
+        const add = (shape, paint, x = 0, y = 0, z = 0, parent = world.scene) => {
+          const mesh = object.mesh(shape, paint);
+          mesh.position.set(x, y, z);
+          parent.add(mesh);
+          return mesh;
+        };
+        // The floor: twenty by forty tiles of 2 m in two stones, painted on a canvas with a thin
+        // dark joint round each, and laid as one slab: one mesh to draw, not eight hundred.
+        const PX = 32, card = document.createElement('canvas');
+        [card.width, card.height] = [20 * PX, 40 * PX];
+        const paint = card.getContext('2d');
+        paint.fillStyle = '#07080b';
+        paint.fillRect(0, 0, card.width, card.height);
+        for (let row = 0; row < 40; row++)
+          for (let column = 0; column < 20; column++) {
+            paint.fillStyle = (row + column) % 2 ? '#3b3a40' : '#d8d2c4';
+            paint.fillRect(column * PX + 0.5, row * PX + 0.5, PX - 1, PX - 1);
+          }
+        add(geometry.box(40, 0.1, 80), material.meshStandard({ map: texture.canvas(card), roughness: 0.33 }), 0, -0.05, 0);
+        // Two rows of columns, base, shaft and capital, with a beam along each row.
+        const marble = material.meshStandard({ color: '#ece6da', roughness: 0.45 });
+        const shaft = geometry.cylinder(0.42, 0.5, 6, 24), plinth = geometry.box(1.4, 0.4, 1.4), capital = geometry.box(1.4, 0.35, 1.4);
+        for (const x of [-7, 7]) {
+          for (let k = 0; k < 12; k++) {
+            const z = 10 - k * 5;
+            add(plinth, marble, x, 0.2, z);
+            add(shaft, marble, x, 3.4, z);
+            add(capital, marble, x, 6.57, z);
+          }
+          add(geometry.box(1.6, 0.8, 62), marble, x, 7.15, -17.5);
+        }
+        // The knot, gold and polished, on a slender stand.
+        const knot = add(geometry.torusKnot(1.3, 0.38, 220, 32, 2, 3), material.meshStandard({ color: '#f0c470', roughness: 0.3, metalness: 0.55 }), 0, 3.3, 0);
+        add(geometry.cylinder(0.06, 0.06, 1.6, 12), marble, 0, 0.8, 0);
+        add(geometry.cylinder(0.9, 1.1, 0.3, 32), marble, 0, 0.15, 0);
+        // Twelve beads on a tilted ring as wide as the hall: half of it swings in front of the
+        // knot, closer than the plane the eyes meet on, and stands out of the screen.
+        const ring = object.group();
+        ring.position.set(0, 3.3, 0);
+        ring.rotation.set(0.35, 0, 0.2);
+        world.scene.add(ring);
+        const bead = geometry.sphere(0.32, 32, 20);
+        const glass = [material.meshStandard({ color: '#f2efe8', roughness: 0.08, metalness: 0.2 }), material.meshStandard({ color: '#000000', emissive: '#ffd9a0', emissiveIntensity: 3 })];
+        for (let k = 0; k < 12; k++) {
+          const a = (k / 12) * Math.PI * 2;
+          add(bead, glass[k % 3 === 0 ? 1 : 0], Math.cos(a) * 4.6, 0, Math.sin(a) * 4.6, ring);
+        }
+        // Warm lamps down the colonnade, a cool fill from above, a key that casts the shadows.
+        for (let k = 0; k < 6; k++) {
+          const z = 7.5 - k * 10;
+          world.scene.add(light.point({ color: '#ffb46b', intensity: 30, distance: 12, position: [0, 5.5, z] }));
+          add(geometry.sphere(0.18, 16, 12), glass[1], 0, 5.5, z);
+        }
+        world.scene.add(
+          light.directional({ color: '#fff1dc', intensity: 1.6, position: [6, 12, 9], castShadow: true }),
+          light.hemisphere({ color: '#8fa6c8', groundColor: '#2a2420', intensity: 0.5 }),
+        );
+        world.effects.add(effect.bloom({ intensity: 0.06 }));
+        return (time) => {
+          knot.rotation.set(time * 0.3, time * 0.5, 0);
+          ring.rotation.set(0.35, time * 0.25, 0.2);
+        };
+      }
+
+      // The left eye is the world the viewer drives; the right eye's world copies its camera, one
+      // eye-distance to the right, and turns it onto the same point: the point where the two
+      // pictures coincide sits on the screen, nearer things come out of it, farther ones sink in.
+      const world = createWorld('view', { controls: 'orbit' });
+      const other = createWorld('right');
+      const moveLeft = hall(world), moveRight = hall(other);
+      const target = [0, 3.2, 0], start = [2.4, 7.5, 30];
+      world.camera.position.set(...start);
+      world.camera.lookAt(...target);
+      world.controls.target.set(...target);
+      world.controls.minDistance = 7;
+      world.controls.maxDistance = 32;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
+
+      const ui = controls({
+        glasses: ['halfColour', 'colour', 'grey', 'none'],
+        separation: [0, 1.5, 0.5, 0.01],
+        screenPlane: [0.4, 2, 1, 0.05],
+        swapEyes: false,
+        speed: [0, 2, 1],
+      }, (values) => {
+        document.body.dataset.glasses = values.glasses;
+        world.invalidate();
+      }, world);
+      const parallax = readout('screenDistance');
+
+      // The opening: the camera glides in down the middle of the hall and lands 13 m from the
+      // knot, facing it between the two rows of columns, which would otherwise come too close to one eye.
+      const far = Math.hypot(...start.map((value, i) => value - target[i]));
+      const landed = start.map((value, i) => target[i] + (value - target[i]) * (13 / far));
+      opening(world, (time) => {
+        world.camera.position.set(...mix({ math }, start, landed, ease.inOut(time / 4.5)));
+        return time < 4.5;
+      });
+
+      let time = 0;
+      const side = math.vector3(), forward = math.vector3(), meet = math.vector3();
+      const lastEye = math.vector3(), lastMeet = math.vector3();
+      world.onFrame(({ delta }) => {
+        time += Math.min(delta, 0.1) * ui.speed;
+        moveLeft(time);
+        moveRight(time);
+        // The plane the eyes meet on, as a share of the distance to the knot: below one it moves
+        // towards the viewer and more of the hall sinks behind the screen, above one the reverse.
+        const reach = world.camera.position.distanceTo(world.controls.target);
+        forward.copy(world.controls.target).sub(world.camera.position).normalize();
+        meet.copy(world.camera.position).addScaledVector(forward, reach * ui.screenPlane);
+        side.set(1, 0, 0).applyQuaternion(world.camera.quaternion);
+        other.camera.position.copy(world.camera.position).addScaledVector(side, (ui.swapEyes ? -1 : 1) * ui.separation);
+        other.camera.lookAt(meet);
+        parallax(`${(reach * ui.screenPlane).toFixed(1)} m`);
+        // The right eye draws again only when its picture can change: the hall turns, or its
+        // camera moved.
+        if (ui.speed || !other.camera.position.equals(lastEye) || !meet.equals(lastMeet)) other.invalidate();
+        lastEye.copy(other.camera.position);
+        lastMeet.copy(meet);
+        if (ui.speed) world.invalidate();
+      });
+      world.invalidate();
+    </script>
+  </body>
+</html>

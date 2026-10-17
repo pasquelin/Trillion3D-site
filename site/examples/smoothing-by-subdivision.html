@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Smooth by subdivision</title>
+    <meta name="thumbnail" content="4" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #0f1420;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { buffer, createWorld, effect, geometry, light, material, math, object } from '../runtime/engine.js';
+      import { controls, readout } from '../runtime/kit.js';
+
+      // A coarse cage of triangles becomes a smooth surface by Loop subdivision (Charles Loop,
+      // 1987), written in the page: every triangle is cut in four, the new corner on each edge
+      // placed from the two corners of the edge and the two facing it, every old corner pulled
+      // toward its neighbours. Edges marked sharp follow the crease rules instead (Hoppe et al.,
+      // 1994): they stay sharp at every level. Then the edge split: the surface is cut along the
+      // sharp edges, so the light breaks there and stays smooth everywhere else.
+
+      // A cage from an engine shape: its corners welded where they meet (a shape repeats a
+      // corner along its seams), and the triangles left with no area dropped. The shape is read
+      // unshared, every corner of every triangle in turn.
+      function cage(shape) {
+        const flat = shape.toNonIndexed(), source = flat.attributes.position.array;
+        const welded = new Map(), positions = [], triangles = [];
+        const id = (k) => {
+          const key = [0, 1, 2].map((axis) => Math.round(source[k * 3 + axis] * 1e4)).join();
+          if (!welded.has(key)) {
+            welded.set(key, positions.length / 3);
+            positions.push(source[k * 3], source[k * 3 + 1], source[k * 3 + 2]);
+          }
+          return welded.get(key);
+        };
+        for (let k = 0; k < source.length / 3; k += 3) {
+          const a = id(k), b = id(k + 1), c = id(k + 2);
+          if (a !== b && b !== c && c !== a) triangles.push(a, b, c);
+        }
+        shape.dispose();
+        flat.dispose();
+        return { positions: Float64Array.from(positions), triangles: Uint32Array.from(triangles) };
+      }
+
+      // The cages: a knot, a goblet turned from a profile, a twenty-sided ball, a cube.
+      const goblet = [[0, 0], [0.9, 0], [0.95, 0.1], [0.55, 0.2], [0.24, 0.34], [0.17, 0.6], [0.17, 0.95], [0.26, 1.15], [0.62, 1.32], [0.92, 1.7], [1.02, 2.2], [0.9, 2.24], [0.8, 1.8], [0.5, 1.48], [0, 1.42]];
+      const PHI = (1 + Math.sqrt(5)) / 2; // the golden ratio
+      const ICOSAHEDRON = [[-1, PHI, 0, 1, PHI, 0, -1, -PHI, 0, 1, -PHI, 0, 0, -1, PHI, 0, 1, PHI, 0, -1, -PHI, 0, 1, -PHI, PHI, 0, -1, PHI, 0, 1, -PHI, 0, -1, -PHI, 0, 1],
+        [0, 11, 5, 0, 5, 1, 0, 1, 7, 0, 7, 10, 0, 10, 11, 1, 5, 9, 5, 11, 4, 11, 10, 2, 10, 7, 6, 7, 1, 8, 3, 9, 4, 3, 4, 2, 3, 2, 6, 3, 6, 8, 3, 8, 9, 4, 9, 5, 2, 4, 11, 6, 2, 10, 8, 6, 7, 9, 8, 1]];
+      const SHAPES = {
+        knot: { make: () => geometry.torusKnot(0.95, 0.42, 40, 6, 2, 3), colour: '#2fb3a0' },
+        goblet: { make: () => geometry.lathe(goblet.map(([x, y]) => [x * 1.05, y - 1.12]), 10), colour: '#d9a441' },
+        ball: { make: () => geometry.polyhedron(...ICOSAHEDRON, 1.45), colour: '#e0663c' },
+        cube: { make: () => geometry.box(1.9, 1.9, 1.9, 2, 2, 2), colour: '#6f7dff' },
+      };
+
+      // Every edge of a mesh once: its two corners, the corners facing it, its new corner's id.
+      const edgeKey = (a, b, count) => (a < b ? a * count + b : b * count + a);
+      function edgesOf({ positions, triangles }) {
+        const count = positions.length / 3, edges = new Map();
+        for (let t = 0; t < triangles.length; t += 3)
+          for (let side = 0; side < 3; side++) {
+            const a = triangles[t + side], b = triangles[t + ((side + 1) % 3)], facing = triangles[t + ((side + 2) % 3)];
+            const key = edgeKey(a, b, count);
+            const edge = edges.get(key);
+            if (edge) edge.facing.push(facing);
+            else edges.set(key, { a, b, facing: [facing], id: edges.size });
+          }
+        return edges;
+      }
+
+      // An edge is sharp when the cage folds across it by more than `angle`, and always where it
+      // borders a hole or is shared by more than two faces.
+      function sharpEdges(mesh, angle) {
+        const { positions: p, triangles } = mesh, normals = new Map(), sharp = new Set();
+        const normal = (t) => {
+          const [a, b, c] = [triangles[t] * 3, triangles[t + 1] * 3, triangles[t + 2] * 3];
+          const u = [p[b] - p[a], p[b + 1] - p[a + 1], p[b + 2] - p[a + 2]], v = [p[c] - p[a], p[c + 1] - p[a + 1], p[c + 2] - p[a + 2]];
+          const n = [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]];
+          const length = Math.hypot(...n) || 1;
+          return n.map((x) => x / length);
+        };
+        const count = p.length / 3;
+        for (let t = 0; t < triangles.length; t += 3)
+          for (let side = 0; side < 3; side++) {
+            const key = edgeKey(triangles[t + side], triangles[t + ((side + 1) % 3)], count);
+            (normals.get(key) ?? normals.set(key, []).get(key)).push(normal(t));
+          }
+        const limit = Math.cos((angle * Math.PI) / 180);
+        for (const [key, faces] of normals) {
+          if (faces.length !== 2) sharp.add(key);
+          else if (angle < 180 && faces[0][0] * faces[1][0] + faces[0][1] * faces[1][1] + faces[0][2] * faces[1][2] < limit) sharp.add(key);
+        }
+        return sharp;
+      }
+
+      // One step of Loop subdivision, the sharp edges kept sharp: returns the finer mesh and its
+      // sharp edges, each sharp edge now two.
+      function subdivide(mesh, sharp) {
+        const { positions: p, triangles } = mesh, count = p.length / 3;
+        const edges = edgesOf(mesh);
+        const next = new Float64Array((count + edges.size) * 3);
+        // The new corner on each edge: 3/8 of each end and 1/8 of each facing corner, or the
+        // middle of a sharp edge.
+        for (const [key, { a, b, facing, id }] of edges) {
+          const at = (count + id) * 3;
+          const crease = sharp.has(key) || facing.length !== 2;
+          for (let axis = 0; axis < 3; axis++)
+            next[at + axis] = crease ? (p[a * 3 + axis] + p[b * 3 + axis]) / 2 : (3 / 8) * (p[a * 3 + axis] + p[b * 3 + axis]) + (1 / 8) * (p[facing[0] * 3 + axis] + p[facing[1] * 3 + axis]);
+        }
+        // Every old corner pulled toward its neighbours by Loop's weight; on a crease, toward its
+        // two sharp neighbours only; where three sharp edges or more meet, a corner, it stays.
+        const ring = Array.from({ length: count }, () => []), creaseRing = Array.from({ length: count }, () => []);
+        for (const [key, { a, b, facing }] of edges) {
+          ring[a].push(b);
+          ring[b].push(a);
+          if (sharp.has(key) || facing.length !== 2) {
+            creaseRing[a].push(b);
+            creaseRing[b].push(a);
+          }
+        }
+        for (let v = 0; v < count; v++) {
+          const around = creaseRing[v].length >= 2 ? creaseRing[v] : ring[v];
+          let keep, each;
+          if (creaseRing[v].length > 2) {
+            keep = 1;
+            each = 0;
+          } else if (creaseRing[v].length === 2) {
+            keep = 3 / 4;
+            each = 1 / 8;
+          } else {
+            const n = around.length, beta = n > 3 ? 3 / (8 * n) : 3 / 16;
+            keep = 1 - n * beta;
+            each = beta;
+          }
+          for (let axis = 0; axis < 3; axis++) {
+            let sum = 0;
+            for (const u of around) sum += p[u * 3 + axis];
+            next[v * 3 + axis] = keep * p[v * 3 + axis] + each * sum;
+          }
+        }
+        // Each triangle into four, and each sharp edge into two sharp halves.
+        const finer = new Uint32Array(triangles.length * 4), finerCount = count + edges.size, finerSharp = new Set();
+        const middle = (a, b) => count + edges.get(edgeKey(a, b, count)).id;
+        let o = 0;
+        const put = (x, y, z) => {
+          finer[o] = x;
+          finer[o + 1] = y;
+          finer[o + 2] = z;
+          o += 3;
+        };
+        for (let t = 0; t < triangles.length; t += 3) {
+          const a = triangles[t], b = triangles[t + 1], c = triangles[t + 2];
+          const ab = middle(a, b), bc = middle(b, c), ca = middle(c, a);
+          // The three corner triangles, then the middle one.
+          put(a, ab, ca);
+          put(ab, b, bc);
+          put(ca, bc, c);
+          put(ab, bc, ca);
+        }
+        for (const key of sharp) {
+          const a = Math.floor(key / count), b = key % count, m = middle(a, b);
+          finerSharp.add(edgeKey(a, m, finerCount)).add(edgeKey(m, b, finerCount));
+        }
+        return [{ positions: next, triangles: finer }, finerSharp];
+      }
+
+      // The edge split: corners of neighbouring faces are one vertex unless a sharp edge parts
+      // them; each vertex's normal sums the faces it joins, weighted by their area.
+      function surface({ positions: p, triangles }, sharp) {
+        const count = p.length / 3, corners = triangles.length;
+        const parent = Int32Array.from({ length: corners }, (_, k) => k);
+        const root = (k) => {
+          while (parent[k] !== k) k = parent[k] = parent[parent[k]];
+          return k;
+        };
+        const seen = new Map();
+        for (let t = 0; t < corners; t += 3)
+          for (let side = 0; side < 3; side++) {
+            const ca = t + side, cb = t + ((side + 1) % 3), a = triangles[ca], b = triangles[cb];
+            const key = edgeKey(a, b, count);
+            if (sharp.has(key)) continue;
+            const other = seen.get(key);
+            if (other === undefined) seen.set(key, [ca, cb]);
+            else {
+              // The neighbour runs the edge the other way: its corner of `a` is its second.
+              parent[root(ca)] = root(other[1]);
+              parent[root(cb)] = root(other[0]);
+            }
+          }
+        const vertex = new Map(), normals = [], positions = [], index = new Uint32Array(corners);
+        const faceNormal = new Float64Array(3);
+        for (let t = 0; t < corners; t += 3) {
+          const a = triangles[t] * 3, b = triangles[t + 1] * 3, c = triangles[t + 2] * 3;
+          const ux = p[b] - p[a], uy = p[b + 1] - p[a + 1], uz = p[b + 2] - p[a + 2], vx = p[c] - p[a], vy = p[c + 1] - p[a + 1], vz = p[c + 2] - p[a + 2];
+          faceNormal[0] = uy * vz - uz * vy;
+          faceNormal[1] = uz * vx - ux * vz;
+          faceNormal[2] = ux * vy - uy * vx;
+          for (let side = 0; side < 3; side++) {
+            const group = root(t + side);
+            let at = vertex.get(group);
+            if (at === undefined) {
+              vertex.set(group, (at = positions.length / 3));
+              const v = triangles[t + side] * 3;
+              positions.push(p[v], p[v + 1], p[v + 2]);
+              normals.push(0, 0, 0);
+            }
+            for (let axis = 0; axis < 3; axis++) normals[at * 3 + axis] += faceNormal[axis];
+            index[t + side] = at;
+          }
+        }
+        for (let at = 0; at < normals.length; at += 3) {
+          const length = Math.hypot(normals[at], normals[at + 1], normals[at + 2]) || 1;
+          for (let axis = 0; axis < 3; axis++) normals[at + axis] /= length;
+        }
+        return geometry.createBuffer({
+          position: buffer.float32(new Float32Array(positions), 3),
+          normal: buffer.float32(new Float32Array(normals), 3),
+          index: buffer.uint32(index, 1),
+        });
+      }
+
+      // The cage drawn as lines: its plain edges faint, its sharp edges bright.
+      function cageLines(mesh, sharp) {
+        const plain = [], creases = [], { positions: p } = mesh, count = p.length / 3;
+        for (const [key, { a, b }] of edgesOf(mesh)) (sharp.has(key) ? creases : plain).push(...p.subarray(a * 3, a * 3 + 3), ...p.subarray(b * 3, b * 3 + 3));
+        const lines = (list) => geometry.createBuffer({ position: buffer.float32(new Float32Array(list.length ? list : [0, 0, 0, 0, 0, 0]), 3) });
+        return [lines(plain), lines(creases)];
+      }
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#0f1420');
+      const plinth = object.mesh(geometry.cylinder(2.5, 2.7, 0.3, 96), material.meshStandard({ color: '#1d2433', roughness: 0.4, metalness: 0.3 }));
+      plinth.position.y = -0.15;
+      const floor = object.mesh(geometry.cylinder(16, 16, 0.1, 96), material.meshStandard({ color: '#121722', roughness: 0.95 }));
+      floor.position.y = -0.35;
+      world.scene.add(plinth, floor);
+      world.scene.add(light.directional({ intensity: 2.8, color: '#fff2e0', position: [4, 9, 5], castShadow: true }));
+      world.scene.add(light.point({ intensity: 26, color: '#ff9d6b', position: [-3.5, 4, -3], distance: 10 }));
+      world.scene.add(light.point({ intensity: 26, color: '#6bb8ff', position: [3.5, 4, -3.5], distance: 10 }));
+      world.scene.add(light.hemisphere({ color: '#a8b8e0', groundColor: '#2a221c', intensity: 0.6 }));
+      world.effects.add(effect.bloom({ intensity: 0.04 }));
+
+      const holder = object.group();
+      holder.position.y = 1.7;
+      world.scene.add(holder);
+      const glaze = material.meshPhysical({ color: '#2fb3a0', roughness: 0.22, metalness: 0.05, clearcoat: 1, clearcoatRoughness: 0.08 });
+      const faint = material.line({ color: '#dfe8ff', transparent: true, opacity: 0.3 });
+      const bright = material.line({ color: '#ffc44d' });
+      const knots = material.points({ color: '#ffffff', size: 0.05 });
+      let built = null;
+
+      world.camera.position.set(0, 3, 6.6);
+      world.camera.lookAt(0, 1.4, 0);
+      world.controls.target.set(0, 1.4, 0);
+      world.controls.minDistance = 3;
+      world.controls.maxDistance = 14;
+      world.controls.maxPolarAngle = Math.PI * 0.53;
+
+      // Each level of the chosen cage is its own mesh, made the first time it is shown and kept:
+      // the level slider then only shows one, and nothing is made again until the cage or its
+      // sharp edges change. A crease change throws every level away, so only the level shown is
+      // subdivided again, and the finest (some 30,000 triangles) only when asked for.
+      const LEVELS = 4;
+      const show = { triangles: null, cage: null };
+      function rebuild(values) {
+        if (built) {
+          holder.remove(built.group);
+          for (const part of built.parts) part.geometry.dispose();
+        }
+        const base = cage(SHAPES[values.shape].make());
+        const sharp = sharpEdges(base, values.creases ? values.creaseAngle : 180);
+        const [plain, creases] = cageLines(base, sharp);
+        const lines = [object.lineSegments(plain, faint), object.lineSegments(creases, bright)];
+        const dots = object.points(geometry.createBuffer({ position: buffer.float32(Float32Array.from(base.positions), 3) }), knots);
+        const group = object.group();
+        group.add(...lines, dots);
+        holder.add(group);
+        // `steps` holds each level's mesh and sharp edges, as far as subdivided yet.
+        built = { group, steps: [[base, sharp]], meshes: [], cage: [...lines, dots], parts: [...lines, dots], base };
+        glaze.color.set(SHAPES[values.shape].colour);
+      }
+      function meshAt(level) {
+        const { steps, meshes, group, parts } = built;
+        while (steps.length <= level) steps.push(subdivide(...steps[steps.length - 1]));
+        if (!meshes[level]) {
+          meshes[level] = object.mesh(surface(...steps[level]), glaze);
+          group.add(meshes[level]);
+          parts.push(meshes[level]);
+        }
+        return meshes[level];
+      }
+      function present(values) {
+        meshAt(values.level);
+        built.meshes.forEach((mesh, level) => (mesh.visible = level === values.level));
+        for (const part of built.cage) part.visible = values.cage;
+        show.triangles?.(String(built.meshes[values.level].geometry.index.count / 3));
+        show.cage?.(String(built.base.triangles.length / 3));
+        world.invalidate();
+      }
+
+      const ui = controls({
+        shape: Object.keys(SHAPES),
+        level: [0, LEVELS, 3, 1],
+        creases: true,
+        creaseAngle: [10, 120, 75, 1],
+        cage: true,
+        spin: true,
+      }, (values, key) => {
+        if (key === 'spin') return;
+        if (!key || key === 'shape' || key === 'creases' || key === 'creaseAngle') rebuild(values);
+        present(values);
+      }, world);
+      show.triangles = readout('triangles');
+      show.cage = readout('cageTriangles');
+      present(ui);
+
+      let time = 0;
+      world.onFrame(({ delta }) => {
+        if (!ui.spin) return;
+        time += delta;
+        holder.rotation.set(0.3 + Math.sin(time * 0.25) * 0.15, time * 0.4, 0);
+        world.invalidate();
+      });
+    </script>
+  </body>
+</html>

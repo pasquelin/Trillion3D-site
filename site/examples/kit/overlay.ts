@@ -51,6 +51,12 @@ export function hideable(panel: HTMLElement) {
   if (folded) panel.removeAttribute('open')
 }
 
+/** Takes `panel` off the page, and out of the show/hide message: a panel whose world is gone. */
+export function dropPanel(panel: HTMLElement) {
+  panels.delete(panel)
+  panel.remove()
+}
+
 /** Folds every panel, and every panel still to come, down to its title: a game's menu and its
  * play keep the frame to themselves, the settings one click away. */
 export function foldPanels() {

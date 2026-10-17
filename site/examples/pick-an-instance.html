@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Pick an instance</title>
+    <meta name="thumbnail" content="4" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #0b1220;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, geometry, material, object, light, effect, math } from '../runtime/engine.js';
+      import { controls, onClick, readout, valueNoise, language } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#0b1220');
+
+      // One hexagonal column, a six-sided cylinder standing on its base, and seven materials
+      // from the deep sea to the snow: every hex of the island is a placement of that one shape
+      // with one of those materials, so the engine draws each material's hexes together.
+      const column = geometry.cylinder(0.47, 0.47, 1, 6);
+      column.translate(0, 0.5, 0);
+      const BANDS = [
+        ['#1a4f8a', 0.25], ['#2f86b8', 0.2], ['#e3cf94', 0.85], ['#6fae4f', 0.8],
+        ['#3d7a3a', 0.85], ['#8a8178', 0.9], ['#f2f5fa', 0.6],
+      ].map(([color, roughness]) => material.meshStandard({ color, roughness, metalness: 0.05 }));
+      // Two more for the hexes the pointer speaks of: the one under it, and the one picked.
+      const hovered = material.meshStandard({ color: '#ffe2a8', emissive: '#ff9a3c', emissiveIntensity: 0.9, roughness: 0.4 });
+      const chosen = material.meshStandard({ color: '#ffffff', emissive: '#ff5fa2', emissiveIntensity: 2.2, roughness: 0.3 });
+
+      // An island in axial hex coordinates: rings out to RINGS around the centre, heights from
+      // two octaves of value noise lowered toward the shore, banded by height.
+      const RINGS = 22;
+      const noise = valueNoise({ math });
+      const hexes = [];
+      for (let q = -RINGS; q <= RINGS; q++)
+        for (let r = Math.max(-RINGS, -q - RINGS); r <= Math.min(RINGS, -q + RINGS); r++) {
+          const x = Math.sqrt(3) * 0.5 * (q + r / 2), z = 0.75 * r;
+          const ring = (Math.abs(q) + Math.abs(r) + Math.abs(q + r)) / 2;
+          const fall = 1 - (ring / RINGS) ** 1.7;
+          const lift = 0.6 * noise(x * 0.22, z * 0.22, 0, 3) + 0.3 * noise(x * 0.55, z * 0.55, 0, 8);
+          const land = fall * 1.25 + lift - 0.42;
+          const band = land < -0.1 ? 0 : land < 0.08 ? 1 : land < 0.2 ? 2 : land < 0.55 ? 3 : land < 0.85 ? 4 : land < 1.05 ? 5 : 6;
+          const height = band < 2 ? 0.25 + band * 0.1 : 0.4 + (land - 0.08) * 3.2;
+          const mesh = object.mesh(column, BANDS[band]);
+          mesh.position.set(x, 0, z);
+          mesh.scale.set(1, height, 1);
+          mesh.name = String(hexes.length);
+          world.scene.add(mesh);
+          hexes.push({ mesh, q, r, band, height, x, z, lift: 0 });
+        }
+
+      world.scene.add(
+        light.directional({ color: '#ffd6a8', intensity: 2.8, position: [-10, 12, 6], castShadow: true }),
+        light.hemisphere({ color: '#9ec4ff', groundColor: '#1a2233', intensity: 0.9 }),
+      );
+      // A pink lamp hangs over the picked hex and follows each new pick.
+      const beacon = light.point({ color: '#ff6fae', intensity: 0, distance: 7, position: [0, 3, 0] });
+      world.scene.add(beacon);
+      world.effects.add(effect.bloom({ intensity: 0.07 }));
+      world.camera.position.set(0, 19, 23);
+      world.camera.lookAt(0, 0, 0);
+      world.controls.target.set(0, 0, 0);
+      world.controls.minDistance = 6;
+      world.controls.maxDistance = 45;
+
+      const ui = controls({ ripple: [0, 1.5, 0.9, 0.05], swell: true }, () => world.invalidate(), world);
+      const which = readout('instance'), cell = readout('cell'), tall = readout('height');
+      readout('placements')(hexes.length.toLocaleString(language()));
+      readout('shapes')('1');
+
+      // The pointer, aimed again when it moves or when the hexes under it rise or fall: the
+      // swell's few centimetres change nothing worth a raycast of the whole island.
+      const pointer = { x: 0, y: 0, inside: false, moved: false };
+      world.canvas.addEventListener('pointermove', (event) => {
+        Object.assign(pointer, { x: event.offsetX, y: event.offsetY, inside: !event.buttons, moved: true });
+        world.invalidate();
+      });
+      world.canvas.addEventListener('pointerleave', () => {
+        pointer.inside = false;
+        world.invalidate();
+      });
+
+      // One ray, every hex: `world.raycast` answers the nearest placement it meets, the very
+      // mesh that was added, so its name is its rank among the thousand.
+      const meshes = hexes.map((hex) => hex.mesh);
+      const hexAt = (x, y) => {
+        const hit = world.raycast({ x, y }, { objects: meshes });
+        return hit ? hexes[Number(hit.object.name)] : null;
+      };
+      const tell = (hex) => {
+        which(hex ? `#${Number(hex.mesh.name) + 1} / ${hexes.length}` : '—');
+        cell(hex ? `${hex.q}, ${hex.r}` : '—');
+        tall(hex ? hex.height.toFixed(2) : '—');
+      };
+
+      // A pick sends a ripple across the island from the hex picked: each column rises and
+      // falls as the ring of the wave reaches it, fading with distance and time.
+      let under = null, picked = null, clock = 0, shifting = true;
+      const ripples = [];
+      const circle = [];
+      for (let k = 0; k < 96; k++)
+        for (const a of [k, k + 1].map((n) => (n / 96) * Math.PI * 2)) circle.push(Math.cos(a), 0, Math.sin(a));
+      const pick = (hex) => {
+        if (!hex) return;
+        picked = hex;
+        ripples.push({ x: hex.x, z: hex.z, born: clock, ring: world.guides.lines({ positions: circle, color: '#7fe8ff', width: 2 }) });
+        beacon.position.set(hex.x, hex.height + 2.4, hex.z);
+        beacon.intensity = 30;
+        if (ripples.length > 4) ripples.shift().ring.remove();
+        tell(hex);
+      };
+      onClick(world.canvas, (event) => pick(hexAt(event.offsetX, event.offsetY)));
+
+      // The opening picks two hexes by itself, through the same ray, so the island moves at once.
+      const opening = [[0.5, 0.55, 0.4], [0.36, 0.42, 1.5], [0.62, 0.4, 2.8]];
+      world.onFrame(({ delta }) => {
+        const step = Math.min(delta, 0.05);
+        clock += step;
+        while (opening.length && clock > opening[0][2]) {
+          const [fx, fy] = opening.shift();
+          pick(hexAt(fx * world.canvas.clientWidth, fy * world.canvas.clientHeight));
+        }
+        const now = !pointer.inside ? null : pointer.moved || shifting ? hexAt(pointer.x, pointer.y) : under;
+        pointer.moved = false;
+        if (now !== under) {
+          under = now;
+          world.canvas.style.cursor = under ? 'pointer' : '';
+          if (under) tell(under);
+          else tell(picked);
+        }
+        while (ripples.length && clock - ripples[0].born > 9) ripples.shift().ring.remove();
+        // Each ripple's front, drawn as a guide: a unit circle scaled to how far it has run.
+        for (const wave of ripples) {
+          const reach = (clock - wave.born) * 4.5;
+          wave.ring.setTransform([reach, 0, 0, 0, 0, 1, 0, 0, 0, 0, reach, 0, wave.x, 1.2, wave.z, 1]).setVisible(reach < RINGS * 1.1);
+        }
+        // Still frames are skipped: the island asks for the next one only while something moves.
+        let lifting = false;
+        for (const hex of hexes) {
+          let y = ui.swell && hex.band < 2 ? 0.06 * Math.sin(clock * 1.4 + hex.x * 0.7 + hex.z * 0.4) : 0;
+          for (const wave of ripples) {
+            const age = clock - wave.born, d = Math.hypot(hex.x - wave.x, hex.z - wave.z);
+            const front = d - age * 4.5;
+            if (front > 1 || front < -8) continue;
+            const fade = Math.exp(-age * 0.3);
+            y += ui.ripple * Math.cos(front * 1.6) * Math.exp(-front * front * 0.08) * fade * (front > -0.5 ? 1 : 0.6);
+          }
+          // The material says what the hex is now: picked, pointed at, or itself.
+          const wears = hex === picked ? chosen : hex === under ? hovered : BANDS[hex.band];
+          if (hex.mesh.material !== wears) hex.mesh.material = wears;
+          // The hex under the pointer and the picked one stand a little proud of the others.
+          const target = hex === picked ? 1.4 : hex === under ? 0.35 : 0;
+          if (Math.abs(target - hex.lift) > 0.001) {
+            hex.lift += (target - hex.lift) * Math.min(1, step * 10);
+            lifting = true;
+          } else hex.lift = target;
+          hex.mesh.position.y = y + hex.lift;
+        }
+        shifting = lifting || ripples.length > 0;
+        if (shifting || ui.swell || opening.length > 0) world.invalidate();
+      });
+      world.invalidate();
+      addEventListener('pagehide', () => world.dispose(), { once: true });
+    </script>
+  </body>
+</html>

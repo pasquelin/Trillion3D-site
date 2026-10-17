@@ -1,4 +1,4 @@
-import { hideable, overlay, panelsShown } from './overlay.ts'
+import { dropPanel, hideable, overlay, panelsShown } from './overlay.ts'
 import { profileLines, profiling, startProfile } from './profile.ts'
 import { STATS_CARD, STATS_TERM, STATS_VALUE, statsCorners, type StatsWorld } from './statsLines.ts'
 import type { StatsCorner } from './statsLayout.ts'
@@ -36,7 +36,7 @@ export function statsCard(corner: StatsCorner = 'bottom-left') {
  * maps and the engine's counters, refreshed four times a second; hidden, it reads no CPU, while
  * the debug mode it turns on keeps filing the engine's CPU steps. With `?profile` in the page's
  * address, it adds each second's CPU profile (`profile.ts`).
- * What it returns stops the overlay's timers.
+ * What it returns stops the overlay's timers and removes it, for a world disposed before the page.
  */
 export function stats(world: StatsWorld, corner: StatsCorner = 'bottom-left') {
   // The overlay reads the engine's CPU steps, which only its debug mode files, as a development
@@ -60,5 +60,6 @@ export function stats(world: StatsWorld, corner: StatsCorner = 'bottom-left') {
   return () => {
     stop()
     stopProfile()
+    dropPanel(panel)
   }
 }

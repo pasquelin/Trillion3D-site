@@ -1,0 +1,278 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Paint where you click</title>
+    <meta name="thumbnail" content="5" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #15110f;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, geometry, material, object, light, texture, effect, math } from '../runtime/engine.js';
+      import { controls, readout, seeded } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#15110f');
+
+      // The vase's skin is a canvas: 1024 × 512 pixels of bare clay, wrapped once around the
+      // vase by the lathe's texture coordinates (u around, v up the profile). Painting is drawing
+      // on this canvas, then `needsUpdate`: the whole canvas is copied into the texture again on
+      // the next frame, which is why it is kept no larger than the vase needs on screen.
+      const W = 1024, H = 512;
+      const skin = document.createElement('canvas');
+      skin.width = W;
+      skin.height = H;
+      const pen = skin.getContext('2d');
+      const grain = seeded(5);
+      const bare = () => {
+        pen.globalCompositeOperation = 'source-over';
+        pen.fillStyle = '#efe4d2';
+        pen.fillRect(0, 0, W, H);
+        // Speckles and faint throwing rings, so the bare clay reads as a material.
+        for (let n = 0; n < 9000; n++) {
+          pen.fillStyle = grain() < 0.5 ? 'rgba(120, 92, 64, 0.16)' : 'rgba(255, 255, 255, 0.25)';
+          pen.fillRect(grain() * W, grain() * H, 0.5 + grain() * 1.25, 0.5 + grain() * 1.25);
+        }
+        for (let y = 0; y < H; y += 3) {
+          pen.fillStyle = `rgba(150, 118, 86, ${0.03 + 0.05 * grain()})`;
+          pen.fillRect(0, y, W, 1);
+        }
+      };
+      bare();
+      const clay = texture.canvas(skin);
+      clay.anisotropy = 8;
+
+      // The vase: one profile up the outer wall, over a rolled lip and back down inside, turned
+      // by `geometry.lathe` in 160 slices.
+      const profile = [];
+      const radius = (t) => 0.32 + 0.62 * Math.sin(Math.PI * (0.1 + 0.85 * t)) ** 1.6 * (1 - 0.55 * t) + 0.24 * Math.max(0, t - 0.78) ** 1.2 * 4;
+      for (let s = 0; s <= 90; s++) profile.push([radius(s / 90), (s / 90) * 2.6]);
+      const lip = radius(1);
+      profile.push([lip + 0.05, 2.63], [lip - 0.01, 2.66], [lip - 0.05, 2.6]);
+      for (let s = 90; s >= 40; s -= 2) profile.push([Math.max(0.05, radius(s / 90) - 0.05), (s / 90) * 2.6]);
+      profile.unshift([0, 0]);
+      const shape = geometry.lathe(profile, 160);
+      const vase = object.mesh(shape, material.meshPhysical({ map: clay, roughness: 0.38, clearcoat: 0.7, clearcoatRoughness: 0.12 }));
+
+      // A potter's wheel: a slate head on a dark base, the vase turning with it.
+      const wheel = object.group();
+      const head = object.mesh(geometry.cylinder(1.45, 1.45, 0.12, 96), material.meshStandard({ color: '#3a3f47', roughness: 0.55, metalness: 0.3 }));
+      head.position.y = -0.06;
+      const base = object.mesh(geometry.cylinder(1.1, 1.3, 0.7, 96), material.meshStandard({ color: '#1f1c1b', roughness: 0.8 }));
+      base.position.y = -0.47;
+      wheel.add(head, vase);
+      world.scene.add(wheel, base);
+      const floor = object.mesh(geometry.circle(9, 96), material.meshStandard({ color: '#241d19', roughness: 0.95 }));
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.y = -0.82;
+      world.scene.add(floor);
+
+      // A warm key with shadows, a cool softbox at the left and an amber rim from behind: the
+      // glaze shows each as a highlight sliding round as the wheel turns.
+      world.scene.add(
+        light.directional({ color: '#fff0dc', intensity: 2.4, position: [4, 7, 5], castShadow: true }),
+        light.hemisphere({ color: '#c9d6ff', groundColor: '#2a1d16', intensity: 0.55 }),
+        light.point({ color: '#ff9a5c', intensity: 40, position: [-1.5, 3, -3.5], distance: 12 }),
+      );
+      const softbox = light.rectArea({ color: '#dfe9ff', intensity: 6, width: 1.4, height: 2.6, position: [-3.6, 2.2, 2.4] });
+      softbox.lookAt(0, 1.2, 0);
+      world.scene.add(softbox);
+      world.effects.add(effect.bloom({ intensity: 0.05 }));
+      world.camera.position.set(0, 2.3, 5.4);
+      world.camera.lookAt(0, 1.15, 0);
+      world.controls.target.set(0, 1.15, 0);
+      world.controls.minDistance = 2.5;
+      world.controls.maxDistance = 10;
+
+      // From a hit to a pixel. The ray names the triangle it met (`face`, its rank in the index
+      // list) and the world point; carried back into the vase's own frame, the point's
+      // barycentric weights in that triangle blend its three corners' texture coordinates. The
+      // same corners give how many world units one unit of u and of v spans there, so a dab is
+      // drawn as an ellipse that lands round on the surface, narrow at the belly, wide at the foot.
+      const corners = shape.index.array, position = shape.attributes.position.array, uvs = shape.attributes.uv.array;
+      const at = (i) => [position[3 * i], position[3 * i + 1], position[3 * i + 2]];
+      const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+      const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+      const len = (a) => Math.sqrt(dot(a, a));
+      function surfaceAt(hit) {
+        const p = vase.worldToLocal(hit.point.clone()).toArray();
+        const [i0, i1, i2] = [corners[3 * hit.face], corners[3 * hit.face + 1], corners[3 * hit.face + 2]];
+        const [p0, p1, p2] = [at(i0), at(i1), at(i2)];
+        const e1 = sub(p1, p0), e2 = sub(p2, p0), ep = sub(p, p0);
+        const d11 = dot(e1, e1), d12 = dot(e1, e2), d22 = dot(e2, e2), dp1 = dot(ep, e1), dp2 = dot(ep, e2);
+        const den = d11 * d22 - d12 * d12;
+        const b1 = (d22 * dp1 - d12 * dp2) / den, b2 = (d11 * dp2 - d12 * dp1) / den, b0 = 1 - b1 - b2;
+        const uv = (k) => b0 * uvs[2 * i0 + k] + b1 * uvs[2 * i1 + k] + b2 * uvs[2 * i2 + k];
+        const du1 = uvs[2 * i1] - uvs[2 * i0], dv1 = uvs[2 * i1 + 1] - uvs[2 * i0 + 1];
+        const du2 = uvs[2 * i2] - uvs[2 * i0], dv2 = uvs[2 * i2 + 1] - uvs[2 * i0 + 1];
+        const det = du1 * dv2 - du2 * dv1;
+        // The surface's tangents along u and v: their lengths are the world size of one unit.
+        const alongU = [0, 1, 2].map((k) => (e1[k] * dv2 - e2[k] * dv1) / det);
+        const alongV = [0, 1, 2].map((k) => (e2[k] * du1 - e1[k] * du2) / det);
+        return { u: uv(0), v: uv(1), spanU: len(alongU), spanV: len(alongV), point: hit.point.clone() };
+      }
+
+      // A dab: a soft ellipse of paint, drawn again one turn to the left and right so a stroke
+      // crossing the seam where u wraps from 1 to 0 carries on unbroken.
+      function dab(s, colour, size) {
+        const x = s.u * W, y = (1 - s.v) * H;
+        const rx = (size / s.spanU) * W, ry = (size / s.spanV) * H;
+        for (const shift of [-W, 0, W]) {
+          if (x + shift + rx < 0 || x + shift - rx > W) continue;
+          pen.save();
+          pen.translate(x + shift, y);
+          pen.scale(rx, ry);
+          const soft = pen.createRadialGradient(0, 0, 0, 0, 0, 1);
+          soft.addColorStop(0, colour);
+          soft.addColorStop(0.55, colour);
+          soft.addColorStop(1, colour + '00');
+          pen.fillStyle = soft;
+          pen.beginPath();
+          pen.arc(0, 0, 1, 0, Math.PI * 2);
+          pen.fill();
+          pen.restore();
+        }
+      }
+      // A stroke from the last dab to this one, dabs a third of the brush apart, in texture
+      // space: u is followed the short way round the seam. A jump on the surface starts anew.
+      function stroke(brush, s, colour, size) {
+        const last = brush.last;
+        brush.last = s;
+        if (!last || last.point.distanceTo(s.point) > size * 6) return dab(s, colour, size);
+        let du = s.u - last.u;
+        du -= Math.round(du);
+        const dv = s.v - last.v;
+        const span = Math.hypot(du * s.spanU, dv * s.spanV);
+        const steps = Math.max(1, Math.ceil(span / (size * 0.3)));
+        for (let k = 1; k <= steps; k++) {
+          const f = k / steps;
+          dab({ ...s, u: (((last.u + du * f) % 1) + 1) % 1, v: last.v + dv * f }, colour, size);
+        }
+      }
+
+      let painted = 0;
+      const dirty = () => {
+        clay.needsUpdate = true;
+        world.invalidate();
+      };
+      // The ray from a canvas point, cast at the vase alone, so the wheel never takes paint.
+      const castAt = (x, y) => world.raycast({ x, y }, { objects: [vase] });
+      // Paint with one brush at a canvas point: a ray, a triangle, a texel.
+      function paintAt(brush, x, y, colour, size) {
+        paintHit(brush, castAt(x, y), colour, size);
+      }
+      function paintHit(brush, hit, colour, size) {
+        if (!hit) {
+          brush.last = null;
+          return;
+        }
+        const s = surfaceAt(hit);
+        stroke(brush, s, colour, size);
+        triangle(`${hit.face + 1}`);
+        where(`${s.u.toFixed(3)}, ${s.v.toFixed(3)}`);
+        dirty();
+      }
+
+      // The opening: four brushes held at fixed points of the canvas while the wheel spins fast,
+      // painting a cobalt band, a terracotta wave, a golden rim and a fine line through the very same
+      // ray → triangle → texel path a click takes. Any press of the reader stops them. Like the
+      // reader's hand, each brush keeps its `last` dab, so its dabs join into a stroke.
+      const opening = { done: false, time: 0, turned: 0 };
+      const brushes = [
+        { colour: '#1d4e9e', size: 0.075, at: (t) => [0.5 + 0.06 * Math.sin(t * 9), 0.6] },
+        { colour: '#c2532d', size: 0.045, at: (t) => [0.5, 0.44 + 0.035 * Math.sin(t * 13)] },
+        { colour: '#d6a22f', size: 0.035, at: () => [0.5, 0.3] },
+        { colour: '#1d4e9e', size: 0.03, at: (t) => [0.5, 0.71 + 0.012 * Math.sin(t * 20)] },
+      ];
+
+      // A press on the vase paints and holds the view still; a press beside it turns the view.
+      // While held, the brush keeps painting each frame: on a turning wheel a still brush lays a
+      // band all the way round, as a potter bands a pot.
+      const hand = { down: false, x: 0, y: 0, last: null, id: -1 };
+      world.canvas.addEventListener('pointerdown', (event) => {
+        if (event.button !== 0) return;
+        const hit = castAt(event.offsetX, event.offsetY);
+        if (!hit) return;
+        Object.assign(hand, { down: true, x: event.offsetX, y: event.offsetY, last: null, id: event.pointerId });
+        opening.done = true;
+        world.controls.enabled = false;
+        world.canvas.setPointerCapture(event.pointerId);
+        paintHit(hand, hit, ui.colour, ui.brush);
+        dabs(String(++painted));
+      });
+      // The cursor shows whether a press would paint: one ray per frame at most, however many
+      // pointer events arrive.
+      let hovered = null;
+      const aimCursor = () => {
+        world.canvas.style.cursor = hand.down || castAt(hovered.offsetX, hovered.offsetY) ? 'crosshair' : '';
+        hovered = null;
+      };
+      world.canvas.addEventListener('pointermove', (event) => {
+        if (!hovered) requestAnimationFrame(aimCursor);
+        hovered = event;
+        if (!hand.down || event.pointerId !== hand.id) return;
+        // Between two pointer events, a ray every few pixels: a quick flick stays one stroke.
+        const steps = Math.max(1, Math.ceil(Math.hypot(event.offsetX - hand.x, event.offsetY - hand.y) / 4));
+        for (let k = 1; k <= steps; k++)
+          paintAt(hand, hand.x + ((event.offsetX - hand.x) * k) / steps, hand.y + ((event.offsetY - hand.y) * k) / steps, ui.colour, ui.brush);
+        Object.assign(hand, { x: event.offsetX, y: event.offsetY });
+      });
+      const release = (event) => {
+        if (!hand.down || event.pointerId !== hand.id) return;
+        hand.down = false;
+        world.controls.enabled = true;
+      };
+      world.canvas.addEventListener('pointerup', release);
+      world.canvas.addEventListener('pointercancel', release);
+
+      const ui = controls({
+        colour: '#1d4e9e',
+        brush: [0.02, 0.2, 0.06, 0.005],
+        wheel: [0, 3, 0.6, 0.05],
+        clear: () => {
+          bare();
+          painted = 0;
+          dabs('0');
+          dirty();
+        },
+      }, () => world.invalidate(), world);
+      const triangle = readout('triangle'), where = readout('uv'), dabs = readout('strokes');
+      dabs('0');
+
+      world.onFrame(({ delta }) => {
+        const step = Math.min(delta, 0.05);
+        const box = world.canvas;
+        if (!opening.done) {
+          // Counted in turns of the wheel, not seconds: a slow frame rate still closes each band.
+          opening.time += step;
+          if (opening.turned > Math.PI * 2.1) opening.done = true;
+          for (const brush of brushes) {
+            const [fx, fy] = brush.at(opening.time);
+            paintAt(brush, fx * box.clientWidth, fy * box.clientHeight, brush.colour, brush.size);
+          }
+        }
+        // The wheel runs fast through the opening, then at the reader's speed.
+        const speed = opening.done ? ui.wheel : 2.2;
+        wheel.rotation.y += step * speed;
+        if (!opening.done) opening.turned += step * speed;
+        if (hand.down) paintAt(hand, hand.x, hand.y, ui.colour, ui.brush);
+        if (speed || !opening.done || hand.down) world.invalidate();
+      });
+      world.invalidate();
+      addEventListener('pagehide', () => world.dispose(), { once: true });
+    </script>
+  </body>
+</html>

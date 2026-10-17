@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>A line that draws itself</title>
+    <meta name="thumbnail" content="10" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #1c1612;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      // A spirograph on a desk: a toothed wheel rolls inside a toothed ring, a pen in one of its
+      // holes, and the pen's line appears behind it, layer after layer, each in a new ink.
+      import { createWorld, geometry, material, object, light, math, buffer } from '../runtime/engine.js';
+      import { controls, readout, opening, ease, mix, language } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#1c1612');
+
+      // THE GEARS. Teeth all share one pitch, so a wheel of n teeth has a radius in proportion to
+      // n and meshes with the ring wherever it rolls. The ring has 105 teeth inside.
+      const RING_TEETH = 105, RING = 1.6, PITCH = RING / RING_TEETH;
+      const TOOTH = 0.018, THICK = 0.05;
+      const radiusOf = (teeth) => teeth * PITCH;
+      // A toothed circle as a list of points: the radius swings by TOOTH, a rounded square wave,
+      // `teeth` times round. The ring and the wheel use the same wave, so where they touch a
+      // tooth of one lies in a gap of the other.
+      function toothed(radius, teeth, perTooth = 10) {
+        const points = [];
+        for (let k = 0; k < teeth * perTooth; k++) {
+          const a = (k / (teeth * perTooth)) * Math.PI * 2;
+          const wave = math.clamp(Math.sin(a * teeth) * 1.8, -1, 1);
+          points.push([Math.cos(a) * (radius + TOOTH * wave), Math.sin(a) * (radius + TOOTH * wave)]);
+        }
+        return points;
+      }
+      const round = (x, y, radius, segments = 40) =>
+        math.shape(Array.from({ length: segments }, (_, k) => {
+          const a = (k / segments) * Math.PI * 2;
+          return [x + Math.cos(a) * radius, y + Math.sin(a) * radius];
+        }));
+      // A plate the thickness of plastic, lying on the paper: the shape is drawn in x and y,
+      // pushed up along z, then laid down.
+      const plate = (outline) => {
+        const solid = geometry.extrude(outline, { depth: THICK, bevelEnabled: true, bevelThickness: 0.006, bevelSize: 0.006, bevelSegments: 2 });
+        solid.rotateX(-Math.PI / 2);
+        return solid;
+      };
+
+      // The ring: a round plate with the toothed hole the wheel rolls in.
+      const ringShape = round(0, 0, RING + 0.42, 160);
+      ringShape.holes.push(math.shape(toothed(RING, RING_TEETH)));
+      // Tinted, see-through plastic, glossy: the ink under it stays in sight.
+      const plastic = (colour) => material.meshPhysical({ color: colour, roughness: 0.15, clearcoat: 1, transparent: true, opacity: 0.72 });
+      const ring = object.mesh(plate(ringShape), plastic('#8fd0ff'));
+      ring.position.y = 0.006;
+      ring.receiveShadow = true;
+      world.scene.add(ring);
+
+      // The wheel: toothed outside, with a spiral of pen holes from near its middle to near its
+      // rim. Each hole is a fraction of the radius; the pen sits in the one chosen.
+      const HOLES = [0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9];
+      const holeAngle = (k) => k * 2.35;
+      // The wheel is made with the first wheel chosen; a new choice gives it a new plate.
+      const wheelSpin = object.group();
+      world.scene.add(wheelSpin);
+      let wheel = null;
+      function buildWheel(teeth) {
+        const r = radiusOf(teeth), outline = math.shape(toothed(r, teeth));
+        HOLES.forEach((fraction, k) => outline.holes.push(round(Math.cos(holeAngle(k)) * fraction * r, Math.sin(holeAngle(k)) * fraction * r, 0.035, 20)));
+        if (!wheel) {
+          wheel = object.mesh(plate(outline), plastic('#ffb36b'));
+          wheelSpin.add(wheel);
+          return;
+        }
+        const worn = wheel.geometry;
+        wheel.geometry = plate(outline);
+        worn.dispose();
+      }
+
+      // The paper on a walnut desk.
+      const desk = object.mesh(geometry.box(16, 0.3, 10), material.meshStandard({ color: '#4b2e1e', roughness: 0.55 }));
+      desk.position.y = -0.152;
+      const paper = object.mesh(geometry.box(4.6, 0.004, 4.6), material.meshStandard({ color: '#f4efe4', roughness: 0.92 }));
+      paper.position.y = -0.002;
+      paper.rotation.y = 0.06;
+      paper.receiveShadow = desk.receiveShadow = true;
+      world.scene.add(desk, paper);
+
+      // The pen: a slim body and a cone tip, standing in the hole; its cap takes the ink's colour.
+      const pen = object.group();
+      const capInk = material.meshStandard({ color: '#1d3fbf', roughness: 0.35 });
+      const body = object.mesh(geometry.cylinder(0.035, 0.035, 0.9, 24), material.meshStandard({ color: '#f2f2f2', roughness: 0.3 }));
+      body.position.y = 0.55;
+      const cap = object.mesh(geometry.cylinder(0.04, 0.04, 0.22, 24), capInk);
+      cap.position.y = 1.0;
+      const tip = object.mesh(geometry.cone(0.035, 0.1, 24), material.meshStandard({ color: '#2a2a2a', roughness: 0.4 }));
+      tip.rotation.x = Math.PI;
+      tip.position.y = 0.05;
+      pen.add(body, cap, tip);
+      world.scene.add(pen);
+
+      // A warm desk lamp up on the left casting soft shadows, and the room's fill.
+      world.scene.add(
+        light.directional({ color: '#fff0dc', intensity: 2.6, position: [-3, 6, 2.5], castShadow: true }),
+        light.hemisphere({ color: '#c8d4ff', groundColor: '#3a2618', intensity: 0.6 }),
+      );
+
+      // THE PEN'S PATH. The wheel's centre goes round at R − r; while it does, the wheel turns
+      // the other way by (R − r) / r as much, and the pen, at distance d from its centre, traces a
+      // hypotrochoid. It closes once the wheel has rolled a whole number of its own teeth back to
+      // the start: after r / gcd(R, r) laps of the ring, in teeth.
+      const gcd = (a, b) => (b ? gcd(b, a % b) : a);
+      const lapsOf = (teeth) => teeth / gcd(RING_TEETH, teeth);
+      function pathOf(teeth, hole, phase) {
+        const R = RING, r = radiusOf(teeth), d = HOLES[hole] * r, laps = lapsOf(teeth);
+        const steps = Math.ceil(laps * 720), points = new Float32Array((steps + 1) * 3), length = new Float32Array(steps + 1);
+        for (let k = 0; k <= steps; k++) {
+          const t = (k / steps) * laps * Math.PI * 2, spin = -((R - r) / r) * t + phase + holeAngle(hole);
+          const x = (R - r) * Math.cos(t + phase) + d * Math.cos(spin);
+          const y = (R - r) * Math.sin(t + phase) + d * Math.sin(spin);
+          points.set([x, 0.003, -y], k * 3);
+          if (k) length[k] = length[k - 1] + Math.hypot(x - points[k * 3 - 3], -y - points[k * 3 - 1]);
+        }
+        return { points, length, laps, steps, r, d, hole };
+      }
+
+      // THE LINE THAT DRAWS ITSELF. Each layer is one line, whole from the start, built once and
+      // never rewritten. What grows is its dash. A dashed
+      // ink draws `dashSize` metres from the first vertex, then leaves a `gapSize` gap; with the
+      // gap longer than the whole line, the dash IS the part drawn. Moving `dashSize` up to the
+      // pen's distance along the path reveals it pixel by pixel, between two vertices as well.
+      const INKS = ['#1d3fbf', '#d1335b', '#13897a', '#e3892b', '#6b3fc7', '#1f2933', '#c2185b', '#00838f'];
+      const LAYERS = INKS.length;
+      const layers = [];
+      // Each layer starts the wheel a few teeth further round the ring, so the teeth still mesh.
+      const phaseOf = (layer) => (layer * 4 * Math.PI * 2) / RING_TEETH;
+      const holeOf = (fraction) => Math.round((fraction - HOLES[0]) * 10);
+      let current = null, layer = 0, drawn = 0;
+      function startLayer(teeth = Number(ui.wheel), hole = holeOf(ui.hole)) {
+        const ink = INKS[layer % INKS.length];
+        const path = pathOf(teeth, hole, phaseOf(layer));
+        const total = path.length[path.steps];
+        const paint = material.lineDashed({ color: ink, linewidth: ui.width, dashSize: 1e-4, gapSize: total * 2 + 1 });
+        const line = object.line(geometry.createBuffer({ position: buffer.float32(path.points, 3) }), paint);
+        line.position.y = layer * 0.0004;
+        world.scene.add(line);
+        current = { ...path, total, paint, line };
+        layers.push(current);
+        capInk.color.set(ink);
+        drawn = 0;
+        place();
+      }
+      function clearAll() {
+        for (const { line } of layers) {
+          world.scene.remove(line);
+          line.geometry.dispose();
+        }
+        layers.length = 0;
+        layer = 0;
+        startLayer();
+        world.invalidate();
+      }
+
+      // The gears and the pen where the pen is: `drawn` is in steps of the path, its fraction
+      // read back to the angle the wheel's centre has turned.
+      function place() {
+        const { laps, steps, r, length, paint } = current;
+        const k = Math.min(steps, Math.floor(drawn)), f = Math.min(1, drawn - k);
+        const along = k < steps ? length[k] + (length[k + 1] - length[k]) * f : length[steps];
+        paint.dashSize = Math.max(1e-4, along);
+        const phase = phaseOf(layer), t = (drawn / steps) * laps * Math.PI * 2;
+        const spin = -((RING - r) / r) * t + phase;
+        wheelSpin.position.set((RING - r) * Math.cos(t + phase), 0.006, -(RING - r) * Math.sin(t + phase));
+        wheelSpin.rotation.set(0, spin, 0);
+        const tipAngle = spin + holeAngle(current.hole);
+        pen.position.set(wheelSpin.position.x + current.d * Math.cos(tipAngle), 0, wheelSpin.position.z - current.d * Math.sin(tipAngle));
+        drawnOut(`${Math.round((along / current.total) * 100)} %`);
+      }
+
+      const ui = controls({
+        wheel: ['63', '45', '84', '40', '56', '72', '30'],
+        hole: [0.3, 0.9, 0.8, 0.1],
+        speed: [0.1, 4, 0.9, 0.1],
+        width: [1, 6, 2.5, 0.5],
+        layers: true,
+        clear: clearAll,
+      }, (values, key) => {
+        if (key === undefined || key === 'wheel') buildWheel(Number(values.wheel));
+        // The readouts exist once the controls do, so the first call leaves them alone.
+        if (key === 'wheel') lapsOut(String(lapsOf(Number(values.wheel))));
+        for (const { paint } of layers) paint.linewidth = values.width;
+        // A new wheel or hole starts the layer again, on the same ink.
+        if (current && (key === 'wheel' || key === 'hole')) {
+          world.scene.remove(current.line);
+          current.line.geometry.dispose();
+          layers.pop();
+          startLayer();
+        }
+        world.invalidate();
+      }, world);
+      const drawnOut = readout('drawn');
+      const lapsOut = readout('laps');
+      const lengthOut = readout('inkLaid');
+      lapsOut(String(lapsOf(Number(ui.wheel))));
+      // The paper opens with three layers already drawn, from other wheels and holes, and the
+      // fourth on its way.
+      for (const [teeth, hole] of [[84, 6], [45, 4], [40, 3]]) {
+        startLayer(teeth, hole);
+        drawn = current.steps;
+        place();
+        layer++;
+      }
+      startLayer();
+
+      world.camera.position.set(0.3, 3.4, 3.6);
+      world.camera.lookAt(0, 0, 0.1);
+      world.controls.target.set(0, 0, 0.1);
+      world.controls.minDistance = 1.6;
+      world.controls.maxDistance = 9;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.08;
+      const from = [2.6, 1.6, 4.4], to = [0.3, 3.4, 3.6];
+      opening(world, (time) => {
+        world.camera.position.set(...mix({ math }, from, to, ease.out(time / 3)));
+        return time < 3;
+      });
+
+      // The pen goes round the ring at `speed` laps a second. A finished layer starts the next one,
+      // turned a little and in the next ink, until eight lie on the paper; then the desk is still
+      // and asks for no frame.
+      world.onFrame(({ delta }) => {
+        const step = Math.min(delta, 0.05);
+        if (drawn >= current.steps) {
+          if (!ui.layers || layers.length >= LAYERS) return;
+          layer++;
+          startLayer();
+        }
+        drawn = Math.min(current.steps, drawn + step * ui.speed * 720);
+        place();
+        let laid = 0;
+        for (const { paint } of layers) laid += paint.dashSize;
+        lengthOut(`${laid.toLocaleString(language(), { maximumFractionDigits: 1 })} m`);
+        world.invalidate();
+      });
+    </script>
+  </body>
+</html>

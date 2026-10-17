@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>A convex hull</title>
+    <meta name="thumbnail" content="4" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #080a12;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      // A swarm of points and the smallest convex solid that holds them all, computed again on
+      // every frame as the points move: a crystal that keeps re-cutting its facets.
+      import { createWorld, effect, geometry, material, object, light, math, buffer } from '../runtime/engine.js';
+      import { controls, readout, seeded, opening, ease, mix, language } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#080a12');
+      const MAX = 160, CENTRE = [0, 1.7, 0];
+
+      // THE HULL, built point by point (the beneath–beyond method). It starts as the
+      // tetrahedron of four far-apart points; every further point either lies behind all the
+      // faces — inside, nothing to do — or sees some of them. The faces it sees are removed,
+      // which opens a hole bordered by a loop of edges, the horizon; the point is joined to every
+      // horizon edge by a new face. Faces are kept turned outward, their corners anticlockwise
+      // seen from outside, so "sees" is "lies in front of the face's plane".
+      function hull(points, count) {
+        const at = (i) => points.subarray(i * 3, i * 3 + 3);
+        const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+        const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+        const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+        const EPSILON = 1e-7;
+        const face = (a, b, c) => {
+          const n = cross(sub(at(b), at(a)), sub(at(c), at(a)));
+          const length = Math.hypot(...n) || 1;
+          const normal = [n[0] / length, n[1] / length, n[2] / length];
+          return { a, b, c, normal, offset: dot(normal, at(a)) };
+        };
+        const ahead = (f, p) => dot(f.normal, p) - f.offset;
+
+        // Four points as far apart as can be: the lowest x, the farthest from it, the farthest
+        // from the line through both, the farthest from their plane.
+        let i0 = 0;
+        for (let i = 1; i < count; i++) if (at(i)[0] < at(i0)[0]) i0 = i;
+        const farthest = (measure) => {
+          let best = -1, far = -Infinity;
+          for (let i = 0; i < count; i++) {
+            const m = measure(at(i));
+            if (m > far) {
+              far = m;
+              best = i;
+            }
+          }
+          return [best, far];
+        };
+        const [i1] = farthest((p) => Math.hypot(...sub(p, at(i0))));
+        const axis = sub(at(i1), at(i0));
+        const [i2, off] = farthest((p) => Math.hypot(...cross(axis, sub(p, at(i0)))));
+        if (off < EPSILON) return null;
+        const base = face(i0, i1, i2);
+        const [i3, height] = farthest((p) => Math.abs(ahead(base, p)));
+        if (height < EPSILON) return null;
+        let faces = ahead(base, at(i3)) > 0
+          ? [face(i0, i2, i1), face(i0, i1, i3), face(i1, i2, i3), face(i2, i0, i3)]
+          : [face(i0, i1, i2), face(i0, i3, i1), face(i1, i3, i2), face(i2, i3, i0)];
+
+        for (let p = 0; p < count; p++) {
+          if (p === i0 || p === i1 || p === i2 || p === i3) continue;
+          const point = at(p), seen = [], kept = [];
+          for (const f of faces) (ahead(f, point) > EPSILON ? seen : kept).push(f);
+          if (!seen.length) continue;
+          // The horizon: the edges of seen faces whose other side is not seen. An edge runs u→v
+          // in one face and v→u in its neighbour.
+          const edges = new Set();
+          for (const { a, b, c } of seen) for (const [u, v] of [[a, b], [b, c], [c, a]]) edges.add(u * MAX + v);
+          for (const key of edges) {
+            const u = Math.floor(key / MAX), v = key % MAX;
+            if (!edges.has(v * MAX + u)) kept.push(face(u, v, p));
+          }
+          faces = kept;
+        }
+        return faces;
+      }
+
+      // THE POINTS. Each has a home in the chosen cloud and moves round it: carried round the
+      // vertical axis at its own pace, and swaying on three slow waves.
+      const next = seeded(11);
+      const gauss = () => Math.sqrt(-2 * Math.log(1 - next())) * Math.cos(2 * Math.PI * next());
+      const CLOUDS = {
+        ball: () => {
+          const r = 1.35 * Math.cbrt(next()), y = next() * 2 - 1, a = next() * Math.PI * 2, s = Math.sqrt(1 - y * y);
+          return [r * s * Math.cos(a), r * y, r * s * Math.sin(a)];
+        },
+        cube: () => [next() * 2.2 - 1.1, next() * 2.2 - 1.1, next() * 2.2 - 1.1],
+        torus: () => {
+          const a = next() * Math.PI * 2, b = next() * Math.PI * 2, r = 0.32 * Math.sqrt(next());
+          return [(1.15 + r * Math.cos(b)) * Math.cos(a), r * Math.sin(b), (1.15 + r * Math.cos(b)) * Math.sin(a)];
+        },
+        swarm: () => [gauss() * 0.28, gauss() * 0.28, gauss() * 0.28],
+      };
+      const homes = new Float32Array(MAX * 3), waves = new Float32Array(MAX * 6);
+      function scatter(cloud) {
+        for (let i = 0; i < MAX; i++) {
+          homes.set(CLOUDS[cloud](), i * 3);
+          for (let k = 0; k < 6; k++) waves[i * 6 + k] = k < 3 ? 0.4 + next() * 1.2 : next() * Math.PI * 2;
+        }
+      }
+      const points = new Float32Array(MAX * 3);
+      function move(time, cloud) {
+        for (let i = 0; i < MAX; i++) {
+          const spin = time * (0.25 + (i % 7) * 0.06) * (i % 2 ? 1 : -1);
+          let [x, y, z] = homes.subarray(i * 3, i * 3 + 3);
+          // The swarm is three clusters that circle one another, merging and parting; every
+          // third point belongs to the same cluster.
+          if (cloud === 'swarm') {
+            const cluster = i % 3;
+            const a = time * 0.5 + (cluster * Math.PI * 2) / 3, out = 0.75 + 0.45 * Math.sin(time * 0.37 + cluster);
+            x += Math.cos(a) * out;
+            y += Math.sin(time * 0.6 + cluster * 2) * 0.45;
+            z += Math.sin(a) * out;
+          }
+          const c = Math.cos(spin), s = Math.sin(spin), sway = 0.12;
+          points[i * 3] = c * x - s * z + Math.sin(time * waves[i * 6] + waves[i * 6 + 3]) * sway;
+          points[i * 3 + 1] = y + Math.sin(time * waves[i * 6 + 1] + waves[i * 6 + 4]) * sway;
+          points[i * 3 + 2] = s * x + c * z + Math.sin(time * waves[i * 6 + 2] + waves[i * 6 + 5]) * sway;
+        }
+      }
+
+      // THE CRYSTAL. One mesh with room for the most faces a hull of MAX points can have
+      // (2 × MAX − 4), each face its own three corners and its own colour. It is written again
+      // in place on every frame; the faces not used are folded to a point and draw nothing. It
+      // carries no normals: the world computes them from the faces on every rewrite, one a face
+      // here, since no two faces share a corner.
+      const FACES = 2 * MAX - 4;
+      const facePositions = buffer.float32(new Float32Array(FACES * 9), 3);
+      const faceColours = buffer.float32(new Float32Array(FACES * 9), 3);
+      const crystalShape = geometry.createBuffer({ position: facePositions, color: faceColours });
+      crystalShape.usage = 'dynamic';
+      const glass = material.meshPhysical({ vertexColors: true, roughness: 0.08, metalness: 0.1, clearcoat: 1, transparent: true, opacity: 0.5, depthWrite: false });
+      const crystal = object.mesh(crystalShape, glass);
+      crystal.castShadow = false;
+      crystal.position.set(...CENTRE);
+      world.scene.add(crystal);
+
+      // A face's colour from the way it faces: a ramp from sea green through violet to gold,
+      // picked by its direction round the vertical and lightened as it turns upward.
+      const RAMP = ['#36e0c2', '#4a7dff', '#a25bff', '#ff6fb5', '#ffc85a', '#36e0c2'].map((c) => math.color(c));
+      const tint = math.color(), WHITE = math.color('#ffffff');
+      const colourOf = (n) => {
+        const around = ((Math.atan2(n[2], n[0]) / (Math.PI * 2) + 1) % 1) * (RAMP.length - 1), k = Math.floor(around);
+        return tint.copy(RAMP[k]).lerp(RAMP[k + 1], around - k).lerp(WHITE, Math.max(0, n[1]) * 0.35);
+      };
+
+      // The points: on the hull they glow gold and larger; inside they are small and blue. Each
+      // point has both beads, one shown. The hull's edges are thin glowing rods, a pool of them
+      // shared out each frame, each set between its two corners.
+      const goldGlow = material.meshStandard({ color: '#000000', emissive: '#ffb53a', emissiveIntensity: 3.2 });
+      const blueGlow = material.meshStandard({ color: '#000000', emissive: '#5b8cff', emissiveIntensity: 2.2 });
+      const bead = geometry.sphere(1, 16, 10);
+      const beads = Array.from({ length: MAX }, () => {
+        const outer = object.mesh(bead, goldGlow), inner = object.mesh(bead, blueGlow);
+        outer.scale.setScalar(0.05);
+        inner.scale.setScalar(0.028);
+        outer.castShadow = inner.castShadow = false;
+        crystal.add(outer, inner);
+        return { outer, inner };
+      });
+      const EDGES = 3 * MAX - 6;
+      const rodGlow = material.meshStandard({ color: '#000000', emissive: '#9fd8ff', emissiveIntensity: 0.9 });
+      const rod = geometry.cylinder(0.007, 0.007, 1, 6);
+      const rods = Array.from({ length: EDGES }, () => {
+        const mesh = object.mesh(rod, rodGlow);
+        mesh.castShadow = false;
+        mesh.visible = false;
+        crystal.add(mesh);
+        return mesh;
+      });
+      const up = math.vector3(0, 1, 0), along = math.vector3();
+
+      // A dark polished floor that mirrors the crystal, a cool key, a warm rim, and a bloom round
+      // everything that glows.
+      const floor = object.mesh(geometry.cylinder(30, 30, 0.1, 96), material.meshStandard({ color: '#121624', roughness: 0.42, metalness: 0.2 }));
+      floor.position.y = -0.05;
+      world.scene.add(
+        floor,
+        light.directional({ color: '#dfe8ff', intensity: 2.2, position: [3, 6, 4] }),
+        light.directional({ color: '#ffb27a', intensity: 1.4, position: [-4, 5, -3] }),
+        light.hemisphere({ color: '#6f7fb8', groundColor: '#120e18', intensity: 0.5 }),
+        light.point({ color: '#7fa0ff', intensity: 12, distance: 6, position: CENTRE }),
+      );
+      world.effects.add(effect.bloom({ intensity: 0.1 }));
+      world.camera.position.set(0.4, 2.5, 4.6);
+      world.camera.lookAt(...CENTRE);
+      world.controls.target.set(...CENTRE);
+      world.controls.minDistance = 2.5;
+      world.controls.maxDistance = 14;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.04;
+
+      let dirty = true;
+      const ui = controls({
+        points: [8, MAX, 70, 1],
+        motion: [0, 2, 0.6, 0.05],
+        cloud: Object.keys(CLOUDS),
+        facets: true,
+        edges: true,
+      }, (values, key) => {
+        if (key === undefined || key === 'cloud') scatter(values.cloud);
+        glass.opacity = values.facets ? 0.5 : 0;
+        dirty = true;
+        world.invalidate();
+      }, world);
+      const shown = {
+        corners: readout('hullCorners'),
+        faces: readout('faces'),
+        inside: readout('inside'),
+        euler: readout('euler'),
+        time: readout('buildTime'),
+      };
+
+      // Every frame: move the points, build the hull from nothing, write its faces, beads and
+      // rods. Its vertices, edges and faces always satisfy Euler's V − E + F = 2. The scratch
+      // arrays are kept from frame to frame, and only the faces the last hull used and this one
+      // does not are folded back to a point.
+      let time = 0, usedFaces = 0;
+      const onHull = new Uint8Array(MAX), edges = [];
+      function rebuild() {
+        const count = ui.points;
+        move(time, ui.cloud);
+        const started = performance.now();
+        const faces = hull(points, count) ?? [];
+        const spent = performance.now() - started;
+        const p = facePositions.array, c = faceColours.array;
+        if (faces.length < usedFaces) p.fill(0, faces.length * 9, usedFaces * 9);
+        usedFaces = faces.length;
+        onHull.fill(0);
+        edges.length = 0;
+        faces.forEach(({ a, b, c: d, normal }, f) => {
+          const { r, g, b: blue } = colourOf(normal);
+          [a, b, d].forEach((v, k) => {
+            const at = f * 9 + k * 3;
+            p[at] = points[v * 3];
+            p[at + 1] = points[v * 3 + 1];
+            p[at + 2] = points[v * 3 + 2];
+            c[at] = r;
+            c[at + 1] = g;
+            c[at + 2] = blue;
+            onHull[v] = 1;
+          });
+          if (a < b) edges.push(a, b);
+          if (b < d) edges.push(b, d);
+          if (d < a) edges.push(d, a);
+        });
+        facePositions.needsUpdate = faceColours.needsUpdate = true;
+        let corners = 0;
+        beads.forEach(({ outer, inner }, i) => {
+          const live = i < count;
+          outer.visible = live && onHull[i] === 1;
+          inner.visible = live && !onHull[i];
+          corners += outer.visible ? 1 : 0;
+          (outer.visible ? outer : inner).position.set(points[i * 3], points[i * 3 + 1], points[i * 3 + 2]);
+        });
+        rods.forEach((mesh, e) => {
+          mesh.visible = ui.edges && e * 2 < edges.length;
+          if (!mesh.visible) return;
+          const u = edges[e * 2] * 3, v = edges[e * 2 + 1] * 3;
+          along.set(points[v] - points[u], points[v + 1] - points[u + 1], points[v + 2] - points[u + 2]);
+          const length = along.length();
+          mesh.position.set((points[u] + points[v]) / 2, (points[u + 1] + points[v + 1]) / 2, (points[u + 2] + points[v + 2]) / 2);
+          mesh.quaternion.setFromUnitVectors(up, along.divideScalar(length || 1));
+          mesh.scale.set(1, length, 1);
+        });
+        const say = (n) => n.toLocaleString(language());
+        const E = edges.length / 2, F = faces.length;
+        shown.corners(say(corners));
+        shown.faces(say(F));
+        shown.inside(say(count - corners));
+        shown.euler(`${say(corners)} − ${say(E)} + ${say(F)} = ${say(corners - E + F)}`);
+        shown.time(`${spent.toLocaleString(language(), { maximumFractionDigits: 2 })} ms`);
+      }
+      rebuild();
+
+      const from = [4.6, 4, 6.8], to = [0.4, 2.5, 4.6];
+      opening(world, (t) => {
+        world.camera.position.set(...mix({ math }, from, to, ease.out(t / 3)));
+        return t < 3;
+      });
+      // With no motion the swarm holds still and asks for no frame, but a new setting is drawn.
+      world.onFrame(({ delta }) => {
+        if (!ui.motion && !dirty) return;
+        time += Math.min(delta, 0.05) * ui.motion;
+        rebuild();
+        dirty = false;
+        world.invalidate();
+      });
+    </script>
+  </body>
+</html>

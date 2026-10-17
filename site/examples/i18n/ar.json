@@ -1454,6 +1454,38 @@
       "credit": "Amazon Lumberyard Bistro (NVIDIA ORCA), CC BY 4.0 — انظر assets/examples/CREDITS.md"
     }
   },
+  "a-map-of-what-the-engine-draws": {
+    "banner": "انقر على العرض الأيسر وامشِ بالمفاتيح W A S D؛ تُظهر الخريطة على اليمين من الأعلى ما حسبه ذلك العرض في هذا الإطار. جمّد الاقتطاع، ثم اخرج منه.",
+    "controls": {
+      "freeze": "تجميد",
+      "frustum": "هرم الرؤية",
+      "clusters": "العناقيد",
+      "shadows": "صفحات الظل",
+      "reflections": "أشعة الانعكاس",
+      "lights": "الأضواء",
+      "mapSize": "حجم الخريطة (م)"
+    },
+    "readouts": {
+      "clusters": "العناقيد",
+      "occluded": "محجوبة",
+      "missing": "غير محمّلة",
+      "shadowPages": "صفحات الظل المرسومة",
+      "raysMissed": "أشعة لم تصطدم بشيء"
+    },
+    "words": {
+      "credit": "Emerald Square من Nicholas Hull وKate Anderson (NVIDIA ORCA)، النباتات من SpeedTree، CC BY-NC-SA 3.0 — انظر assets/examples/CREDITS.md",
+      "fine": "دقيق",
+      "coarse": "خشن",
+      "occluded": "محجوب",
+      "missing": "غير محمّل",
+      "pageDrawn": "صفحة ظل مرسومة",
+      "pageCached": "صفحة ظل من الذاكرة المؤقتة",
+      "rayHit": "شعاع وموضع اصطدامه",
+      "rayMissed": "شعاع لم يصطدم بشيء",
+      "camera": "الكاميرا",
+      "frozenCut": "اقتطاع مجمّد"
+    }
+  },
   "a-bust-a-crate-and-a-glass-ball": {
     "banner": "اسحب لتدور حول التمثال النصفي. الصندوق والكرة الزجاجية يدوران على قاعدتهما الدوّارة.",
     "words": {
@@ -2726,6 +2758,739 @@
       "height": "الخفّة",
       "base": "القاعدة",
       "colour": "اللون"
+    }
+  },
+  "paint-where-you-click": {
+    "banner": "اضغط على المزهرية واسحب لترسم. اثبت في مكانك فترسم العجلة الدوّارة شريطًا حولها. اسحب بجانبها لتدوير المنظر.",
+    "controls": {
+      "colour": "اللون",
+      "brush": "حجم الفرشاة",
+      "wheel": "سرعة العجلة",
+      "clear": "مسح"
+    },
+    "readouts": {
+      "triangle": "المثلث",
+      "uv": "النسيج (u, v)",
+      "strokes": "الضربات"
+    }
+  },
+  "pixel-art-render": {
+    "banner": "اسحب لتدوير الجزيرة، ومرّر للتكبير. غيّر حجم البكسل ولوحة الألوان.",
+    "controls": {
+      "pixelSize": "حجم البكسل",
+      "palette": "لوحة الألوان",
+      "upscale": "التكبير",
+      "turn": "الدوران"
+    },
+    "choices": {
+      "palette": {
+        "full": "ألوان كاملة",
+        "posterized": "64 لونًا",
+        "handheld": "أخضر جهاز الألعاب المحمول",
+        "dusk": "أربع درجات للغسق"
+      },
+      "upscale": {
+        "nearest": "أقرب بكسل",
+        "smooth": "مُنعَّم"
+      }
+    },
+    "readouts": {
+      "resolution": "الدقة المرسومة"
+    }
+  },
+  "a-line-that-draws-itself": {
+    "banner": "سبيروغراف يرسم خطّه نفسه: تنمو شَرطة خطّ واحد خلف القلم. اختر عجلة وثقبًا؛ اسحب للنظر حولك.",
+    "controls": {
+      "wheel": "أسنان العجلة",
+      "hole": "ثقب القلم",
+      "speed": "دورات في الثانية",
+      "width": "عرض الخط",
+      "layers": "الطبقة التالية",
+      "clear": "امسح الورقة"
+    },
+    "readouts": {
+      "drawn": "المرسوم من الطبقة",
+      "laps": "دورات حتى الإغلاق",
+      "inkLaid": "الحبر المرسوم"
+    }
+  },
+  "decals-on-a-surface": {
+    "banner": "مرّر فوق الحصاة لترى صندوق الإسقاط؛ انقر لتقصّ ملصقًا من السطح تحته. اسحب لتدوير المنظر.",
+    "controls": {
+      "sticker": "الملصق",
+      "size": "الحجم",
+      "turn": "دوران عشوائي",
+      "box": "إظهار الصندوق",
+      "spin": "تدوير",
+      "clear": "انزعها كلها"
+    },
+    "choices": {
+      "sticker": {
+        "mixed": "منوّعة",
+        "star": "نجمة",
+        "bolt": "برق",
+        "heart": "قلب",
+        "target": "هدف",
+        "flag": "مربّعات",
+        "smile": "ابتسامة",
+        "hazard": "تحذير",
+        "flower": "زهرة"
+      }
+    },
+    "readouts": {
+      "decals": "الملصقات",
+      "kept": "المثلثات المقصوصة"
+    }
+  },
+  "procedural-wood-and-noise": {
+    "banner": "اسحب للنظر حولك. كل تكسل ينمو من ضجيج تحسبه الصفحة: اختر خشبًا، وانشر جذوعًا جديدة.",
+    "controls": {
+      "wood": "الخشب",
+      "rings": "حلقات لكل 10 سم",
+      "figure": "التعريق",
+      "varnish": "الورنيش",
+      "newLogs": "جذوع جديدة",
+      "turn": "أدر الوعاء"
+    },
+    "choices": {
+      "wood": {
+        "oak": "بلوط",
+        "walnut": "جوز",
+        "cherry": "كرز",
+        "maple": "قيقب"
+      }
+    },
+    "readouts": {
+      "texels": "تكسلات محسوبة",
+      "bakeTime": "حُسبت في"
+    }
+  },
+  "a-toolpath-in-lines": {
+    "banner": "ملف G-code حقيقي، تقرؤه الصفحة وترسمه خطوطًا بينما تطبعه الفوهة. اسحب للتدوير؛ اخفض الطبقة العليا لقطع القطعة.",
+    "controls": {
+      "colour": "التلوين حسب",
+      "topLayer": "الطبقة العليا",
+      "pace": "الإيقاع",
+      "travel": "حركات الانتقال",
+      "reprint": "اطبع من جديد"
+    },
+    "choices": {
+      "colour": {
+        "kind": "نوع الحركة",
+        "layer": "الطبقة",
+        "speed": "السرعة"
+      }
+    },
+    "readouts": {
+      "layer": "الطبقة",
+      "filament": "الخيط",
+      "printTime": "مدة الطباعة",
+      "gcodeLines": "أسطر G-code",
+      "segments": "المقاطع",
+      "lines": "الخطوط في المشهد"
+    }
+  },
+  "pick-an-instance": {
+    "banner": "أشر إلى سداسيّ لتعرف اسمه بين 1519 موضعًا لشكل واحد؛ انقر لتختاره وتُطلق موجة عبر الجزيرة.",
+    "controls": {
+      "ripple": "الموجة",
+      "swell": "تموّج البحر"
+    },
+    "readouts": {
+      "instance": "النسخة",
+      "cell": "الخلية (q, r)",
+      "height": "الارتفاع",
+      "placements": "المواضع",
+      "shapes": "الأشكال المشتركة"
+    }
+  },
+  "shapes-from-an-svg": {
+    "banner": "ملف SVG يُقرأ مسارًا مسارًا، وكل شكل مملوء يُقصّ من الورق المقوّى مع ثقوبه. باعِد بين الطبقات، أو أفلت ملف SVG خاصًا بك على الصفحة.",
+    "controls": {
+      "spread": "التباعد",
+      "depth": "سماكة الورق المقوّى",
+      "bevel": "الشطب",
+      "detail": "دقة المنحنيات",
+      "sway": "التمايل",
+      "yourSvg": "افتح ملف SVG الخاص بك"
+    },
+    "readouts": {
+      "paths": "الأشكال المقروءة",
+      "outlines": "الحدود",
+      "holes": "الثقوب المقصوصة",
+      "triangles": "المثلثات",
+      "file": "الملف"
+    }
+  },
+  "boolean-shapes": {
+    "banner": "اسحب للدوران حول الشكل. اختر عملية؛ فعّل الانجراف فيعيد worker قصّ الشكل أثناء حركته.",
+    "controls": {
+      "operation": "العملية",
+      "ball": "الكرة",
+      "bore": "الثقب",
+      "drifting": "الانجراف",
+      "operands": "المعاملات",
+      "spin": "الدوران"
+    },
+    "choices": {
+      "operation": {
+        "carved": "(مكعب ∩ كرة) − ثقوب",
+        "subtract": "مكعب − كرة",
+        "intersect": "مكعب ∩ كرة",
+        "union": "مكعب ∪ كرة"
+      }
+    },
+    "readouts": {
+      "triangles": "المثلثات",
+      "computedIn": "حُسب في"
+    }
+  },
+  "a-convex-hull": {
+    "banner": "أصغر مجسّم محدّب يحيط بسرب متحرّك، يُبنى من جديد في كل إطار. غيّر النقاط والسحابة؛ اسحب للنظر حولك.",
+    "controls": {
+      "points": "النقاط",
+      "motion": "الحركة",
+      "cloud": "السحابة",
+      "facets": "الأوجه",
+      "edges": "الحواف"
+    },
+    "choices": {
+      "cloud": {
+        "ball": "كرة",
+        "cube": "مكعّب",
+        "torus": "حلقة",
+        "swarm": "ثلاثة أسراب"
+      }
+    },
+    "readouts": {
+      "hullCorners": "رؤوس الغلاف",
+      "faces": "الأوجه",
+      "inside": "نقاط في الداخل",
+      "euler": "V − E + F",
+      "buildTime": "زمن بناء الغلاف"
+    }
+  },
+  "contact-shadow-under-a-car": {
+    "banner": "اسحب للدوران. وسّع المصباح أو ارفع السيارة أو اجعلها تقفز: يبقى ظلها ملتصقًا بالإطارات.",
+    "controls": {
+      "lampWidth": "عرض المصباح",
+      "rideHeight": "الارتفاع عن الأرض",
+      "hop": "قفزة",
+      "paint": "الطلاء",
+      "drive": "قيادة"
+    },
+    "readouts": {
+      "height": "الارتفاع"
+    }
+  },
+  "contact-shadows-from-the-screen": {
+    "banner": "اسحب للدوران ومرّر للاقتراب. تحتفظ كل ساق وكل مسار بخيط ظلها الرفيع.",
+    "controls": {
+      "sunHeight": "ارتفاع الشمس",
+      "sunTurn": "اتجاه الشمس",
+      "sweep": "مسح"
+    },
+    "readouts": {
+      "ray": "شعاع الشاشة"
+    }
+  },
+  "light-that-bounces": {
+    "banner": "اسحب للنظر داخل الغرفة. أطفئ الارتداد ثم شغّله: بقعة الشمس تضيء الغرفة كلها.",
+    "controls": {
+      "bounce": "الارتداد",
+      "sunHeight": "ارتفاع الشمس",
+      "sunTurn": "اتجاه الشمس",
+      "sweep": "مسح",
+      "sunColour": "لون الشمس"
+    }
+  },
+  "voxel-models": {
+    "banner": "ملفات MagicaVoxel تقرؤها الصفحة: تُحذف الأوجه المخفية وتُظلَّل الزوايا بحسب جيرانها. اسحب للتدوير؛ اخفض الارتفاع لفتح النموذج.",
+    "controls": {
+      "model": "النموذج",
+      "height": "الارتفاع",
+      "occlusion": "الحجب",
+      "spin": "الدوران"
+    },
+    "choices": {
+      "model": {
+        "lighthouse": "منارة",
+        "castle": "قلعة",
+        "balloon": "منطاد هواء ساخن"
+      }
+    },
+    "readouts": {
+      "voxels": "الفوكسلات",
+      "facesDrawn": "الأوجه المرسومة",
+      "facesHidden": "الأوجه المحذوفة",
+      "file": "الملف"
+    }
+  },
+  "red-cyan-anaglyph": {
+    "banner": "ضع نظارة أحمر-سماوي، والعدسة الحمراء على العين اليسرى. اسحب للتدوير، ومرّر للاقتراب.",
+    "controls": {
+      "glasses": "النظارة",
+      "separation": "المسافة بين العينين",
+      "screenPlane": "مستوى الشاشة",
+      "swapEyes": "تبديل العينين",
+      "speed": "السرعة"
+    },
+    "choices": {
+      "glasses": {
+        "halfColour": "نصف ملوّن",
+        "colour": "ألوان كاملة",
+        "grey": "رمادي",
+        "none": "بلا نظارة، العين اليسرى فقط"
+      }
+    },
+    "readouts": {
+      "screenDistance": "مستوى الشاشة على بعد"
+    }
+  },
+  "cross-fade-between-scenes": {
+    "banner": "عالمان وكاميرا واحدة. اسحب للتدوير، واختر كيف يُفسح مشهد المكان للآخر.",
+    "controls": {
+      "transition": "الانتقال",
+      "duration": "المدة (ث)",
+      "hold": "التوقف (ث)",
+      "autoplay": "تشغيل تلقائي",
+      "switchScene": "تبديل المشهد"
+    },
+    "choices": {
+      "transition": {
+        "iris": "قزحية",
+        "wipe": "مسح",
+        "fade": "تلاشٍ متقاطع",
+        "blinds": "ستائر"
+      }
+    },
+    "readouts": {
+      "showing": "المشهد",
+      "worldsDrawing": "العوالم التي ترسم"
+    },
+    "words": {
+      "desert": "الصحراء",
+      "glacier": "النهر الجليدي"
+    }
+  },
+  "a-refracting-pane": {
+    "banner": "اسحب للنظر حولك. الزجاج يحرف ما خلفه: غيّر نقشه ومعامل انكساره وسُمكه.",
+    "controls": {
+      "glass": "الزجاج",
+      "refraction": "معامل الانكسار",
+      "thickness": "السُّمك",
+      "tint": "اللون",
+      "slide": "انزلاق"
+    },
+    "choices": {
+      "glass": {
+        "reeded": "مضلّع",
+        "hammered": "مطروق",
+        "rippled": "متموّج",
+        "bullseye": "عين الثور",
+        "flat": "مستوٍ"
+      }
+    }
+  },
+  "pick-lines-and-points": {
+    "banner": "حرّك المؤشر فوق الكرة: يضيء أقرب نجم أو خط في المتناول. يصيب raycast المحرّك المثلثات؛ أما النقاط والقطع فتُختبر هنا بالبكسل.",
+    "controls": {
+      "reach": "المدى (px)",
+      "stars": "اختيار النجوم",
+      "lines": "اختيار الخطوط",
+      "turning": "الدوران"
+    },
+    "readouts": {
+      "hit": "المختار",
+      "place": "أين",
+      "off": "الانحراف",
+      "cost": "الكلفة"
+    },
+    "words": {
+      "nothing": "لا شيء",
+      "star": "النجم {n} من {total}",
+      "figure": "الشكل {n}",
+      "parallel": "خط العرض {deg}°",
+      "meridian": "خط الطول {deg}°",
+      "segment": "القطعة {k} من {total}",
+      "place": "طول {lon}° · عرض {lat}°",
+      "pixels": "{px} px",
+      "cost": "{n} اختبار · {us} µs"
+    }
+  },
+  "printable-parts": {
+    "banner": "ملفات STL وPLY وAMF و3MF، يقرأ كلًّا منها بضع عشرات من الأسطر في الصفحة. اسحب للتدوير؛ اختر قطعة لتراها عن قرب.",
+    "controls": {
+      "focus": "انظر إلى",
+      "stlColour": "خيط STL",
+      "wireframe": "هيكل سلكي",
+      "spin": "الدوران"
+    },
+    "choices": {
+      "focus": {
+        "all": "اللوح كله",
+        "gear": "ترس (STL)",
+        "vase": "مزهرية (PLY)",
+        "bolt": "مسمار وصامولة (AMF)",
+        "knot": "عقدة (3MF)"
+      }
+    },
+    "readouts": {
+      "gear": "gear.stl",
+      "vase": "vase.ply",
+      "bolt": "bolt.amf",
+      "knot": "knot.3mf"
+    },
+    "words": {
+      "summary": "{size} ك.ب · {triangles} مثلث"
+    }
+  },
+  "avif-textures": {
+    "banner": "اسحب للنظر حولك. المنظر وغصن الزيتون ملفات AVIF: اخفض الجودة وانظر من النافذة.",
+    "controls": {
+      "quality": "جودة AVIF",
+      "lookAt": "انظر إلى"
+    },
+    "choices": {
+      "lookAt": {
+        "room": "الغرفة",
+        "view": "المنظر",
+        "branch": "الغصن"
+      }
+    },
+    "readouts": {
+      "view": "المنظر",
+      "branch": "الغصن",
+      "decoded": "البكسلات المفكوكة"
+    },
+    "words": {
+      "alpha": "شفاف"
+    }
+  },
+  "smoothing-by-subdivision": {
+    "banner": "اسحب للدوران حول الشكل. ارفع المستوى لتقسيم كل مثلث إلى أربعة؛ الحواف الكهرمانية طيّات وتبقى حادّة.",
+    "controls": {
+      "shape": "القفص",
+      "level": "المستوى",
+      "creases": "الطيّات",
+      "creaseAngle": "زاوية الطيّة",
+      "cage": "إظهار القفص",
+      "spin": "الدوران"
+    },
+    "choices": {
+      "shape": {
+        "knot": "عقدة",
+        "goblet": "كأس",
+        "ball": "عشروني الأوجه",
+        "cube": "مكعب"
+      }
+    },
+    "readouts": {
+      "triangles": "المثلثات",
+      "cageTriangles": "مثلثات القفص"
+    }
+  },
+  "motion-retargeting": {
+    "banner": "اسحب للدوران حول المشهد. مشية CesiumMan مُعاد كتابتها لهيكلين عظميين بأسماء عظام وأحجام ووضعيات راحة مختلفة. غيّر الطريقة لترى ما تصلحه كل خطوة.",
+    "controls": {
+      "method": "الطريقة",
+      "speed": "السرعة"
+    },
+    "choices": {
+      "method": {
+        "directions": "مطابقة اتجاهات العظام",
+        "turns": "نقل دورانات العالم",
+        "copy": "نسخ الدورانات المحلية"
+      }
+    },
+    "readouts": {
+      "bones": "العظام المربوطة",
+      "keys": "المفاتيح المحسوبة مسبقًا"
+    }
+  },
+  "breaking-things": {
+    "banner": "انقر لرمي كرة حديدية. الجدار والعمود والبلورة مقطّعة إلى قطع فورونوي، ملحومة بمفاصل تنكسر إذا تجاوزت قوتها.",
+    "controls": {
+      "pieces": "القطع",
+      "strength": "القوة (كيلونيوتن)",
+      "speed": "السرعة (م/ث)",
+      "slowMotion": "حركة بطيئة",
+      "throwAtWall": "ارمِ على الجدار",
+      "rebuild": "إعادة البناء"
+    },
+    "readouts": {
+      "pieces": "القطع",
+      "welds": "لحامات سليمة",
+      "broken": "لحامات مكسورة"
+    }
+  },
+  "a-ground-projected-sky": {
+    "banner": "اسحب للدوران حول الكرة ذات الحلقات: تبقى أرضية الصورة تحتها وتستقبل ظلالها. ألغِ «على الأرض» لترى كرة بسيطة تنزلق.",
+    "controls": {
+      "place": "المكان",
+      "grounded": "على الأرض",
+      "height": "الارتفاع",
+      "radius": "نصف القطر",
+      "turning": "الدوران"
+    },
+    "choices": {
+      "place": {
+        "plaza": "ساحة رخامية",
+        "salt flat": "سهل ملحي عند الغسق",
+        "meadow": "مرج"
+      }
+    },
+    "readouts": {
+      "flatFloor": "امتداد الأرضية المسطحة"
+    },
+    "words": {
+      "credit": "صور بانورامية ترسمها هذه الصفحة بالشيفرة عند فتحها: لا يُنزَّل شيء."
+    }
+  },
+  "sound-in-space": {
+    "banner": "اضغط «استمع» (السماعات أفضل)، ثم دوّر وقرّب: كل مصدر يُسمع من حيث يتوهج، يضعه حول رأسك موزّع صوت من Web Audio يتبع الكاميرا.",
+    "controls": {
+      "listen": "استمع",
+      "silence": "صمت",
+      "volume": "مستوى الصوت",
+      "distanceModel": "التخامد",
+      "rolloff": "معدّل التخامد",
+      "panning": "التوزيع المكاني",
+      "moving": "الحركة"
+    },
+    "choices": {
+      "distanceModel": {
+        "inverse": "عكسي",
+        "exponential": "أسّي",
+        "linear": "خطي"
+      },
+      "panning": {
+        "HRTF": "HRTF (ثلاثي الأبعاد)",
+        "equalpower": "قدرة متساوية (ستيريو)"
+      }
+    },
+    "readouts": {
+      "bell": "الجرس",
+      "horn": "البوق",
+      "firefly": "اليراعة"
+    },
+    "words": {
+      "listening": "استماع: دُر حول مصدر، أو اقترب منه، أو انتقل خلف البوق لتخرج من مخروطه.",
+      "silent": "الصوت متوقف.",
+      "level": "{db} dB · {m} م",
+      "distance": "{m} م"
+    }
+  },
+  "drag-objects": {
+    "banner": "اسحب قطعة عبر المنصة، أو فوق أخرى لتكديسها، أو نحو القطع الأخرى لدفعها. اضغط Shift مع الاستمرار لرفعها على مستوى عمودي.",
+    "controls": {
+      "plane": "المستوى",
+      "shove": "الدفع",
+      "home": "إعادة"
+    },
+    "choices": {
+      "plane": {
+        "floor": "أفقي",
+        "wall": "عمودي"
+      }
+    },
+    "readouts": {
+      "held": "الممسوك",
+      "surface": "المستوى",
+      "height": "الارتفاع"
+    },
+    "words": {
+      "nothing": "لا شيء",
+      "floor": "أفقي",
+      "wall": "عمودي",
+      "metres": "{m} م",
+      "ball": "كرة مطلية",
+      "knot": "عقدة خزفية",
+      "crate": "صندوق",
+      "glass": "عمود زجاجي",
+      "cone": "مخروط أحمر",
+      "gem": "جوهرة ذهبية",
+      "pill": "كبسولة وردية"
+    }
+  },
+  "oriented-boxes": {
+    "banner": "اسحب للدوران حول المشهد. الصناديق السماوية تدور مع أشكالها، والكهرمانية تلتزم محاور العالم؛ الأحمر يعني أن صندوقين يتلامسان.",
+    "controls": {
+      "boxes": "الصناديق",
+      "fit": "الملاءمة",
+      "speed": "السرعة",
+      "tumbling": "التقلّب"
+    },
+    "choices": {
+      "boxes": {
+        "both": "كلاهما",
+        "oriented": "موجّهة",
+        "aligned": "محاذية",
+        "none": "لا شيء"
+      },
+      "fit": {
+        "tightest": "الأضيق",
+        "principal axes": "المحاور الرئيسية"
+      }
+    },
+    "readouts": {
+      "orientedVolume": "الحجم، موجّهة",
+      "alignedVolume": "الحجم، محاذية",
+      "orientedContacts": "التلامسات، موجّهة",
+      "alignedContacts": "التلامسات، محاذية"
+    }
+  },
+  "edit-a-spline": {
+    "banner": "اسحب مقبضًا ذهبيًا فيتبعه المنحنى؛ اضغط Shift مع الاستمرار لرفعه أو خفضه. انقر نقرًا مزدوجًا على الأرض لإضافة مقبض، وعلى مقبض لإزالته.",
+    "controls": {
+      "closed": "حلقة مغلقة",
+      "radius": "نصف القطر",
+      "speed": "الخرزات",
+      "polygon": "خطوط التحكم",
+      "reset": "إعادة الضبط"
+    },
+    "readouts": {
+      "handles": "المقابض",
+      "length": "الطول",
+      "triangles": "المثلثات"
+    },
+    "words": {
+      "metres": "{m} م"
+    }
+  },
+  "compressed-mesh-input": {
+    "banner": "اسحب للنظر حولك. ملف glTF واحد يحوي هذا التمثال الرخامي ثلاث مرات: بأعداد عشرية خام، وبـ Draco، وبـ meshopt. يفك المترجم الصيغتين أثناء التحضير، فلا يحتاج المتصفح إلى أي فاكّ ترميز. اختر تمثالًا لتقرأ ملفه.",
+    "controls": {
+      "bust": "التمثال",
+      "turn": "دوران"
+    },
+    "choices": {
+      "bust": {
+        "all": "الثلاثة",
+        "plain": "أعداد عشرية خام",
+        "draco": "Draco",
+        "meshopt": "Meshopt"
+      }
+    },
+    "readouts": {
+      "stored": "المخزَّن",
+      "decoded": "بعد فك الترميز",
+      "extension": "الامتداد",
+      "triangles": "المثلثات"
+    }
+  },
+  "lens-flares": {
+    "banner": "اسحب لتدوير المشهد: تعبر الانعكاسات منتصف الصورة وتخفت كلما حجبت شفرة الشمس.",
+    "controls": {
+      "flare": "توهج العدسة",
+      "lens": "العدسة",
+      "strength": "الشدة",
+      "sunHeight": "ارتفاع الشمس"
+    },
+    "choices": {
+      "lens": {
+        "spherical": "كروية",
+        "anamorphic": "أنامورفية"
+      }
+    },
+    "readouts": {
+      "sunShowing": "الظاهر من الشمس"
+    }
+  },
+  "particles-with-own-sizes": {
+    "banner": "كل شرارة نقش (sprite) بحجمه الخاص: مذنبات كبيرة، وبريق دقيق، وجمرات تصغر كلما بردت. وسّع تفاوت الأحجام أو أطلق قذيفة.",
+    "controls": {
+      "shells": "القذائف",
+      "sizeSpread": "تفاوت الأحجام",
+      "rate": "الإطلاقات",
+      "launch": "إطلاق"
+    },
+    "choices": {
+      "shells": {
+        "mixed": "منوّع",
+        "peony": "فاوانيا",
+        "ring": "حلقة",
+        "willow": "صفصاف",
+        "chrysanthemum": "أقحوان"
+      }
+    },
+    "readouts": {
+      "sparks": "الشرارات",
+      "sizes": "الأحجام الخاصة"
+    }
+  },
+  "an-atmospheric-sky": {
+    "banner": "اسحب للنظر حولك. تُحسب السماء من الهواء نفسه: حرّك الساعة، وكثّف الضباب أو الهواء.",
+    "controls": {
+      "hour": "الساعة",
+      "run": "تشغيل اليوم",
+      "haze": "الضباب",
+      "air": "كثافة الهواء",
+      "adaptEyes": "تكيّف العينين"
+    },
+    "readouts": {
+      "clock": "الوقت",
+      "sunHeight": "ارتفاع الشمس",
+      "sunThroughAir": "الشمس عبر الهواء"
+    }
+  },
+  "lit-by-an-hdr-image": {
+    "banner": "اسحب للدوران حولها. كل مكان صورة HDR حقيقية: تصبح شمسه ضوءًا له ظلال، والباقي ضوءًا ناعمًا من كل الجهات.",
+    "controls": {
+      "place": "المكان",
+      "turn": "تدوير",
+      "exposure": "التعريض",
+      "sunFromImage": "الشمس كضوء",
+      "spin": "دوران"
+    },
+    "choices": {
+      "place": {
+        "plains": "سهل مشمس",
+        "sunset": "البندقية عند الغروب",
+        "harbour": "ميناء ليلًا"
+      }
+    },
+    "readouts": {
+      "sunFound": "الشمس على ارتفاع",
+      "sunShare": "ضوء الشمس",
+      "range": "مدى الصورة"
+    },
+    "words": {
+      "noSun": "لا شيء",
+      "stops": "{n} درجات",
+      "credit": "صور HDR: Rosendal Plains 2, Venice Sunset, Golden Bay — Poly Haven, CC0"
+    }
+  },
+  "adjusting-the-environment": {
+    "banner": "اسحب للدوران حولها. دوّر الضوء المحيط بالمشهد أو دفّئه أو أشبعه أو خفّفه: كل تغيير بضعة أرقام تُطبَّق على الضوء والظلال والخلفية معًا.",
+    "controls": {
+      "rig": "الإضاءة",
+      "turn": "تدوير",
+      "strength": "الشدة",
+      "warmth": "الدفء",
+      "saturation": "التشبع",
+      "exposure": "التعريض",
+      "toneMapping": "منحنى الدرجات",
+      "backgroundBlur": "ضبابية الخلفية",
+      "background": "الخلفية",
+      "spin": "دوران"
+    },
+    "choices": {
+      "rig": {
+        "studio": "استوديو تصوير",
+        "stage": "مسرح بمرشحات ملونة"
+      },
+      "toneMapping": {
+        "aces": "aces",
+        "agx": "agx",
+        "neutral": "محايد",
+        "reinhard": "reinhard",
+        "cineon": "cineon",
+        "linear": "خطي"
+      }
+    },
+    "readouts": {
+      "lightOnTop": "الضوء من الأعلى"
     }
   }
 }

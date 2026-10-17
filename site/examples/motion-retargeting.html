@@ -1,0 +1,569 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Motion retargeting</title>
+    <meta name="thumbnail" content="4" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #0e1420;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      p {
+        position: absolute;
+        bottom: 0;
+        margin: 0.5rem;
+        color: white;
+        font: 12px system-ui;
+      }
+      a {
+        color: inherit;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <p>
+      CesiumMan © 2017 Cesium —
+      <a href="https://creativecommons.org/licenses/by/4.0/">CC BY 4.0</a>.
+      <a
+        href="https://github.com/KhronosGroup/glTF-Sample-Assets/blob/main/LICENSES/LicenseRef-LegalMark-Cesium.txt"
+        >Cesium logo notice</a
+      >.
+    </p>
+    <script type="module">
+      import {
+        createWorld,
+        animation,
+        buffer,
+        effect,
+        geometry,
+        light,
+        material,
+        math,
+        object,
+      } from '../runtime/engine.js';
+      import { controls, ease, mix, opening, readout } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      const night = math.color('#0e1420');
+      world.scene.background = night;
+      world.scene.fog = { color: night, near: 7, far: 16 };
+
+      // A dark lacquered stage, a warm key that throws the three shadows forward, a cool sky to
+      // fill, and two coloured rims behind that draw each outline against the night.
+      const stage = object.mesh(
+        geometry.cylinder(6, 6, 0.1, 128),
+        material.meshPhysical({ color: '#1a2130', roughness: 0.32, clearcoat: 0.5 }),
+      );
+      stage.position.y = -0.05;
+      stage.castShadow = false;
+      const key = light.directional({ intensity: 3, color: '#ffe2c4', castShadow: true });
+      key.position.set(3, 6, 5);
+      // The rims hang high behind: the lacquer mirrors them below the bottom of the view.
+      const rimCool = light.point({ color: '#4fc8ff', intensity: 40, distance: 11 });
+      rimCool.position.set(2.6, 5, -3);
+      const rimWarm = light.point({ color: '#ff9a4a', intensity: 40, distance: 11 });
+      rimWarm.position.set(-2.6, 5, -3);
+      world.scene.add(
+        stage,
+        key,
+        rimCool,
+        rimWarm,
+        light.hemisphere({ intensity: 1.3, color: '#bcd2ff', groundColor: '#2a2018' }),
+      );
+      world.effects.add(effect.bloom({ intensity: 0.1, radius: 1.2 }));
+
+      // The source: CesiumMan and the walk his file carries, on his own 19 bones. His bones lie
+      // along their local x, each turned about its own y: frames no other rig shares.
+      const model = await world.scene.load(
+        '../assets/examples/cesium-man/cache/native/full/manifest.json',
+      );
+      const walk = model.animations[0];
+      if (!walk) throw new Error('The compiled sample must retain its animation');
+      const source = animation.createMixer(model).clipAction(walk);
+
+      // Every joint the walk drives, by its role: the source bone, the bone whose head shows where
+      // it points (none for an end), and the role it hangs from. The targets name each role
+      // their own way.
+      const JOINTS = [
+        ['hips', 'Skeleton_torso_joint_1', 'Skeleton_torso_joint_2', null],
+        ['spine', 'Skeleton_torso_joint_2', 'torso_joint_3', 'hips'],
+        ['chest', 'torso_joint_3', 'Skeleton_neck_joint_1', 'spine'],
+        ['neck', 'Skeleton_neck_joint_1', 'Skeleton_neck_joint_2', 'chest'],
+        ['head', 'Skeleton_neck_joint_2', null, 'neck'],
+        ...['L', 'R'].flatMap((side) => {
+          const arm = side === 'L' ? ['_L__4_', '_L__3_', '_L__2_'] : ['_R', '_R__2_', '_R__3_'];
+          const [shoulder, elbow, wrist] = arm.map((tag) => `Skeleton_arm_joint${tag}`);
+          const leg = (n) => `leg_joint_${side}_${n}`;
+          return [
+            [`arm${side}`, shoulder, elbow, 'chest'],
+            [`forearm${side}`, elbow, wrist, `arm${side}`],
+            [`hand${side}`, wrist, null, `forearm${side}`],
+            [`thigh${side}`, leg(1), leg(2), 'hips'],
+            [`shin${side}`, leg(2), leg(3), `thigh${side}`],
+            [`foot${side}`, leg(3), leg(5), `shin${side}`],
+          ];
+        }),
+      ];
+      // Where a target's bone points: the head of the role after it, the toe for a foot.
+      const NEXT = { hips: 'spine', spine: 'chest', chest: 'neck', neck: 'head' };
+      for (const side of ['L', 'R'])
+        Object.assign(NEXT, {
+          [`arm${side}`]: `forearm${side}`,
+          [`forearm${side}`]: `hand${side}`,
+          [`thigh${side}`]: `shin${side}`,
+          [`shin${side}`]: `foot${side}`,
+          [`foot${side}`]: `toe${side}`,
+        });
+      const bone = (name) => {
+        const node = model.getObjectByName(name);
+        if (!node) throw new Error(`The sample must keep the bone ${name}`);
+        return node;
+      };
+
+      /** A skeleton of named bones under a root: rows of `[role, name, parent role, x, y, z, turn]`,
+       *  each bone placed in its parent's frame and turned `turn` about z. */
+      function skeletonOf(rows) {
+        const root = object.group();
+        const byRole = {};
+        for (const [role, name, parent, x, y, z, turn = 0] of rows) {
+          const node = object.group();
+          node.name = name;
+          node.position.set(x, y, z);
+          node.rotation.z = turn;
+          (parent ? byRole[parent] : root).add(node);
+          byRole[role] = node;
+        }
+        world.scene.add(root);
+        root.updateMatrixWorld(true);
+        return { root, byRole };
+      }
+
+      // Target one, the mannequin: 1.95 m tall, its arms held out level (a T pose where CesiumMan
+      // rests in an A), its bones named the way many character tools name them.
+      const mannequin = skeletonOf([
+        ['hips', 'Hips', null, 0, 1.02, 0],
+        ['spine', 'Spine', 'hips', 0, 0.12, 0],
+        ['chest', 'Chest', 'spine', 0, 0.3, 0],
+        ['neck', 'Neck', 'chest', 0, 0.21, 0],
+        ['head', 'Head', 'neck', 0, 0.1, 0],
+        ...[1, -1].flatMap((s) => {
+          const side = s > 0 ? 'L' : 'R',
+            word = s > 0 ? 'Left' : 'Right';
+          return [
+            [`arm${side}`, `${word}Arm`, 'chest', s * 0.2, 0.15, 0],
+            [`forearm${side}`, `${word}ForeArm`, `arm${side}`, s * 0.31, 0, 0],
+            [`hand${side}`, `${word}Hand`, `forearm${side}`, s * 0.27, 0, 0],
+            [`thigh${side}`, `${word}UpLeg`, 'hips', s * 0.11, -0.06, 0],
+            [`shin${side}`, `${word}Leg`, `thigh${side}`, 0, -0.45, 0.01],
+            [`foot${side}`, `${word}Foot`, `shin${side}`, 0, -0.43, -0.02],
+            [`toe${side}`, `${word}ToeBase`, `foot${side}`, 0, -0.06, 0.17],
+          ];
+        }),
+      ]);
+
+      // Target two, the robot: 1.25 m, squat and broad, arms hanging stiffly out to its sides,
+      // its bones named as game engines name theirs.
+      const robot = skeletonOf([
+        ['hips', 'pelvis', null, 0, 0.56, 0],
+        ['spine', 'spine_01', 'hips', 0, 0.1, 0],
+        ['chest', 'spine_02', 'spine', 0, 0.2, 0],
+        ['neck', 'neck_01', 'chest', 0, 0.2, 0],
+        ['head', 'head', 'neck', 0, 0.06, 0],
+        ...[1, -1].flatMap((s) => {
+          const side = s > 0 ? 'L' : 'R',
+            tag = s > 0 ? 'l' : 'r';
+          return [
+            [`arm${side}`, `upperarm_${tag}`, 'chest', s * 0.31, 0.12, 0, -s * 1.15],
+            [`forearm${side}`, `lowerarm_${tag}`, `arm${side}`, s * 0.25, 0, 0],
+            [`hand${side}`, `hand_${tag}`, `forearm${side}`, s * 0.23, 0, 0],
+            [`thigh${side}`, `thigh_${tag}`, 'hips', s * 0.15, -0.05, 0],
+            [`shin${side}`, `calf_${tag}`, `thigh${side}`, 0, -0.22, 0.02],
+            [`foot${side}`, `foot_${tag}`, `shin${side}`, 0, -0.21, -0.02],
+            [`toe${side}`, `ball_${tag}`, `foot${side}`, 0, -0.05, 0.16],
+          ];
+        }),
+      ]);
+
+      // ——— The mannequin's skin: one mesh of tapered capsules, bent by its nineteen bones.
+      const at = (role, x = 0, y = 0, z = 0) =>
+        mannequin.byRole[role].getWorldPosition(math.vector3()).add(math.vector3(x, y, z));
+      /** A capsule from `a` to `b`, radii `ra` and `rb`, its vertices bent by `bones`, the two
+       *  nearest of them by distance to each bone's span; `depth` squashes it front to back. */
+      function capsule(a, b, ra, rb, bones, depth = 1) {
+        const axis = b.clone().sub(a),
+          length = axis.length();
+        axis.normalize();
+        const u = Math.abs(axis.y) > 0.9 ? math.vector3(1, 0, 0) : math.vector3(0, 1, 0);
+        const v = math.vector3().crossVectors(axis, u).normalize();
+        u.crossVectors(v, axis).normalize();
+        // The profile, end to end: a half sphere, the tapered body, a half sphere.
+        const profile = [];
+        const CAP = 7,
+          BODY = 8;
+        for (let i = 0; i <= CAP; i++) {
+          const phi = -Math.PI / 2 + (i / CAP) * (Math.PI / 2);
+          profile.push([ra * Math.sin(phi), ra * Math.cos(phi), Math.sin(phi), Math.cos(phi)]);
+        }
+        const slope = (ra - rb) / length;
+        for (let i = 1; i < BODY; i++) {
+          const k = i / BODY;
+          profile.push([length * k, ra + (rb - ra) * k, slope, 1]);
+        }
+        for (let i = 0; i <= CAP; i++) {
+          const phi = (i / CAP) * (Math.PI / 2);
+          profile.push([
+            length + rb * Math.sin(phi),
+            rb * Math.cos(phi),
+            Math.sin(phi),
+            Math.cos(phi),
+          ]);
+        }
+        const AROUND = 28;
+        const spans = bones.map((role) => {
+          const next = NEXT[role];
+          return [at(role), next ? at(next) : at(role)];
+        });
+        const first = skin.at.length / 3;
+        const p = math.vector3(),
+          n = math.vector3(),
+          ab = math.vector3(),
+          near = math.vector3();
+        for (const [s, r, along, out] of profile)
+          for (let j = 0; j <= AROUND; j++) {
+            const turn = (j / AROUND) * Math.PI * 2,
+              c = Math.cos(turn),
+              w = Math.sin(turn);
+            p.copy(a)
+              .addScaledVector(axis, s)
+              .addScaledVector(u, c * r)
+              .addScaledVector(v, w * r * depth);
+            n.copy(u)
+              .multiplyScalar(c * out)
+              .addScaledVector(v, (w * out) / depth)
+              .addScaledVector(axis, along)
+              .normalize();
+            skin.at.push(p.x, p.y, p.z);
+            skin.normals.push(n.x, n.y, n.z);
+            // Inverse distance to the fourth power: a vertex follows its nearest bone, and those
+            // between two bones share them, so a bent elbow folds instead of tearing.
+            const weights = spans.map(([from, to]) => {
+              const span = ab.copy(to).sub(from),
+                lengthSq = span.lengthSq();
+              const t = lengthSq
+                ? math.clamp(near.copy(p).sub(from).dot(span) / lengthSq, 0, 1)
+                : 0;
+              near.copy(from).addScaledVector(span, t);
+              return 1 / (near.distanceToSquared(p) ** 2 + 1e-9);
+            });
+            const order = weights.map((_, i) => i).sort((i, k) => weights[k] - weights[i]);
+            const [j0, j1 = j0] = order;
+            const sum = weights[j0] + (j1 === j0 ? 0 : weights[j1]);
+            skin.joints.push(roles.indexOf(bones[j0]), roles.indexOf(bones[j1]), 0, 0);
+            skin.weights.push(weights[j0] / sum, j1 === j0 ? 0 : weights[j1] / sum, 0, 0);
+          }
+        for (let i = 0; i + 1 < profile.length; i++)
+          for (let j = 0; j < AROUND; j++) {
+            const q = first + i * (AROUND + 1) + j,
+              r = q + AROUND + 1;
+            skin.index.push(q, r, q + 1, q + 1, r, r + 1);
+          }
+      }
+      const roles = [...JOINTS.map(([role]) => role), 'toeL', 'toeR'];
+      const skin = { at: [], normals: [], joints: [], weights: [], index: [] };
+      capsule(at('hips', 0, -0.1), at('spine', 0, 0.04), 0.15, 0.14, ['hips', 'spine'], 0.72);
+      capsule(at('spine'), at('chest'), 0.13, 0.18, ['spine', 'chest', 'hips'], 0.66);
+      capsule(at('chest', 0, 0.02), at('neck', 0, -0.05), 0.19, 0.14, ['chest', 'spine'], 0.62);
+      capsule(at('neck'), at('head'), 0.055, 0.05, ['neck', 'head', 'chest']);
+      capsule(at('head', 0, 0.08), at('head', 0, 0.2), 0.105, 0.095, ['head'], 0.92);
+      for (const side of ['L', 'R']) {
+        const s = side === 'L' ? 1 : -1;
+        capsule(at(`arm${side}`), at(`forearm${side}`), 0.062, 0.05, [
+          `arm${side}`,
+          `forearm${side}`,
+          'chest',
+        ]);
+        capsule(at(`forearm${side}`), at(`hand${side}`), 0.05, 0.038, [
+          `forearm${side}`,
+          `hand${side}`,
+          `arm${side}`,
+        ]);
+        capsule(at(`hand${side}`, s * 0.03), at(`hand${side}`, s * 0.12), 0.045, 0.04, [`hand${side}`], 0.55);
+        capsule(at(`thigh${side}`), at(`shin${side}`), 0.09, 0.062, [
+          `thigh${side}`,
+          `shin${side}`,
+          'hips',
+        ]);
+        capsule(at(`shin${side}`), at(`foot${side}`), 0.062, 0.045, [
+          `shin${side}`,
+          `foot${side}`,
+          `thigh${side}`,
+        ]);
+        capsule(at(`foot${side}`, 0, -0.04, -0.03), at(`toe${side}`, 0, -0.01), 0.045, 0.04, [`foot${side}`]);
+      }
+      const body = geometry.createBuffer({
+        position: buffer.float32(skin.at, 3),
+        normal: buffer.float32(skin.normals, 3),
+        index: buffer.uint32(skin.index, 1),
+      });
+      body.setAttribute('skinIndex', buffer.uint16(skin.joints, 4));
+      body.setAttribute('skinWeight', buffer.float32(skin.weights, 4));
+      const shell = object.mesh(
+        body,
+        material.meshPhysical({ color: '#f4efe8', roughness: 0.42, clearcoat: 0.5 }),
+      );
+      // Made now, the bones as built: the T pose is the bind pose.
+      shell.skeleton = animation.skeleton(roles.map((role) => mannequin.byRole[role]));
+      mannequin.root.add(shell);
+
+      // Rings of light at its joints and a visor, carried rigidly by their bones.
+      const glow = (colour, strength) =>
+        material.meshStandard({ color: '#000000', emissive: colour, emissiveIntensity: strength });
+      const cyan = glow('#3fd8ff', 5);
+      const ring = (role, radius, across) => {
+        const band = object.mesh(geometry.torus(radius, 0.012, 10, 48), cyan);
+        if (across === 'x') band.rotation.y = Math.PI / 2;
+        else band.rotation.x = Math.PI / 2;
+        band.castShadow = false;
+        mannequin.byRole[role].add(band);
+      };
+      for (const side of ['L', 'R']) {
+        ring(`forearm${side}`, 0.058, 'x');
+        ring(`hand${side}`, 0.046, 'x');
+        ring(`shin${side}`, 0.07, 'y');
+        ring(`foot${side}`, 0.053, 'y');
+      }
+      ring('neck', 0.064, 'y');
+      const visor = object.mesh(geometry.box(0.15, 0.035, 0.03), cyan);
+      visor.position.set(0, 0.15, 0.09);
+      visor.castShadow = false;
+      mannequin.byRole.head.add(visor);
+
+      // ——— The robot's body: painted blocks and steel balls at the joints, each held by its
+      // bone; every block shares one unit cube, every ball one unit sphere, scaled to its size.
+      const paint = material.meshStandard({ color: '#e0682a', metalness: 0.35, roughness: 0.38 });
+      const steel = material.meshStandard({ color: '#2b2f38', metalness: 0.8, roughness: 0.3 });
+      const amber = glow('#ffb347', 6);
+      const cube = geometry.box(1, 1, 1), sphere = geometry.sphere(0.5, 24, 16);
+      const hold = (role, mesh, [w, h, d], [x, y, z]) => {
+        mesh.scale.set(w, h, d);
+        mesh.position.set(x, y, z);
+        robot.byRole[role].add(mesh);
+      };
+      const block = (role, matter, size, offset) => hold(role, object.mesh(cube, matter), size, offset);
+      const ball = (role, diameter) => hold(role, object.mesh(sphere, steel), [diameter, diameter, diameter], [0, 0, 0]);
+      block('hips', paint, [0.36, 0.14, 0.24], [0, 0, 0]);
+      ball('spine', 0.16);
+      block('spine', paint, [0.34, 0.12, 0.22], [0, 0.08, 0]);
+      block('chest', paint, [0.56, 0.3, 0.32], [0, 0.07, 0]);
+      block('chest', amber, [0.2, 0.05, 0.02], [0, 0.1, 0.165]);
+      ball('neck', 0.1);
+      block('head', paint, [0.26, 0.2, 0.24], [0, 0.11, 0]);
+      block('head', amber, [0.2, 0.045, 0.02], [0, 0.13, 0.125]);
+      for (const side of ['L', 'R']) {
+        const s = side === 'L' ? 1 : -1;
+        ball(`arm${side}`, 0.14);
+        block(`arm${side}`, paint, [0.21, 0.11, 0.11], [s * 0.125, 0, 0]);
+        ball(`forearm${side}`, 0.1);
+        block(`forearm${side}`, paint, [0.19, 0.1, 0.1], [s * 0.115, 0, 0]);
+        ball(`hand${side}`, 0.12);
+        ball(`thigh${side}`, 0.13);
+        block(`thigh${side}`, paint, [0.13, 0.16, 0.14], [0, -0.11, 0]);
+        ball(`shin${side}`, 0.11);
+        block(`shin${side}`, paint, [0.12, 0.15, 0.13], [0, -0.1, 0]);
+        block(`foot${side}`, paint, [0.14, 0.07, 0.24], [0, -0.03, 0.06]);
+      }
+
+      // ——— Retargeting, baked: the walk sampled on the source, rewritten for each target as a
+      // clip of its own bones' names, then played by the target's own mixer.
+      const STEPS = 60,
+        duration = walk.duration;
+      const times = Array.from({ length: STEPS + 1 }, (_, i) => (i / STEPS) * duration);
+      const turnOf = (node) => node.getWorldQuaternion(math.quaternion());
+      const placeOf = (node) => node.getWorldPosition(math.vector3());
+      // The source at rest, before any key: each bone's turn in the world and where it points.
+      model.updateMatrixWorld(true);
+      const rest = Object.fromEntries(
+        JOINTS.map(([role, name, next]) => {
+          const node = bone(name);
+          const pointing = next ? placeOf(bone(next)).sub(placeOf(node)).normalize() : null;
+          return [role, { node, inverse: turnOf(node).invert(), pointing }];
+        }),
+      );
+      const sourceHips = placeOf(rest.hips.node);
+
+      /** The target's rest: each bone's turn in the world, and the turn that lays it along the
+       *  source bone's direction at rest (an end bone keeps its parent's). */
+      function restOf(target) {
+        const fixes = {};
+        const bones = JOINTS.map(([role, , , parent]) => {
+          const node = target.byRole[role];
+          const next = NEXT[role];
+          let fix = math.quaternion();
+          if (next && rest[role].pointing) {
+            const pointing = placeOf(target.byRole[next]).sub(placeOf(node)).normalize();
+            fix.setFromUnitVectors(pointing, rest[role].pointing);
+          } else if (parent) fix = fixes[parent].clone();
+          fixes[role] = fix;
+          return { role, parent, node, world: turnOf(node), fix };
+        });
+        return {
+          bones,
+          hips: target.byRole.hips.position.clone(),
+          height: placeOf(target.byRole.hips).y,
+        };
+      }
+
+      /** The walk rewritten for `target` by `method`: 'copy' copies each bone's local turn as it
+       *  is, 'turns' carries each bone's turn from rest in the world, 'directions' does so after
+       *  laying each target bone along its source bone first. `sample` takes the key of the
+       *  source's pose now; `clip` makes the clip of every key taken. */
+      function baker(target, setup, method) {
+        const keys = setup.bones.map(() => []),
+          hips = [];
+        const scale = setup.height / sourceHips.y;
+        const worlds = {};
+        const sample = () => {
+          setup.bones.forEach(({ role, parent, node, world, fix }, index) => {
+            const from = rest[role];
+            let local;
+            if (method === 'copy') local = from.node.quaternion.clone();
+            else {
+              // How far the source bone turned from rest, in the world, applied to the target
+              // bone's rest (laid along the source bone first, for 'directions').
+              const turned = turnOf(from.node).multiply(from.inverse);
+              if (method === 'directions') turned.multiply(fix);
+              worlds[role] = turned.multiply(world);
+              local = parent
+                ? worlds[parent].clone().invert().multiply(worlds[role])
+                : worlds[role].clone();
+            }
+            // Each key on the same side as the one before, so no key turns the long way round.
+            const list = keys[index];
+            const last = list.length - 4;
+            if (last >= 0) {
+              const dot =
+                list[last] * local.x +
+                list[last + 1] * local.y +
+                list[last + 2] * local.z +
+                list[last + 3] * local.w;
+              if (dot < 0) local.set(-local.x, -local.y, -local.z, -local.w);
+            }
+            list.push(local.x, local.y, local.z, local.w);
+          });
+          // The hips rise, fall and sway by as much again as the legs are longer.
+          const moved = placeOf(rest.hips.node).sub(sourceHips).multiplyScalar(scale);
+          hips.push(setup.hips.x + moved.x, setup.hips.y + moved.y, setup.hips.z + moved.z);
+        };
+        const clip = () => {
+          const tracks = setup.bones.map(({ node }, index) =>
+            animation.quaternionTrack(`${node.name}.quaternion`, times, keys[index]),
+          );
+          tracks.push(animation.vectorTrack(`${target.byRole.hips.name}.position`, times, hips));
+          return animation.clip(`${method} ${target.root.name}`, duration, tracks);
+        };
+        return { sample, clip };
+      }
+
+      // The source is posed once a time; at each, both targets take their key by all three methods.
+      const METHODS = ['directions', 'turns', 'copy'];
+      const baking = [mannequin, robot].map((target) => {
+        const setup = restOf(target);
+        return { target, setup, bakers: METHODS.map((method) => baker(target, setup, method)) };
+      });
+      for (const time of times) {
+        source.seek(time);
+        model.updateMatrixWorld(true);
+        for (const { bakers } of baking) for (const { sample } of bakers) sample();
+      }
+      const targets = baking.map(({ target, setup, bakers }) => {
+        const mixer = animation.createMixer(target.root);
+        const actions = Object.fromEntries(bakers.map(({ clip }, k) => [METHODS[k], mixer.clipAction(clip())]));
+        return { target, actions, tracks: setup.bones.length + 1 };
+      });
+
+      // The three side by side, facing the camera: the robot, the source, the mannequin.
+      robot.root.position.x = -1.3;
+      mannequin.root.position.x = 1.3;
+      // A ring of light on the floor under each: white for the source, its colour for each copy.
+      const pad = (x, colour) => {
+        const disc = object.mesh(geometry.torus(0.55, 0.012, 8, 96), glow(colour, 3));
+        disc.rotation.x = Math.PI / 2;
+        disc.position.set(x, 0.005, 0);
+        disc.castShadow = false;
+        world.scene.add(disc);
+      };
+      pad(-1.3, '#ffb347');
+      pad(0, '#e8f0ff');
+      pad(1.3, '#3fd8ff');
+
+      let method = METHODS[0],
+        fading = null;
+      source.stop().play();
+      for (const { actions } of targets) actions[method].play();
+
+      const ui = controls(
+        { method: METHODS, speed: [0, 1.5, 1, 0.05] },
+        (values) => {
+          source.timeScale = values.speed;
+          for (const { actions } of targets)
+            for (const action of Object.values(actions)) action.timeScale = values.speed;
+          if (values.method !== method) {
+            // The new clip takes over in a third of a second, from the source's time.
+            const from = method;
+            method = values.method;
+            for (const { actions } of targets) {
+              const next = actions[method];
+              next.time = source.time;
+              next.weight = 0;
+              next.play();
+            }
+            fading = { from, time: 0 };
+          }
+          world.invalidate();
+        },
+        world,
+      );
+      const bones = readout('bones'),
+        baked = readout('keys');
+      bones(`${targets.length} × ${JOINTS.length}`);
+      baked(
+        String(
+          targets.reduce((sum, { tracks }) => sum + tracks * times.length, 0) * METHODS.length,
+        ),
+      );
+
+      world.onFrame(({ delta }) => {
+        if (!fading) return;
+        fading.time += Math.min(delta, 0.05);
+        const k = ease.smooth(fading.time / 0.35);
+        for (const { actions } of targets) {
+          actions[method].weight = k;
+          actions[fading.from].weight = 1 - k;
+          if (k >= 1) actions[fading.from].stop();
+        }
+        if (k >= 1) fading = null;
+        world.invalidate();
+      });
+
+      // The opening: from low on the robot's side round to a three-quarter view of all three.
+      const from = [-4.5, 0.6, 3.2],
+        to = [0.5, 1.45, 4.9];
+      opening(world, (time) => {
+        const k = ease.inOut(time / 3);
+        world.camera.position.set(...mix({ math }, from, to, k));
+        world.controls.target.set(-0.3, 0.85, 0);
+        return time < 3;
+      });
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
+    </script>
+  </body>
+</html>

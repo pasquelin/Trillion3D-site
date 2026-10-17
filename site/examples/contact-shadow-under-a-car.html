@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Contact shadow</title>
+    <meta name="thumbnail" content="4" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #e9e6e1;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, geometry, material, object, light, math, buffer, effect } from '../runtime/engine.js';
+      import { controls, readout, ease, opening } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      const PAPER = '#e9e6e1';
+      world.scene.background = math.color(PAPER);
+      world.exposure = 0.85;
+
+      // THE STUDIO: a photographer's sweep, a floor curving up into a wall with no corner, in the
+      // page's own pale colour, so the ground fades into the backdrop and the car seems to stand
+      // on nothing but the dark band under its tyres and sills — its contact shadow. The profile,
+      // point by point with the normal it faces, is pulled 30 m wide; the normals turn with the
+      // curve, so it shades without facets.
+      const profile = [];
+      for (let k = 0; k <= 12; k++) profile.push([12 - k * 1.75, 0, 0, 1]);
+      for (let k = 1; k <= 32; k++) {
+        const a = (k / 32) * (Math.PI / 2);
+        profile.push([-9 - 6 * Math.sin(a), 6 - 6 * Math.cos(a), Math.sin(a), Math.cos(a)]);
+      }
+      for (let k = 1; k <= 6; k++) profile.push([-15, 6 + k * 2, 1, 0]);
+      const sweep = { position: [], normal: [], index: [] };
+      profile.forEach(([z, y, nz, ny], k) => {
+        sweep.position.push(-15, y, z, 15, y, z);
+        sweep.normal.push(0, ny, nz, 0, ny, nz);
+        if (k) sweep.index.push(2 * k - 2, 2 * k - 1, 2 * k + 1, 2 * k - 2, 2 * k + 1, 2 * k);
+      });
+      const studio = object.mesh(
+        geometry.createBuffer({
+          position: buffer.float32(sweep.position, 3),
+          normal: buffer.float32(sweep.normal, 3),
+          index: buffer.uint32(sweep.index, 1),
+        }),
+        material.meshStandard({ color: '#e4e0da', roughness: 0.75 }),
+      );
+      studio.receiveShadow = true;
+      studio.castShadow = false;
+      world.scene.add(studio);
+
+      // THE CAR, lofted: a slice across the body every few centimetres from the nose to the tail,
+      // each a superellipse whose height and width follow a coupe's lines — a long low bonnet, a
+      // raked screen, a fastback falling to a cut-off tail, the floor lifted in an arch over each
+      // wheel. Slices share their corners with the next, so the normals are smooth and the
+      // reflections run along the flanks without a break. Glass is the same skin, painted dark.
+      const smooth = (from, to, x) => ease.smooth((x - from) / (to - from));
+      const AXLES = [-1.36, 1.3], TRACK = 0.8, TYRE = 0.33, LENGTH = 4.5;
+      const soft = (value, power) => Math.sign(value) * Math.abs(value) ** power;
+      function coupe(slices = 160, around = 80) {
+        const positions = [], colours = [], index = [];
+        for (let i = 0; i <= slices; i++) {
+          const s = i / slices, x = (s - 0.5) * LENGTH;
+          // The ends round off; the waist line climbs gently from the nose to the tail.
+          const end = (1 - Math.abs(2 * s - 1) ** 5) ** (1 / 5);
+          const waist = 0.6 + 0.2 * smooth(0, 0.36, s) + 0.08 * smooth(0.6, 0.95, s);
+          // The cabin: a raked screen from 0.38, the roof, a long fastback down to 0.9.
+          const cabin = smooth(0.36, 0.5, s) * (1 - smooth(0.6, 0.92, s) ** 1.3);
+          const arch = Math.max(...AXLES.map((axle) => Math.sqrt(Math.max(0, 1 - ((x - axle) / 0.44) ** 2))));
+          const top = waist + 0.42 * cabin, bottom = 0.22 + 0.36 * arch;
+          const middle = (top + bottom) / 2, half = ((top - bottom) / 2) * end;
+          const flank = 0.96 * end * (0.94 + 0.06 * smooth(0, 0.3, s));
+          for (let k = 0; k < around; k++) {
+            const angle = (k / around) * Math.PI * 2;
+            const y = middle + half * soft(Math.sin(angle), 0.32);
+            // The glasshouse leans in above the waist; the flanks swell at the hips over the rear axle.
+            const lean = 1 - 0.34 * cabin * smooth(waist - 0.02, waist + 0.42, y);
+            const hips = 1 + 0.035 * Math.exp(-(((x - AXLES[1]) / 0.6) ** 2));
+            const z = flank * lean * hips * soft(Math.cos(angle), 0.24);
+            positions.push(x, y, z);
+            const glass = cabin > 0.08 && y > waist + 0.04;
+            const roof = cabin > 0.93 && y > top - 0.03 && Math.abs(z) < flank * lean * 0.72;
+            // The light strips: thin bands across the nose and the tail.
+            const lamp = (s < 0.025 || s > 0.985) && Math.abs(y - (waist - 0.08)) < 0.04 && Math.abs(z) > 0.25;
+            colours.push(...(glass && !roof ? [0.03, 0.03, 0.035] : lamp ? [0, 0, 0] : [1, 1, 1]));
+            if (i < slices) {
+              const a = i * around, b = a + around, next = (k + 1) % around;
+              index.push(a + k, b + k, a + next, b + k, b + next, a + next);
+            }
+          }
+        }
+        const shape = geometry.createBuffer({
+          position: buffer.float32(positions, 3),
+          color: buffer.float32(colours, 3),
+          index: buffer.uint32(index, 1),
+        });
+        shape.computeVertexNormals();
+        const normals = shape.attributes.normal;
+        for (let k = 0; k < around; k++) {
+          normals.setXYZ(k, -1, 0, 0);
+          normals.setXYZ(slices * around + k, 1, 0, 0);
+        }
+        return shape;
+      }
+      const paint = material.meshPhysical({
+        color: '#b0141f', metalness: 0.3, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.04, vertexColors: true,
+      });
+      const car = object.group(), body = object.group();
+      body.add(object.mesh(coupe(), paint));
+      // Head and tail lamps: thin glowing bars set into the nose and the tail.
+      const lampBar = (colour, x, y, z, width) => {
+        const bar = object.mesh(geometry.capsule(0.025, width, 4, 12), material.meshStandard({ color: '#000000', emissive: colour, emissiveIntensity: 5 }));
+        bar.rotation.x = Math.PI / 2;
+        bar.position.set(x, y, z);
+        bar.castShadow = false;
+        body.add(bar);
+      };
+      for (const z of [-0.55, 0.55]) lampBar('#eaf4ff', -LENGTH / 2 + 0.11, 0.62, z, 0.22);
+      lampBar('#ff1a1a', LENGTH / 2 - 0.07, 0.74, 0, 1.25);
+      car.add(body);
+
+      // Four wheels, each turned on a lathe round its axle: a tyre with a rounded shoulder, a
+      // dark barrel inside it, and a machined face of ten spokes and a polished lip. Each tyre
+      // touches the ground along one short line — where the contact shadow is darkest.
+      const rubber = material.meshStandard({ color: '#18191c', roughness: 0.82 });
+      const alloy = material.meshStandard({ color: '#d4d7dc', metalness: 1, roughness: 0.2 });
+      const barrel = material.meshStandard({ color: '#25272b', metalness: 0.7, roughness: 0.45 });
+      const tyre = [];
+      for (let k = 0; k <= 12; k++) {
+        const a = (k / 12) * Math.PI;
+        tyre.push([TYRE - 0.06 + 0.06 * Math.sin(a), -0.12 * Math.cos(a)]);
+      }
+      const tyreShape = geometry.lathe([[0.215, -0.11], ...tyre, [0.215, 0.11]], 72);
+      const barrelShape = geometry.cylinder(0.215, 0.215, 0.2, 48);
+      const lipShape = geometry.torus(0.205, 0.014, 12, 72);
+      const hubShape = geometry.cylinder(0.055, 0.065, 0.05, 24);
+      const spokeShape = geometry.box(0.032, 0.03, 0.17);
+      const wheels = [];
+      for (const x of AXLES)
+        for (const side of [-1, 1]) {
+          const wheel = object.group(), spin = object.group();
+          wheel.position.set(x, TYRE, side * TRACK);
+          // The lathe's axis is y: turned so that the wheel's face looks out of the car.
+          wheel.rotation.x = side * (Math.PI / 2);
+          const part = (shape, look, y = 0) => {
+            const mesh = object.mesh(shape, look);
+            mesh.position.y = y;
+            spin.add(mesh);
+            return mesh;
+          };
+          part(tyreShape, rubber);
+          part(barrelShape, barrel);
+          part(hubShape, alloy, 0.105);
+          const lip = part(lipShape, alloy, 0.1);
+          lip.rotation.x = Math.PI / 2;
+          for (let k = 0; k < 10; k++) {
+            const angle = (k / 10) * Math.PI * 2;
+            const spoke = part(spokeShape, alloy, 0.1 - 0.012 * (k % 2));
+            spoke.position.x = Math.sin(angle) * 0.13;
+            spoke.position.z = Math.cos(angle) * 0.13;
+            spoke.rotation.y = angle;
+          }
+          wheel.add(spin);
+          car.add(wheel);
+          wheels.push({ spin, side });
+        }
+      car.traverse((part) => {
+        if (part.isMesh) part.receiveShadow = true;
+      });
+      world.scene.add(car);
+
+      // THE LIGHT: one wide lamp straight over the car, a glowing sphere (`radius`) whose shadow
+      // is the only one in the studio. A wide source sees round the edges of the car: under the
+      // sills only a sliver of it is hidden, under the tyres all of it, so the shade is darkest
+      // where the car meets the ground and fades out a hand's breadth away. No texture is baked
+      // or blurred: the shadow is traced again every frame, as the car moves. Two long softboxes
+      // along the flanks only paint the reflections, and a pale sky lifts the shaded side.
+      const lamp = light.point({ color: '#fff7ee', intensity: 150, radius: 1.5, distance: 40, castShadow: true });
+      lamp.position.set(0, 5.5, 0);
+      const streaks = [-3, 3].map((z) => {
+        const streak = light.rectArea({ color: '#ffffff', intensity: 2.5, width: 7, height: 0.6 });
+        streak.position.set(0, 3, z);
+        streak.lookAt(0, 0.6, 0);
+        return streak;
+      });
+      world.scene.add(lamp, ...streaks, light.hemisphere({ color: '#f4f1ec', groundColor: '#8a847c', intensity: 1 }));
+      world.effects.add(effect.bloom({ intensity: 0.04 }));
+
+      world.controls.target.set(0, 0.45, 0);
+      world.controls.minDistance = 3;
+      world.controls.maxDistance = 14;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.06;
+
+      // The opening glide: from high above, where the shadow is a soft halo round the car, down
+      // to the height of the wheels, where it is a dark line under each tyre.
+      opening(world, (time) => {
+        const t = ease.inOut(time / 5);
+        const turn = -2.4 + 1.5 * t, distance = 11 - 3 * t, height = 7.5 - 5.7 * t;
+        world.camera.position.set(Math.sin(turn) * distance, height, Math.cos(turn) * distance);
+        world.camera.lookAt(world.controls.target);
+        return time < 5;
+      });
+
+      // THE CONTROLS. The lamp's width sets the softness; the ride height lifts the car off the
+      // ground, and the contact shadow spreads and pales the instant the tyres leave it.
+      let lift = 0, time = 0, liftedAt = -10;
+      const ui = controls(
+        {
+          lampWidth: [0.2, 6, 3, 0.1],
+          rideHeight: [0, 0.6, 0, 0.01],
+          hop: () => {
+            liftedAt = time;
+            world.invalidate();
+          },
+          paint: '#b0141f',
+          drive: true,
+        },
+        (values) => {
+          lamp.radius = values.lampWidth / 2;
+          paint.color.set(values.paint);
+          world.invalidate();
+        },
+        world,
+      );
+      const height = readout('height');
+
+      // The car rolls on the spot, its wheels turning, rocking softly on its springs; a hop
+      // lifts it and drops it back on a bounce. Parked and landed, it asks for no more frames.
+      let shownLift = -1;
+      world.onFrame(({ delta }) => {
+        const step = Math.min(delta, 0.05);
+        time += step;
+        const since = time - liftedAt;
+        // A hop: a throw 55 cm high for 0.9 s, then a small rebound of 8 cm.
+        const arc = (from, length, peak) => {
+          const t = (since - from) / length;
+          return t > 0 && t < 1 ? 4 * peak * t * (1 - t) : 0;
+        };
+        const jump = arc(0, 0.9, 0.55) + arc(0.9, 0.4, 0.08);
+        lift = ui.rideHeight + jump;
+        car.position.y = lift;
+        if (ui.drive) {
+          for (const { spin, side } of wheels) spin.rotation.y += side * step * 4;
+          body.rotation.z = Math.sin(time * 1.7) * 0.006;
+          body.position.y = Math.sin(time * 2.3) * 0.006;
+        }
+        if (lift !== shownLift) {
+          shownLift = lift;
+          height(`${Math.round(lift * 100)} cm`);
+        }
+        if (ui.drive || jump > 0) world.invalidate();
+      });
+    </script>
+  </body>
+</html>

@@ -21,11 +21,12 @@
     <trillion-viewer></trillion-viewer>
     <script type="module">
       import { createWorld, geometry, light, material, math, object } from '../runtime/engine.js';
-      import { controls } from '../runtime/kit.js';
+      import { controls, stats } from '../runtime/kit.js';
 
       // createWorld(this) adds its own canvas to the element; dispose() removes it again.
       class TrillionViewer extends HTMLElement {
         world = null;
+        stopStats = null;
 
         connectedCallback() {
           if (this.world) return;
@@ -58,9 +59,13 @@
           world.camera.position.set(7, 4, 8);
           world.controls.target.set(0, -0.2, 0);
           world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
+          // The stats follow the world: they start with it and leave with it.
+          this.stopStats = stats(world);
         }
 
         disconnectedCallback() {
+          this.stopStats?.();
+          this.stopStats = null;
           this.world?.dispose();
           this.world = null;
         }

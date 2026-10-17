@@ -1,0 +1,348 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Printable parts</title>
+    <meta name="thumbnail" content="6" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #1a1d24;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { buffer, createWorld, geometry, light, loader, material, math, object, srgbToLinearBatch } from '../runtime/engine.js';
+      import { controls, ease, flights, language, readout, words } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#1a1d24');
+      const say = words();
+
+      // Four parts, four file formats a 3D printer's slicer opens and the engine's compiler does
+      // not: STL, PLY, AMF and 3MF. Each is fetched as bytes and read by a reader written below,
+      // a few dozen lines each; what they all hand back is the same — positions in millimetres,
+      // triangles, and the colours the file carries, if any.
+
+      // STL: an 80-byte header, a triangle count, then fifty bytes a triangle — its facet normal,
+      // three corners, two spare bytes. The same file can be ASCII text: `facet normal`, three
+      // `vertex` lines. A file's size tells the two apart. STL carries no colour.
+      function readStl(bytes) {
+        const view = new DataView(bytes);
+        const binary = bytes.byteLength >= 84 && 84 + view.getUint32(80, true) * 50 === bytes.byteLength;
+        const corners = [];
+        if (binary)
+          for (let at = 84; at < bytes.byteLength; at += 50)
+            for (let k = 12; k < 48; k += 4) corners.push(view.getFloat32(at + k, true));
+        else
+          for (const [, x, y, z] of new TextDecoder().decode(bytes).matchAll(/vertex\s+(\S+)\s+(\S+)\s+(\S+)/g)) corners.push(+x, +y, +z);
+        return [{ positions: corners, indices: null, colours: null, colour: null }];
+      }
+
+      // PLY: a text header naming its elements and their properties, then the data — text, or
+      // binary in either byte order. Every property is read by its type; a face is a list, and a
+      // face of more than three corners is cut into a fan of triangles. Colours come per vertex.
+      function readPly(bytes) {
+        const all = new Uint8Array(bytes);
+        const end = new TextDecoder().decode(all.subarray(0, Math.min(all.length, 4096))).indexOf('end_header') + 'end_header'.length;
+        const header = new TextDecoder().decode(all.subarray(0, end)).split(/\r?\n/);
+        const body = end + (all[end] === 13 ? 2 : 1);
+        const format = header.find((line) => line.startsWith('format')).split(/\s+/)[1];
+        const elements = [];
+        for (const line of header) {
+          const [word, ...rest] = line.trim().split(/\s+/);
+          if (word === 'element') elements.push({ name: rest[0], count: Number(rest[1]), properties: [] });
+          else if (word === 'property') elements.at(-1).properties.push(rest[0] === 'list' ? { list: true, countType: rest[1], type: rest[2], name: rest[3] } : { type: rest[0], name: rest[1] });
+        }
+        const SIZES = { char: 1, int8: 1, uchar: 1, uint8: 1, short: 2, int16: 2, ushort: 2, uint16: 2, int: 4, int32: 4, uint: 4, uint32: 4, float: 4, float32: 4, double: 8, float64: 8 };
+        const view = new DataView(bytes), little = format === 'binary_little_endian';
+        let at = body;
+        const tokens = format === 'ascii' ? new TextDecoder().decode(all.subarray(body)).trim().split(/\s+/) : null;
+        let token = 0;
+        const read = (type) => {
+          if (tokens) return Number(tokens[token++]);
+          const size = SIZES[type], value =
+            type.startsWith('float') ? (size === 4 ? view.getFloat32(at, little) : view.getFloat64(at, little))
+            : type === 'double' ? view.getFloat64(at, little)
+            : size === 1 ? (type.startsWith('u') ? view.getUint8(at) : view.getInt8(at))
+            : size === 2 ? (type.startsWith('u') ? view.getUint16(at, little) : view.getInt16(at, little))
+            : type.startsWith('u') ? view.getUint32(at, little) : view.getInt32(at, little);
+          at += size;
+          return value;
+        };
+        const positions = [], colours = [], indices = [];
+        for (const element of elements)
+          for (let item = 0; item < element.count; item++) {
+            const values = {};
+            for (const property of element.properties)
+              values[property.name] = property.list ? Array.from({ length: read(property.countType) }, () => read(property.type)) : read(property.type);
+            if (element.name === 'vertex') {
+              positions.push(values.x, values.y, values.z);
+              if ('red' in values) colours.push(values.red / 255, values.green / 255, values.blue / 255);
+            } else if (element.name === 'face') {
+              const corners = values.vertex_indices ?? values.vertex_index;
+              for (let k = 1; k + 1 < corners.length; k++) indices.push(corners[0], corners[k], corners[k + 1]);
+            }
+          }
+        // Colours in the file are sRGB bytes; the vertex colours the engine blends are linear.
+        const linear = new Float64Array(colours.length);
+        srgbToLinearBatch(linear, colours, colours.length);
+        return [{ positions, indices, colours: colours.length ? Array.from(linear) : null, colour: null }];
+      }
+
+      const hexOf = (rgb) => '#' + rgb.map((value) => Math.round(value * 255).toString(16).padStart(2, '0')).join('');
+
+      // ZIP, which 3MF always is and AMF may be: the directory at the end of the archive lists
+      // each entry, its method and where it starts; a deflated entry is inflated by the browser's
+      // own DecompressionStream.
+      async function readZip(bytes) {
+        const view = new DataView(bytes), entries = new Map();
+        let end = bytes.byteLength - 22;
+        while (end >= 0 && view.getUint32(end, true) !== 0x06054b50) end--;
+        let at = view.getUint32(end + 16, true);
+        for (let entry = view.getUint16(end + 10, true); entry > 0; entry--) {
+          const method = view.getUint16(at + 10, true), size = view.getUint32(at + 20, true);
+          const nameLength = view.getUint16(at + 28, true), local = view.getUint32(at + 42, true);
+          const name = new TextDecoder().decode(new Uint8Array(bytes, at + 46, nameLength));
+          const start = local + 30 + view.getUint16(local + 26, true) + view.getUint16(local + 28, true);
+          const packed = new Uint8Array(bytes, start, size);
+          entries.set(name, async () => method === 0 ? packed : new Uint8Array(await new Response(new Blob([packed]).stream().pipeThrough(new DecompressionStream('deflate-raw'))).arrayBuffer()));
+          at += 46 + nameLength + view.getUint16(at + 30, true) + view.getUint16(at + 32, true);
+        }
+        return entries;
+      }
+      const xml = (text) => new DOMParser().parseFromString(text, 'application/xml');
+      const numbers = (element, ...names) => names.map((name) => Number(element.getElementsByTagName(name)[0]?.textContent ?? element.getAttribute(name)));
+
+      // AMF: XML, zipped or not. Each object's mesh lists its vertices once, then one volume a
+      // material, each volume its triangles by vertex number; a material holds its colour.
+      async function readAmf(bytes) {
+        const zipped = new Uint8Array(bytes, 0, 2).every((byte, k) => byte === [0x50, 0x4b][k]);
+        const text = new TextDecoder().decode(zipped ? await [...(await readZip(bytes)).values()][0]() : bytes);
+        const document = xml(text), colours = new Map();
+        for (const found of document.getElementsByTagName('material')) {
+          const colour = found.getElementsByTagName('color')[0];
+          if (colour) colours.set(found.getAttribute('id'), numbers(colour, 'r', 'g', 'b'));
+        }
+        const parts = [];
+        for (const mesh of document.getElementsByTagName('mesh')) {
+          const positions = [...mesh.getElementsByTagName('coordinates')].flatMap((point) => numbers(point, 'x', 'y', 'z'));
+          for (const volume of mesh.getElementsByTagName('volume')) {
+            const indices = [...volume.getElementsByTagName('triangle')].flatMap((triangle) => numbers(triangle, 'v1', 'v2', 'v3'));
+            parts.push({ positions, indices, colours: null, colour: colours.get(volume.getAttribute('materialid')) ?? null });
+          }
+        }
+        return parts;
+      }
+
+      // 3MF: a zip whose relationships name the model part, an XML of objects — vertices and
+      // triangles as attributes — base materials with their display colours, and a build that
+      // places each object with a 3×4 matrix.
+      async function read3mf(bytes) {
+        const entries = await readZip(bytes), decode = async (name) => new TextDecoder().decode(await entries.get(name)());
+        const target = entries.has('_rels/.rels') ? /Target="\/?([^"]+\.model)"/.exec(await decode('_rels/.rels'))?.[1] : null;
+        const document = xml(await decode(target ?? '3D/3dmodel.model'));
+        const bases = new Map();
+        for (const group of document.getElementsByTagName('basematerials'))
+          bases.set(group.getAttribute('id'), [...group.getElementsByTagName('base')].map((base) => {
+            const hex = base.getAttribute('displaycolor').slice(1, 7);
+            return [0, 2, 4].map((k) => parseInt(hex.slice(k, k + 2), 16) / 255);
+          }));
+        const objects = new Map([...document.getElementsByTagName('object')].map((found) => [found.getAttribute('id'), found]));
+        const parts = [];
+        for (const item of document.getElementsByTagName('item')) {
+          const found = objects.get(item.getAttribute('objectid'));
+          const m = (item.getAttribute('transform') ?? '1 0 0 0 1 0 0 0 1 0 0 0').split(/\s+/).map(Number);
+          const positions = [...found.getElementsByTagName('vertex')].flatMap((vertex) => {
+            const [x, y, z] = ['x', 'y', 'z'].map((axis) => Number(vertex.getAttribute(axis)));
+            return [x * m[0] + y * m[3] + z * m[6] + m[9], x * m[1] + y * m[4] + z * m[7] + m[10], x * m[2] + y * m[5] + z * m[8] + m[11]];
+          });
+          const indices = [...found.getElementsByTagName('triangle')].flatMap((triangle) => ['v1', 'v2', 'v3'].map((corner) => Number(triangle.getAttribute(corner))));
+          const colour = bases.get(found.getAttribute('pid'))?.[Number(found.getAttribute('pindex') ?? 0)] ?? null;
+          parts.push({ positions, indices, colours: null, colour });
+        }
+        return parts;
+      }
+
+      // None of these files carries normals the page trusts, so they are made here: each corner
+      // averages the normals of the triangles around it that turn by less than 35° from its own.
+      // Smooth curves stay smooth, a gear's or a hexagon's edges stay sharp.
+      const CREASE = Math.cos(math.degToRad(35));
+      function shade({ positions, indices, colours }) {
+        const count = indices ? indices.length : positions.length / 3;
+        const corner = (k) => (indices ? indices[k] : k);
+        const out = new Float32Array(count * 3);
+        const at = (k, axis) => positions[corner(k) * 3 + axis];
+        const faceNormals = [];
+        for (let t = 0; t < count; t += 3) {
+          const u = [0, 1, 2].map((axis) => at(t + 1, axis) - at(t, axis)), v = [0, 1, 2].map((axis) => at(t + 2, axis) - at(t, axis));
+          faceNormals.push([u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2], u[0] * v[1] - u[1] * v[0]]);
+        }
+        // The triangles meeting at each point, the point found by its position.
+        const around = new Map();
+        const keys = Array.from({ length: count }, (_, k) => `${at(k, 0).toFixed(3)},${at(k, 1).toFixed(3)},${at(k, 2).toFixed(3)}`);
+        keys.forEach((name, k) => {
+          if (!around.has(name)) around.set(name, []);
+          around.get(name).push(Math.floor(k / 3));
+        });
+        const unit = (n) => {
+          const length = Math.hypot(...n) || 1;
+          return n.map((value) => value / length);
+        };
+        const units = faceNormals.map(unit);
+        const corners = [], tints = colours ? [] : null;
+        for (let k = 0; k < count; k++) {
+          const own = units[Math.floor(k / 3)], sum = [0, 0, 0];
+          for (const face of around.get(keys[k]))
+            if (units[face][0] * own[0] + units[face][1] * own[1] + units[face][2] * own[2] > CREASE)
+              for (let axis = 0; axis < 3; axis++) sum[axis] += faceNormals[face][axis];
+          out.set(unit(sum), k * 3);
+          corners.push(at(k, 0), at(k, 1), at(k, 2));
+          if (tints) tints.push(...colours.slice(corner(k) * 3, corner(k) * 3 + 3));
+        }
+        return { corners, normals: out, tints };
+      }
+
+      // The printer's millimetres, Z up, become the scene's: a tenth of a unit each, Y up.
+      const SCALE = 0.1;
+      function build({ positions, indices, colours, colour }, fallback) {
+        const { corners, normals, tints } = shade({ positions, indices, colours });
+        const turn = (list) => {
+          const out = new Float32Array(list.length);
+          for (let k = 0; k < list.length; k += 3) out.set([list[k], list[k + 2], -list[k + 1]], k);
+          return out;
+        };
+        const shape = geometry.createBuffer({
+          position: buffer.float32(turn(corners).map((value) => value * SCALE), 3),
+          normal: buffer.float32(turn(normals), 3),
+          ...(tints && { color: buffer.float32(new Float32Array(tints), 3) }),
+        });
+        const surface = material.meshStandard({
+          vertexColors: Boolean(tints),
+          color: tints ? '#ffffff' : colour ? hexOf(colour) : fallback,
+          roughness: 0.42,
+          metalness: 0.05,
+        });
+        const mesh = object.mesh(shape, surface);
+        mesh.receiveShadow = true;
+        return { mesh, surface, triangles: corners.length / 9 };
+      }
+
+      // The build plate: a spring-steel sheet with a gold textured coat, on the dark printer bed.
+      const bed = object.group();
+      world.scene.add(bed);
+      const frame = object.mesh(geometry.box(15, 0.3, 15), material.meshStandard({ color: '#24272e', roughness: 0.6, metalness: 0.5 }));
+      frame.position.y = -0.2;
+      const sheet = object.mesh(geometry.box(14, 0.06, 14), material.meshStandard({ color: '#8a6a34', roughness: 0.8, metalness: 0.35 }));
+      sheet.position.y = -0.03;
+      for (const part of [frame, sheet]) part.receiveShadow = true;
+      bed.add(frame, sheet);
+
+      const FILES = {
+        gear: { file: 'gear.stl', read: readStl, at: [-32, -30] },
+        vase: { file: 'vase.ply', read: readPly, at: [30, 30] },
+        bolt: { file: 'bolt.amf', read: readAmf, at: [-30, 32] },
+        knot: { file: 'knot.3mf', read: read3mf, at: [32, -30] },
+      };
+      const loaded = await Promise.all(Object.entries(FILES).map(async ([name, { file, read, at }]) => {
+        const bytes = await loader.file(`../assets/examples/printable-parts/${file}`, 'arraybuffer');
+        const parts = await read(bytes);
+        // Each part stands on the plate at its place: its lowest point on the sheet, centred on
+        // its footprint.
+        const low = [Infinity, Infinity, Infinity], high = [-Infinity, -Infinity, -Infinity];
+        for (const { positions } of parts)
+          positions.forEach((value, k) => {
+            low[k % 3] = Math.min(low[k % 3], value);
+            high[k % 3] = Math.max(high[k % 3], value);
+          });
+        const holder = object.group(), spinner = object.group();
+        holder.position.set(at[0] * SCALE, 0, -at[1] * SCALE);
+        holder.add(spinner);
+        const built = parts.map((part) => build(part, '#f2c230'));
+        for (const { mesh } of built) {
+          mesh.position.set(-((low[0] + high[0]) / 2) * SCALE, -low[2] * SCALE, ((low[1] + high[1]) / 2) * SCALE);
+          spinner.add(mesh);
+        }
+        bed.add(holder);
+        return [name, { holder, spinner, built, bytes: bytes.byteLength, height: (high[2] - low[2]) * SCALE, lift: 0 }];
+      }));
+      const parts = Object.fromEntries(loaded);
+
+      world.scene.add(
+        light.directional({ color: '#fff3e2', intensity: 3.2, position: [6, 11, 7], castShadow: true, angularRadius: 0.04 }),
+        light.directional({ color: '#7fa6ff', intensity: 1.2, position: [-8, 4, -6] }),
+        light.hemisphere({ color: '#d9e4ff', groundColor: '#3a2f22', intensity: 0.7 }),
+      );
+
+      const OVERVIEW = { position: [10.5, 9, 12.5], target: [0, 1.2, 0] };
+      world.camera.position.set(...OVERVIEW.position);
+      world.controls.target.set(...OVERVIEW.target);
+      world.camera.lookAt(...OVERVIEW.target);
+      world.controls.minDistance = 2;
+      world.controls.maxDistance = 30;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.04;
+      const flyTo = flights({ math }, world);
+
+      // A picked part rises off the plate and turns on itself while the camera comes to it; the
+      // plate, with every part, turns slowly while none is picked.
+      const ui = controls({
+        focus: ['all', ...Object.keys(FILES)],
+        stlColour: '#f2c230',
+        wireframe: false,
+        spin: true,
+      }, (values, key) => {
+        if (key === undefined || key === 'stlColour') for (const { surface } of parts.gear.built) surface.color.set(values.stlColour);
+        if (key === undefined || key === 'wireframe') for (const { built } of Object.values(parts)) for (const { surface } of built) surface.wireframe = values.wireframe;
+        if (key === 'focus') {
+          if (values.focus === 'all') flyTo(OVERVIEW, 1.6);
+          else {
+            const part = parts[values.focus], place = part.holder.getWorldPosition();
+            // The camera comes in from the plate's centre side, further back for a taller part.
+            const middle = place.y + 1.2 + part.height / 2, away = 2.6 + part.height * 1.2;
+            const out = Math.hypot(place.x, place.z) || 1;
+            flyTo({ position: [place.x + (place.x / out) * away, middle + away * 0.55, place.z + (place.z / out) * away], target: [place.x, middle, place.z] }, 1.6);
+          }
+        }
+        world.invalidate();
+      }, world);
+      for (const [name, part] of Object.entries(parts)) {
+        const triangles = part.built.reduce((sum, { triangles }) => sum + triangles, 0);
+        readout(name)(say('summary', { size: (part.bytes / 1024).toFixed(0), triangles: triangles.toLocaleString(language()) }));
+      }
+
+      let turn = 0;
+      world.onFrame(({ delta }) => {
+        const step = Math.min(delta, 0.05);
+        let moving = false;
+        if (ui.spin && ui.focus === 'all') {
+          turn += step * 0.12;
+          bed.rotation.y = turn;
+          moving = true;
+        }
+        for (const [name, part] of Object.entries(parts)) {
+          const goal = ui.focus === name ? 1.2 : 0;
+          if (Math.abs(part.lift - goal) > 1e-3) {
+            part.lift += (goal - part.lift) * Math.min(1, step * 4);
+            moving = true;
+          } else part.lift = goal;
+          part.holder.position.y = ease.smooth(part.lift / 1.2) * 1.2;
+          if (ui.focus === name && ui.spin) {
+            part.spinner.rotation.y += step * 0.6;
+            moving = true;
+          }
+        }
+        if (moving) world.invalidate();
+      });
+      addEventListener('pagehide', () => world.dispose(), { once: true });
+    </script>
+  </body>
+</html>

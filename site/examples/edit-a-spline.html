@@ -1,0 +1,398 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Edit a spline</title>
+    <meta name="thumbnail" content="4" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #0b0d14;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { buffer, createWorld, effect, geometry, light, material, math, object } from '../runtime/engine.js';
+      import { controls, language, pointerRay, readout, words } from '../runtime/kit.js';
+
+      const say = words();
+      const world = createWorld('view', { controls: 'orbit' });
+      const night = math.color('#0b0d14');
+      world.scene.background = night;
+      world.scene.fog = { color: night, near: 18, far: 40 };
+      world.camera.position.set(0.6, 8.6, 12.4);
+      world.camera.lookAt(0, 0.8, 0);
+      world.controls.target.set(0, 0.8, 0);
+      world.controls.maxPolarAngle = 1.5;
+      world.controls.minDistance = 5;
+      world.controls.maxDistance = 24;
+
+      // A dark floor ruled every metre, the bright lines every five.
+      const floor = object.mesh(geometry.circle(9, 96).rotateX(-Math.PI / 2), material.meshStandard({ color: '#151926', roughness: 0.35, metalness: 0.2 }));
+      world.scene.add(floor);
+      const rule = (step, from) => {
+        const at = [];
+        for (let k = -8; k <= 8; k += step) {
+          if (from && k % from === 0) continue;
+          const half = Math.sqrt(81 - k * k);
+          at.push(k, 0.005, -half, k, 0.005, half, -half, 0.005, k, half, 0.005, k);
+        }
+        return geometry.createBuffer({ position: buffer.float32(new Float32Array(at), 3) });
+      };
+      world.scene.add(
+        object.lineSegments(rule(1, 4), material.line({ color: '#1f2638' })),
+        object.lineSegments(rule(4), material.line({ color: '#2d3a5a', linewidth: 1.5 })),
+      );
+
+      // The handles the curve passes through: seven to start, a closed loop that rises and dips.
+      const START = Array.from({ length: 7 }, (_, k) => {
+        const a = (k / 7) * Math.PI * 2;
+        return [Math.cos(a) * (3.4 + (k % 2) * 1.1), 0.7 + 1.6 * (0.5 + 0.5 * Math.sin(a * 2 + 0.6)), Math.sin(a) * (3 + (k % 2) * 0.9)];
+      });
+      const knob = geometry.sphere(0.2, 32, 16);
+      const handles = [];
+      function addHandle(at, index = handles.length) {
+        const look = material.meshStandard({ color: '#0d1020', emissive: '#ffc35a', emissiveIntensity: 1.6, roughness: 0.3 });
+        const mesh = object.mesh(knob, look);
+        mesh.position.set(...at);
+        mesh.castShadow = false;
+        world.scene.add(mesh);
+        handles.splice(index, 0, { mesh, look });
+      }
+      for (const at of START) addHandle(at);
+
+      // The curve itself is `math.curve`, a Catmull–Rom spline through the handles. What shows it
+      // is a tube swept along it, lit and casting its shadow, and thin lines from handle to
+      // handle, the control polygon. A geometry built anew is cut into pages before it is drawn,
+      // which takes frames: one rebuilt at every move of the pointer would never show. So the
+      // tube is one geometry marked `dynamic`, its positions rewritten in place at every edit —
+      // uploaded as they are, its normals averaged again by the world — and is built anew only
+      // when its vertex count changes: a handle added or taken away, the loop opened or closed.
+      const SLICES = 40, SIDES = 18;
+      const paint = material.meshPhysical({ color: '#3a7dff', roughness: 0.22, metalness: 0.1, clearcoat: 1, clearcoatRoughness: 0.06, emissive: '#0a1d55' });
+      let curve = null, tube = null, position = null, shapeKey = '', table = null, dirty = true;
+      // `spans` is how many gaps the rings leave: one fewer than the rings on an open curve.
+      function tubeShape(rings, spans) {
+        const index = [];
+        for (let i = 0; i < spans; i++)
+          for (let j = 0; j < SIDES; j++) {
+            const a = i * SIDES + j, b = ((i + 1) % rings) * SIDES + j, c = ((i + 1) % rings) * SIDES + ((j + 1) % SIDES), d = i * SIDES + ((j + 1) % SIDES);
+            index.push(a, d, b, d, c, b);
+          }
+        position = buffer.float32(new Float32Array(rings * SIDES * 3), 3);
+        const shape = geometry.createBuffer({ position, index: buffer.uint32(index) });
+        shape.usage = 'dynamic';
+        return shape;
+      }
+      // The sweep: points along the curve, and round each a ring of SIDES vertices in the plane
+      // square to the curve. The rings are turned by parallel transport — each frame is the one
+      // before, tipped just enough to stay square to the new direction — so the tube never
+      // twists on its own; a closed loop shares out evenly the turn it comes back with.
+      const P = [], T = [];
+      // Takes away from `v` its part along the unit direction `t`, and makes it unit again.
+      const squareTo = (v, t) => v.addScaledVector(t, -v.dot(t)).normalize();
+      function sweep(rings, spans, closed, radius) {
+        for (let i = 0; i < rings; i++) P[i] = curve.getPoint(i / spans, P[i] ?? math.vector3());
+        for (let i = 0; i < rings; i++) {
+          const prev = closed ? (i + rings - 1) % rings : Math.max(0, i - 1), next = closed ? (i + 1) % rings : Math.min(rings - 1, i + 1);
+          T[i] = (T[i] ?? math.vector3()).copy(P[next]).sub(P[prev]).normalize();
+        }
+        const n = math.vector3(), b = math.vector3(), t0 = T[0];
+        n.set(Math.abs(t0.y) < 0.9 ? 0 : 1, Math.abs(t0.y) < 0.9 ? 1 : 0, 0);
+        squareTo(n, t0);
+        const n0 = n.clone(), normals = [];
+        for (let i = 0; i < rings; i++) {
+          normals.push(squareTo(n, T[i]).clone());
+        }
+        let twist = 0;
+        if (closed) {
+          const back = squareTo(normals[rings - 1].clone(), t0);
+          twist = Math.atan2(math.vector3().crossVectors(back, n0).dot(t0), back.dot(n0));
+        }
+        const out = position.array;
+        for (let i = 0; i < rings; i++) {
+          const t = T[i], turn = (twist * i) / rings;
+          const ni = normals[i], bi = b.crossVectors(t, ni);
+          for (let j = 0; j < SIDES; j++) {
+            const phi = (j / SIDES) * Math.PI * 2 + turn, c = Math.cos(phi) * radius, s = Math.sin(phi) * radius, k = (i * SIDES + j) * 3;
+            out[k] = P[i].x + ni.x * c + bi.x * s;
+            out[k + 1] = P[i].y + ni.y * c + bi.y * s;
+            out[k + 2] = P[i].z + ni.z * c + bi.z * s;
+          }
+        }
+        position.needsUpdate = true;
+      }
+
+      // The control polygon: one unit line per edge, from 0 to 1 along z, placed on its edge by
+      // its pose alone — turned to the next handle and stretched to reach it. Lines are never
+      // rewritten, only moved.
+      const unitLine = geometry.createBuffer({ position: buffer.float32(new Float32Array([0, 0, 0, 0, 0, 1]), 3) });
+      const polygonInk = material.line({ color: '#d9a64a', linewidth: 1.2 });
+      const edges = [];
+      function placeEdges() {
+        const count = ui.closed ? handles.length : handles.length - 1;
+        while (edges.length < count) {
+          const edge = object.line(unitLine, polygonInk);
+          world.scene.add(edge);
+          edges.push(edge);
+        }
+        edges.forEach((edge, k) => {
+          edge.visible = ui.polygon && k < count;
+          if (k >= count) return;
+          const a = handles[k].mesh.position, b = handles[(k + 1) % handles.length].mesh.position;
+          edge.position.copy(a);
+          edge.lookAt(b.x, b.y, b.z);
+          edge.scale.set(1, 1, Math.max(1e-3, a.distanceTo(b)));
+        });
+      }
+
+      function rebuild() {
+        dirty = false;
+        curve = math.curve(handles.map((h) => h.mesh.position.toArray()), ui.closed);
+        const rings = SLICES * handles.length + (ui.closed ? 0 : 1), spans = ui.closed ? rings : rings - 1, key = `${rings} ${ui.closed}`;
+        if (key !== shapeKey) {
+          shapeKey = key;
+          const old = tube?.geometry, shape = tubeShape(rings, spans);
+          if (tube) tube.geometry = shape;
+          else {
+            tube = object.mesh(shape, paint);
+            world.scene.add(tube);
+          }
+          old?.dispose();
+        }
+        sweep(rings, spans, ui.closed, ui.radius);
+        placeEdges();
+        // The spline's own parameter runs evenly per span, not per metre: a table of lengths
+        // along it lets the riders go at an even speed whatever the spans' lengths.
+        const steps = 64 * handles.length, at = math.vector3(), last = math.vector3();
+        table = new Float32Array(steps + 1);
+        curve.getPoint(0, last);
+        for (let k = 1; k <= steps; k++) {
+          curve.getPoint(k / steps, at);
+          table[k] = table[k - 1] + at.distanceTo(last);
+          last.copy(at);
+        }
+        shownHandles(handles.length.toLocaleString(language()));
+        shownLength(say('metres', { m: table[steps].toLocaleString(language(), { maximumFractionDigits: 1, minimumFractionDigits: 1 }) }));
+        shownTriangles((spans * SIDES * 2).toLocaleString(language()));
+      }
+      // The spline's parameter at the fraction `f` of its length, read off the table.
+      function alongLength(f) {
+        const total = table[table.length - 1], want = f * total;
+        let lo = 0, hi = table.length - 1;
+        while (hi - lo > 1) {
+          const mid = (lo + hi) >> 1;
+          if (table[mid] < want) lo = mid;
+          else hi = mid;
+        }
+        const span = table[hi] - table[lo] || 1;
+        return (lo + (want - table[lo]) / span) / (table.length - 1);
+      }
+
+      // Riders: a train of glowing beads running along the curve, each with a small lamp.
+      const ball = geometry.sphere(1, 20, 12);
+      const riders = Array.from({ length: 9 }, (_, k) => {
+        const colour = k === 0 ? '#ffffff' : '#7fe3ff';
+        const bead = object.mesh(ball, material.meshStandard({ color: '#000000', emissive: colour, emissiveIntensity: 6 }));
+        bead.castShadow = false;
+        world.scene.add(bead);
+        return { bead, gap: k * 0.012 };
+      });
+      const lamp = light.point({ color: '#8fe6ff', intensity: 14, distance: 4 });
+      world.scene.add(lamp);
+
+      // While a handle is held: its plumb line to the floor and the spot below it.
+      const plumb = object.line(geometry.createBuffer({ position: buffer.float32(new Float32Array([0, 0, 0, 0, 1, 0]), 3) }), material.line({ color: '#ffc35a', linewidth: 1.5 }));
+      const spot = object.mesh(geometry.ring(0.16, 0.24, 40).rotateX(-Math.PI / 2), material.meshBasic({ color: '#ffc35a' }));
+      spot.castShadow = false;
+      plumb.visible = spot.visible = false;
+      world.scene.add(plumb, spot);
+
+      world.scene.add(
+        light.directional({ intensity: 1.6, color: '#dfe8ff', position: [3, 10, 4], castShadow: true }),
+        light.hemisphere({ intensity: 0.35, color: '#6f86c8', groundColor: '#120c08' }),
+      );
+      world.effects.add(effect.bloom({ intensity: 0.1, radius: 0.8 }));
+
+      // ---- Holding a handle. `world.raycast` among the handles finds the one under the pointer;
+      // it then follows the pointer on a plane through it — level, or upright and facing the
+      // camera while Shift is held — where the camera's ray meets the plane.
+      const plane = math.plane(), up = math.vector3(0, 1, 0), facing = math.vector3(), meet = math.vector3();
+      let held = null, hovered = null, shift = false, travel = 0;
+      const meshes = () => handles.map((h) => h.mesh);
+      const handleAt = (event) => {
+        const hit = world.raycast({ x: event.offsetX, y: event.offsetY }, { objects: meshes() });
+        return hit ? handles.find((h) => h.mesh === hit.object) : null;
+      };
+      function planeThrough(point) {
+        if (shift) {
+          facing.copy(world.camera.position).sub(point);
+          facing.y = 0;
+          facing.normalize();
+          plane.setFromNormalAndCoplanarPoint(facing, point);
+        } else plane.setFromNormalAndCoplanarPoint(up, point);
+      }
+      function follow(event) {
+        const ray = pointerRay(world, event), reach = ray?.distanceToPlane(plane) ?? null;
+        if (reach === null || reach < 0 || reach > 60) return;
+        ray.at(reach, meet);
+        const p = held.handle.mesh.position, out = Math.hypot(meet.x, meet.z);
+        if (out > 8) {
+          meet.x *= 8 / out;
+          meet.z *= 8 / out;
+        }
+        p.set(meet.x, math.clamp(meet.y, 0.2, 6), meet.z);
+        dirty = true;
+      }
+      function highlight(handle, on) {
+        if (!handle) return;
+        handle.look.emissive.set(on ? '#ffffff' : '#ffc35a');
+        handle.mesh.scale.setScalar(on ? 1.4 : 1);
+      }
+      const hover = (handle) => {
+        if (handle === hovered) return;
+        highlight(hovered, false);
+        highlight(handle, true);
+        hovered = handle;
+        world.canvas.style.cursor = handle ? 'grab' : '';
+        world.invalidate();
+      };
+      world.canvas.addEventListener('pointerdown', (event) => {
+        demo = null;
+        if (event.button !== 0 || held) return;
+        const handle = handleAt(event);
+        if (!handle) return;
+        held = { handle, pointerId: event.pointerId, event };
+        hover(handle);
+        planeThrough(handle.mesh.position);
+        world.canvas.style.cursor = 'grabbing';
+        world.controls.enabled = false;
+        world.canvas.setPointerCapture(event.pointerId);
+      });
+      world.canvas.addEventListener('pointermove', (event) => {
+        if (!held) {
+          if (!event.buttons) hover(handleAt(event));
+          return;
+        }
+        if (event.pointerId !== held.pointerId) return;
+        held.event = event;
+        follow(event);
+        world.invalidate();
+      });
+      const release = (event) => {
+        if (!held || event.pointerId !== held.pointerId) return;
+        const { pointerId } = held;
+        held = null;
+        world.controls.enabled = true;
+        world.canvas.style.cursor = hovered ? 'grab' : '';
+        if (world.canvas.hasPointerCapture(pointerId)) world.canvas.releasePointerCapture(pointerId);
+        world.invalidate();
+      };
+      world.canvas.addEventListener('pointerup', release);
+      world.canvas.addEventListener('pointercancel', release);
+      world.canvas.addEventListener('lostpointercapture', release);
+      const swap = (event) => {
+        if (event.key !== 'Shift' || shift === (event.type === 'keydown')) return;
+        shift = event.type === 'keydown';
+        if (held) planeThrough(held.handle.mesh.position);
+      };
+      addEventListener('keydown', swap);
+      addEventListener('keyup', swap);
+
+      // A double click on a handle takes it away (four stay at least); on the floor, it adds one
+      // there, put into the span of the curve that passes nearest, at the height of that span.
+      world.canvas.addEventListener('dblclick', (event) => {
+        const handle = handleAt(event);
+        if (handle) {
+          if (handles.length <= 4) return;
+          handles.splice(handles.indexOf(handle), 1);
+          world.scene.remove(handle.mesh);
+          hovered = null;
+        } else {
+          const ray = pointerRay(world, event), reach = ray?.distanceToPlane(plane.setFromNormalAndCoplanarPoint(up, math.vector3())) ?? null;
+          if (reach === null || reach < 0) return;
+          ray.at(reach, meet);
+          const spans = ui.closed ? handles.length : handles.length - 1, at = math.vector3();
+          let best = null;
+          for (let k = 0; k <= 200; k++) {
+            curve.getPoint(k / 200, at);
+            const d = Math.hypot(at.x - meet.x, at.z - meet.z);
+            if (!best || d < best.d) best = { d, t: k / 200, y: at.y };
+          }
+          addHandle([meet.x, best.y, meet.z], Math.min(spans, Math.floor(best.t * spans)) + 1);
+        }
+        dirty = true;
+        world.invalidate();
+      });
+
+      const ui = controls({
+        closed: true,
+        radius: [0.03, 0.18, 0.1, 0.01],
+        speed: [0, 0.3, 0.07, 0.01],
+        polygon: true,
+        reset: () => {
+          for (const h of handles) world.scene.remove(h.mesh);
+          handles.length = 0;
+          hovered = null;
+          for (const at of START) addHandle(at);
+          dirty = true;
+          world.invalidate();
+        },
+      }, (values, key) => {
+        if (key) dirty = true;
+        world.invalidate();
+      }, world);
+      const shownHandles = readout('handles'), shownLength = readout('length'), shownTriangles = readout('triangles');
+
+      // Until the viewer's first press, the page edits the curve itself: one handle rises and
+      // swings out and back, so the tube is seen to follow it.
+      let demo = { time: 0, handle: handles[1], from: handles[1].mesh.position.clone() };
+      world.onFrame(({ delta }) => {
+        const dt = Math.min(delta, 0.05);
+        if (demo) {
+          demo.time += dt;
+          const s = Math.sin(Math.min(1, demo.time / 4) * Math.PI), { from } = demo;
+          demo.handle.mesh.position.set(from.x * (1 + 0.35 * s), from.y + 1.6 * s, from.z * (1 + 0.35 * s));
+          highlight(demo.handle, s > 0.05);
+          dirty = true;
+          if (demo.time > 4) {
+            highlight(demo.handle, false);
+            demo = null;
+          }
+        }
+        if (dirty) rebuild();
+        const shown = held?.handle ?? (demo && demo.handle);
+        plumb.visible = spot.visible = Boolean(shown);
+        if (shown) {
+          const p = shown.mesh.position;
+          plumb.position.set(p.x, 0, p.z);
+          plumb.scale.set(1, Math.max(0.001, p.y), 1);
+          spot.position.set(p.x, 0.01, p.z);
+        }
+        // The riders, spaced by length: the first leads, the others trail it, smaller.
+        travel = (travel + dt * ui.speed) % 1;
+        const at = math.vector3();
+        for (const [k, { bead, gap }] of riders.entries()) {
+          let f = travel - gap;
+          f = ui.closed ? ((f % 1) + 1) % 1 : 1 - Math.abs(1 - 2 * (((f % 1) + 1) % 1));
+          curve.getPoint(alongLength(f), at);
+          bead.position.copy(at);
+          bead.scale.setScalar((ui.radius + 0.06) * (1 - k * 0.07));
+          if (k === 0) lamp.position.copy(at);
+        }
+        // Still riders on a still curve draw nothing new: the page then waits for the viewer.
+        if (demo || ui.speed > 0) world.invalidate();
+      });
+    </script>
+  </body>
+</html>

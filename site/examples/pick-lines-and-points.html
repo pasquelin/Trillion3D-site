@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Pick lines and points</title>
+    <meta name="thumbnail" content="4" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #04050c;
+        overflow: hidden;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+        touch-action: none;
+      }
+      /* The pointer the page moves on its own until the viewer's own comes over the canvas. */
+      #ghost {
+        position: absolute;
+        width: 22px;
+        height: 22px;
+        pointer-events: none;
+        filter: drop-shadow(0 0 4px #8fc4ff);
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <svg id="ghost" viewBox="0 0 22 22"><path d="M2 2 L2 18 L6.5 13.8 L9.6 20.5 L12.6 19.2 L9.6 12.6 L15.6 12.6 Z" fill="#ffffff" stroke="#0b1020" stroke-width="1.4" stroke-linejoin="round" /></svg>
+    <script type="module">
+      import { buffer, createWorld, effect, geometry, light, material, math, object, texture } from '../runtime/engine.js';
+      import { canvasRay, controls, ease, language, mix, readout, seeded, words } from '../runtime/kit.js';
+
+      const say = words();
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#04050c');
+      world.camera.position.set(3.3, 4.2, 13.2);
+      world.camera.lookAt(0, 0, 0);
+      world.controls.target.set(0, 0, 0);
+      world.controls.minDistance = 6;
+      world.controls.maxDistance = 22;
+
+      // A celestial globe: stars on a shell of radius 4 over a dark inner ball, their figures
+      // joined by lines, and the grid of parallels and meridians. The whole sky turns in `sky`.
+      const R = 4;
+      const sky = object.group();
+      sky.rotation.set(0.38, 0, -0.2);
+      world.scene.add(sky);
+      const spin = object.group();
+      sky.add(spin);
+      const ball = object.mesh(geometry.sphere(R * 0.975, 96, 48), material.meshStandard({ color: '#0a1230', roughness: 0.75, metalness: 0.1 }));
+      spin.add(ball);
+
+      // The stars: seeded, evenly spread over the shell, in four classes of size and colour. A
+      // points object draws one colour at one size, so each class is one object of its own.
+      const next = seeded(7);
+      const onShell = () => {
+        const y = next() * 2 - 1, around = next() * Math.PI * 2, ring = Math.sqrt(1 - y * y);
+        return [ring * Math.cos(around) * R, y * R, ring * Math.sin(around) * R];
+      };
+      const CLASSES = [
+        { colour: '#fff3d6', size: 0.075, count: 90 },
+        { colour: '#cfe2ff', size: 0.05, count: 420 },
+        { colour: '#ffc48a', size: 0.045, count: 260 },
+        { colour: '#7f97d6', size: 0.03, count: 2400 },
+      ];
+      const stars = [];
+      for (const [rank, { colour, size, count }] of CLASSES.entries()) {
+        const at = new Float32Array(count * 3);
+        for (let k = 0; k < count; k++) {
+          const p = onShell();
+          at.set(p, k * 3);
+          stars.push({ p, rank, index: stars.length });
+        }
+        const cloud = object.points(geometry.createBuffer({ position: buffer.float32(at, 3) }), material.points({ color: colour, size }));
+        spin.add(cloud);
+      }
+      const angle = (a, b) => Math.acos(math.clamp((a[0] * b[0] + a[1] * b[1] + a[2] * b[2]) / (R * R), -1, 1));
+
+      // A lane is what the picking tests: a line object drawn in its own ink from `segments`, the
+      // pairs of ends of its segments, with the name `label` gives it and its ink at rest.
+      function lane(segments, label, rest, width) {
+        const ink = material.line({ color: rest, linewidth: width });
+        const line = object.lineSegments(geometry.createBuffer({ position: buffer.float32(new Float32Array(segments.flat()), 3) }), ink);
+        spin.add(line);
+        return { line, ink, segments, label, rest, width };
+      }
+
+      // The figures: around fourteen bright stars far apart, the nearest bright and middle
+      // stars, joined by their shortest tree (Prim's), as a constellation joins its stars.
+      const anchors = [];
+      for (const star of stars) if (star.rank === 0 && anchors.length < 14 && anchors.every((a) => angle(a.p, star.p) > 0.62)) anchors.push(star);
+      const figures = anchors.map((anchor, index) => {
+        const near = stars.filter((s) => s.rank < 2 && angle(s.p, anchor.p) < 0.36).sort((a, b) => angle(a.p, anchor.p) - angle(b.p, anchor.p)).slice(0, 8);
+        const inTree = [near[0]], pairs = [];
+        while (inTree.length < near.length) {
+          let best = null;
+          for (const a of inTree) for (const b of near) if (!inTree.includes(b) && (!best || angle(a.p, b.p) < best[2])) best = [a, b, angle(a.p, b.p)];
+          inTree.push(best[1]);
+          pairs.push(best[0].p, best[1].p);
+        }
+        return lane(pairs, () => say('figure', { n: index + 1 }), '#6fa8ff', 1.6);
+      });
+
+      // The grid, a little above the stars' shell so it never hides in the ball: parallels every
+      // 30° and twelve meridians, each a loop of its own.
+      const LOOP = 120, SHELL = R * 1.004;
+      const loop = (place) => {
+        const pairs = [];
+        for (let k = 0; k < LOOP; k++) pairs.push(place(k / LOOP), place((k + 1) / LOOP));
+        return pairs;
+      };
+      const grid = [];
+      for (const lat of [-60, -30, 0, 30, 60]) {
+        const phi = (lat * Math.PI) / 180, r = Math.cos(phi) * SHELL, y = Math.sin(phi) * SHELL;
+        grid.push(lane(loop((t) => [Math.cos(t * Math.PI * 2) * r, y, Math.sin(t * Math.PI * 2) * r]), () => say('parallel', { deg: lat }), '#26365f', 1));
+      }
+      for (let k = 0; k < 6; k++) {
+        const theta = (k / 6) * Math.PI;
+        const place = (t) => {
+          const a = t * Math.PI * 2;
+          return [Math.cos(a) * Math.cos(theta) * SHELL, Math.sin(a) * SHELL, Math.cos(a) * Math.sin(theta) * SHELL];
+        };
+        grid.push(lane(loop(place), () => say('meridian', { deg: k * 30 }), '#26365f', 1));
+      }
+      const lanes = [...figures, ...grid];
+
+      // The armillary rings round the globe: brass, lit, only there to frame it.
+      const brass = material.meshStandard({ color: '#c9973f', roughness: 0.28, metalness: 0.95 });
+      const equator = object.mesh(geometry.torus(R * 1.16, 0.05, 16, 160), brass);
+      equator.rotation.x = Math.PI / 2;
+      const meridian = object.mesh(geometry.torus(R * 1.22, 0.06, 16, 160), brass);
+      sky.add(equator, meridian);
+      world.scene.add(
+        light.directional({ intensity: 2.4, color: '#fff0d8', position: [6, 8, 7] }),
+        light.hemisphere({ intensity: 0.5, color: '#7d95d8', groundColor: '#1a1206' }),
+      );
+      world.effects.add(effect.bloom({ intensity: 0.12, radius: 0.9 }));
+
+      // What the pointer marks: a ring that keeps its size on screen, on the star picked or on
+      // the nearest point of the line picked, and the segment picked drawn wide in gold.
+      const sheet = document.createElement('canvas');
+      sheet.width = sheet.height = 128;
+      const pen = sheet.getContext('2d');
+      pen.strokeStyle = '#ffffff';
+      pen.lineWidth = 9;
+      pen.beginPath();
+      pen.arc(64, 64, 50, 0, Math.PI * 2);
+      for (const [x, y] of [[64, 0], [64, 128], [0, 64], [128, 64]]) {
+        pen.moveTo(x, y);
+        pen.lineTo(64 + (x - 64) * 0.62, 64 + (y - 64) * 0.62);
+      }
+      pen.stroke();
+      const reticle = object.sprite(material.sprite({ map: texture.canvas(sheet), color: '#ffe08a', depthTest: false }));
+      reticle.visible = false;
+      spin.add(reticle);
+      const goldInk = material.line({ color: '#ffd166', linewidth: 5 });
+      let picked = null;
+
+      // ---- The picking. `world.raycast` meets triangles only: lines and points are tested here,
+      // against the camera's ray through the pointer, in the sky's own frame. A point is hit when
+      // the ray passes within `reach` pixels of it; a segment when the closest point between the
+      // ray and the segment does. A pixel is measured where the candidate stands: the angle one
+      // pixel makes at the eye, times its distance. Whatever lies behind the ball is not seen,
+      // so not picked: the ball is raycast first, and it bounds the distance.
+      const inverse = math.matrix4();
+      const o = math.vector3(), d = math.vector3(), d2 = math.vector3();
+      const box = () => world.canvas.getBoundingClientRect();
+      // The ray through the canvas point (x, y), and the angle of one pixel there: the gap to the
+      // ray through the pixel below.
+      function rayAt(x, y) {
+        const size = box();
+        const ray = canvasRay(world, x, y, size), below = canvasRay(world, x, y + 1, size);
+        if (!ray) return { ray: null, pixel: 0 };
+        const pixel = Math.hypot(ray.direction.x - below.direction.x, ray.direction.y - below.direction.y, ray.direction.z - below.direction.z);
+        return { ray, pixel };
+      }
+      function pick(x, y) {
+        const started = performance.now();
+        const { ray, pixel } = rayAt(x, y);
+        if (!ray) return { hit: null, tests: 0, time: 0 };
+        const wall = world.raycast(ray, { objects: [ball] })?.distance ?? Infinity;
+        spin.updateWorldMatrix(true, false);
+        inverse.copy(spin.matrixWorld).invert();
+        o.copy(ray.origin).applyMatrix4(inverse);
+        d.copy(ray.direction).transformDirection(inverse);
+        const reach = ui.reach;
+        let best = null, tests = 0;
+        if (ui.stars) for (const star of stars) {
+          tests++;
+          const [px, py, pz] = star.p, vx = px - o.x, vy = py - o.y, vz = pz - o.z;
+          const t = vx * d.x + vy * d.y + vz * d.z;
+          if (t <= 0 || t > wall) continue;
+          const off = Math.hypot(vx - t * d.x, vy - t * d.y, vz - t * d.z) / (t * pixel);
+          if (off < reach && (!best || off < best.off)) best = { kind: 'star', star, off, at: star.p };
+        }
+        let line = null;
+        if (ui.lines) for (const owner of lanes) {
+          const s = owner.segments;
+          for (let k = 0; k < s.length; k += 2) {
+            tests++;
+            const hit = rayToSegment(s[k], s[k + 1]);
+            if (!hit || hit.t > wall) continue;
+            const off = hit.distance / (hit.t * pixel);
+            if (off < reach && (!line || off < line.off)) line = { kind: 'line', owner, off, at: hit.point, segment: [s[k], s[k + 1]], index: k / 2 };
+          }
+        }
+        // The nearer on screen wins; a star by a pixel's grace, as a star sits on its own lines.
+        const hit = best && (!line || best.off <= line.off + 1) ? best : line;
+        return { hit, tests, time: performance.now() - started };
+      }
+      // The closest points of the ray (o, d) and the segment a–b: the ray's `t`, the point on the
+      // segment and the gap between them — the classic two-line solve, clamped to the segment.
+      function rayToSegment(a, b) {
+        const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2];
+        const wx = a[0] - o.x, wy = a[1] - o.y, wz = a[2] - o.z;
+        const uu = ux * ux + uy * uy + uz * uz, ud = ux * d.x + uy * d.y + uz * d.z;
+        const wu = wx * ux + wy * uy + wz * uz, wd = wx * d.x + wy * d.y + wz * d.z;
+        const den = uu - ud * ud;
+        let s = den > 1e-9 ? math.clamp((ud * wd - wu) / den, 0, 1) : 0;
+        let t = wd + s * ud;
+        if (t <= 0) return null;
+        const px = a[0] + ux * s, py = a[1] + uy * s, pz = a[2] + uz * s;
+        const distance = Math.hypot(px - (o.x + d.x * t), py - (o.y + d.y * t), pz - (o.z + d.z * t));
+        return { t, distance, point: [px, py, pz] };
+      }
+
+      // ---- What a pick changes: the line it names brightens, its segment glows, the ring moves.
+      let lit = null, segmentLine = null, pointer = null, ghostTime = 0, own = false;
+      function show(result) {
+        const hit = result.hit;
+        const owner = hit?.kind === 'line' ? hit.owner : null;
+        if (lit !== owner) {
+          if (lit) {
+            lit.ink.color.set(lit.rest);
+            lit.ink.linewidth = lit.width;
+          }
+          if (owner) {
+            owner.ink.color.set('#b8dcff');
+            owner.ink.linewidth = 2.6;
+          }
+          lit = owner;
+        }
+        const segment = hit?.kind === 'line' ? hit.segment : null;
+        if (segmentLine && segmentLine.userData.segment !== segment) {
+          spin.remove(segmentLine);
+          segmentLine.geometry.dispose();
+          segmentLine = null;
+        }
+        // A line's positions are cut into what it draws once: a new segment is a new line.
+        if (segment && !segmentLine) {
+          segmentLine = object.lineSegments(geometry.createBuffer({ position: buffer.float32(new Float32Array([...segment[0], ...segment[1]]), 3) }), goldInk);
+          segmentLine.userData.segment = segment;
+          // Lifted a hair off the figure's own line, so the two never fight for the same depth.
+          segmentLine.scale.setScalar(1.003);
+          spin.add(segmentLine);
+        }
+        reticle.visible = Boolean(hit);
+        if (hit) reticle.position.set(...hit.at);
+        reticle.material.color.set(hit?.kind === 'line' ? '#ffd166' : '#ffffff');
+        picked = hit;
+        const n = (value, digits = 0) => value.toLocaleString(language(), { maximumFractionDigits: digits, minimumFractionDigits: digits });
+        if (!hit) {
+          shownHit(say('nothing'));
+          shownPlace('—');
+          shownOff('—');
+        } else if (hit.kind === 'star') {
+          const [x, y, z] = hit.star.p;
+          shownHit(say('star', { n: n(hit.star.index + 1), total: n(stars.length) }));
+          shownPlace(say('place', { lon: n(((Math.atan2(z, x) * 180) / Math.PI + 360) % 360, 1), lat: n((Math.asin(y / R) * 180) / Math.PI, 1) }));
+          shownOff(say('pixels', { px: n(hit.off, 1) }));
+        } else {
+          shownHit(hit.owner.label());
+          shownPlace(say('segment', { k: n(hit.index + 1), total: n(hit.owner.segments.length / 2) }));
+          shownOff(say('pixels', { px: n(hit.off, 1) }));
+        }
+        shownCost(say('cost', { n: n(result.tests), us: n(result.time * 1000) }));
+        world.invalidate();
+      }
+
+      // `aimed`: the pointer moved since the last frame, which picks again, once.
+      let aimed = false;
+      const ui = controls({ reach: [2, 30, 12, 1], stars: true, lines: true, turning: true }, (values, key) => {
+        if (key) aimed = true;
+        world.invalidate();
+      }, world);
+      const shownHit = readout('hit'), shownPlace = readout('place'), shownOff = readout('off'), shownCost = readout('cost');
+
+      // ---- The pointer: the viewer's, or until it comes, a ghost that wanders over the globe.
+      const ghost = document.getElementById('ghost');
+      const aim = (event) => {
+        own = true;
+        ghost.style.display = 'none';
+        pointer = [event.offsetX, event.offsetY];
+        aimed = true;
+        world.invalidate();
+      };
+      world.canvas.addEventListener('pointermove', aim);
+      world.canvas.addEventListener('pointerdown', aim);
+      world.canvas.addEventListener('pointerleave', () => {
+        if (!own) return;
+        pointer = null;
+        show({ hit: null, tests: 0, time: 0 });
+      });
+
+      // The ghost goes from target to target on the side of the globe facing the eye — a star,
+      // then the middle of a figure's segment, in turn — gliding 1.1 s and resting 1.3 s on each.
+      // A target is a point of the sky put on the screen: the sky's matrix, the camera's inverse,
+      // then the perspective divide.
+      const seen = math.vector3();
+      function onScreen(p) {
+        seen.set(...p).applyMatrix4(spin.matrixWorld).applyMatrix4(world.camera.matrixWorldInverse);
+        if (seen.z > -0.1) return null;
+        const { width, height } = box(), slope = Math.tan((world.camera.fov * Math.PI) / 360);
+        const x = seen.x / -seen.z / (slope * (width / height)), y = seen.y / -seen.z / slope;
+        return [((x + 1) / 2) * width, ((1 - y) / 2) * height];
+      }
+      function facing(p) {
+        seen.set(...p).applyMatrix4(spin.matrixWorld);
+        const c = world.camera.position;
+        return (seen.x * (c.x - seen.x) + seen.y * (c.y - seen.y) + seen.z * (c.z - seen.z)) / R;
+      }
+      const legs = [];
+      function target(k) {
+        const pool = k % 2
+          ? figures.flatMap((f) => f.segments.filter((_, i) => i % 2 === 0).map((a, i) => a.map((v, axis) => (v + f.segments[i * 2 + 1][axis]) / 2)))
+          : stars.filter((star) => star.rank < 2).map((star) => star.p);
+        const middle = box().width / 2;
+        const ranked = pool.map((p) => [p, facing(p) - Math.abs((onScreen(p)?.[0] ?? 0) - middle) * 0.004]).sort((x, y) => y[1] - x[1]);
+        return ranked[Math.floor(next() * Math.min(6, ranked.length))][0];
+      }
+      function ghostAt(time) {
+        const leg = Math.floor(time / 2.4), within = time - leg * 2.4;
+        while (legs.length <= leg + 1) legs.push(target(legs.length));
+        spin.updateWorldMatrix(true, false);
+        const { width, height } = box();
+        const from = leg ? onScreen(legs[leg - 1]) ?? [width / 2, height / 2] : [width * 0.5, height * 0.62];
+        const to = onScreen(legs[leg]) ?? from;
+        return mix({ math }, from, to, ease.smooth(within / 1.1));
+      }
+
+      // The ring keeps 34 pixels across wherever it stands: its world size is the distance times
+      // the angle of a pixel. The sky turns slowly; the pointer, still, picks again as it turns.
+      const where = math.vector3();
+      world.onFrame(({ delta }) => {
+        const step = Math.min(delta, 0.05);
+        if (ui.turning) spin.rotation.y += step * 0.06;
+        if (!own) {
+          ghostTime += step;
+          pointer = ghostAt(ghostTime);
+          ghost.style.left = `${pointer[0] - 2}px`;
+          ghost.style.top = `${pointer[1] - 2}px`;
+        }
+        if (pointer && (aimed || ui.turning || !own)) show(pick(...pointer));
+        aimed = false;
+        if (picked) {
+          reticle.updateWorldMatrix(true, false);
+          where.setFromMatrixPosition(reticle.matrixWorld);
+          const { width, height } = box(), { pixel } = rayAt(width / 2, height / 2);
+          reticle.scale.setScalar(world.camera.position.distanceTo(where) * pixel * 34);
+        }
+        // A still sky under a still pointer draws nothing new: the page then waits for the viewer.
+        if (ui.turning || !own) world.invalidate();
+      });
+    </script>
+  </body>
+</html>

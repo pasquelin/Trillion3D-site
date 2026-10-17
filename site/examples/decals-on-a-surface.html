@@ -1,0 +1,426 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Decals on a surface</title>
+    <meta name="thumbnail" content="9" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #0f121a;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, geometry, material, object, light, texture, effect, buffer, math } from '../runtime/engine.js';
+      import { controls, mix, onClick, readout, seeded } from '../runtime/kit.js';
+
+      const world = createWorld('view', { controls: 'orbit' });
+      world.scene.background = math.color('#0f121a');
+
+      // The surface: a sphere pushed in and out by a few slow waves into a smooth pebble, in
+      // glossy car paint. Its triangles are what every decal is cut from.
+      const shape = geometry.sphere(1.25, 160, 100);
+      const position = shape.attributes.position.array;
+      for (let i = 0; i < position.length; i += 3) {
+        const [x, y, z] = [position[i], position[i + 1], position[i + 2]];
+        const r = Math.hypot(x, y, z);
+        const swell = 1 + 0.1 * Math.sin(2.4 * x + 1) * Math.sin(2.1 * y) + 0.07 * Math.sin(3.1 * z + 1.7 * y) + 0.05 * Math.cos(2.7 * x - 1.9 * z);
+        position[i] = (x / r) * 1.25 * swell * 1.08;
+        position[i + 1] = (y / r) * 1.25 * swell * 0.92;
+        position[i + 2] = (z / r) * 1.25 * swell;
+      }
+      shape.computeVertexNormals();
+      const paint = material.meshPhysical({ color: '#227f93', metalness: 0.2, roughness: 0.3, clearcoat: 1, clearcoatRoughness: 0.06 });
+      const pebble = object.mesh(shape, paint);
+      pebble.position.y = 1.25;
+      const plinth = object.mesh(geometry.cylinder(1.2, 1.35, 0.5, 96), material.meshStandard({ color: '#2a2d35', roughness: 0.45, metalness: 0.2 }));
+      plinth.position.y = -0.25;
+      const floor = object.mesh(geometry.circle(10, 96), material.meshStandard({ color: '#171a22', roughness: 0.9 }));
+      floor.rotation.x = -Math.PI / 2;
+      floor.position.y = -0.5;
+      world.scene.add(pebble, plinth, floor);
+      world.scene.add(
+        light.directional({ color: '#fff3e2', intensity: 2.6, position: [4, 8, 5], castShadow: true }),
+        light.hemisphere({ color: '#a9c4ff', groundColor: '#1a1410', intensity: 0.9 }),
+        light.point({ color: '#ff8a5c', intensity: 45, position: [-3.5, 2.5, -3], distance: 14 }),
+        light.point({ color: '#5cc8ff', intensity: 30, position: [3.5, 1, -2.5], distance: 12 }),
+      );
+      const softbox = light.rectArea({ color: '#fff6ea', intensity: 7, width: 2.6, height: 1.2, position: [-2.4, 3.6, 3.2] });
+      softbox.lookAt(0, 1.2, 0);
+      world.scene.add(softbox);
+      world.effects.add(effect.bloom({ intensity: 0.05 }));
+      world.camera.position.set(0, 2.4, 5.6);
+      world.camera.lookAt(0, 1.1, 0);
+      world.controls.target.set(0, 1.1, 0);
+      world.controls.minDistance = 2.6;
+      world.controls.maxDistance = 11;
+
+      // Eight die-cut stickers, painted on one 1024 × 512 canvas, four across and two down, each
+      // with the wide white border a vinyl sticker is cut with. One texture serves every decal.
+      const STICKERS = ['star', 'bolt', 'heart', 'target', 'flag', 'smile', 'hazard', 'flower'];
+      const atlas = document.createElement('canvas');
+      atlas.width = 1024;
+      atlas.height = 512;
+      const pen = atlas.getContext('2d');
+      const star = (n, outer, inner, turn = -Math.PI / 2) => {
+        pen.beginPath();
+        for (let k = 0; k < n * 2; k++) {
+          const a = turn + (k * Math.PI) / n, r = k % 2 ? inner : outer;
+          pen.lineTo(Math.cos(a) * r, Math.sin(a) * r);
+        }
+        pen.closePath();
+      };
+      const disc = () => {
+        pen.beginPath();
+        pen.arc(0, 0, 96, 0, Math.PI * 2);
+      };
+      const shapes = {
+        star: () => star(5, 100, 44),
+        bolt: () => {
+          pen.beginPath();
+          for (const [x, y] of [[20, -110], [-62, 14], [-6, 14], [-26, 110], [62, -20], [6, -20], [30, -110]]) pen.lineTo(x, y);
+          pen.closePath();
+        },
+        heart: () => {
+          pen.beginPath();
+          pen.moveTo(0, 92);
+          pen.bezierCurveTo(-140, 0, -80, -110, 0, -48);
+          pen.bezierCurveTo(80, -110, 140, 0, 0, 92);
+          pen.closePath();
+        },
+        target: disc,
+        flag: () => {
+          pen.beginPath();
+          pen.roundRect(-92, -70, 184, 140, 18);
+        },
+        smile: disc,
+        hazard: () => {
+          pen.beginPath();
+          pen.moveTo(0, -100);
+          pen.lineTo(104, 82);
+          pen.lineTo(-104, 82);
+          pen.closePath();
+        },
+        flower: () => {
+          pen.beginPath();
+          for (let k = 0; k < 6; k++) {
+            const a = (k * Math.PI) / 3;
+            pen.moveTo(Math.cos(a) * 52 + 46, Math.sin(a) * 52);
+            pen.arc(Math.cos(a) * 52, Math.sin(a) * 52, 46, 0, Math.PI * 2);
+          }
+        },
+      };
+      const inks = { star: '#ffcf3a', bolt: '#ff7a1f', heart: '#ff3d6e', target: '#2f6bff', flag: '#16181d', smile: '#ffd23f', hazard: '#ffc400', flower: '#b45cff' };
+      // What each sticker carries inside its outline.
+      const details = {
+        target: () => {
+          for (const [r, c] of [[72, '#ffffff'], [50, '#2f6bff'], [28, '#ffffff'], [10, '#ff3d6e']]) {
+            pen.fillStyle = c;
+            pen.beginPath();
+            pen.arc(0, 0, r, 0, Math.PI * 2);
+            pen.fill();
+          }
+        },
+        flag: () => {
+          pen.save();
+          pen.clip();
+          pen.fillStyle = '#ffffff';
+          for (let x = 0; x < 8; x++) for (let y = 0; y < 6; y++) if ((x + y) % 2) pen.fillRect(-92 + x * 23, -70 + y * 23.4, 23, 23.4);
+          pen.restore();
+        },
+        smile: () => {
+          pen.fillStyle = '#16181d';
+          for (const x of [-32, 32]) {
+            pen.beginPath();
+            pen.ellipse(x, -24, 11, 18, 0, 0, Math.PI * 2);
+            pen.fill();
+          }
+          pen.lineWidth = 12;
+          pen.lineCap = 'round';
+          pen.strokeStyle = '#16181d';
+          pen.beginPath();
+          pen.arc(0, 6, 54, 0.2 * Math.PI, 0.8 * Math.PI);
+          pen.stroke();
+        },
+        hazard: () => {
+          pen.fillStyle = '#16181d';
+          pen.fillRect(-9, -40, 18, 70);
+          pen.beginPath();
+          pen.arc(0, 52, 11, 0, Math.PI * 2);
+          pen.fill();
+        },
+        flower: () => {
+          pen.fillStyle = '#ffd23f';
+          pen.beginPath();
+          pen.arc(0, 0, 36, 0, Math.PI * 2);
+          pen.fill();
+        },
+        star: () => {
+          pen.fillStyle = 'rgba(255, 255, 255, 0.55)';
+          star(5, 54, 24);
+          pen.fill();
+        },
+      };
+      STICKERS.forEach((name, k) => {
+        pen.save();
+        pen.translate(128 + (k % 4) * 256, 128 + Math.floor(k / 4) * 256);
+        pen.lineJoin = 'round';
+        // The cut line: a soft dark edge, then the white border, then the ink.
+        shapes[name]();
+        pen.lineWidth = 34;
+        pen.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+        pen.stroke();
+        pen.lineWidth = 26;
+        pen.strokeStyle = '#ffffff';
+        pen.stroke();
+        pen.fillStyle = '#ffffff';
+        pen.fill();
+        pen.fillStyle = inks[name];
+        pen.fill();
+        details[name]?.();
+        pen.restore();
+      });
+      const stickers = texture.canvas(atlas);
+      stickers.anisotropy = 8;
+      // Vinyl: a little glossier than the paint, cut out where the picture is clear (`alphaTest`),
+      // so a decal is an ordinary opaque surface that takes light and shadow like the pebble.
+      const vinyl = material.meshPhysical({ map: stickers, alphaTest: 0.5, roughness: 0.25, clearcoat: 0.6, clearcoatRoughness: 0.1 });
+
+      // The pebble's triangles in its own frame, read once: three corner ranks each, and the
+      // positions and normals they name.
+      const corners = shape.index.array, normals = shape.attributes.normal.array;
+      const triangleCount = corners.length / 3;
+      // Each vertex's place in the projector box, worked out once per cut.
+      const inBox = new Float32Array(position.length);
+
+      // A decal is a projector: a box laid on the surface at the hit, its depth along the normal
+      // there, turned by `angle` about it. Every vertex of the pebble is carried into the box's
+      // frame; the triangles that reach into it and face it are clipped by its six faces
+      // (Sutherland–Hodgman), and what is left becomes the decal's own triangles, its texture
+      // coordinates the box's x and y.
+      const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+      const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+      const unit = (a) => {
+        const l = Math.hypot(...a);
+        return a.map((v) => v / l);
+      };
+      function frameAt(point, normal, angle) {
+        const z = unit(normal);
+        const seed = Math.abs(z[1]) < 0.95 ? [0, 1, 0] : [1, 0, 0];
+        const x0 = unit(cross(seed, z)), y0 = cross(z, x0);
+        const [c, s] = [Math.cos(angle), Math.sin(angle)];
+        const x = x0.map((v, k) => c * v + s * y0[k]), y = y0.map((v, k) => c * v - s * x0[k]);
+        return { origin: point, x, y, z };
+      }
+      // Clips a polygon of box-frame corners (each [x, y, z, nx, ny, nz]) to `axis · sign ≤ limit`.
+      function clip(polygon, axis, sign, limit) {
+        const out = [];
+        for (let k = 0; k < polygon.length; k++) {
+          const a = polygon[k], b = polygon[(k + 1) % polygon.length];
+          const da = a[axis] * sign - limit, db = b[axis] * sign - limit;
+          if (da <= 0) out.push(a);
+          if (da <= 0 !== db <= 0) {
+            out.push(mix({ math }, a, b, da / (da - db)));
+          }
+        }
+        return out;
+      }
+      function cutDecal(frame, size, sticker, lift) {
+        // The box is as deep as it is wide: `half` bounds it on all three axes.
+        const half = size / 2;
+        const { origin, x, y, z } = frame;
+        for (let i = 0; i < position.length; i += 3) {
+          const dx = position[i] - origin[0], dy = position[i + 1] - origin[1], dz = position[i + 2] - origin[2];
+          inBox[i] = dx * x[0] + dy * x[1] + dz * x[2];
+          inBox[i + 1] = dx * y[0] + dy * y[1] + dz * y[2];
+          inBox[i + 2] = dx * z[0] + dy * z[1] + dz * z[2];
+        }
+        // Wholly beyond one face of the box along `axis`: all three corners past `half`, one side.
+        const outside = (i, j, k, axis) => {
+          const [p, q, r] = [inBox[3 * i + axis], inBox[3 * j + axis], inBox[3 * k + axis]];
+          return (p > half && q > half && r > half) || (p < -half && q < -half && r < -half);
+        };
+        const into = (i) => {
+          const n = [normals[3 * i], normals[3 * i + 1], normals[3 * i + 2]];
+          return [inBox[3 * i], inBox[3 * i + 1], inBox[3 * i + 2], dot(n, x), dot(n, y), dot(n, z)];
+        };
+        const out = { position: [], normal: [], uv: [] };
+        const [col, row] = [sticker % 4, Math.floor(sticker / 4)];
+        for (let t = 0; t < triangleCount; t++) {
+          const [i, j, k] = [corners[3 * t], corners[3 * t + 1], corners[3 * t + 2]];
+          // Quick refusals: a triangle wholly outside one face of the box, or turned away.
+          if (outside(i, j, k, 0) || outside(i, j, k, 1) || outside(i, j, k, 2)) continue;
+          const a = into(i), b = into(j), c = into(k);
+          const face = cross([b[0] - a[0], b[1] - a[1], b[2] - a[2]], [c[0] - a[0], c[1] - a[1], c[2] - a[2]]);
+          if (face[2] <= 0.2 * Math.hypot(...face)) continue;
+          let polygon = [a, b, c];
+          for (const axis of [0, 1, 2])
+            for (const sign of [1, -1]) if (polygon.length) polygon = clip(polygon, axis, sign, half);
+          // A fan of the clipped polygon, lifted a hair along its normal so it sits on the paint.
+          const lifted = polygon.map((p) => {
+            const n = unit([p[3], p[4], p[5]]);
+            const at = [0, 1, 2].map((k) => origin[k] + p[0] * x[k] + p[1] * y[k] + p[2] * z[k]);
+            const nl = [0, 1, 2].map((k) => n[0] * x[k] + n[1] * y[k] + n[2] * z[k]);
+            return { at: at.map((v, k) => v + nl[k] * lift), nl, uv: [(col + p[0] / size + 0.5) / 4, 1 - (row + 0.5 - p[1] / size) / 2] };
+          });
+          for (let k = 1; k + 1 < lifted.length; k++)
+            for (const v of [lifted[0], lifted[k], lifted[k + 1]]) {
+              out.position.push(...v.at);
+              out.normal.push(...v.nl);
+              out.uv.push(...v.uv);
+            }
+        }
+        return out;
+      }
+
+      // The projector's box as a guide, a unit cube placed by a matrix: it follows the pointer
+      // over the pebble, showing where the next decal will be cut.
+      const cube = [];
+      for (const [a, b] of [[0, 1], [1, 3], [3, 2], [2, 0], [4, 5], [5, 7], [7, 6], [6, 4], [0, 4], [1, 5], [2, 6], [3, 7]])
+        for (const c of [a, b]) cube.push((c & 1) - 0.5, ((c >> 1) & 1) - 0.5, ((c >> 2) & 1) - 0.5);
+      const box = world.guides.lines({ positions: cube, color: '#7fe3ff', width: 1.5 }).setVisible(false);
+      const placed = math.matrix4();
+      function showBox(frame, size) {
+        const { origin: o, x, y, z } = frame;
+        placed.set(x[0] * size, y[0] * size, z[0] * size, o[0], x[1] * size, y[1] * size, z[1] * size, o[1], x[2] * size, y[2] * size, z[2] * size, o[2], 0, 0, 0, 1);
+        box.setTransform(placed.premultiply(pebble.matrixWorld)).setVisible(ui.box);
+      }
+
+      // From a world hit to the pebble's frame: the point carried in, and the normal as the step
+      // from it to the point one unit ahead along the world normal, carried in too.
+      const local = (hit) => {
+        const point = pebble.worldToLocal(hit.point.clone()).toArray();
+        const ahead = pebble.worldToLocal(hit.point.clone().add(hit.normal)).toArray();
+        return { point, normal: unit(ahead.map((v, k) => v - point[k])) };
+      };
+      // The next decal is drawn in advance, sticker and turn, so the box shown is the one cut.
+      const pick = seeded(3);
+      const next = { sticker: 0, angle: 0 };
+      // Set when what the projector box shows may have changed: the pointer, the pebble, the controls.
+      let reaim = true;
+      const choose = () => {
+        reaim = true;
+        next.sticker = ui.sticker === 'mixed' ? Math.floor(pick() * STICKERS.length) : STICKERS.indexOf(ui.sticker);
+        next.angle = ui.turn ? (pick() - 0.5) * Math.PI * 1.4 : 0;
+      };
+
+      let decals = [];
+      function stamp(hit) {
+        const { point, normal } = local(hit);
+        const { sticker, angle } = next;
+        choose();
+        const frame = frameAt(point, normal, angle);
+        // Each new decal sits a little higher than the last, so two that overlap never fight.
+        const cut = cutDecal(frame, ui.size, sticker, 0.003 + (decals.length % 40) * 0.0002);
+        if (!cut.position.length) return;
+        const decal = object.mesh(
+          geometry.createBuffer({
+            position: buffer.float32(new Float32Array(cut.position), 3),
+            normal: buffer.float32(new Float32Array(cut.normal), 3),
+            uv: buffer.float32(new Float32Array(cut.uv), 2),
+          }),
+          vinyl,
+        );
+        // A child of the pebble: it turns with the surface it was cut from.
+        pebble.add(decal);
+        decals.push(decal);
+        shown(String(decals.length));
+        kept(`${cut.position.length / 9} / ${triangleCount}`);
+        world.invalidate();
+      }
+
+      const ui = controls({
+        sticker: ['mixed', ...STICKERS],
+        size: [0.2, 1, 0.55, 0.01],
+        turn: true,
+        box: true,
+        spin: true,
+        clear: () => {
+          for (const decal of decals) {
+            decal.remove();
+            decal.geometry.dispose();
+          }
+          decals = [];
+          shown('0');
+          kept('—');
+          world.invalidate();
+        },
+      }, (values, key) => {
+        if (key === 'sticker' || key === 'turn') choose();
+        reaim = true;
+        box.setVisible(values.box && box.visible);
+        world.invalidate();
+      }, world);
+      choose();
+      const shown = readout('decals'), kept = readout('kept');
+      shown('0');
+      kept('—');
+
+      // The pointer: hovering shows the projector, a click that did not drag stamps a decal.
+      const hover = { x: 0, y: 0, inside: false };
+      world.canvas.addEventListener('pointermove', (event) => {
+        Object.assign(hover, { x: event.offsetX, y: event.offsetY, inside: !event.buttons });
+        reaim = true;
+        world.invalidate();
+      });
+      world.canvas.addEventListener('pointerleave', () => {
+        hover.inside = false;
+        reaim = true;
+        world.invalidate();
+      });
+      onClick(world.canvas, (event) => {
+        const hit = world.raycast({ x: event.offsetX, y: event.offsetY }, { objects: [pebble] });
+        if (hit) stamp(hit);
+      });
+
+      // The opening: a burst of stickers slapped on the turning pebble, each through the same
+      // ray a click casts, aimed at points scattered over its silhouette.
+      const OPENING = 30;
+      let opened = 0, clock = 0;
+      const aim = seeded(19);
+      const eye = world.camera.position.clone();
+      world.onFrame(({ delta }) => {
+        const step = Math.min(delta, 0.05);
+        clock += step;
+        if (ui.spin || opened < OPENING) {
+          pebble.rotation.y += step * (opened < OPENING ? 2.2 : 0.25);
+          reaim = true;
+        }
+        if (opened < OPENING && clock > 0.3 + opened * 0.2) {
+          opened++;
+          const { clientWidth: w, clientHeight: h } = world.canvas;
+          const [a, r] = [aim() * Math.PI * 2, Math.sqrt(aim()) * 0.2];
+          const hit = world.raycast({ x: w * (0.5 + Math.cos(a) * r * (h / w)), y: h * (0.5 + Math.sin(a) * r) }, { objects: [pebble] });
+          if (hit) stamp(hit);
+        }
+        // The pebble is 32 000 triangles: cast at it only when the answer may have changed.
+        if (!eye.equals(world.camera.position)) {
+          eye.copy(world.camera.position);
+          reaim = true;
+        }
+        if (reaim) {
+          reaim = false;
+          const hit = hover.inside ? world.raycast(hover, { objects: [pebble] }) : null;
+          world.canvas.style.cursor = hit ? 'crosshair' : '';
+          if (hit) {
+            const { point, normal } = local(hit);
+            showBox(frameAt(point, normal, next.angle), ui.size);
+          } else box.setVisible(false);
+        }
+        if (ui.spin || opened < OPENING) world.invalidate();
+      });
+      world.invalidate();
+      addEventListener('pagehide', () => world.dispose(), { once: true });
+    </script>
+  </body>
+</html>
