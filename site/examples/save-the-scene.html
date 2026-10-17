@@ -70,7 +70,7 @@
             if (node.physics?.type === 'dynamic') node.physics.applyImpulse(BLOCK_KG * TIP * node.position.y, 0, 0);
         },
         open: () => world.scene.fromJSON(JSON.parse(saved), world.camera),
-      });
+      }, world);
       const size = readout('saved');
       size(say('bytes', { bytes: saved.length }));
     </script>

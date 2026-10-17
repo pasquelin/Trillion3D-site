@@ -186,7 +186,7 @@
         for (const action of [waking, plain, soft]) action.timeScale = values.speed;
         for (const ghost of ghosts) ghost.visible = values.onionSkin;
         world.invalidate();
-      });
+      }, world);
       const shownKey = readout('lastKey');
 
       world.onFrame(() => {
