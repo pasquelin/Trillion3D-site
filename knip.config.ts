@@ -1,11 +1,12 @@
 import type { KnipConfig } from 'knip'
 
-// The site's entries: the portal and the examples' kit (bundled by `scripts/docs/build-portal.ts`
-// and `build-runtime.ts`), the tests, and the scripts `package.json` and the workflows run, which
+// The site's entries: the portal, the examples' engine and kit (bundled by
+// `scripts/docs/build-portal.ts` and `build-runtime.ts`), the tests, and the scripts `package.json` and the workflows run, which
 // knip finds itself. The engine under `.engine/` is read, never checked here.
 const config: KnipConfig = {
   entry: [
     'site/app/main.tsx',
+    'site/examples/engine.ts',
     'site/examples/kit/index.ts',
     '**/*.test.ts',
     // Run by hand: the example scenes' sources and thumbnails (`docs/LEARNING_PORTAL.md`), the
