@@ -2,7 +2,6 @@
 import {
   BOX_VALUES,
   axisAngleQuaternion,
-  boxConeRejects,
   boxTransform,
   boxUnion,
   composeMatrix4,
@@ -57,46 +56,6 @@ export const BOX_DEMOS: Record<string, DemoDef> = {
           ['lower bounds', Array.from(out.subarray(0, 3), formatNumber).join(', ')],
           ['upper bounds', Array.from(out.subarray(3, 6), formatNumber).join(', ')],
           ['note', 'the union of the eight transformed corners, never the eight of the result'],
-        ]),
-      ]
-    },
-  },
-  boxConeRejects: {
-    controls: [
-      slider('angle', 'cone half-angle (rad)', 0, 1.57, 0.5, 0.01),
-      slider('axis', 'cone axis, heading (rad)', 0, 6.28, 0, 0.01),
-      slider('distance', 'viewer distance', 1, 12, 6, 0.1),
-    ],
-    run(state) {
-      const world = new Float64Array(16)
-      composeMatrix4(world, [0, 0, 0], [0, 0, 0, 1], [1, 1, 1])
-      const normal = new Float64Array([1, 0, 0, 0, 1, 0, 0, 0, 1])
-      const axis = [Math.cos(state.axis), 0, Math.sin(state.axis)]
-      const rejects = boxConeRejects(
-        axis,
-        state.angle,
-        [-1, -1, -1],
-        [1, 1, 1],
-        world,
-        normal,
-        1,
-        0,
-        0,
-        state.distance,
-      )
-      return [
-        verdictView(
-          'boxConeRejects',
-          !rejects,
-          rejects
-            ? 'rejected: every normal of that cluster faces away from the viewer'
-            : 'kept: the cone may still face the viewer',
-        ),
-        valueView('what the test read', [
-          ['cone axis', axis.map(formatNumber).join(', ')],
-          ['half-angle', `${formatNumber(state.angle * RAD2DEG)}°`],
-          ['viewer', `0, 0, ${formatNumber(state.distance)}`],
-          ['note', 'an angle at or above π/2 never rejects'],
         ]),
       ]
     },

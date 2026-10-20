@@ -72,7 +72,7 @@
         lacquer.color.set(values.floor);
         turning = values.turn;
         world.invalidate();
-      }, world);
+      });
       world.onFrame(({ delta }) => {
         if (!turning) return;
         for (const piece of pieces) piece.rotation.y += Math.min(delta, 0.05) * 0.3;

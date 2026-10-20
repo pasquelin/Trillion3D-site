@@ -11,6 +11,23 @@ export const GUIDES: EntryFrame[] = [
     ...GUIDE,
     id: 'install',
   },
+  // HLOD: the compile option `hlod`, both its forms, and the `hlod` and `wireframe` views.
+  {
+    ...GUIDE,
+    id: 'hlod',
+  },
+  // Temporal anti-aliasing: the scene's level (compile option, page, live), who decides, each
+  // material's share of history (`materials`, glTF `extras`), and the `taa-material-history` view.
+  {
+    ...GUIDE,
+    id: 'temporal-antialiasing',
+  },
+  // Responsive anti-aliasing: the compile options `responsive` and `materials`, the glTF
+  // material's `extras`, which one wins, and the `taa-responsive` view.
+  {
+    ...GUIDE,
+    id: 'responsive-antialiasing',
+  },
   {
     ...GUIDE,
     id: 'three-migration',

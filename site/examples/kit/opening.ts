@@ -53,11 +53,16 @@ export interface Opening {
 
 /**
  * Poses the camera every frame with `pose(time)`, `time` the seconds the glide has run (a frame
- * counts 50 ms at most, so a hidden tab does not skip the flight), then updates the controls and
- * asks for a frame. It ends when `pose` answers `false` — it has landed — or at the viewer's
+ * counts 50 ms at most, so a hidden tab does not skip the flight; with `step`, exactly `step`
+ * seconds, so a replay poses the same frames whatever the frame rate), then updates the controls
+ * and asks for a frame. It ends when `pose` answers `false` — it has landed — or at the viewer's
  * first press or wheel on the canvas. `pose(0)` runs at once, so the first frame is the glide's.
  */
-export function opening(world: OpeningWorld, pose: (time: number) => boolean | void): Opening {
+export function opening(
+  world: OpeningWorld,
+  pose: (time: number) => boolean | void,
+  step?: number,
+): Opening {
   let time = 0,
     gliding = true
   const place = () => {
@@ -70,7 +75,7 @@ export function opening(world: OpeningWorld, pose: (time: number) => boolean | v
   for (const type of events) world.canvas.addEventListener(type, stop, { passive: true })
   const unhook = world.onFrame(({ delta }) => {
     if (!gliding) return
-    time += Math.min(delta, 0.05)
+    time += step ?? Math.min(delta, 0.05)
     place()
   })
   place()

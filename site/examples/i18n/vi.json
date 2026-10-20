@@ -17,7 +17,9 @@
   },
   "kit": {
     "panel": {
-      "controls": "Cài đặt"
+      "controls": "Cài đặt",
+      "view": "Chế độ xem",
+      "freeze": "Đóng băng loại bỏ"
     },
     "menu": {
       "play": "Chơi",
@@ -38,7 +40,8 @@
     },
     "stats": {
       "FPS": "Khung/giây",
-      "triangles": "tam giác",
+      "triangles selected": "tam giác được chọn",
+      "triangles drawn": "tam giác được vẽ",
       "triangles (scene)": "tam giác (cảnh)",
       "draw calls": "lệnh vẽ",
       "pages": "trang",
@@ -71,7 +74,13 @@
       "physics step": "bước vật lý",
       "Cadence": "Nhịp",
       "{n}× refresh": "{n}× làm mới",
-      "GPU idle": "GPU rảnh"
+      "GPU idle": "GPU rảnh",
+      "All worlds": "Tất cả thế giới",
+      "main view": "khung nhìn chính",
+      "world": "thế giới",
+      "view": "khung nhìn",
+      "GPU busy": "GPU bận",
+      "CPU busy": "CPU bận"
     },
     "shadows": {
       "lights": "đèn",
@@ -112,6 +121,59 @@
     "banner": {
       "close": "Đóng",
       "waiting": "Đang chờ engine (#{issue})"
+    },
+    "views": {
+      "beauty": "hình ảnh",
+      "wireframe": "tam giác",
+      "xray": "tia X",
+      "clusters": "cụm",
+      "lod": "mức chi tiết",
+      "hlod": "HLOD",
+      "screen-error": "sai số trên màn hình",
+      "materials": "vật liệu",
+      "visibility": "trang được thấy",
+      "pages": "trang trong bộ nhớ",
+      "texture-mip": "kích thước texture",
+      "overdraw": "vẽ chồng",
+      "frame-difference": "chênh lệch khung hình",
+      "reflections": "phản chiếu",
+      "shadows": "bóng đổ",
+      "lighting": "chiếu sáng",
+      "no-temporal-aa": "không AA thời gian",
+      "taa-input": "đầu vào TAA",
+      "taa-rejection": "loại bỏ TAA",
+      "taa-validity": "lịch sử TAA",
+      "taa-flicker": "nhấp nháy TAA",
+      "taa-shading": "đổ bóng TAA",
+      "taa-reprojection": "tái chiếu TAA",
+      "taa-motion": "chuyển động TAA",
+      "taa-thin": "hình học mảnh TAA",
+      "taa-material-history": "lịch sử TAA theo vật liệu"
+    },
+    "viewHints": {
+      "wireframe": "Mỗi tam giác được vẽ một màu, cạnh tối: ở xa, tam giác ít hơn và lớn hơn.",
+      "xray": "Các cạnh của mọi tam giác mà engine gửi đi, nhìn xuyên tường: phần bị loại bỏ không hiện. Đóng băng loại bỏ rồi bước sang bên để kiểm tra.",
+      "clusters": "Mỗi cụm một màu: nhóm tam giác mà lát cắt thay bằng nhóm thô hơn.",
+      "lod": "Mức chi tiết được vẽ — xanh dương: đầy đủ chi tiết, rồi lục lam, xanh lá, vàng, đỏ khi thô dần (đỏ: từ 8 mức trở lên).",
+      "hlod": "Trắng: chính vật thể, ở gần. Xanh dương: HLOD 0, các vật thể của ô được gộp lại. Vàng, tím, lục lam: HLOD 1, 2, 3, mỗi ô một lớp vỏ đơn giản, thô hơn ở mỗi mức.",
+      "screen-error": "Xanh lá: chính xác. Vàng: gần sai số pixel cho phép. Đỏ: ở giới hạn.",
+      "materials": "Mỗi loại vật liệu một màu.",
+      "visibility": "Xanh lá: mỗi trang được vẽ trong khung hình này.",
+      "pages": "Xanh lá: mỗi trang trong bộ nhớ được vẽ.",
+      "frame-difference": "Đen: điểm ảnh không đổi so với khung trước. Xám đến trắng: đã thay đổi, khuếch đại tám lần — cái gì nhấp nháy sẽ sáng lên.",
+      "reflections": "Chỉ ánh sáng mà bề mặt phản chiếu, từ dò tia trên màn hình và các đầu dò; đen ở nơi không có phản chiếu.",
+      "shadows": "Lượng ánh nắng tới từng bề mặt — trắng: được chiếu sáng, đen: trong bóng. Không có màu vật liệu.",
+      "lighting": "Toàn bộ ánh sáng trên một bề mặt trắng: trực tiếp, phản chiếu, dội lại và môi trường. Không có màu vật liệu.",
+      "no-temporal-aa": "Ảnh bình thường không tích lũy theo thời gian: ảnh thô của khung này, kể cả răng cưa và nhiễu.",
+      "taa-input": "Ảnh mà AA thời gian nhận, bật jitter, không tích lũy: mỗi điểm ảnh hiện điểm ảnh kết xuất mà nó rơi vào — rung từ khung này sang khung khác.",
+      "taa-rejection": "Mỗi điểm ảnh giữ lại bao nhiêu lịch sử — trắng: giữ lịch sử, đen: bị loại (ánh sáng thay đổi, ngoài màn hình).",
+      "taa-validity": "Mỗi điểm ảnh còn bao nhiêu lịch sử sau khi cập nhật — trắng: lịch sử đầy đủ, đen: bắt đầu lại. Xám: vẫn đang hội tụ.",
+      "taa-flicker": "Phép đo nhấp nháy — đỏ: sai số của nó, xanh lá: số lần nhấp nháy đếm được, xanh dương: độ phủ của vật trong suốt triệt tiêu nó.",
+      "taa-shading": "Loại bỏ theo đổ bóng, trắng: giữ lịch sử — đỏ: không nới theo nhấp nháy, xanh lá: có nới, xanh dương: lan sang lân cận, cái mà cập nhật áp dụng.",
+      "taa-reprojection": "Vì sao lịch sử bắt đầu lại — đỏ: lộ ra, xanh lá: lộ ra và lấp bằng chuyển động của vật che, xanh dương: ngoài màn hình trước.",
+      "taa-motion": "Chuyển động mà phép tích lũy thấy — đỏ: đang chuyển động với phép đo nhấp nháy, xanh lá: hoạt ảnh điểm ảnh, xanh dương: cạnh tái chiếu (trắng: chuyển động đều).",
+      "taa-thin": "Hình học mảnh — đỏ: mức nới giới hạn lịch sử, xanh lá: vùng lỗ cụm, xanh dương: lịch sử độ phủ.",
+      "taa-material-history": "Phần lịch sử mỗi vật liệu được giữ, hiện bằng màu xám — trắng: 1, làm mịn đầy đủ; đen: 0, chỉ ảnh hiện tại."
     }
   },
   "a-city-from-rules": {
@@ -845,6 +907,55 @@
       "notCounted": "không đếm ở đây"
     }
   },
+  "long-district": {
+    "banner": "Hai kilômét phố trong bốn mức HLOD: chọn chế độ xem HLOD để thấy chúng. Nhấp vào khung nhìn, rồi đi dọc con phố bằng W A S D và nhìn bằng chuột; Space và Shift nâng và hạ bạn.",
+    "controls": {
+      "walkSpeed": "Tốc độ đi bộ",
+      "pixelError": "Sai số điểm ảnh",
+      "motion": "Phần chuyển động",
+      "forwardRun": "Chạy thẳng",
+      "fastStrafe": "Lướt ngang nhanh",
+      "slowPan": "Lia chậm",
+      "rotation": "Xoay",
+      "highOrbit": "Quỹ đạo cao",
+      "home": "Về điểm xuất phát"
+    },
+    "readouts": {
+      "trianglesDrawn": "Tam giác đã vẽ",
+      "shareDistrict": "Tỉ lệ của khu phố",
+      "trianglesDistrict": "Tam giác của khu phố",
+      "pathFrame": "Khung hình lộ trình"
+    },
+    "words": {
+      "credit": "Khu phố được dựng bằng mã cho ví dụ này, CC0 — xem assets/examples/CREDITS.md",
+      "notCounted": "không đếm ở đây"
+    }
+  },
+  "nine-emerald-squares": {
+    "banner": "Nhấp vào khung nhìn, rồi bay trên chín quảng trường bằng W A S D và nhìn bằng chuột; Space và Shift đưa bạn lên và xuống.",
+    "controls": {
+      "flySpeed": "Tốc độ bay",
+      "pixelError": "Sai số điểm ảnh",
+      "memory": "Bộ nhớ",
+      "view": "Chế độ xem",
+      "home": "Về điểm xuất phát"
+    },
+    "choices": {
+      "view": {
+        "beauty": "ảnh hoàn chỉnh",
+        "lod": "mức chi tiết",
+        "clusters": "cụm"
+      }
+    },
+    "readouts": {
+      "trianglesGrid": "Tam giác trong lưới",
+      "trianglesDrawn": "Tam giác đã vẽ"
+    },
+    "words": {
+      "credit": "Emerald Square của Nicholas Hull và Kate Anderson (NVIDIA ORCA), cây cối của SpeedTree, CC BY-NC-SA 3.0 — xem assets/examples/CREDITS.md",
+      "notCounted": "không đếm ở đây"
+    }
+  },
   "edges-and-wireframe": {
     "banner": "Kéo để nhìn quanh. Tăng ngưỡng để chỉ giữ các cạnh sắc.",
     "controls": {
@@ -1421,15 +1532,7 @@
     "controls": {
       "walkSpeed": "Tốc độ đi bộ",
       "memory": "Bộ nhớ",
-      "view": "Chế độ xem",
       "home": "Về điểm xuất phát"
-    },
-    "choices": {
-      "view": {
-        "beauty": "ảnh hoàn chỉnh",
-        "lod": "mức chi tiết",
-        "clusters": "cụm"
-      }
     },
     "words": {
       "credit": "Emerald Square của Nicholas Hull và Kate Anderson (NVIDIA ORCA), cây cối của SpeedTree, CC BY-NC-SA 3.0 — xem assets/examples/CREDITS.md"
@@ -1440,15 +1543,7 @@
     "controls": {
       "walkSpeed": "Tốc độ đi bộ",
       "memory": "Bộ nhớ",
-      "view": "Chế độ xem",
       "home": "Về điểm xuất phát"
-    },
-    "choices": {
-      "view": {
-        "beauty": "ảnh hoàn chỉnh",
-        "lod": "mức chi tiết",
-        "clusters": "cụm"
-      }
     },
     "words": {
       "credit": "Amazon Lumberyard Bistro (NVIDIA ORCA), CC BY 4.0 — xem assets/examples/CREDITS.md"
@@ -1484,7 +1579,7 @@
     }
   },
   "no-hitch-on-first-draw": {
-    "banner": "Kéo để nhìn quanh. Biểu đồ cho thấy thời gian giữa các khung hình.",
+    "banner": "Kéo để nhìn quanh. Góc thống kê vẽ thời gian của từng khung hình.",
     "controls": {
       "turning": "Đang xoay",
       "revealAgain": "Hiện lại"
@@ -1494,7 +1589,7 @@
       "worstFrameAfter": "Khung hình tệ nhất sau"
     },
     "words": {
-      "note": "Mười bốn bề mặt, mỗi cái một chất liệu hay thiết lập khác nhau, tất cả hiện trên cùng một khung hình. Biểu đồ vẽ thời gian giữa các khung hình; vạch vàng là lúc chúng xuất hiện.",
+      "note": "Mười bốn bề mặt, mỗi cái một chất liệu hay thiết lập khác nhau, tất cả hiện trên cùng một khung hình. Bảng cho biết thời gian tệ nhất giữa các khung hình trước và sau khi chúng xuất hiện; góc thống kê vẽ từng khung hình.",
       "measuring": "đang đo",
       "hidden": "đang ẩn"
     }
@@ -1804,6 +1899,21 @@
     "words": {
       "on": "bật",
       "off": "tắt"
+    }
+  },
+  "particles-responsive": {
+    "banner": "Hai đàn tia lửa, cùng một chuyển động: lịch sử của đàn bên trái phản hồi nhanh, vệt ngắn. Kéo để xoay quanh chúng.",
+    "controls": {
+      "smoothing": "Làm mịn",
+      "motion": "Chuyển động"
+    },
+    "readouts": {
+      "temporalAntialiasing": "Khử răng cưa theo thời gian"
+    },
+    "words": {
+      "on": "bật",
+      "off": "tắt",
+      "credit": "Tia lửa được mô hình hóa bằng mã cho ví dụ này, CC0 — xem assets/examples/CREDITS.md"
     }
   },
   "snow-of-sprites": {
@@ -2446,18 +2556,11 @@
   "a-hundred-thousand-instances": {
     "banner": "Kéo để xoay quanh trường. Thay đổi số lượng hoặc chế độ xem.",
     "controls": {
-      "count": "Số lượng",
-      "view": "Chế độ xem"
+      "count": "Số lượng"
     },
     "readouts": {
       "objectsShown": "Đối tượng hiển thị",
       "objectsBuilt": "Đối tượng đã tạo"
-    },
-    "choices": {
-      "view": {
-        "beauty": "ảnh hoàn chỉnh",
-        "clusters": "cụm"
-      }
     }
   },
   "inside-a-component": {

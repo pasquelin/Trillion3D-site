@@ -29,8 +29,8 @@
     <canvas id="view"></canvas>
     <p data-words="credit"></p>
     <script type="module">
-      import { createWorld, light, math } from '../runtime/engine.js';
-      import { controls } from '../runtime/kit.js';
+      import { createWorld, geometry, light, material, math, object, side, texture } from '../runtime/engine.js';
+      import { controls, viewModes } from '../runtime/kit.js';
 
       // NVIDIA's Emerald Square, ten million triangles in metres, walked in first person: click,
       // look with the mouse, walk with W/A/S/D. The compiler cut it into pages the walk streams in.
@@ -40,6 +40,27 @@
         light.directional({ intensity: 3.4, color: '#fff1d6', position: [40, 90, 30] }),
         light.hemisphere({ intensity: 1.6, color: '#d6e6ff', groundColor: '#8a7c64' }),
       );
+      // The sky: a painted dome seen from inside, unlit, centred on the camera so it never comes
+      // nearer — deep blue overhead, paling to a hazy horizon. It casts and takes no shadow.
+      const sky = document.createElement('canvas');
+      sky.width = 16;
+      sky.height = 512;
+      const brush = sky.getContext('2d');
+      const air = brush.createLinearGradient(0, 0, 0, 256);
+      air.addColorStop(0, '#3f78c8');
+      air.addColorStop(0.65, '#8fb8e6');
+      air.addColorStop(1, '#dfe9f2');
+      brush.fillStyle = air;
+      brush.fillRect(0, 0, 16, 256);
+      brush.fillStyle = '#dfe9f2';
+      brush.fillRect(0, 256, 16, 256);
+      const dome = object.mesh(
+        geometry.sphere(350, 48, 24),
+        material.meshBasic({ map: texture.canvas(sky), side: side.double }),
+      );
+      dome.castShadow = dome.receiveShadow = false;
+      world.scene.add(dome);
+      world.beforeFrame(() => dome.position.copy(world.camera.position));
       // Kept on one line so the shared example proof checks this published manifest and its credit.
       // prettier-ignore
       await world.scene.load('../assets/examples/emerald-square/cache/native/full/manifest.json');
@@ -48,6 +69,7 @@
       world.camera.far = 400;
       const HOME = { position: [-30, 2.2, 45], target: [-10, 2.6, 10] };
       const home = () => world.camera.set(HOME);
+      window.__world = world; // PROBE ONLY, never committed
       home();
 
       // The geometry pool in MiB, from the engine's default of 512: below it the square's ground
@@ -57,7 +79,6 @@
         {
           walkSpeed: [0.5, 12, 3, 0.5],
           memory: [128, 2048, 512, 64],
-          view: ['beauty', 'lod', 'clusters'],
           home,
         },
         (values, key) => {
@@ -65,11 +86,10 @@
             world.controls.movementSpeed = values.walkSpeed;
           if (key === undefined || key === 'memory')
             world.budget.geometryPool = values.memory * MiB;
-          if (key === undefined || key === 'view') world.diagnostic.mode = values.view;
           world.invalidate();
         },
-        world,
       );
+      viewModes(world);
     </script>
   </body>
 </html>

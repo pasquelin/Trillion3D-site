@@ -10,8 +10,10 @@ export function overlay(): HTMLElement {
   if (layer) return layer
   const host = document.createElement('div')
   host.dataset.exampleOverlay = ''
-  // Hidden until the stylesheet arrives, so no unstyled panel flashes over the render.
-  host.style.cssText = 'position:fixed;inset:0;pointer-events:none;visibility:hidden'
+  // Hidden until the stylesheet arrives, so no unstyled panel flashes over the render. Above the
+  // page's own layers: a view the page adds after it, positioned, would otherwise paint over it.
+  host.style.cssText =
+    'position:fixed;inset:0;z-index:2147483647;pointer-events:none;visibility:hidden'
   const root = host.attachShadow({ mode: 'open' })
   const sheet = document.createElement('link')
   sheet.rel = 'stylesheet'

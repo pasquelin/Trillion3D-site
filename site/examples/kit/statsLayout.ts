@@ -24,7 +24,7 @@ export function loadLayout(size: string, corner: StatsCorner): Layout {
   const fallback: Layout = {
     compact: size === 's',
     corner,
-    open: { cadence: open, cpu: open, gpu: open, shadows: open, scene: open },
+    open: { page: open, cadence: open, cpu: open, gpu: open, shadows: open, scene: open },
   }
   try {
     const saved = JSON.parse(

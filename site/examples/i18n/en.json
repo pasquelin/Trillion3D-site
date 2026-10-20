@@ -17,7 +17,9 @@
   },
   "kit": {
     "panel": {
-      "controls": "Controls"
+      "controls": "Controls",
+      "view": "View",
+      "freeze": "Freeze culling"
     },
     "menu": {
       "play": "Play",
@@ -38,7 +40,8 @@
     },
     "stats": {
       "FPS": "FPS",
-      "triangles": "triangles",
+      "triangles selected": "triangles selected",
+      "triangles drawn": "triangles drawn",
       "triangles (scene)": "triangles (scene)",
       "draw calls": "draw calls",
       "pages": "pages",
@@ -71,7 +74,13 @@
       "physics step": "physics step",
       "Cadence": "Cadence",
       "{n}× refresh": "{n}× refresh",
-      "GPU idle": "GPU idle"
+      "GPU idle": "GPU idle",
+      "All worlds": "All worlds",
+      "main view": "main view",
+      "world": "world",
+      "view": "view",
+      "GPU busy": "GPU busy",
+      "CPU busy": "CPU busy"
     },
     "shadows": {
       "lights": "lights",
@@ -112,6 +121,59 @@
     "banner": {
       "close": "Close",
       "waiting": "Waiting for the engine (#{issue})"
+    },
+    "views": {
+      "beauty": "beauty",
+      "wireframe": "triangles",
+      "xray": "x-ray",
+      "clusters": "clusters",
+      "lod": "detail levels",
+      "hlod": "HLOD",
+      "screen-error": "screen error",
+      "materials": "materials",
+      "visibility": "pages seen",
+      "pages": "pages held",
+      "texture-mip": "texture size",
+      "overdraw": "overdraw",
+      "frame-difference": "frame difference",
+      "reflections": "reflections",
+      "shadows": "shadows",
+      "lighting": "lighting",
+      "no-temporal-aa": "no temporal AA",
+      "taa-input": "TAA input",
+      "taa-rejection": "TAA rejection",
+      "taa-validity": "TAA history",
+      "taa-flicker": "TAA flicker",
+      "taa-shading": "TAA shading",
+      "taa-reprojection": "TAA reprojection",
+      "taa-motion": "TAA motion",
+      "taa-thin": "TAA thin geometry",
+      "taa-material-history": "TAA history by material"
+    },
+    "viewHints": {
+      "wireframe": "One colour per triangle drawn, edges dark: far away, fewer and larger triangles.",
+      "xray": "The edges of every triangle the engine submitted, seen through walls: what culling dropped is gone. Freeze culling, then step aside to check.",
+      "clusters": "One colour per cluster, the group of triangles the cut swaps for a coarser one.",
+      "lod": "Detail level drawn — blue: full detail, then cyan, green, yellow, red as it gets coarser (red: 8 levels and more).",
+      "hlod": "White: the object itself, near. Blue: HLOD 0, the cell's objects batched. Yellow, purple, cyan: HLOD 1, 2, 3, one simple shell per cell, coarser at each level.",
+      "screen-error": "Green: exact. Yellow: near the allowed pixel error. Red: at it.",
+      "materials": "One colour per kind of material.",
+      "visibility": "Green: every page drawn this frame.",
+      "pages": "Green: every page held in memory and drawn.",
+      "frame-difference": "Black: the pixel did not change since the last frame. Grey to white: it changed, eight times amplified — whatever flickers lights up.",
+      "reflections": "Only the light the surfaces reflect, from the screen trace and the probes; black where nothing is reflected.",
+      "shadows": "How much sunlight reaches each surface — white: lit, black: in shadow. No material colour.",
+      "lighting": "All the light on a white surface: direct, reflected, bounced and ambient. No material colour.",
+      "no-temporal-aa": "The normal image without temporal accumulation: the raw image of this frame, its aliasing and noise included.",
+      "taa-input": "The image the temporal AA receives, jitter on, nothing accumulated: each pixel shows the rendered pixel it falls in — it shimmers from frame to frame.",
+      "taa-rejection": "How much history each pixel keeps — white: history kept, black: rejected (a change of shading, off screen).",
+      "taa-validity": "How much history each pixel holds after the update — white: a full history, black: it starts again. Grey: still converging.",
+      "taa-flicker": "The flicker measure — red: its error, green: how many flickers it counted, blue: the transparents' coverage that cancels it.",
+      "taa-shading": "The shading rejection, white: history kept — red: without the flicker widening, green: with it, blue: spread to the neighbours, what the update applies.",
+      "taa-reprojection": "Why the history restarts — red: disoccluded, green: disoccluded and filled with the occluder's motion, blue: off the last screen.",
+      "taa-motion": "The motion the accumulation sees — red: moving for the flicker measure, green: a pixel animation, blue: the reprojection edge (white: flat motion).",
+      "taa-thin": "Thin geometry — red: how far the history clamp relaxes, green: a cluster hole region, blue: the coverage history.",
+      "taa-material-history": "Each material's share of history as grey — white: 1, the full smoothing; black: 0, the current image alone."
     }
   },
   "a-city-from-rules": {
@@ -845,6 +907,55 @@
       "notCounted": "not counted here"
     }
   },
+  "long-district": {
+    "banner": "Two kilometres of street in four HLOD levels: choose the HLOD view to see them. Click the view, then walk with W A S D and look with the mouse; Space and Shift lift and lower you.",
+    "controls": {
+      "walkSpeed": "Walk speed",
+      "pixelError": "Pixel error",
+      "motion": "Moving parts",
+      "forwardRun": "Forward run",
+      "fastStrafe": "Fast strafe",
+      "slowPan": "Slow pan",
+      "rotation": "Rotation",
+      "highOrbit": "High orbit",
+      "home": "Return home"
+    },
+    "readouts": {
+      "trianglesDrawn": "Triangles drawn",
+      "shareDistrict": "Share of the district",
+      "trianglesDistrict": "Triangles in the district",
+      "pathFrame": "Path frame"
+    },
+    "words": {
+      "credit": "District modelled in code for this example, CC0 — see assets/examples/CREDITS.md",
+      "notCounted": "not counted here"
+    }
+  },
+  "nine-emerald-squares": {
+    "banner": "Click the view, then fly over the nine squares with W A S D and look with the mouse; Space and Shift lift and lower you.",
+    "controls": {
+      "flySpeed": "Fly speed",
+      "pixelError": "Pixel error",
+      "memory": "Memory",
+      "view": "View",
+      "home": "Return home"
+    },
+    "choices": {
+      "view": {
+        "beauty": "beauty",
+        "lod": "lod",
+        "clusters": "clusters"
+      }
+    },
+    "readouts": {
+      "trianglesGrid": "Triangles in the grid",
+      "trianglesDrawn": "Triangles drawn"
+    },
+    "words": {
+      "credit": "Emerald Square by Nicholas Hull and Kate Anderson (NVIDIA ORCA), foliage by SpeedTree, CC BY-NC-SA 3.0 — see assets/examples/CREDITS.md",
+      "notCounted": "not counted here"
+    }
+  },
   "edges-and-wireframe": {
     "banner": "Drag to look around. Raise the threshold to keep only sharp edges.",
     "controls": {
@@ -1421,15 +1532,7 @@
     "controls": {
       "walkSpeed": "Walk speed",
       "memory": "Memory",
-      "view": "View",
       "home": "Return home"
-    },
-    "choices": {
-      "view": {
-        "beauty": "beauty",
-        "lod": "lod",
-        "clusters": "clusters"
-      }
     },
     "words": {
       "credit": "Emerald Square by Nicholas Hull and Kate Anderson (NVIDIA ORCA), foliage by SpeedTree, CC BY-NC-SA 3.0 — see assets/examples/CREDITS.md"
@@ -1440,15 +1543,7 @@
     "controls": {
       "walkSpeed": "Walk speed",
       "memory": "Memory",
-      "view": "View",
       "home": "Return home"
-    },
-    "choices": {
-      "view": {
-        "beauty": "beauty",
-        "lod": "lod",
-        "clusters": "clusters"
-      }
     },
     "words": {
       "credit": "Amazon Lumberyard Bistro (NVIDIA ORCA), CC BY 4.0 — see assets/examples/CREDITS.md"
@@ -1484,7 +1579,7 @@
     }
   },
   "no-hitch-on-first-draw": {
-    "banner": "Drag to look around. The graph shows the time between pictures.",
+    "banner": "Drag to look around. The stats corner draws each frame's time.",
     "controls": {
       "turning": "Turning",
       "revealAgain": "Reveal again"
@@ -1494,7 +1589,7 @@
       "worstFrameAfter": "Worst frame after"
     },
     "words": {
-      "note": "Fourteen surfaces, each a different material or setting, all shown on the same frame. The graph plots the time between frames; the gold line is the moment they appear.",
+      "note": "Fourteen surfaces, each a different material or setting, all shown on the same frame. The panel gives the worst time between frames before and after they appear; the stats corner draws each frame.",
       "measuring": "measuring",
       "hidden": "hidden"
     }
@@ -1804,6 +1899,21 @@
     "words": {
       "on": "on",
       "off": "off"
+    }
+  },
+  "particles-responsive": {
+    "banner": "Two swarms of sparks, the same motion: the left one's history is responsive, its trails short. Drag to turn around them.",
+    "controls": {
+      "smoothing": "Smoothing",
+      "motion": "Motion"
+    },
+    "readouts": {
+      "temporalAntialiasing": "Temporal antialiasing"
+    },
+    "words": {
+      "on": "on",
+      "off": "off",
+      "credit": "Sparks modelled in code for this example, CC0 — see assets/examples/CREDITS.md"
     }
   },
   "snow-of-sprites": {
@@ -2446,18 +2556,11 @@
   "a-hundred-thousand-instances": {
     "banner": "Drag to orbit the field. Change the count or view.",
     "controls": {
-      "count": "Count",
-      "view": "View"
+      "count": "Count"
     },
     "readouts": {
       "objectsShown": "Objects shown",
       "objectsBuilt": "Objects built"
-    },
-    "choices": {
-      "view": {
-        "beauty": "beauty",
-        "clusters": "clusters"
-      }
     }
   },
   "inside-a-component": {

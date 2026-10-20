@@ -48,13 +48,15 @@
         spot.penumbra = values.softness;
         spot.color.set(values.colour);
         spot.intensity = values.power;
-      }, world);
+      });
 
-      // The pointer casts a ray from the camera; where it meets the floor (y = 0), the spot aims.
+      // The pointer casts a ray from the camera; the lamp hangs 6 m above where it meets the floor
+      // (y = 0), still aimed at the crates (its target stays at the origin). A shadow is cast from
+      // where the lamp is, not where it points: the lamp moves, so the shadows swing round.
       world.canvas.addEventListener('pointermove', (event) => {
         const floor = pointerOnPlane(world, event);
         if (!floor) return;
-        spot.target.position.set(floor[0], 0, floor[1]);
+        spot.position.set(floor[0], 6, floor[1]);
         world.invalidate();
       });
       world.invalidate();

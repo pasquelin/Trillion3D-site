@@ -17,7 +17,9 @@
   },
   "kit": {
     "panel": {
-      "controls": "Impostazioni"
+      "controls": "Impostazioni",
+      "view": "Vista",
+      "freeze": "Congela il culling"
     },
     "menu": {
       "play": "Gioca",
@@ -38,7 +40,8 @@
     },
     "stats": {
       "FPS": "Immagini/s",
-      "triangles": "triangoli",
+      "triangles selected": "triangoli selezionati",
+      "triangles drawn": "triangoli disegnati",
       "triangles (scene)": "triangoli (scena)",
       "draw calls": "chiamate di disegno",
       "pages": "pagine",
@@ -71,7 +74,13 @@
       "physics step": "passo di fisica",
       "Cadence": "Cadenza",
       "{n}× refresh": "{n}× aggiornamento",
-      "GPU idle": "GPU inattiva"
+      "GPU idle": "GPU inattiva",
+      "All worlds": "Tutti i mondi",
+      "main view": "vista principale",
+      "world": "mondo",
+      "view": "vista",
+      "GPU busy": "GPU occupata",
+      "CPU busy": "CPU occupata"
     },
     "shadows": {
       "lights": "luci",
@@ -112,6 +121,59 @@
     "banner": {
       "close": "Chiudi",
       "waiting": "In attesa del motore (#{issue})"
+    },
+    "views": {
+      "beauty": "immagine",
+      "wireframe": "triangoli",
+      "xray": "raggi X",
+      "clusters": "cluster",
+      "lod": "livelli di dettaglio",
+      "hlod": "HLOD",
+      "screen-error": "errore a schermo",
+      "materials": "materiali",
+      "visibility": "pagine viste",
+      "pages": "pagine in memoria",
+      "texture-mip": "dimensione texture",
+      "overdraw": "sovradisegno",
+      "frame-difference": "differenza tra immagini",
+      "reflections": "riflessi",
+      "shadows": "ombre",
+      "lighting": "illuminazione",
+      "no-temporal-aa": "senza AA temporale",
+      "taa-input": "ingresso TAA",
+      "taa-rejection": "rifiuto TAA",
+      "taa-validity": "storico TAA",
+      "taa-flicker": "sfarfallio TAA",
+      "taa-shading": "ombreggiatura TAA",
+      "taa-reprojection": "riproiezione TAA",
+      "taa-motion": "movimento TAA",
+      "taa-thin": "geometria sottile TAA",
+      "taa-material-history": "storia TAA per materiale"
+    },
+    "viewHints": {
+      "wireframe": "Un colore per triangolo disegnato, spigoli scuri: in lontananza, triangoli meno numerosi e più grandi.",
+      "xray": "I bordi di ogni triangolo inviato dal motore, visti attraverso i muri: ciò che il culling ha scartato non c’è. Congela il culling, poi spostati di lato per verificare.",
+      "clusters": "Un colore per cluster, il gruppo di triangoli che il taglio sostituisce con uno più semplice.",
+      "lod": "Livello di dettaglio disegnato — blu: dettaglio pieno, poi ciano, verde, giallo, rosso man mano che si semplifica (rosso: 8 livelli e oltre).",
+      "hlod": "Bianco: l’oggetto stesso, da vicino. Blu: HLOD 0, gli oggetti della cella raggruppati. Giallo, viola, ciano: HLOD 1, 2, 3, un involucro semplice per cella, più grossolano a ogni livello.",
+      "screen-error": "Verde: esatto. Giallo: vicino all’errore in pixel ammesso. Rosso: al limite.",
+      "materials": "Un colore per tipo di materiale.",
+      "visibility": "Verde: ogni pagina disegnata in questa immagine.",
+      "pages": "Verde: ogni pagina in memoria e disegnata.",
+      "frame-difference": "Nero: il pixel non è cambiato dall’immagine precedente. Da grigio a bianco: è cambiato, amplificato otto volte — ciò che sfarfalla si accende.",
+      "reflections": "Solo la luce che le superfici riflettono, dal tracciamento a schermo e dalle sonde; nero dove nulla si riflette.",
+      "shadows": "Quanta luce del sole raggiunge ogni superficie — bianco: illuminata, nero: in ombra. Senza colore del materiale.",
+      "lighting": "Tutta la luce su una superficie bianca: diretta, riflessa, rimbalzata e ambientale. Senza colore del materiale.",
+      "no-temporal-aa": "L’immagine normale senza accumulo temporale: l’immagine grezza di questo fotogramma, con scalettature e rumore.",
+      "taa-input": "L’immagine che riceve l’AA temporale, jitter attivo, nulla accumulato: ogni pixel mostra il pixel renderizzato in cui cade — tremola da un fotogramma all’altro.",
+      "taa-rejection": "Quanto storico conserva ogni pixel — bianco: storico conservato, nero: rifiutato (un cambio di illuminazione, fuori schermo).",
+      "taa-validity": "Quanto storico contiene ogni pixel dopo l’aggiornamento — bianco: storico completo, nero: ricomincia. Grigio: ancora in convergenza.",
+      "taa-flicker": "La misura dello sfarfallio — rosso: il suo errore, verde: quanti sfarfallii contati, blu: la copertura dei trasparenti che lo annulla.",
+      "taa-shading": "Il rifiuto di ombreggiatura, bianco: storico conservato — rosso: senza l’allargamento dello sfarfallio, verde: con esso, blu: esteso ai vicini, ciò che l’aggiornamento applica.",
+      "taa-reprojection": "Perché lo storico ricomincia — rosso: disocclusione, verde: disocclusione riempita con il moto dell’occludente, blu: fuori dallo schermo precedente.",
+      "taa-motion": "Il movimento che vede l’accumulo — rosso: in movimento per la misura dello sfarfallio, verde: un’animazione di pixel, blu: il bordo di riproiezione (bianco: moto uniforme).",
+      "taa-thin": "Geometria sottile — rosso: quanto si allenta il limite dello storico, verde: regione di buchi di cluster, blu: storico di copertura.",
+      "taa-material-history": "La quota di storia di ogni materiale, in grigio — bianco: 1, la smussatura completa; nero: 0, la sola immagine corrente."
     }
   },
   "a-city-from-rules": {
@@ -845,6 +907,55 @@
       "notCounted": "non contato qui"
     }
   },
+  "long-district": {
+    "banner": "Due chilometri di strada in quattro livelli HLOD: scegli la vista HLOD per vederli. Fai clic sulla vista, percorri la via con W A S D e guarda con il mouse; Spazio e Maiusc ti alzano e ti abbassano.",
+    "controls": {
+      "walkSpeed": "Velocità di cammino",
+      "pixelError": "Errore in pixel",
+      "motion": "Parti in movimento",
+      "forwardRun": "Corsa in avanti",
+      "fastStrafe": "Spostamento laterale rapido",
+      "slowPan": "Panoramica lenta",
+      "rotation": "Rotazione",
+      "highOrbit": "Orbita alta",
+      "home": "Torna all'inizio"
+    },
+    "readouts": {
+      "trianglesDrawn": "Triangoli disegnati",
+      "shareDistrict": "Quota del quartiere",
+      "trianglesDistrict": "Triangoli del quartiere",
+      "pathFrame": "Fotogramma del percorso"
+    },
+    "words": {
+      "credit": "Quartiere modellato in codice per questo esempio, CC0 — vedi assets/examples/CREDITS.md",
+      "notCounted": "non contato qui"
+    }
+  },
+  "nine-emerald-squares": {
+    "banner": "Fai clic sulla vista, poi sorvola le nove piazze con W A S D e guarda con il mouse; Spazio e Maiusc ti alzano e ti abbassano.",
+    "controls": {
+      "flySpeed": "Velocità di volo",
+      "pixelError": "Errore in pixel",
+      "memory": "Memoria",
+      "view": "Vista",
+      "home": "Torna all'inizio"
+    },
+    "choices": {
+      "view": {
+        "beauty": "immagine",
+        "lod": "livelli di dettaglio",
+        "clusters": "cluster"
+      }
+    },
+    "readouts": {
+      "trianglesGrid": "Triangoli della griglia",
+      "trianglesDrawn": "Triangoli disegnati"
+    },
+    "words": {
+      "credit": "Emerald Square di Nicholas Hull e Kate Anderson (NVIDIA ORCA), vegetazione di SpeedTree, CC BY-NC-SA 3.0 — vedi assets/examples/CREDITS.md",
+      "notCounted": "non contato qui"
+    }
+  },
   "edges-and-wireframe": {
     "banner": "Trascina per guardarti intorno. Alza la soglia per tenere solo gli spigoli vivi.",
     "controls": {
@@ -1421,15 +1532,7 @@
     "controls": {
       "walkSpeed": "Velocità di cammino",
       "memory": "Memoria",
-      "view": "Vista",
       "home": "Torna all'inizio"
-    },
-    "choices": {
-      "view": {
-        "beauty": "immagine",
-        "lod": "livelli di dettaglio",
-        "clusters": "cluster"
-      }
     },
     "words": {
       "credit": "Emerald Square di Nicholas Hull e Kate Anderson (NVIDIA ORCA), vegetazione di SpeedTree, CC BY-NC-SA 3.0 — vedi assets/examples/CREDITS.md"
@@ -1440,15 +1543,7 @@
     "controls": {
       "walkSpeed": "Velocità di cammino",
       "memory": "Memoria",
-      "view": "Vista",
       "home": "Torna all'inizio"
-    },
-    "choices": {
-      "view": {
-        "beauty": "immagine",
-        "lod": "livelli di dettaglio",
-        "clusters": "cluster"
-      }
     },
     "words": {
       "credit": "Amazon Lumberyard Bistro (NVIDIA ORCA), CC BY 4.0 — vedi assets/examples/CREDITS.md"
@@ -1484,7 +1579,7 @@
     }
   },
   "no-hitch-on-first-draw": {
-    "banner": "Trascina per guardarti intorno. Il grafico mostra il tempo tra un'immagine e l'altra.",
+    "banner": "Trascina per guardarti intorno. L'angolo delle statistiche traccia il tempo di ogni immagine.",
     "controls": {
       "turning": "Rotazione",
       "revealAgain": "Mostra di nuovo"
@@ -1494,7 +1589,7 @@
       "worstFrameAfter": "Immagine peggiore dopo"
     },
     "words": {
-      "note": "Quattordici superfici, ognuna con un materiale o un'impostazione diversa, tutte nella stessa immagine. Il grafico traccia il tempo tra le immagini; la linea dorata è il momento in cui appaiono.",
+      "note": "Quattordici superfici, ognuna con un materiale o un'impostazione diversa, tutte nella stessa immagine. Il pannello dà il tempo peggiore tra due immagini prima e dopo la loro comparsa; l'angolo delle statistiche traccia ogni immagine.",
       "measuring": "misurazione",
       "hidden": "nascoste"
     }
@@ -1804,6 +1899,21 @@
     "words": {
       "on": "acceso",
       "off": "spento"
+    }
+  },
+  "particles-responsive": {
+    "banner": "Due sciami di scintille, lo stesso movimento: la storia di quello a sinistra è reattiva, le sue scie corte. Trascina per girarci intorno.",
+    "controls": {
+      "smoothing": "Smussatura",
+      "motion": "Movimento"
+    },
+    "readouts": {
+      "temporalAntialiasing": "Antialiasing temporale"
+    },
+    "words": {
+      "on": "attivo",
+      "off": "spento",
+      "credit": "Scintille modellate in codice per questo esempio, CC0 — vedi assets/examples/CREDITS.md"
     }
   },
   "snow-of-sprites": {
@@ -2446,18 +2556,11 @@
   "a-hundred-thousand-instances": {
     "banner": "Trascina per orbitare sul campo. Cambia il numero o la vista.",
     "controls": {
-      "count": "Numero",
-      "view": "Vista"
+      "count": "Numero"
     },
     "readouts": {
       "objectsShown": "Oggetti mostrati",
       "objectsBuilt": "Oggetti creati"
-    },
-    "choices": {
-      "view": {
-        "beauty": "immagine",
-        "clusters": "cluster"
-      }
     }
   },
   "inside-a-component": {

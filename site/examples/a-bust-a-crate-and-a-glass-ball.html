@@ -18,7 +18,7 @@
       import { createWorld, animation, camera, geometry, light, loader, material, math, object } from '../runtime/engine.js';
       // The gallery's page kit, not the engine, which a project leaves out: the page's words, its
       // banner and its stats corner.
-      import { stats } from '../runtime/kit.js';
+      import '../runtime/kit.js';
 
       // --- Renderer
       // WebGPU, the engine's one renderer; ACES is the default.
@@ -94,7 +94,6 @@
 
       // --- Loop
       // The world owns the loop: it advances mixers and controls, draws, and pauses on a still image.
-      stats(world);
 
       // --- Dispose
       // One call releases the GPU, the controls, the observers and the queued frames.

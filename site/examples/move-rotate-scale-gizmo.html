@@ -77,10 +77,10 @@
       let press = null;
       world.canvas.addEventListener('pointerdown', (event) => (press = { x: event.offsetX, y: event.offsetY }));
       gizmo.addEventListener('dragStart', () => (press = null));
-      world.canvas.addEventListener('pointerup', (event) => {
+      world.canvas.addEventListener('pointerup', async (event) => {
         if (!press || Math.hypot(event.offsetX - press.x, event.offsetY - press.y) > 4) return;
         press = null;
-        const hit = world.raycast({ x: event.offsetX, y: event.offsetY }, { objects: props });
+        const hit = await world.raycast({ x: event.offsetX, y: event.offsetY }, { objects: props });
         if (!hit || hit.object === gizmo.object) return;
         gizmo.attach(hit.object);
         show();

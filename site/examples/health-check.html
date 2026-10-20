@@ -165,7 +165,7 @@
       const ui = controls({ drive: false, drop, reset: () => park(driven, start) }, ({ drive }) => {
         world.controls.kind = drive ? 'vehicle' : 'orbit';
         if (drive) flown?.stop();
-      }, world);
+      });
       physicsReadouts(world, ['bodies', 'step']);
       const drawn = readout('renderer');
       world.camera.position.set(70, 45, 70);

@@ -17,7 +17,9 @@
   },
   "kit": {
     "panel": {
-      "controls": "Ajustes"
+      "controls": "Ajustes",
+      "view": "Vista",
+      "freeze": "Congelar o culling"
     },
     "menu": {
       "play": "Jogar",
@@ -38,7 +40,8 @@
     },
     "stats": {
       "FPS": "Quadros/s",
-      "triangles": "triângulos",
+      "triangles selected": "triângulos selecionados",
+      "triangles drawn": "triângulos desenhados",
       "triangles (scene)": "triângulos (cena)",
       "draw calls": "chamadas de desenho",
       "pages": "páginas",
@@ -71,7 +74,13 @@
       "physics step": "passo de física",
       "Cadence": "Cadência",
       "{n}× refresh": "{n}× atualização",
-      "GPU idle": "GPU ociosa"
+      "GPU idle": "GPU ociosa",
+      "All worlds": "Todos os mundos",
+      "main view": "vista principal",
+      "world": "mundo",
+      "view": "vista",
+      "GPU busy": "GPU ocupada",
+      "CPU busy": "CPU ocupada"
     },
     "shadows": {
       "lights": "luzes",
@@ -112,6 +121,59 @@
     "banner": {
       "close": "Fechar",
       "waiting": "À espera do motor (#{issue})"
+    },
+    "views": {
+      "beauty": "imagem",
+      "wireframe": "triângulos",
+      "xray": "raio X",
+      "clusters": "clusters",
+      "lod": "níveis de detalhe",
+      "hlod": "HLOD",
+      "screen-error": "erro na tela",
+      "materials": "materiais",
+      "visibility": "páginas vistas",
+      "pages": "páginas na memória",
+      "texture-mip": "tamanho da textura",
+      "overdraw": "sobredesenho",
+      "frame-difference": "diferença de imagem",
+      "reflections": "reflexos",
+      "shadows": "sombras",
+      "lighting": "iluminação",
+      "no-temporal-aa": "sem AA temporal",
+      "taa-input": "entrada TAA",
+      "taa-rejection": "rejeição TAA",
+      "taa-validity": "histórico TAA",
+      "taa-flicker": "cintilação TAA",
+      "taa-shading": "sombreamento TAA",
+      "taa-reprojection": "reprojeção TAA",
+      "taa-motion": "movimento TAA",
+      "taa-thin": "geometria fina TAA",
+      "taa-material-history": "histórico TAA por material"
+    },
+    "viewHints": {
+      "wireframe": "Uma cor por triângulo desenhado, arestas escuras: ao longe, menos triângulos e maiores.",
+      "xray": "As arestas de cada triângulo que o motor envia, vistas através das paredes: o que o culling descartou não aparece. Congele o culling e afaste-se para conferir.",
+      "clusters": "Uma cor por cluster, o grupo de triângulos que o corte troca por um mais simples.",
+      "lod": "Nível de detalhe desenhado — azul: detalhe completo, depois ciano, verde, amarelo e vermelho conforme simplifica (vermelho: 8 níveis ou mais).",
+      "hlod": "Branco: o próprio objeto, de perto. Azul: HLOD 0, os objetos da célula agrupados. Amarelo, roxo, ciano: HLOD 1, 2, 3, um invólucro simples por célula, mais grosseiro a cada nível.",
+      "screen-error": "Verde: exato. Amarelo: perto do erro em pixels permitido. Vermelho: no limite.",
+      "materials": "Uma cor por tipo de material.",
+      "visibility": "Verde: cada página desenhada nesta imagem.",
+      "pages": "Verde: cada página na memória e desenhada.",
+      "frame-difference": "Preto: o pixel não mudou desde a imagem anterior. De cinza a branco: mudou, amplificado oito vezes — o que cintila acende.",
+      "reflections": "Só a luz que as superfícies refletem, do traçado na tela e das sondas; preto onde nada se reflete.",
+      "shadows": "Quanto da luz do sol chega a cada superfície — branco: iluminada, preto: na sombra. Sem cor de material.",
+      "lighting": "Toda a luz sobre uma superfície branca: direta, refletida, rebatida e ambiente. Sem cor de material.",
+      "no-temporal-aa": "A imagem normal sem acumulação temporal: a imagem bruta deste quadro, com serrilhado e ruído.",
+      "taa-input": "A imagem que o AA temporal recebe, jitter ativo, nada acumulado: cada pixel mostra o pixel renderizado em que cai — tremula de um quadro para o outro.",
+      "taa-rejection": "Quanto histórico cada pixel mantém — branco: histórico mantido, preto: rejeitado (uma mudança de iluminação, fora da tela).",
+      "taa-validity": "Quanto histórico cada pixel contém após a atualização — branco: histórico completo, preto: recomeça. Cinza: ainda convergindo.",
+      "taa-flicker": "A medida da cintilação — vermelho: o seu erro, verde: quantas cintilações contou, azul: a cobertura dos transparentes que a anula.",
+      "taa-shading": "A rejeição de sombreamento, branco: histórico mantido — vermelho: sem o alargamento da cintilação, verde: com ele, azul: espalhado aos vizinhos, o que a atualização aplica.",
+      "taa-reprojection": "Por que o histórico recomeça — vermelho: desocluído, verde: desocluído e preenchido com o movimento do oclusor, azul: fora da tela anterior.",
+      "taa-motion": "O movimento que a acumulação vê — vermelho: em movimento para a medida da cintilação, verde: uma animação de pixels, azul: a borda de reprojeção (branco: movimento uniforme).",
+      "taa-thin": "Geometria fina — vermelho: quanto o limite do histórico relaxa, verde: região de buracos de cluster, azul: histórico de cobertura.",
+      "taa-material-history": "A parte do histórico de cada material, em cinza — branco: 1, a suavização completa; preto: 0, só a imagem atual."
     }
   },
   "a-city-from-rules": {
@@ -845,6 +907,55 @@
       "notCounted": "não contado aqui"
     }
   },
+  "long-district": {
+    "banner": "Dois quilômetros de rua em quatro níveis de HLOD: escolha a vista HLOD para vê-los. Clique na vista, percorra a rua com W A S D e olhe com o rato; Espaço e Shift sobem-no e descem-no.",
+    "controls": {
+      "walkSpeed": "Velocidade de marcha",
+      "pixelError": "Erro em pixels",
+      "motion": "Partes móveis",
+      "forwardRun": "Corrida para a frente",
+      "fastStrafe": "Deslocamento lateral rápido",
+      "slowPan": "Panorâmica lenta",
+      "rotation": "Rotação",
+      "highOrbit": "Órbita alta",
+      "home": "Voltar ao início"
+    },
+    "readouts": {
+      "trianglesDrawn": "Triângulos desenhados",
+      "shareDistrict": "Parte do bairro",
+      "trianglesDistrict": "Triângulos do bairro",
+      "pathFrame": "Quadro do percurso"
+    },
+    "words": {
+      "credit": "Bairro modelado em código para este exemplo, CC0 — ver assets/examples/CREDITS.md",
+      "notCounted": "não contado aqui"
+    }
+  },
+  "nine-emerald-squares": {
+    "banner": "Clique na vista e sobrevoe as nove praças com W A S D, olhando com o rato; Espaço e Shift fazem-te subir e descer.",
+    "controls": {
+      "flySpeed": "Velocidade de voo",
+      "pixelError": "Erro em pixels",
+      "memory": "Memória",
+      "view": "Vista",
+      "home": "Voltar ao início"
+    },
+    "choices": {
+      "view": {
+        "beauty": "imagem",
+        "lod": "níveis de detalhe",
+        "clusters": "clusters"
+      }
+    },
+    "readouts": {
+      "trianglesGrid": "Triângulos da grelha",
+      "trianglesDrawn": "Triângulos desenhados"
+    },
+    "words": {
+      "credit": "Emerald Square de Nicholas Hull e Kate Anderson (NVIDIA ORCA), vegetação da SpeedTree, CC BY-NC-SA 3.0 — veja assets/examples/CREDITS.md",
+      "notCounted": "não contado aqui"
+    }
+  },
   "edges-and-wireframe": {
     "banner": "Arraste para olhar em volta. Suba o limite para manter só as arestas vivas.",
     "controls": {
@@ -1421,15 +1532,7 @@
     "controls": {
       "walkSpeed": "Velocidade de marcha",
       "memory": "Memória",
-      "view": "Vista",
       "home": "Voltar ao início"
-    },
-    "choices": {
-      "view": {
-        "beauty": "imagem",
-        "lod": "níveis de detalhe",
-        "clusters": "clusters"
-      }
     },
     "words": {
       "credit": "Emerald Square de Nicholas Hull e Kate Anderson (NVIDIA ORCA), vegetação da SpeedTree, CC BY-NC-SA 3.0 — veja assets/examples/CREDITS.md"
@@ -1440,15 +1543,7 @@
     "controls": {
       "walkSpeed": "Velocidade de marcha",
       "memory": "Memória",
-      "view": "Vista",
       "home": "Voltar ao início"
-    },
-    "choices": {
-      "view": {
-        "beauty": "imagem",
-        "lod": "níveis de detalhe",
-        "clusters": "clusters"
-      }
     },
     "words": {
       "credit": "Amazon Lumberyard Bistro (NVIDIA ORCA), CC BY 4.0 — veja assets/examples/CREDITS.md"
@@ -1484,7 +1579,7 @@
     }
   },
   "no-hitch-on-first-draw": {
-    "banner": "Arraste para olhar em volta. O gráfico mostra o tempo entre as imagens.",
+    "banner": "Arraste para olhar em volta. O canto das estatísticas traça o tempo de cada quadro.",
     "controls": {
       "turning": "Girando",
       "revealAgain": "Mostrar de novo"
@@ -1494,7 +1589,7 @@
       "worstFrameAfter": "Pior quadro depois"
     },
     "words": {
-      "note": "Catorze superfícies, cada uma com um material ou ajuste diferente, todas no mesmo quadro. O gráfico mostra o tempo entre os quadros; a linha dourada é o momento em que elas aparecem.",
+      "note": "Catorze superfícies, cada uma com um material ou ajuste diferente, todas no mesmo quadro. O painel dá o pior tempo entre quadros antes e depois de elas aparecerem; o canto das estatísticas traça cada quadro.",
       "measuring": "medindo",
       "hidden": "escondidas"
     }
@@ -1804,6 +1899,21 @@
     "words": {
       "on": "ligado",
       "off": "desligado"
+    }
+  },
+  "particles-responsive": {
+    "banner": "Dois enxames de faíscas, o mesmo movimento: o histórico do da esquerda é responsivo, os rastros curtos. Arraste para girar em volta.",
+    "controls": {
+      "smoothing": "Suavização",
+      "motion": "Movimento"
+    },
+    "readouts": {
+      "temporalAntialiasing": "Antialiasing temporal"
+    },
+    "words": {
+      "on": "ligado",
+      "off": "desligado",
+      "credit": "Faíscas modeladas em código para este exemplo, CC0 — veja assets/examples/CREDITS.md"
     }
   },
   "snow-of-sprites": {
@@ -2446,18 +2556,11 @@
   "a-hundred-thousand-instances": {
     "banner": "Arraste para orbitar o campo. Altere a quantidade ou a vista.",
     "controls": {
-      "count": "Quantidade",
-      "view": "Vista"
+      "count": "Quantidade"
     },
     "readouts": {
       "objectsShown": "Objetos exibidos",
       "objectsBuilt": "Objetos criados"
-    },
-    "choices": {
-      "view": {
-        "beauty": "imagem",
-        "clusters": "clusters"
-      }
     }
   },
   "inside-a-component": {

@@ -97,8 +97,9 @@
       import { controls, readout, seeded, words } from '../runtime/kit.js';
       const say = words();
 
-      // Six security cameras round a town square, each one a world of its own drawing the same
-      // square from its own lens. The first feed is the page's canvas; the others are added here.
+      // Six security cameras round a town square: one world, the square built once, and six views
+      // of it, one per lens. The first feed is the world's own canvas; the others are views, each
+      // drawing into a canvas of its own added here.
       const FEEDS = [
         { name: 'northGate', at: [-10, 6.5, -24], pole: true },
         { name: 'fountain', at: [9, 5, 10], pole: true },
@@ -125,9 +126,8 @@
       const random = seeded(7);
       const TOWN = Array.from({ length: 16 }, (_, k) => ({ side: Math.floor(k / 4), slot: k % 4, high: 9 + Math.floor(random() * 4) * 3, hue: Math.floor(random() * 5) }));
 
-      // The square, built once per world: the same seeded town in each, so every lens sees one
-      // place. Everything that moves is returned for the frame to pose.
-      function build(world, own) {
+      // The square, built once: everything that moves is returned for the frame to pose.
+      function build(world) {
         const paint = (color, roughness = 0.8, metalness = 0) => material.meshStandard({ color, roughness, metalness });
         const add = (shape, look, x, y, z) => {
           const mesh = object.mesh(shape, look);
@@ -199,14 +199,14 @@
         }
         balloon.add(object.mesh(geometry.box(1.2, 1, 1.2).translate(0, -1.2, 0), wood));
         world.scene.add(balloon);
-        // The cameras themselves: a mount, a turret that pans and a head that tilts. A lens never
-        // sees its own housing: its head is hidden in its own world.
+        // The cameras themselves: a mount, a turret that pans and a head that tilts. A lens looks out
+        // of the front of its head, so it never sees its own housing.
         const white = paint('#eef0f2', 0.4, 0.1), lens = paint('#15181d', 0.1, 0.7), led = material.meshStandard({ color: '#ff3030', emissive: '#ff2020', emissiveIntensity: 2 });
         const parts = {
           mount: geometry.box(0.3, 0.3, 0.3), neck: geometry.cylinder(0.08, 0.08, 0.35, 8).translate(0, 0.17, 0), shell: geometry.box(0.38, 0.32, 0.8),
           hood: geometry.box(0.46, 0.05, 0.95).translate(0, 0.19, 0.05), glass: geometry.cylinder(0.12, 0.12, 0.1, 16).rotateX(Math.PI / 2).translate(0, 0, 0.42), light: geometry.sphere(0.035, 8, 6).translate(0.13, -0.08, 0.41),
         };
-        const units = FEEDS.map(({ at, pole }, k) => {
+        const units = FEEDS.map(({ at, pole }) => {
           if (pole) add(geometry.cylinder(0.12, 0.16, at[1], 10), iron, at[0], at[1] / 2, at[2]);
           else add(parts.mount, iron, at[0], at[1] + 0.1, at[2]);
           const turret = object.group(), head = object.group();
@@ -214,7 +214,6 @@
           head.position.y = 0.35;
           turret.add(object.mesh(parts.neck, iron), head);
           head.add(object.mesh(parts.shell, white), object.mesh(parts.hood, white), object.mesh(parts.glass, lens), object.mesh(parts.light, led));
-          turret.visible = k !== own;
           world.scene.add(turret);
           return { turret, head };
         });
@@ -222,7 +221,6 @@
           light.directional({ color: '#ffbf7e', intensity: 3.3, position: [-60, 24, 34], castShadow: true }),
           light.hemisphere({ color: '#a8c0ff', groundColor: '#5c5a3c', intensity: 0.9 }),
         );
-        world.camera.far = 900;
         return { car, wheels, balloon, units };
       }
 
@@ -242,22 +240,19 @@
         return { x: cx - nx * BEND * Math.cos(a) + dx * BEND * Math.sin(a), z: cz - nz * BEND * Math.cos(a) + dz * BEND * Math.sin(a), yaw: Math.atan2(dx * Math.cos(a) + nx * Math.sin(a), dz * Math.cos(a) + nz * Math.sin(a)) };
       }
 
-      // What every world shows at this instant, moved on once per frame whichever world asks first.
+      // What the square shows at this instant, moved on each frame.
       // The scratches a length is read in: on the ground, and in the air.
       const ground = math.vector2(), reach = math.vector3();
       const wrap = (angle) => angle - Math.PI * 2 * Math.round(angle / (Math.PI * 2));
       const state = {
-        time: 0, last: performance.now(), watch: 'patrol',
+        time: 0, watch: 'patrol',
         car: lap(0), balloon: [0, 0, 0],
         units: FEEDS.map(({ at }) => {
           const yaw = Math.atan2(-at[0], -at[2]), pitch = Math.atan2(1 - at[1], ground.set(at[0], at[2]).length() * 0.8);
           return { rest: [yaw, pitch], yaw, pitch, fov: 58, seesCar: false };
         }),
       };
-      function advance() {
-        const now = performance.now(), step = Math.min(0.05, (now - state.last) / 1000);
-        if (step <= 0) return;
-        state.last = now;
+      function advance(step) {
         state.time += step;
         const t = state.time;
         state.car = lap(t * 9);
@@ -281,45 +276,38 @@
         });
       }
 
-      // One world per feed; each poses its copy of the square from the shared state, then its lens.
-      // The feed in front — the big one, or the first on the wall — draws at the display's rate and
-      // resolution; the others, as a real monitor wall does, about twelve times a second at half
-      // the resolution, which spares most of the six worlds' work.
-      let lead = 0;
-      const worlds = FEEDS.map((_, k) => {
-        const world = createWorld(k ? `cam${k + 1}` : 'view');
-        const scene = build(world, k);
-        world.beforeFrame(() => {
-          advance();
-          scene.car.position.set(state.car.x, 0.1, state.car.z);
-          scene.car.rotation.set(0, state.car.yaw, 0);
-          for (const wheel of scene.wheels) wheel.rotation.set((state.time * 9) / 0.4, 0, 0);
-          scene.balloon.position.set(...state.balloon);
-          scene.units.forEach(({ turret, head }, j) => {
-            turret.rotation.set(0, state.units[j].yaw, 0);
-            head.rotation.set(-state.units[j].pitch, 0, 0);
-          });
+      // One world, and one view per feed beyond the first: the world's own camera is the first lens.
+      // Every feed draws at the display's rate. The one in front — the big one, or the first on the
+      // wall — at the display's resolution; the others, as a real monitor wall does, at half of it
+      // and without temporal antialiasing, their image upscaled as drawn.
+      const world = createWorld('view');
+      const scene = build(world);
+      const feeds = [world, ...cells.slice(1).map(({ cell }) => world.addView({ canvas: cell.querySelector('canvas') }))];
+      for (const { camera } of feeds) camera.far = 900;
+      // The lens: at the front of the head, past its glass and hood.
+      const LENS = 0.6;
+      world.beforeFrame(({ delta }) => {
+        advance(Math.min(0.05, delta));
+        scene.car.position.set(state.car.x, 0.1, state.car.z);
+        scene.car.rotation.set(0, state.car.yaw, 0);
+        for (const wheel of scene.wheels) wheel.rotation.set((state.time * 9) / 0.4, 0, 0);
+        scene.balloon.position.set(...state.balloon);
+        scene.units.forEach(({ turret, head }, k) => {
+          turret.rotation.set(0, state.units[k].yaw, 0);
+          head.rotation.set(-state.units[k].pitch, 0, 0);
+        });
+        feeds.forEach(({ camera }, k) => {
           const { yaw, pitch, fov } = state.units[k], at = FEEDS[k].at;
-          world.camera.fov = fov;
-          world.camera.position.set(at[0], at[1] + 0.35, at[2]);
-          world.camera.lookAt(at[0] + Math.sin(yaw) * Math.cos(pitch), at[1] + 0.35 + Math.sin(pitch), at[2] + Math.cos(yaw) * Math.cos(pitch));
+          const look = [Math.sin(yaw) * Math.cos(pitch), Math.sin(pitch), Math.cos(yaw) * Math.cos(pitch)];
+          camera.fov = fov;
+          camera.position.set(at[0] + look[0] * LENS, at[1] + 0.35 + look[1] * LENS, at[2] + look[2] * LENS);
+          camera.lookAt(at[0] + look[0] * 2, at[1] + 0.35 + look[1] * 2, at[2] + look[2] * 2);
         });
-        let pending = 0;
-        world.onFrame(() => {
-          clearTimeout(pending);
-          if (k === lead) world.invalidate();
-          else pending = setTimeout(() => world.invalidate(), 1000 / 12);
-        });
-        world.invalidate();
-        return world;
       });
-      const follow = (k) => {
-        lead = k;
-        // A feed drawn twelve times a second has no steady history to smooth over: it goes
-        // without temporal antialiasing, which would smear what moves between its frames.
-        worlds.forEach((world, j) => {
-          world.renderScale = j === lead ? 'auto' : 0.5;
-          world.temporalAntialiasing = j === lead;
+      const follow = (lead) => {
+        feeds.forEach((feed, k) => {
+          feed.renderScale = k === lead ? 'auto' : 0.5;
+          feed.temporalAntialiasing = k === lead;
         });
       };
       follow(0);
@@ -338,7 +326,7 @@
 
       controls({
         watch: ['patrol', 'car', 'balloon'],
-      }, (values) => (state.watch = values.watch), worlds[0]);
+      }, (values) => (state.watch = values.watch));
       const seen = readout('camerasSeeingCar');
       const clock = (seconds) => new Date(Date.UTC(2026, 8, 23, 18, 42) + seconds * 1000).toISOString().slice(11, 19);
       setInterval(() => {

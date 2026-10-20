@@ -16,19 +16,10 @@
         width: 100%;
         height: 100%;
       }
-      #graph {
-        position: absolute;
-        right: 12px;
-        bottom: 12px;
-        width: 300px;
-        height: 110px;
-        border-radius: 10px;
-        background: rgba(12, 16, 26, 0.72);
-        pointer-events: none;
-      }
       p {
         position: absolute;
-        top: 0;
+        right: 0;
+        bottom: 0;
         max-width: 26em;
         margin: 0.6rem;
         color: #cbd5e1;
@@ -39,7 +30,6 @@
   </head>
   <body>
     <canvas id="view"></canvas>
-    <canvas id="graph" width="600" height="220"></canvas>
     <p data-words="note"></p>
     <script type="module">
       import { createWorld, geometry, material, object, light, math } from '../runtime/engine.js';
@@ -123,30 +113,6 @@
       });
       const before = readout('worstFrameBefore'), after = readout('worstFrameAfter');
 
-      // The time between frames, a bar per frame, the last few seconds; the world is asked for
-      // a frame every frame, so a hitch is a tall bar and never a pause of the loop.
-      const graph = document.getElementById('graph').getContext('2d'), SPAN = 240, bars = [];
-      function plot() {
-        const { width, height } = graph.canvas, scale = height / 50;
-        graph.clearRect(0, 0, width, height);
-        graph.strokeStyle = 'rgba(255,255,255,0.25)';
-        graph.setLineDash([6, 6]);
-        graph.beginPath();
-        graph.moveTo(0, height - 16.7 * scale);
-        graph.lineTo(width, height - 16.7 * scale);
-        graph.stroke();
-        graph.setLineDash([]);
-        const step = width / SPAN;
-        bars.forEach(({ ms, reveal }, k) => {
-          graph.fillStyle = ms > 33 ? '#ff6b6b' : '#6fd3a8';
-          graph.fillRect(k * step, height - Math.min(ms, 50) * scale, step - 0.5, Math.min(ms, 50) * scale);
-          if (reveal) (graph.fillStyle = '#ffd27a'), graph.fillRect(k * step - 1, 0, 3, height);
-        });
-        graph.fillStyle = '#cbd5e1';
-        graph.font = '20px system-ui';
-        graph.fillText('16.7 ms', 8, height - 16.7 * scale - 6);
-      }
-
       // The camera sways slowly round the hall, until the first press or wheel on the canvas.
       const { position: eye } = world.camera, { target } = world.controls;
       const [dx, dz] = [eye.x - target.x, eye.z - target.z];
@@ -154,14 +120,13 @@
         const turn = 0.48 * (1 - Math.cos(time * 0.25)), [cos, sin] = [Math.cos(turn), Math.sin(turn)];
         eye.set(target.x + dx * cos + dz * sin, eye.y, target.z + dz * cos - dx * sin);
       });
+      // The worst time between frames before the reveal and in the second after it; the world is
+      // asked for a frame every frame, so a hitch is a long interval and never a pause of the loop.
       world.onFrame(({ delta, time, metrics }) => {
         frameIndex++;
         const ms = metrics.rafIntervalMs;
         const since = revealedAt < 0 ? -1 : frameIndex - revealedAt;
         if (ms != null && frameIndex > 30) {
-          // The first interval read after the reveal holds the frame that drew the exhibits.
-          bars.push({ ms, reveal: since === 1 });
-          if (bars.length > SPAN) bars.shift();
           if (revealedAt < 0) worstBefore = Math.max(worstBefore, ms);
           else if (since <= 60) worstAfter = Math.max(worstAfter, ms);
         }
@@ -175,7 +140,6 @@
         if (frameIndex % 15 === 0) {
           before(worstBefore ? `${worstBefore.toFixed(1)} ms` : say('measuring'));
           after(revealedAt < 0 ? say('hidden') : worstAfter ? `${worstAfter.toFixed(1)} ms` : say('measuring'));
-          plot();
         }
         world.invalidate();
       });

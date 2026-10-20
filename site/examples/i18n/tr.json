@@ -17,7 +17,9 @@
   },
   "kit": {
     "panel": {
-      "controls": "Ayarlar"
+      "controls": "Ayarlar",
+      "view": "Görünüm",
+      "freeze": "Elemeyi dondur"
     },
     "menu": {
       "play": "Oyna",
@@ -38,7 +40,8 @@
     },
     "stats": {
       "FPS": "Kare/sn",
-      "triangles": "üçgen",
+      "triangles selected": "seçilen üçgenler",
+      "triangles drawn": "çizilen üçgenler",
       "triangles (scene)": "üçgen (sahne)",
       "draw calls": "çizim çağrısı",
       "pages": "sayfa",
@@ -71,7 +74,13 @@
       "physics step": "fizik adımı",
       "Cadence": "Kadans",
       "{n}× refresh": "{n}× yenileme",
-      "GPU idle": "GPU boşta"
+      "GPU idle": "GPU boşta",
+      "All worlds": "Tüm dünyalar",
+      "main view": "ana görünüm",
+      "world": "dünya",
+      "view": "görünüm",
+      "GPU busy": "GPU meşgul",
+      "CPU busy": "CPU meşgul"
     },
     "shadows": {
       "lights": "ışıklar",
@@ -112,6 +121,59 @@
     "banner": {
       "close": "Kapat",
       "waiting": "Motoru bekliyor (#{issue})"
+    },
+    "views": {
+      "beauty": "görüntü",
+      "wireframe": "üçgenler",
+      "xray": "röntgen",
+      "clusters": "kümeler",
+      "lod": "ayrıntı düzeyleri",
+      "hlod": "HLOD",
+      "screen-error": "ekran hatası",
+      "materials": "malzemeler",
+      "visibility": "görülen sayfalar",
+      "pages": "bellekteki sayfalar",
+      "texture-mip": "doku boyutu",
+      "overdraw": "yeniden çizim",
+      "frame-difference": "kare farkı",
+      "reflections": "yansımalar",
+      "shadows": "gölgeler",
+      "lighting": "aydınlatma",
+      "no-temporal-aa": "zamansal AA yok",
+      "taa-input": "TAA girdisi",
+      "taa-rejection": "TAA reddi",
+      "taa-validity": "TAA geçmişi",
+      "taa-flicker": "TAA titreme",
+      "taa-shading": "TAA gölgeleme",
+      "taa-reprojection": "TAA yeniden izdüşüm",
+      "taa-motion": "TAA hareket",
+      "taa-thin": "TAA ince geometri",
+      "taa-material-history": "malzemeye göre TAA geçmişi"
+    },
+    "viewHints": {
+      "wireframe": "Çizilen her üçgene bir renk, koyu kenarlar: uzakta daha az ve daha büyük üçgenler.",
+      "xray": "Motorun gönderdiği her üçgenin kenarları, duvarların ardından görünür: elemenin attığı şey yoktur. Elemeyi dondurun, sonra kontrol için kenara çekilin.",
+      "clusters": "Her kümeye bir renk: kesimin daha kaba biriyle değiştirdiği üçgen grubu.",
+      "lod": "Çizilen ayrıntı düzeyi — mavi: tam ayrıntı, sonra kabalaştıkça camgöbeği, yeşil, sarı, kırmızı (kırmızı: 8 düzey ve üstü).",
+      "hlod": "Beyaz: nesnenin kendisi, yakında. Mavi: HLOD 0, hücrenin nesneleri bir arada. Sarı, mor, camgöbeği: HLOD 1, 2, 3, hücre başına basit bir kabuk, her düzeyde daha kaba.",
+      "screen-error": "Yeşil: tam. Sarı: izin verilen piksel hatasına yakın. Kırmızı: sınırda.",
+      "materials": "Her malzeme türüne bir renk.",
+      "visibility": "Yeşil: bu karede çizilen her sayfa.",
+      "pages": "Yeşil: bellekte tutulan ve çizilen her sayfa.",
+      "frame-difference": "Siyah: piksel önceki kareden beri değişmedi. Griden beyaza: değişti, sekiz kat güçlendirildi — titreyen her şey parlar.",
+      "reflections": "Yalnızca yüzeylerin yansıttığı ışık, ekran izlemesinden ve sondalardan; hiçbir şey yansımayan yerde siyah.",
+      "shadows": "Her yüzeye ne kadar güneş ışığı ulaştığı — beyaz: aydınlık, siyah: gölgede. Malzeme rengi yok.",
+      "lighting": "Beyaz bir yüzeydeki tüm ışık: doğrudan, yansıyan, seken ve ortam. Malzeme rengi yok.",
+      "no-temporal-aa": "Zamansal birikim olmadan normal görüntü: bu karenin ham görüntüsü, tırtıklanma ve gürültü dahil.",
+      "taa-input": "Zamansal AA'nın aldığı görüntü, titreşim açık, birikim yok: her piksel içine düştüğü işlenmiş pikseli gösterir — kareden kareye titrer.",
+      "taa-rejection": "Her pikselin ne kadar geçmiş tuttuğu — beyaz: geçmiş korundu, siyah: reddedildi (aydınlatma değişimi, ekran dışı).",
+      "taa-validity": "Güncellemeden sonra her pikselin ne kadar geçmişi olduğu — beyaz: tam geçmiş, siyah: yeniden başlıyor. Gri: hâlâ yakınsıyor.",
+      "taa-flicker": "Titreme ölçüsü — kırmızı: hatası, yeşil: kaç titreme saydığı, mavi: onu sıfırlayan saydamların kaplaması.",
+      "taa-shading": "Gölgeleme reddi, beyaz: geçmiş korundu — kırmızı: titreme genişletmesi olmadan, yeşil: onunla, mavi: komşulara yayılmış, güncellemenin uyguladığı.",
+      "taa-reprojection": "Geçmiş neden yeniden başlar — kırmızı: açığa çıktı, yeşil: açığa çıktı ve örtenin hareketiyle dolduruldu, mavi: önceki ekranın dışında.",
+      "taa-motion": "Birikimin gördüğü hareket — kırmızı: titreme ölçüsü için hareketli, yeşil: piksel animasyonu, mavi: yeniden izdüşüm kenarı (beyaz: düz hareket).",
+      "taa-thin": "İnce geometri — kırmızı: geçmiş sınırının ne kadar gevşediği, yeşil: küme boşluğu bölgesi, mavi: kaplama geçmişi.",
+      "taa-material-history": "Her malzemenin geçmiş payı gri tonla — beyaz: 1, tam yumuşatma; siyah: 0, yalnızca güncel kare."
     }
   },
   "a-city-from-rules": {
@@ -845,6 +907,55 @@
       "notCounted": "burada sayılmadı"
     }
   },
+  "long-district": {
+    "banner": "Dört HLOD düzeyinde iki kilometrelik sokak: görmek için HLOD görünümünü seçin. Görünüme tıklayın, ardından W A S D ile sokakta yürüyün ve fareyle bakın; Boşluk ve Shift sizi yükseltir ve alçaltır.",
+    "controls": {
+      "walkSpeed": "Yürüme hızı",
+      "pixelError": "Piksel hatası",
+      "motion": "Hareketli parçalar",
+      "forwardRun": "İleri koşu",
+      "fastStrafe": "Hızlı yana kayma",
+      "slowPan": "Yavaş pan",
+      "rotation": "Dönüş",
+      "highOrbit": "Yüksek yörünge",
+      "home": "Başlangıca dön"
+    },
+    "readouts": {
+      "trianglesDrawn": "Çizilen üçgenler",
+      "shareDistrict": "Mahallenin payı",
+      "trianglesDistrict": "Mahallenin üçgenleri",
+      "pathFrame": "Yol karesi"
+    },
+    "words": {
+      "credit": "Bu örnek için kodla modellenen mahalle, CC0 — bkz. assets/examples/CREDITS.md",
+      "notCounted": "burada sayılmadı"
+    }
+  },
+  "nine-emerald-squares": {
+    "banner": "Görünüme tıklayın, sonra W A S D ile dokuz meydanın üzerinde uçun ve fareyle bakın; Boşluk ve Shift sizi yükseltir ve alçaltır.",
+    "controls": {
+      "flySpeed": "Uçuş hızı",
+      "pixelError": "Piksel hatası",
+      "memory": "Bellek",
+      "view": "Görünüm",
+      "home": "Başlangıca dön"
+    },
+    "choices": {
+      "view": {
+        "beauty": "görüntü",
+        "lod": "ayrıntı düzeyleri",
+        "clusters": "kümeler"
+      }
+    },
+    "readouts": {
+      "trianglesGrid": "Izgaradaki üçgenler",
+      "trianglesDrawn": "Çizilen üçgenler"
+    },
+    "words": {
+      "credit": "Emerald Square: Nicholas Hull ve Kate Anderson (NVIDIA ORCA), bitki örtüsü SpeedTree, CC BY-NC-SA 3.0 — bkz. assets/examples/CREDITS.md",
+      "notCounted": "burada sayılmadı"
+    }
+  },
   "edges-and-wireframe": {
     "banner": "Etrafa bakmak için sürükle. Sadece keskin kenarlar kalsın diye eşiği yükselt.",
     "controls": {
@@ -1421,15 +1532,7 @@
     "controls": {
       "walkSpeed": "Yürüme hızı",
       "memory": "Bellek",
-      "view": "Görünüm",
       "home": "Başlangıca dön"
-    },
-    "choices": {
-      "view": {
-        "beauty": "görüntü",
-        "lod": "ayrıntı düzeyleri",
-        "clusters": "kümeler"
-      }
     },
     "words": {
       "credit": "Emerald Square: Nicholas Hull ve Kate Anderson (NVIDIA ORCA), bitki örtüsü SpeedTree, CC BY-NC-SA 3.0 — bkz. assets/examples/CREDITS.md"
@@ -1440,15 +1543,7 @@
     "controls": {
       "walkSpeed": "Yürüme hızı",
       "memory": "Bellek",
-      "view": "Görünüm",
       "home": "Başlangıca dön"
-    },
-    "choices": {
-      "view": {
-        "beauty": "görüntü",
-        "lod": "ayrıntı düzeyleri",
-        "clusters": "kümeler"
-      }
     },
     "words": {
       "credit": "Amazon Lumberyard Bistro (NVIDIA ORCA), CC BY 4.0 — bkz. assets/examples/CREDITS.md"
@@ -1484,7 +1579,7 @@
     }
   },
   "no-hitch-on-first-draw": {
-    "banner": "Etrafa bakmak için sürükle. Grafik iki resim arasındaki süreyi gösterir.",
+    "banner": "Etrafa bakmak için sürükle. İstatistik köşesi her karenin süresini çizer.",
     "controls": {
       "turning": "Dönüyor",
       "revealAgain": "Yeniden göster"
@@ -1494,7 +1589,7 @@
       "worstFrameAfter": "Sonraki en kötü kare"
     },
     "words": {
-      "note": "On dört yüzey, her biri farklı bir malzeme ya da ayarla, hepsi aynı karede. Grafik kareler arasındaki süreyi çizer; altın çizgi onların göründüğü andır.",
+      "note": "On dört yüzey, her biri farklı bir malzeme ya da ayarla, hepsi aynı karede. Panel, onlar görünmeden önce ve sonra kareler arasındaki en kötü süreyi verir; istatistik köşesi her kareyi çizer.",
       "measuring": "ölçülüyor",
       "hidden": "gizli"
     }
@@ -1804,6 +1899,21 @@
     "words": {
       "on": "açık",
       "off": "kapalı"
+    }
+  },
+  "particles-responsive": {
+    "banner": "Aynı hareketle iki kıvılcım sürüsü: soldakinin geçmişi duyarlı, izleri kısa. Etrafında dönmek için sürükleyin.",
+    "controls": {
+      "smoothing": "Yumuşatma",
+      "motion": "Hareket"
+    },
+    "readouts": {
+      "temporalAntialiasing": "Zamansal kenar yumuşatma"
+    },
+    "words": {
+      "on": "açık",
+      "off": "kapalı",
+      "credit": "Kıvılcımlar bu örnek için kodla modellendi, CC0 — bkz. assets/examples/CREDITS.md"
     }
   },
   "snow-of-sprites": {
@@ -2446,18 +2556,11 @@
   "a-hundred-thousand-instances": {
     "banner": "Alanı çevrelemek için sürükleyin. Sayıyı veya görünümü değiştirin.",
     "controls": {
-      "count": "Sayı",
-      "view": "Görünüm"
+      "count": "Sayı"
     },
     "readouts": {
       "objectsShown": "Gösterilen nesneler",
       "objectsBuilt": "Oluşturulan nesneler"
-    },
-    "choices": {
-      "view": {
-        "beauty": "görüntü",
-        "clusters": "kümeler"
-      }
     }
   },
   "inside-a-component": {

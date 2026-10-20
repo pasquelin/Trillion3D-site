@@ -17,7 +17,9 @@
   },
   "kit": {
     "panel": {
-      "controls": "设置"
+      "controls": "设置",
+      "view": "视图",
+      "freeze": "冻结剔除"
     },
     "menu": {
       "play": "开始",
@@ -38,7 +40,8 @@
     },
     "stats": {
       "FPS": "帧/秒",
-      "triangles": "三角形",
+      "triangles selected": "选中的三角形",
+      "triangles drawn": "绘制的三角形",
       "triangles (scene)": "三角形（场景）",
       "draw calls": "绘制调用",
       "pages": "页",
@@ -71,7 +74,13 @@
       "physics step": "物理步进",
       "Cadence": "节奏",
       "{n}× refresh": "{n}× 刷新",
-      "GPU idle": "GPU 空闲"
+      "GPU idle": "GPU 空闲",
+      "All worlds": "所有世界",
+      "main view": "主视图",
+      "world": "世界",
+      "view": "视图",
+      "GPU busy": "GPU 占用",
+      "CPU busy": "CPU 占用"
     },
     "shadows": {
       "lights": "灯光",
@@ -112,6 +121,59 @@
     "banner": {
       "close": "关闭",
       "waiting": "等待引擎（#{issue}）"
+    },
+    "views": {
+      "beauty": "正常",
+      "wireframe": "三角形",
+      "xray": "X 光",
+      "clusters": "簇",
+      "lod": "细节层级",
+      "hlod": "HLOD",
+      "screen-error": "屏幕误差",
+      "materials": "材质",
+      "visibility": "可见页",
+      "pages": "驻留页",
+      "texture-mip": "纹理尺寸",
+      "overdraw": "过度绘制",
+      "frame-difference": "帧间差异",
+      "reflections": "反射",
+      "shadows": "阴影",
+      "lighting": "光照",
+      "no-temporal-aa": "无时间抗锯齿",
+      "taa-input": "TAA 输入",
+      "taa-rejection": "TAA 拒绝",
+      "taa-validity": "TAA 历史",
+      "taa-flicker": "TAA 闪烁",
+      "taa-shading": "TAA 着色",
+      "taa-reprojection": "TAA 重投影",
+      "taa-motion": "TAA 运动",
+      "taa-thin": "TAA 细几何",
+      "taa-material-history": "按材质的 TAA 历史"
+    },
+    "viewHints": {
+      "wireframe": "每个绘制的三角形一种颜色，边为深色：越远三角形越少越大。",
+      "xray": "引擎提交的每个三角形的边，可透过墙壁看到：被剔除的部分不会出现。冻结剔除后移到侧面检查。",
+      "clusters": "每个簇一种颜色，即切割换成更粗版本的一组三角形。",
+      "lod": "绘制的细节层级 — 蓝：完整细节，越粗依次为青、绿、黄、红（红：8 级及以上）。",
+      "hlod": "白：近处的物体本身。蓝：HLOD 0，单元内的物体合批绘制。黄、紫、青：HLOD 1、2、3，每个单元一个简单外壳，每一级更粗。",
+      "screen-error": "绿：精确。黄：接近允许的像素误差。红：达到上限。",
+      "materials": "每种材质一种颜色。",
+      "visibility": "绿：本帧绘制的每个页面。",
+      "pages": "绿：驻留内存并被绘制的每个页面。",
+      "frame-difference": "黑色：像素自上一帧以来没有变化。灰到白：有变化，放大八倍——闪烁的地方会亮起来。",
+      "reflections": "只显示表面反射的光，来自屏幕追踪和探针；没有反射的地方为黑色。",
+      "shadows": "每个表面接收到多少阳光——白色：受光，黑色：在阴影中。不显示材质颜色。",
+      "lighting": "白色表面上的全部光照：直射、反射、反弹和环境光。不显示材质颜色。",
+      "no-temporal-aa": "没有时间累积的正常图像：这一帧的原始图像，包括锯齿和噪点。",
+      "taa-input": "时间抗锯齿接收到的图像，抖动开启，不做累积：每个像素显示它所落入的渲染像素——逐帧闪动。",
+      "taa-rejection": "每个像素保留多少历史——白色：保留历史，黑色：被拒绝（光照变化、屏幕外）。",
+      "taa-validity": "更新后每个像素持有多少历史——白色：完整历史，黑色：重新开始。灰色：仍在收敛。",
+      "taa-flicker": "闪烁测量 — 红：其误差，绿：计到的闪烁次数，蓝：抵消它的透明物覆盖率。",
+      "taa-shading": "着色拒绝，白：保留历史 — 红：不含闪烁放宽，绿：含放宽，蓝：扩散到邻域，即更新所用的值。",
+      "taa-reprojection": "历史为何重新开始 — 红：去遮挡，绿：去遮挡并以遮挡物的运动填充，蓝：在上一帧屏幕之外。",
+      "taa-motion": "累积所见的运动 — 红：对闪烁测量而言在运动，绿：像素动画，蓝：重投影边缘（白：运动平坦）。",
+      "taa-thin": "细几何 — 红：历史钳制放宽的程度，绿：簇空洞区域，蓝：覆盖率历史。",
+      "taa-material-history": "每种材质可保留的历史比例，以灰度显示——白：1，完整平滑；黑：0，只用当前图像。"
     }
   },
   "a-city-from-rules": {
@@ -845,6 +907,55 @@
       "notCounted": "这里没有计数"
     }
   },
+  "long-district": {
+    "banner": "两公里长的街道，分为四个 HLOD 层级：选择 HLOD 视图即可看到。点击画面，然后用 W A S D 沿街行走，用鼠标环顾；空格键和 Shift 键让你升高和降低。",
+    "controls": {
+      "walkSpeed": "步行速度",
+      "pixelError": "像素误差",
+      "motion": "运动部件",
+      "forwardRun": "向前行进",
+      "fastStrafe": "快速横移",
+      "slowPan": "缓慢平移",
+      "rotation": "旋转",
+      "highOrbit": "高空环绕",
+      "home": "回到起点"
+    },
+    "readouts": {
+      "trianglesDrawn": "绘制的三角形",
+      "shareDistrict": "街区占比",
+      "trianglesDistrict": "街区的三角形",
+      "pathFrame": "路径帧"
+    },
+    "words": {
+      "credit": "为本例用代码建模的街区，CC0 — 见 assets/examples/CREDITS.md",
+      "notCounted": "这里没有计数"
+    }
+  },
+  "nine-emerald-squares": {
+    "banner": "点击视图，然后用 W A S D 飞越九座广场，用鼠标环顾；空格和 Shift 让你升降。",
+    "controls": {
+      "flySpeed": "飞行速度",
+      "pixelError": "像素误差",
+      "memory": "内存",
+      "view": "视图",
+      "home": "回到起点"
+    },
+    "choices": {
+      "view": {
+        "beauty": "成品",
+        "lod": "细节层级",
+        "clusters": "簇"
+      }
+    },
+    "readouts": {
+      "trianglesGrid": "网格中的三角形",
+      "trianglesDrawn": "绘制的三角形"
+    },
+    "words": {
+      "credit": "Emerald Square：Nicholas Hull、Kate Anderson（NVIDIA ORCA），植被 SpeedTree，CC BY-NC-SA 3.0 — 见 assets/examples/CREDITS.md",
+      "notCounted": "这里没有计数"
+    }
+  },
   "edges-and-wireframe": {
     "banner": "拖动四处看看。调高阈值，只留下锋利的棱。",
     "controls": {
@@ -1421,15 +1532,7 @@
     "controls": {
       "walkSpeed": "步行速度",
       "memory": "内存",
-      "view": "视图",
       "home": "回到起点"
-    },
-    "choices": {
-      "view": {
-        "beauty": "成品",
-        "lod": "细节层级",
-        "clusters": "簇"
-      }
     },
     "words": {
       "credit": "Emerald Square：Nicholas Hull、Kate Anderson（NVIDIA ORCA），植被 SpeedTree，CC BY-NC-SA 3.0 — 见 assets/examples/CREDITS.md"
@@ -1440,15 +1543,7 @@
     "controls": {
       "walkSpeed": "步行速度",
       "memory": "内存",
-      "view": "视图",
       "home": "回到起点"
-    },
-    "choices": {
-      "view": {
-        "beauty": "成品",
-        "lod": "细节层级",
-        "clusters": "簇"
-      }
     },
     "words": {
       "credit": "Amazon Lumberyard Bistro (NVIDIA ORCA), CC BY 4.0 — 见 assets/examples/CREDITS.md"
@@ -1484,7 +1579,7 @@
     }
   },
   "no-hitch-on-first-draw": {
-    "banner": "拖动四处看看。图表显示两幅画面之间的时间。",
+    "banner": "拖动四处看看。统计角画出每一帧的时间。",
     "controls": {
       "turning": "旋转",
       "revealAgain": "再显示一次"
@@ -1494,7 +1589,7 @@
       "worstFrameAfter": "之后最差的帧"
     },
     "words": {
-      "note": "十四个表面，每个都有不同的材质或设置，全部出现在同一帧里。图表画出帧与帧之间的时间；金线是它们出现的那一刻。",
+      "note": "十四个表面，每个都有不同的材质或设置，全部出现在同一帧里。面板给出它们出现前后帧与帧之间最差的时间；统计角画出每一帧。",
       "measuring": "测量中",
       "hidden": "隐藏"
     }
@@ -1804,6 +1899,21 @@
     "words": {
       "on": "开",
       "off": "关"
+    }
+  },
+  "particles-responsive": {
+    "banner": "两群运动相同的火花：左边那群的历史是响应式的，拖尾很短。拖动以绕着它们旋转。",
+    "controls": {
+      "smoothing": "平滑",
+      "motion": "运动"
+    },
+    "readouts": {
+      "temporalAntialiasing": "时间抗锯齿"
+    },
+    "words": {
+      "on": "开",
+      "off": "关",
+      "credit": "火花为本示例用代码建模，CC0 — 见 assets/examples/CREDITS.md"
     }
   },
   "snow-of-sprites": {
@@ -2446,18 +2556,11 @@
   "a-hundred-thousand-instances": {
     "banner": "拖动以环绕实例场。更改数量或视图。",
     "controls": {
-      "count": "数量",
-      "view": "视图"
+      "count": "数量"
     },
     "readouts": {
       "objectsShown": "显示的对象",
       "objectsBuilt": "创建的对象"
-    },
-    "choices": {
-      "view": {
-        "beauty": "成品",
-        "clusters": "簇"
-      }
     }
   },
   "inside-a-component": {

@@ -4,8 +4,9 @@ import { kitWord, labelOf } from './words.ts'
 /** GPU passes named in the GPU section, the costliest first; the rest are summed as others. */
 const GPU_ROWS = 6
 
-export type SectionId = 'cadence' | 'cpu' | 'gpu' | 'shadows' | 'scene'
+export type SectionId = 'page' | 'cadence' | 'cpu' | 'gpu' | 'shadows' | 'scene'
 export const SECTIONS: readonly [SectionId, string][] = [
+  ['page', 'All worlds'],
   ['cadence', 'Cadence'],
   ['cpu', 'CPU'],
   ['gpu', 'GPU'],
@@ -60,6 +61,53 @@ export function cpuRows(sample: StatsSample, extra: readonly [string, string][])
     total ? value / total : null,
   ])
   for (const [label, value] of extra) rows.push([say(label), ...split(value), null])
+  return rows
+}
+
+/**
+ * Which of the page's `count` live worlds the panel reads, the `index`th: `main view · 1/6`, the
+ * first the page made being its main one; nothing on a page of one world.
+ */
+export const worldTag = (index: number, count: number) =>
+  count > 1 ? `${say(index === 0 ? 'main view' : 'world')} · ${index + 1}/${count}` : ''
+
+/**
+ * The rows of all the page's worlds (`sample`, the watched one's, and `others`): how busy they
+ * keep the GPU and the main thread, as a share of each second — Σ msᵢ·fpsᵢ / 1000 ms, each
+ * world's last GPU frame time and median CPU frame time times the frames it drew in the last
+ * second (a held world costs nothing; rates are never summed). A share of the second is defined
+ * whatever each world's rate, where a time per frame of the watched world is not. The CPU's
+ * adds up: the worlds share one main thread. Each world times its own images on the GPU, which
+ * runs several worlds' work at once: past 100 %, their GPU times overlap, and the GPU is what
+ * holds the frame. A world's views beside its main one (`world.addView`) add the GPU time their
+ * images took in that second, and the watched world's views each show their last GPU frame time,
+ * `view 2` the first beside the main one. Nothing on a page of one world of one view.
+ */
+export function pageRows(sample: StatsSample, others: readonly StatsSample[]): Row[] {
+  const views = sample.viewGpuMs ?? []
+  if (others.length === 0 && views.length === 0) return []
+  let gpu: number | null = null,
+    cpu: number | null = null
+  for (const world of [sample, ...others]) {
+    const fps = world.fps ?? 0
+    if (world.gpuFrameMs != null) gpu = (gpu ?? 0) + world.gpuFrameMs * fps
+    if (world.viewsGpuMs != null) gpu = (gpu ?? 0) + world.viewsGpuMs
+    if (world.cpu?.frameMs != null) cpu = (cpu ?? 0) + world.cpu.frameMs * fps
+  }
+  const row = (label: string, msPerSecond: number): Row => [
+    say(label),
+    (msPerSecond / 10).toFixed(0),
+    '%',
+    Math.min(1, msPerSecond / 1000),
+  ]
+  const rows: Row[] = []
+  if (gpu != null) rows.push(row('GPU busy', gpu))
+  if (cpu != null) rows.push(row('CPU busy', cpu))
+  const frame = views.reduce<number>((sum, ms) => sum + (ms ?? 0), sample.gpuFrameMs ?? 0)
+  views.forEach((ms, index) => {
+    if (ms != null)
+      rows.push([`${say('view')} ${index + 2}`, ms.toFixed(2), 'ms', frame ? ms / frame : null])
+  })
   return rows
 }
 

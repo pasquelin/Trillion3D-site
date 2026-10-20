@@ -35,7 +35,12 @@ export function watchStats(
   const drawn: number[] = [],
     cpuFrameMs: number[] = [],
     /** Each drawn frame's interval since the last, `NaN` when not measured (`cadence.ts`). */
-    intervals: number[] = []
+    intervals: number[] = [],
+    /** Each image of a view beside the main one: when it was drawn and its GPU time; and each
+     *  view's last GPU time, by index. */
+    viewTimes: number[] = [],
+    viewMs: number[] = [],
+    viewLast: (number | null)[] = []
   let last: FrameCounters = {},
     rated = false,
     gpuFrameMs: number | null = null,
@@ -52,7 +57,13 @@ export function watchStats(
     triangles: number | null = null
   const unhook = world.onFrame(({ metrics }) => {
     frames++
-    drawn.push(performance.now())
+    const at = performance.now()
+    drawn.push(at)
+    for (const view of metrics.views ?? []) {
+      viewTimes.push(at)
+      viewMs.push(view.gpuFrameMs ?? 0)
+      viewLast[view.index] = view.gpuFrameMs
+    }
     intervals.push(metrics.rafIntervalMs ?? Number.NaN)
     last = metrics
     if (metrics.displayRefreshMs != null) refreshMs = metrics.displayRefreshMs
@@ -68,6 +79,10 @@ export function watchStats(
     while (drawn.length && drawn[0] < now - 1000) {
       drawn.shift()
       intervals.shift()
+    }
+    while (viewTimes.length && viewTimes[0] < now - 1000) {
+      viewTimes.shift()
+      viewMs.shift()
     }
     if (!active()) {
       unread = true
@@ -92,6 +107,10 @@ export function watchStats(
       gpuIdleMs,
       cadence: cadenceOf(intervals, refreshMs),
     }
+    if (viewLast.length) {
+      sample.viewsGpuMs = viewMs.reduce((sum, value) => sum + value, 0)
+      sample.viewGpuMs = viewLast.slice()
+    }
     const cpuOpen = cpu.open()
     if (cpuOpen) {
       // The engine's window ran on while the corner was closed: its first read after opening
@@ -113,5 +132,52 @@ export function watchStats(
   return () => {
     clearInterval(timer)
     if (typeof unhook === 'function') unhook()
+  }
+}
+
+/**
+ * The page's other worlds than `main`, each watched as the panel watches its own (`watchStats`),
+ * but only while `open()`: each `read` (the panel's, four times a second) brings the watches in
+ * line with `worlds()` — a world made since is watched, one disposed is let go, and all of them
+ * while closed, so a folded or hidden panel samples no other world — and hands back each one's
+ * last sample. Their CPU is read while `cpu` is, without stages. Returns `read` and what stops it.
+ */
+export function watchWorlds(
+  main: StatsWorld,
+  worlds: () => readonly StatsWorld[],
+  cpu: CpuSource | undefined,
+  periodMs: number,
+  open: () => boolean,
+) {
+  const watched = new Map<StatsWorld, { stop: () => void; sample?: StatsSample }>()
+  const frameCpu: CpuSource = { open: () => cpu?.open() ?? true, stages: () => null }
+  const stop = (world: StatsWorld) => {
+    watched.get(world)?.stop()
+    watched.delete(world)
+  }
+  const read = (): StatsSample[] => {
+    const shown = open(),
+      live = worlds()
+    for (const world of watched.keys()) if (!shown || !live.includes(world)) stop(world)
+    if (!shown) return []
+    for (const world of live)
+      if (world !== main && !watched.has(world)) {
+        const watch: { stop: () => void; sample?: StatsSample } = { stop: () => {} }
+        watch.stop = watchStats(
+          world,
+          (sample) => (watch.sample = sample),
+          frameCpu,
+          periodMs,
+          open,
+        )
+        watched.set(world, watch)
+      }
+    return [...watched.values()].flatMap(({ sample }) => (sample ? [sample] : []))
+  }
+  return {
+    read,
+    stop: () => {
+      for (const world of watched.keys()) stop(world)
+    },
   }
 }

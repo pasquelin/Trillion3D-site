@@ -9,7 +9,10 @@ import { MIB } from '#engine/packages/math/src/constants.ts'
 /** What the stats corner reads of a frame: the engine's own counters, `null` when not measured.
  *  Any other counter the frame publishes rides along under its own name (`shadowLines`). */
 export interface FrameCounters {
+  /** The cut's triangles past its frustum and detail levels, then those drawn once the occlusion
+   *  test dropped its own (`Engine.FrameMetrics`). */
   selectedTriangles?: number | null
+  drawnTriangles?: number | null
   drawCalls?: number | null
   residentPages?: number | null
   geometryPoolBytes?: number | null
@@ -31,6 +34,8 @@ export interface FrameCounters {
   rafIntervalMs?: number | null
   displayRefreshMs?: number | null
   gpuIdleMs?: number | null
+  /** The views the frame drew beside the main one (`world.addView`), each with its GPU time. */
+  views?: readonly { index: number; gpuFrameMs: number | null }[]
 }
 
 /** A node of the scene as far as counting its triangles goes. */
@@ -60,6 +65,10 @@ export interface StatsSample extends FrameCounters {
   cpu?: { frameMs: number | null; stages: [name: string, ms: number][] }
   /** How the last second's frames held the display, `null` before it is measured (`cadence.ts`). */
   cadence?: Cadence | null
+  /** The world's views beside the main one: their GPU time over the last second, ms, and each
+   *  view's last GPU frame time, by its index; absent on a world of one view. */
+  viewsGpuMs?: number
+  viewGpuMs?: (number | null)[]
 }
 
 /** A counter as the corner prints it: rounded, grouped in the page's language. */
@@ -97,13 +106,16 @@ export function shadowCounters(frame: object): [key: string, value: number][] {
   return counters
 }
 
-/** The scene and memory counters of the corner: triangles (the scene's own count, named so, when
- *  the frame does not measure them), draw calls, pages, pool, lights, then the GPU memory all and
- *  by kind (`MEMORY`), each only when the engine publishes it: never a dash, never a zero. */
+/** The scene and memory counters of the corner: triangles selected by the cut and drawn past the
+ *  occlusion test (the scene's own count, named so, when the frame does not measure them), draw
+ *  calls, pages, pool, lights, then the GPU memory all and by kind (`MEMORY`), each only when the
+ *  engine publishes it: never a dash, never a zero. */
 export function sceneLines(sample: StatsSample): [string, string][] {
   const lines: [string, string][] = []
-  if (sample.selectedTriangles) lines.push(['triangles', count(sample.selectedTriangles)])
-  else if (sample.selectedTriangles == null && sample.sceneTriangles)
+  if (sample.selectedTriangles)
+    lines.push(['triangles selected', count(sample.selectedTriangles)])
+  if (sample.drawnTriangles) lines.push(['triangles drawn', count(sample.drawnTriangles)])
+  if (sample.selectedTriangles == null && sample.sceneTriangles)
     lines.push(['triangles (scene)', count(sample.sceneTriangles)])
   if (sample.drawCalls) lines.push(['draw calls', count(sample.drawCalls)])
   if (sample.residentPages) lines.push(['pages', count(sample.residentPages)])

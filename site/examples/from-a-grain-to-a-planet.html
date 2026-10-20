@@ -302,7 +302,7 @@
         toTheBeach: () => fly(12),
         toTheIsland: () => fly(5000),
         toThePlanet: () => fly(FAR),
-      }, world);
+      });
       const shown = readout('viewWidth'), seen = readout('youSee');
       const width = (metres) => (metres < 0.01 ? `${(metres * 1000).toFixed(1)} mm` : metres < 1 ? `${(metres * 100).toFixed(1)} cm` : metres < 1000 ? `${metres.toFixed(metres < 10 ? 1 : 0)} m` : `${(metres / 1000).toFixed(1)} km`);
       const SCALES = [[0.012, 'grains of sand'], [0.15, 'sand and shells'], [3, 'pebbles'], [60, 'the beach'], [900, 'the coast'], [9000, 'the island'], [Infinity, 'the planet']];

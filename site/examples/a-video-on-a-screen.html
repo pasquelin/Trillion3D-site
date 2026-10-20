@@ -111,7 +111,7 @@
       }, (values, key) => {
         if (key === 'playing') values.playing ? video.play() : video.pause();
         world.invalidate();
-      }, world);
+      });
       const source = readout('playing');
       const clock = readout('videoTime');
       source(say('testCard'));

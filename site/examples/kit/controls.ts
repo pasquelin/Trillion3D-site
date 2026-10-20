@@ -1,7 +1,5 @@
 import { hideable, overlay } from './overlay.ts'
 import { perFrame } from './perFrame.ts'
-import { stats } from './stats.ts'
-import type { StatsWorld } from './statsLines.ts'
 import { exampleWord, kitWord, labelOf } from './words.ts'
 
 // The declared settings and their values are the bench kit's (`bench/kit/index.ts`): one home.
@@ -140,17 +138,14 @@ type OnChange<Specs> = (values: ControlValues<Specs>, key?: keyof ControlValues<
 /**
  * A settings panel in the top-right corner of the example, one row per declared control. The
  * returned object holds the live values; `onChange(values, key)` runs once at start, with no
- * key, then after every change. Given the example's world (after `onChange`, or in its place),
- * it also starts the stats corner (`stats.ts`). The page hosting the example shows or hides both
- * by posting `{ type: 'trillion3d:controls', visible }`; standalone, they are shown.
+ * key, then after every change. The page hosting the example shows or hides it, and the stats
+ * corner (`stats.ts`), by posting `{ type: 'trillion3d:controls', visible }`; standalone, they
+ * are shown.
  */
 export function controls<const Specs extends Record<string, ControlSpec>>(
   specs: Specs,
-  changeOrWorld?: OnChange<Specs> | StatsWorld,
-  world?: StatsWorld,
+  onChange: OnChange<Specs> = () => {},
 ): ControlValues<Specs> {
-  const onChange: OnChange<Specs> = typeof changeOrWorld === 'function' ? changeOrWorld : () => {}
-  const watched = typeof changeOrWorld === 'function' ? world : changeOrWorld
   const { controls: declared, values } = describe(specs)
   const live = values as ControlValues<Specs>
   const box = document.createElement('details')
@@ -168,7 +163,90 @@ export function controls<const Specs extends Record<string, ControlSpec>>(
   box.append(title, rows)
   overlay().append(box)
   hideable(box)
-  if (watched) stats(watched)
   onChange(live)
   return live
+}
+
+/** What `viewModes` needs of a world: its view mode and its cut's freeze, read and written, and
+ * its frame hook. */
+interface ViewWorld {
+  diagnostic: { mode: string; freeze: boolean; readonly modes: readonly string[] }
+  onFrame(hook: () => void): unknown
+  invalidate(): void
+}
+
+/** The view modes `world` offers, `triangles` left out: the page's alias of `wireframe`. */
+const offeredModes = (world: ViewWorld) =>
+  world.diagnostic.modes.filter((mode) => mode !== 'triangles')
+
+/**
+ * A `View` row at the foot of the controls panel, declared after `controls` like a readout: one
+ * choice for each view mode the world offers (`world.diagnostic.modes`), the normal image
+ * (`beauty`) first, each named in the page's language (`kit.views.<mode>`), and under it, while a
+ * mode other than `beauty` is on, what its colours mean (`kit.viewHints.<mode>`). The row shows
+ * the world's mode, whoever set it: it is read again when the list is opened. The world knows its
+ * modes once its session opens: the list is read again at each frame until they come, then that
+ * hook removes itself, so the row costs the frames after nothing. A mode the session refuses (the
+ * world keeps the mode it had and says why on the console) is greyed out. Below, a `Freeze culling`
+ * toggle (`kit.panel.freeze`) holds the cut — its levels, HLOD, frustum and occlusion — at the
+ * camera of that moment (`world.diagnostic.freeze`): stepping aside in the `xray` view then shows
+ * what it submitted and what it dropped.
+ */
+export function viewModes(world: ViewWorld) {
+  const panel = overlay().querySelector('[data-rows]')
+  if (!panel) throw new Error('viewModes: declare the controls first')
+  const values: Record<string, unknown> = {}
+  const refused = new Set<string>()
+  const hint = document.createElement('p')
+  hint.className = 'text-xs opacity-80'
+  const paint = () => {
+    const mode = world.diagnostic.mode
+    values.view = mode
+    const select = line.querySelector('select')
+    if (select) {
+      select.value = mode
+      for (const option of select.options) option.disabled = refused.has(option.value)
+    }
+    hint.textContent = mode === 'beauty' ? '' : kitWord('viewHints', mode, '')
+    hint.hidden = !hint.textContent
+  }
+  const row = (modes: readonly string[]) => {
+    const shown = modes.map((mode) => kitWord('views', mode))
+    const label = kitWord('panel', 'view')
+    const control: Control = { kind: 'choice', key: 'view', label, options: modes, shown }
+    const next = field(control, values, () => {
+      const asked = String(values.view)
+      world.diagnostic.mode = asked
+      if (world.diagnostic.mode !== asked) refused.add(asked)
+      paint()
+      world.invalidate()
+    })
+    next.querySelector('select')?.addEventListener('pointerdown', paint)
+    return next
+  }
+  let modes = offeredModes(world)
+  let line = row(modes)
+  values.freeze = world.diagnostic.freeze
+  const freeze = field(
+    { kind: 'toggle', key: 'freeze', label: kitWord('panel', 'freeze') },
+    values,
+    () => {
+      world.diagnostic.freeze = Boolean(values.freeze)
+      world.invalidate()
+    },
+  )
+  panel.append(line, hint, freeze)
+  paint()
+  // Before the session publishes its modes, the world offers `beauty` alone, its first frame
+  // included: the hook waits for the list, then removes itself.
+  const unhook = world.onFrame(() => {
+    const now = offeredModes(world)
+    if (now.join() === modes.join()) return
+    if (typeof unhook === 'function') unhook()
+    modes = now
+    const next = row(modes)
+    line.replaceWith(next)
+    line = next
+    paint()
+  })
 }

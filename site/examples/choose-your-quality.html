@@ -125,7 +125,7 @@
     <aside id="quality" data-example-overlay></aside>
     <script type="module">
       import { createWorld, effect, geometry, light, material, math, object, side, texture, wrap, LOD_QUALITY } from '../runtime/engine.js';
-      import { leafTexture, seeded, stats, tour } from '../runtime/kit.js';
+      import { leafTexture, seeded, tour } from '../runtime/kit.js';
 
       // ── The quality table ──────────────────────────────────────────────────────────────────
       // What each level of each group asks of the engine, through the world's public switches:
@@ -571,9 +571,6 @@
         if (!auto) slider.value = String(Math.round(state.scale * 100));
         percent.textContent = auto ? 'auto' : `${Math.round(state.scale * 100)} %`;
       }
-
-      // The examples' stats corner: the engine's own counters, its GPU memory by kind among them.
-      stats(world);
 
       apply(state);
     </script>

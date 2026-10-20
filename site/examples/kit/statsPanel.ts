@@ -6,6 +6,7 @@ import { shadowCounters, type StatsSample, type StatsWorld } from './statsLines.
 import {
   cpuRows,
   gpuRows,
+  pageRows,
   sceneRows,
   say,
   SECTIONS,
@@ -13,16 +14,18 @@ import {
   shadowRows,
   type Row,
   type SectionId,
+  worldTag,
 } from './statsRows.ts'
 import { sparkline, tone } from './statsSpark.ts'
 import { STYLE } from './statsStyle.ts'
-import { watchStats, type CpuSource } from './statsWatch.ts'
+import { watchStats, watchWorlds, type CpuSource } from './statsWatch.ts'
 import { kitWord } from './words.ts'
 
 /**
  * The profiler overlay of the examples and the scene editor: a header line (frames a second and the frame's time against the 120 Hz
  * budget), a sparkline of the last frames' CPU and GPU times, then one folding section each for
- * the display's cadence (`cadence.ts`), the CPU stages, the GPU passes by cost, the virtual shadow maps and the scene and memory
+ * all the page's worlds (on a page of several: which one the header reads, and the GPU and CPU
+ * time all of them spend for its frame, `pageRows`), the display's cadence (`cadence.ts`), the CPU stages, the GPU passes by cost, the virtual shadow maps and the scene and memory
  * counters. Every value the corner reads (`statsLines.ts`) is shown, only grouped.
  *
  * It scales with the view (its font and width follow the viewport, never more than about 30% of
@@ -37,7 +40,8 @@ const PERIOD_MS = 250
 
 /**
  * The profiler overlay over `parent`, watching `world`: at `corner` unless the viewer moved it.
- * `cpu` and `extra` are `watchStats`'s. Returns the panel and what stops it.
+ * `cpu` and `extra` are `watchStats`'s; `worlds` gives the page's live worlds, `world` among them.
+ * Returns the panel and what stops it.
  */
 export function statsPanel(
   world: StatsWorld,
@@ -46,6 +50,7 @@ export function statsPanel(
     corner?: StatsCorner
     cpu?: CpuSource
     extra?: () => [string, string][]
+    worlds?: () => readonly StatsWorld[]
   } = {},
 ) {
   // The frame covers the view the panel sits on: its size, not the parent's (whose own may wait
@@ -73,11 +78,14 @@ export function statsPanel(
     frame = make('b'),
     frameUnit = make('span', 't3s-u', 'ms'),
     held = make('span', 't3s-tag'),
+    which = make('span', 't3s-tag'),
     cg = make('span', 't3s-cg'),
     cpuHead = make('b'),
     gpuHead = make('b')
   cg.append('CPU ', cpuHead, ' · GPU ', gpuHead, ' ms')
-  head.append(dot, fps, fpsUnit, frame, frameUnit, held, cg)
+  // Hidden, the world's tag leaves a page of one world's header as it was, gap included.
+  which.hidden = true
+  head.append(dot, fps, fpsUnit, frame, frameUnit, held, which, cg)
 
   const body = make('div', 't3s-body')
   const sparkCanvas = make('canvas', 't3s-spark')
@@ -118,6 +126,8 @@ export function statsPanel(
   let latest: StatsSample | undefined
   const open = () => !layout.compact
   const spark = sparkline(world, sparkCanvas, () => !panel.hidden && open())
+  const worlds = options.worlds ?? (() => [world])
+  const others = watchWorlds(world, worlds, options.cpu, PERIOD_MS, () => !panel.hidden && open())
 
   // Folding a section or the panel writes nothing of its own: it shows the last sample again.
   const render = (sample: StatsSample) => {
@@ -128,6 +138,10 @@ export function statsPanel(
     put(frame, frameMs == null ? '–' : frameMs.toFixed(2))
     setClass(frame, colour)
     put(held, sample.held ? say('held') : '')
+    const live = worlds()
+    const tag = worldTag(live.indexOf(world), live.length)
+    put(which, tag)
+    which.hidden = !tag
     put(cpuHead, sample.cpu?.frameMs != null ? sample.cpu.frameMs.toFixed(2) : '–')
     // The head reads the GPU time the image carries: none while it is held, nor between a held
     // image and the device's next sample; the last one measured is the GPU section's, marked last.
@@ -135,10 +149,12 @@ export function statsPanel(
     put(gpuHead, gpuMs != null ? gpuMs.toFixed(2) : '–')
     setClass(gpuHead, tone(gpuMs ?? null))
     panel.removeAttribute('data-empty')
-    // Folded to the head: no section is shown, so none is formatted.
+    // Folded to the head: no section is shown, so none is formatted, nor another world watched.
+    const page = others.read()
     if (!open()) return
     const counters = shadowCounters(sample)
     const rows: Record<SectionId, () => Row[]> = {
+      page: () => pageRows(sample, page),
       cadence: () => cadenceRows(sample.cadence, sample.gpuIdleMs),
       cpu: () => cpuRows(sample, options.extra?.() ?? []),
       gpu: () => gpuRows(sample),
@@ -148,6 +164,7 @@ export function statsPanel(
     for (const [id, { box, name, total, unit }] of sections) {
       // A GPU time kept from an earlier frame is marked as the last one measured.
       if (id === 'gpu') put(name, sample.gpuFrameLast ? `GPU · ${say('last')}` : 'GPU')
+      if (id === 'page') put(name, `${say('All worlds')} (${live.length})`)
       const [sum, measure] = sectionTotal(id, sample, counters)
       put(total, sum)
       put(unit, measure)
@@ -186,6 +203,7 @@ export function statsPanel(
     panel,
     stop() {
       stopStats()
+      others.stop()
       spark.stop()
       unbind()
       area.remove()

@@ -24,31 +24,37 @@ function bounds(values: ArrayLike<number>, size: number) {
 /**
  * Packs flat attribute and index arrays into one binary chunk list: the views and accessors of
  * buffer `buffer`, numbered from `firstView` and `firstAccessor`. Every value is four bytes, so
- * each view starts aligned. An `instanced` accessor — a node's per-instance translations,
- * rotations or scales (`EXT_mesh_gpu_instancing`) — names no vertex target nor bounds.
+ * each view starts aligned. A `vertex` accessor of one component is indices, of more an
+ * attribute with its bounds; an `instance` accessor — a node's per-instance translations,
+ * rotations or scales (`EXT_mesh_gpu_instancing`) — names no vertex target nor bounds; a `key`
+ * accessor — an animation's times or values — is floats with their bounds and no vertex target.
  */
 export function bufferPacker(buffer: number, firstView = 0, firstAccessor = 0) {
   const views: BufferView[] = [],
     accessors: Accessor[] = [],
     chunks: Buffer[] = []
   let byteLength = 0
-  const accessor = (values: ArrayLike<number>, size: number, instanced = false): number => {
-    const indices = size === 1,
+  const accessor = (
+    values: ArrayLike<number>,
+    size: number,
+    kind: 'vertex' | 'instance' | 'key' = 'vertex',
+  ): number => {
+    const indices = kind === 'vertex' && size === 1,
       data = indices ? Uint32Array.from(values) : Float32Array.from(values)
     views.push({
       buffer,
       byteOffset: byteLength,
       byteLength: data.byteLength,
-      ...(instanced ? {} : { target: indices ? 34963 : 34962 }),
+      ...(kind === 'vertex' ? { target: indices ? 34963 : 34962 } : {}),
     })
     chunks.push(Buffer.from(data.buffer))
     byteLength += data.byteLength
     accessors.push({
       bufferView: firstView + views.length - 1,
       componentType: indices ? 5125 : 5126,
-      type: indices ? 'SCALAR' : `VEC${size}`,
+      type: size === 1 ? 'SCALAR' : `VEC${size}`,
       count: values.length / size,
-      ...(indices || instanced ? {} : bounds(values, size)),
+      ...(indices || kind === 'instance' ? {} : bounds(values, size)),
     })
     return firstAccessor + accessors.length - 1
   }

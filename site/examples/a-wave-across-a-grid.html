@@ -63,7 +63,7 @@
           palette.forEach((matter, band) => matter.color.copy(from).lerp(to, band / 11));
         }
         world.invalidate();
-      }, world);
+      });
 
       // Each cube's distance to the last stone dropped, measured again only when a stone falls.
       const distances = new Float32Array(cubes.length);

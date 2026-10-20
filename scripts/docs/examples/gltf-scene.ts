@@ -1,12 +1,26 @@
 import { mkdir, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { bufferPacker } from './gltf.ts'
-import type { GltfDocument, GltfMaterial, GltfNode, Primitive } from './gltf-types.ts'
+import type {
+  GltfAnimation,
+  GltfDocument,
+  GltfMaterial,
+  GltfNode,
+  Primitive,
+} from './gltf-types.ts'
 import { snapped, type Mesh } from './mesh.ts'
 import { snap } from './random.ts'
 import { axisAngleQuaternion } from '#engine/packages/math/src/quaternion/quaternion.ts'
 
 type Colour = readonly [number, number, number]
+
+/** One animated property of a node: its keys' `times` and flat `values` (`SceneGltf.animation`). */
+export interface Channel {
+  node: number
+  path: 'translation' | 'rotation' | 'scale' | 'weights'
+  times: readonly number[]
+  values: readonly number[]
+}
 
 /**
  * A glTF scene written from nothing, for the scenes modelled in code: materials, meshes and
@@ -31,7 +45,10 @@ export class SceneGltf {
     }
   }
 
-  /** A metal–roughness material; `texture` and `normalTexture` are image paths beside the file. */
+  /** A metal–roughness material; `texture` and `normalTexture` are image paths beside the file.
+   *  `emissive` glows by itself; `transmission` lets that share of the background through
+   *  (`KHR_materials_transmission`), a glass; `cutout` keeps only the texels whose alpha reaches
+   *  it (`alphaMode: MASK`), seen from both sides: a leaf, a mesh fence, a perforated sheet. */
   material(
     name: string,
     colour: Colour,
@@ -40,7 +57,18 @@ export class SceneGltf {
       metallic = 0,
       texture,
       normalTexture,
-    }: { roughness?: number; metallic?: number; texture?: string; normalTexture?: string } = {},
+      emissive,
+      transmission,
+      cutout,
+    }: {
+      roughness?: number
+      metallic?: number
+      texture?: string
+      normalTexture?: string
+      emissive?: Colour
+      transmission?: number
+      cutout?: number
+    } = {},
   ) {
     const material: GltfMaterial = {
       name,
@@ -51,6 +79,13 @@ export class SceneGltf {
         ...(texture ? { baseColorTexture: { index: this.texture(texture) } } : {}),
       },
       ...(normalTexture ? { normalTexture: { index: this.texture(normalTexture), scale: 1 } } : {}),
+      ...(emissive ? { emissiveFactor: emissive } : {}),
+      ...(cutout ? { alphaMode: 'MASK', alphaCutoff: cutout, doubleSided: true } : {}),
+    }
+    if (transmission) {
+      const used = (this.document.extensionsUsed ??= [])
+      if (!used.includes('KHR_materials_transmission')) used.push('KHR_materials_transmission')
+      material.extensions = { KHR_materials_transmission: { transmissionFactor: transmission } }
     }
     return this.document.materials.push(material) - 1
   }
@@ -79,6 +114,44 @@ export class SceneGltf {
     return this.document.meshes.push({ name, primitives }) - 1
   }
 
+  /** A mesh of one primitive that bends: `mesh` drawn with `material`, displaced by each of
+   *  `targets` (flat position offsets, one list a target) as far as the node's weights say. */
+  morph(name: string, mesh: Mesh, material: number, targets: readonly (readonly number[])[]) {
+    const primitive = this.primitive(mesh, material)
+    primitive.targets = targets.map((offsets) => ({ POSITION: this.pack.accessor(offsets, 3) }))
+    return (
+      this.document.meshes.push({ name, primitives: [primitive], weights: targets.map(() => 0) }) -
+      1
+    )
+  }
+
+  /**
+   * An animation of `channels`, each keying one node's translation, rotation, scale or morph
+   * weights at `times` (seconds), `values` flat, one key after the other, linear between keys.
+   * Channels keyed at the same times share one accessor of them.
+   */
+  animation(name: string, channels: readonly Channel[]) {
+    const times = new Map<string, number>(),
+      samplers: GltfAnimation['samplers'] = []
+    const input = (keys: readonly number[]) => {
+      const known = times.get(keys.join())
+      if (known !== undefined) return known
+      const index = this.pack.accessor(keys, 1, 'key')
+      times.set(keys.join(), index)
+      return index
+    }
+    const keyed = channels.map(({ node, path, times: keys, values }) => {
+      const size = path === 'rotation' ? 4 : path === 'weights' ? 1 : 3
+      samplers.push({
+        input: input(keys),
+        output: this.pack.accessor(values, size, 'key'),
+        interpolation: 'LINEAR',
+      })
+      return { sampler: samplers.length - 1, target: { node, path } }
+    })
+    ;(this.document.animations ??= []).push({ name, channels: keyed, samplers })
+  }
+
   /** A node; a root one is listed in the scene, a child only in its parent's `children`. */
   node(node: GltfNode, root = false) {
     const index = this.document.nodes.push(node) - 1
@@ -102,9 +175,9 @@ export class SceneGltf {
     const used = (this.document.extensionsUsed ??= [])
     if (!used.includes('EXT_mesh_gpu_instancing')) used.push('EXT_mesh_gpu_instancing')
     const attributes = {
-      TRANSLATION: this.pack.accessor(translations, 3, true),
-      ROTATION: this.pack.accessor(rotations, 4, true),
-      SCALE: this.pack.accessor(scales, 3, true),
+      TRANSLATION: this.pack.accessor(translations, 3, 'instance'),
+      ROTATION: this.pack.accessor(rotations, 4, 'instance'),
+      SCALE: this.pack.accessor(scales, 3, 'instance'),
     }
     return this.node({ name, mesh, extensions: { EXT_mesh_gpu_instancing: { attributes } } }, root)
   }

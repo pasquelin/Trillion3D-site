@@ -21,14 +21,13 @@
     <canvas id="view"></canvas>
     <script type="module">
       import { createWorld, geometry, material, object, light, effect, buffer, math } from '../runtime/engine.js';
-      import { controls, readout, seeded } from '../runtime/kit.js';
+      import { controls, latestOnly, readout, seeded } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
       world.scene.background = math.color('#0d1220');
 
       // A knot cut into facets: three corners of its own per triangle (`toNonIndexed`), so each
-      // triangle carries its own normal and its own colour. Triangle `n` is corners 3n to 3n + 2,
-      // the rank a ray's hit names as `face`.
+      // triangle carries its own normal and its own colour. Triangle `n` is corners 3n to 3n + 2.
       const shape = geometry.torusKnot(1.25, 0.42, 120, 12).toNonIndexed();
       shape.computeVertexNormals();
       const count = shape.attributes.position.count / 3;
@@ -50,6 +49,33 @@
         for (let k = 0; k < 3; k++) colours.setXYZ(3 * n + k, shade.r, shade.g, shade.b);
       };
       for (let n = 0; n < count; n++) write(n, 0);
+      // The facet under a hit: the ray names the drawn triangle by its cluster (`face`), so the
+      // page finds its own triangle `n` from the point met, in the knot's frame — the one whose
+      // plane passes nearest that point with the point inside its three edges.
+      const corners = shape.attributes.position.array;
+      const local = math.vector3();
+      const facetAt = (point) => {
+        knot.worldToLocal(local.copy(point));
+        let best = -1, nearest = Infinity;
+        for (let n = 0; n < count; n++) {
+          const o = 9 * n, a = [corners[o], corners[o + 1], corners[o + 2]];
+          const e1 = [corners[o + 3] - a[0], corners[o + 4] - a[1], corners[o + 5] - a[2]];
+          const e2 = [corners[o + 6] - a[0], corners[o + 7] - a[1], corners[o + 8] - a[2]];
+          const q = [local.x - a[0], local.y - a[1], local.z - a[2]];
+          const nx = e1[1] * e2[2] - e1[2] * e2[1], ny = e1[2] * e2[0] - e1[0] * e2[2], nz = e1[0] * e2[1] - e1[1] * e2[0];
+          const area = Math.hypot(nx, ny, nz);
+          const off = Math.abs(q[0] * nx + q[1] * ny + q[2] * nz) / area;
+          if (!(off < nearest)) continue;
+          // Barycentric coordinates of the point projected on the facet's plane.
+          const d11 = e1[0] * e1[0] + e1[1] * e1[1] + e1[2] * e1[2], d12 = e1[0] * e2[0] + e1[1] * e2[1] + e1[2] * e2[2];
+          const d22 = e2[0] * e2[0] + e2[1] * e2[1] + e2[2] * e2[2];
+          const q1 = q[0] * e1[0] + q[1] * e1[1] + q[2] * e1[2], q2 = q[0] * e2[0] + q[1] * e2[1] + q[2] * e2[2];
+          const det = d11 * d22 - d12 * d12, u = (d22 * q1 - d12 * q2) / det, v = (d11 * q2 - d12 * q1) / det;
+          const slack = -1e-3;
+          if (u >= slack && v >= slack && u + v <= 1 - slack) (best = n), (nearest = off);
+        }
+        return best < 0 ? null : best;
+      };
 
       const knot = object.mesh(shape, material.meshStandard({ vertexColors: true, roughness: 0.32, metalness: 0.15 }));
       world.scene.add(knot);
@@ -67,7 +93,7 @@
       world.controls.minDistance = 3;
       world.controls.maxDistance = 12;
 
-      const ui = controls({ trail: [0, 3, 0.8, 0.1], spin: true }, () => world.invalidate(), world);
+      const ui = controls({ trail: [0, 3, 0.8, 0.1], spin: true }, () => world.invalidate());
       const under = readout('triangle');
 
       // The heat of every facet the pointer crossed: 1 under it, then cooling to 0 over `trail`
@@ -82,24 +108,36 @@
         pointer.inside = false;
         world.invalidate();
       });
+      // The ray's answer lands a frame later: the facet it names is lit on the next frame.
+      let hit = null;
+      const aim = latestOnly(
+        (at) => world.raycast(at, { objects: [knot] }),
+        (answer) => {
+          const next = pointer.inside && answer ? facetAt(answer.point) : null;
+          if (next === hit) return;
+          hit = next;
+          world.invalidate();
+        },
+      );
 
       // Each frame: turn the knot, cast one ray at the pointer — the knot moves under a still
       // pointer too —, light the triangle it hits and cool the others.
       world.onFrame(({ delta }) => {
         const step = Math.min(delta, 0.05);
         if (ui.spin) knot.rotation.set(0.3, knot.rotation.y + step * 0.25, 0);
-        const hit = pointer.inside ? world.raycast(pointer, { objects: [knot] }) : null;
-        under(hit ? `${hit.face + 1} / ${count}` : '—');
+        if (pointer.inside) aim({ x: pointer.x, y: pointer.y });
+        else hit = null;
+        under(hit !== null ? `${hit + 1} / ${count}` : '—');
         // The colours are sent again only when one changed: a still pointer over a still knot
         // writes nothing, and the world stops drawing until something moves.
         let changed = false;
-        if (hit && heat.get(hit.face) !== 1) {
-          heat.set(hit.face, 1);
-          write(hit.face, 1);
+        if (hit !== null && heat.get(hit) !== 1) {
+          heat.set(hit, 1);
+          write(hit, 1);
           changed = true;
         }
         for (const [n, h] of heat) {
-          if (n === hit?.face) continue;
+          if (n === hit) continue;
           const cooler = ui.trail ? h - step / ui.trail : 0;
           if (cooler > 0) heat.set(n, cooler);
           else heat.delete(n);

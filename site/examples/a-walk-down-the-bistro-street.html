@@ -30,7 +30,7 @@
     <p data-words="credit"></p>
     <script type="module">
       import { createWorld, light, math } from '../runtime/engine.js';
-      import { controls } from '../runtime/kit.js';
+      import { controls, viewModes } from '../runtime/kit.js';
 
       // The Amazon Lumberyard Bistro, a Paris street of three million triangles in metres, walked
       // in first person: click, look with the mouse, walk with W/A/S/D. The compiler cut it into
@@ -49,6 +49,7 @@
       world.camera.far = 300;
       const HOME = { position: [0, 1.9, 20], target: [0, 2.2, 0] };
       const home = () => world.camera.set(HOME);
+      window.__world = world; // PROBE ONLY, never committed
       home();
 
       // The geometry pool in MiB, from the engine's default of 512: below it the street's ground
@@ -58,7 +59,6 @@
         {
           walkSpeed: [0.5, 12, 3, 0.5],
           memory: [128, 2048, 512, 64],
-          view: ['beauty', 'lod', 'clusters'],
           home,
         },
         (values, key) => {
@@ -66,11 +66,10 @@
             world.controls.movementSpeed = values.walkSpeed;
           if (key === undefined || key === 'memory')
             world.budget.geometryPool = values.memory * MiB;
-          if (key === undefined || key === 'view') world.diagnostic.mode = values.view;
           world.invalidate();
         },
-        world,
       );
+      viewModes(world);
     </script>
   </body>
 </html>

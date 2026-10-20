@@ -8,6 +8,20 @@
 import { spawnSync, type StdioOptions } from 'node:child_process'
 import { existsSync } from 'node:fs'
 import { currentCompilerExecutable } from '#engine/packages/sdk-node/src/compiler/executable.mts'
+import {
+  DEFAULT_RAM_BUDGET_MB,
+  HLOD_OPTION,
+} from '#engine/packages/sdk-core/src/contracts/compilerAbi.ts'
+import {
+  type HlodOptions,
+  resolveHlod,
+} from '#engine/packages/sdk-core/src/contracts/hlodOptions.ts'
+import {
+  materialFlags,
+  type MaterialsOption,
+  type ResponsiveOption,
+  type TemporalAntialiasingOption,
+} from '#engine/packages/sdk-core/src/contracts/materialOptions.ts'
 
 /** The triangle budget of a `full` cache, the one every published and measured scene uses. */
 export const TRIANGLE_BUDGET = '150000'
@@ -32,8 +46,20 @@ export interface FullCompile {
    *  names the machine it was built on cannot be published. */
   resourceBase?: string
   threads?: number
+  /** The job's RAM budget, in MB: what its HLOD admits its actors on, beside everything the
+   *  process holds. @defaultValue {@link DEFAULT_RAM_BUDGET_MB} */
   ramMb?: number
   simplification?: 'none' | 'qem-endpoints'
+  /** The HLOD, either form (`resolveHlod`); none when left out. */
+  hlod?: HlodOptions
+  /** The scene's temporal anti-aliasing level (`resolveTemporalAntialiasing`); none when left
+   *  out. */
+  temporalAntialiasing?: TemporalAntialiasingOption
+  /** The objects whose materials keep a responsive temporal history (`resolveResponsive`); none
+   *  when left out. */
+  responsive?: ResponsiveOption
+  /** Settings by material name (`resolveMaterials`); none when left out. */
+  materials?: MaterialsOption
   stdio?: StdioOptions
   /** The compiler to run: the engine's by default (`nativeCompiler`). */
   executable?: string
@@ -46,14 +72,20 @@ export function compileFullCache({
   cache = 'cache',
   resourceBase = '../../../../source/',
   threads = 2,
-  ramMb = 256,
+  ramMb = DEFAULT_RAM_BUDGET_MB,
   simplification = 'none',
+  hlod,
+  temporalAntialiasing,
+  responsive,
+  materials,
   stdio = 'inherit',
   executable = nativeCompiler(),
 }: FullCompile) {
   const result = spawnSync(
     executable,
     [
+      ...(hlod === undefined ? [] : [`${HLOD_OPTION}${JSON.stringify(resolveHlod(hlod))}`]),
+      ...materialFlags({ temporalAntialiasing, responsive, materials }),
       source,
       cache,
       'full',
