@@ -40,79 +40,709 @@
     },
     "stats": {
       "FPS": "초당 프레임",
-      "triangles selected": "선택된 삼각형",
-      "triangles drawn": "그려진 삼각형",
-      "triangles (scene)": "삼각형 (장면)",
-      "draw calls": "그리기 호출",
-      "pages": "페이지",
-      "geometry pool": "지오메트리 저장소",
-      "lights": "조명",
-      "GPU memory": "GPU 메모리",
-      "screen images": "화면 이미지",
-      "shadow memory": "그림자 메모리",
-      "geometry memory": "지오메트리 메모리",
-      "texture memory": "텍스처 메모리",
-      "live textures": "활성 텍스처",
-      "transmission backdrop": "투과 배경",
-      "GPU frame": "GPU 프레임",
-      "GPU frame (last)": "GPU 프레임 (마지막)",
-      "CPU frame": "CPU 프레임",
-      "page hooks": "페이지 코드",
-      "engine CPU": "엔진 CPU",
-      "Statistics": "통계",
-      "hint": "클릭: 간략히 · 끌기: 이동 · 키 `",
-      "fps": "FPS",
-      "budget": "예산",
-      "held": "정지",
-      "last": "마지막",
-      "others": "기타",
-      "Shadows": "그림자",
-      "Scene and memory": "장면과 메모리",
-      "cut and culling": "자르기와 컬링",
-      "page preparation": "페이지 준비",
-      "command encoding": "명령 인코딩",
-      "physics step": "물리 단계",
-      "Cadence": "케이던스",
-      "{n}× refresh": "{n}× 새로 고침",
-      "GPU idle": "GPU 유휴",
-      "All worlds": "모든 월드",
-      "main view": "메인 뷰",
-      "world": "월드",
-      "view": "뷰",
-      "GPU busy": "GPU 사용률",
-      "CPU busy": "CPU 사용률"
+      "GPU frame": "GPU 프레임"
     },
-    "shadows": {
-      "lights": "조명",
-      "maps": "맵",
-      "pagesRequested": "요청된 페이지",
-      "pagesAllocated": "할당된 페이지",
-      "pagesCached": "캐시된 페이지",
-      "pagesRendered": "그린 페이지",
-      "freePages": "빈 페이지",
-      "lodBias": "LOD 바이어스",
-      "projectionPasses": "투영 패스",
-      "invalidation": "무효화",
-      "marking": "마킹",
-      "pageManagement": "페이지 관리",
-      "render": "렌더",
-      "projection": "투영",
-      "transmission": "투과"
-    },
-    "passes": {
-      "vsm projection": "VSM 투영",
-      "vsm marking": "VSM 마킹",
-      "vsm render": "VSM 렌더",
-      "material surfaces": "재질 표면",
-      "temporal antialiasing": "시간적 안티에일리어싱",
-      "HDR composition + present": "HDR 합성 + 표시",
-      "deferred lighting": "지연 조명",
-      "reflection source": "반사 소스",
-      "HiZ pyramid": "HiZ 피라미드",
-      "light tiles": "조명 타일",
-      "texture mips": "텍스처 밉",
-      "reflection radiance mips": "반사 휘도 mip",
-      "reflection depth bounds mips": "반사 깊이 경계 mip"
+    "statsPanel": {
+      "tab.page": {
+        "label": "모든 월드",
+        "hint": "페이지의 각 월드와 뷰가 GPU와 메인 스레드를 매초 중 얼마나 점유하는지. 월드나 뷰가 여럿인 페이지에서만 표시됩니다."
+      },
+      "tab.gpu": {
+        "label": "GPU",
+        "hint": "그래픽 프로세서가 이미지 시간을 어디에 쓰는지 단계별로 보여 줍니다."
+      },
+      "tab.cpu": {
+        "label": "CPU",
+        "hint": "엔진이 이미지 한 장의 CPU 시간을 어디에 쓰는지 지난 1초의 중앙값으로 보여 줍니다. 헤더의 CPU는 메인 스레드의 전체 프레임입니다. 프레임당 작업이 늘면 올라갑니다."
+      },
+      "tab.shadows": {
+        "label": "그림자",
+        "hint": "그림자 패스와 페이지 카운터. 그 시간은 GPU 시간에 포함됩니다."
+      },
+      "tab.memory": {
+        "label": "메모리",
+        "hint": "엔진이 보유한 GPU 메모리를 종류별로 보여 줍니다."
+      },
+      "tab.scene": {
+        "label": "씬",
+        "hint": "컷이 선택하고 그린 것과 지오메트리 풀입니다."
+      },
+      "page.gpuBusy": {
+        "label": "GPU 점유",
+        "hint": "페이지의 월드와 뷰가 매초 중 GPU를 점유하는 비율. 100 %를 넘으면 GPU 시간이 겹치며 프레임은 GPU가 좌우합니다."
+      },
+      "page.cpuBusy": {
+        "label": "CPU 점유",
+        "hint": "페이지의 월드가 매초 중 메인 스레드를 점유하는 비율. 메인 스레드를 공유하므로 합산됩니다."
+      },
+      "page.view": {
+        "label": "뷰 {n}",
+        "hint": "메인 뷰 옆에 있는 뷰의 마지막 이미지 GPU 시간과 월드 프레임에서 차지하는 비율."
+      },
+      "profile.cpuFrame": {
+        "label": "CPU 프레임",
+        "hint": "한 프레임의 animation-frame 콜백이 쓴 메인 스레드 시간. 최근 1초의 중앙값 / 95번째 백분위수. ?profile일 때만."
+      },
+      "profile.pageHooks": {
+        "label": "페이지 훅",
+        "hint": "한 프레임에서 페이지 자체 프레임 훅이 쓴 시간. 최근 1초의 중앙값 / 95번째 백분위수. ?profile일 때만."
+      },
+      "profile.engineCpu": {
+        "label": "엔진 CPU",
+        "hint": "이미지 전체에 대한 엔진의 CPU 시간. 최근 1초의 중앙값 / 95번째 백분위수. ?profile일 때만."
+      },
+      "profile.workerStep": {
+        "label": "물리 워커 스텝",
+        "hint": "한 틱에서 물리 워커의 가장 느린 고정 스텝. 최근 1초의 중앙값 / 95번째 백분위수. ?profile일 때만."
+      },
+      "shadows.included": {
+        "label": "GPU에 포함",
+        "hint": "이 시간들은 이미 GPU 합계 안에 있습니다. 합계에 더하지 마세요."
+      },
+      "summary.frame": {
+        "label": "프레임",
+        "hint": "표시된 두 이미지 사이의 시간. 어느 프로세서든 한 번의 갱신보다 오래 걸리면 올라갑니다."
+      },
+      "summary.gpu": {
+        "label": "GPU",
+        "hint": "지난 1초 동안 이미지 한 장의 평균 GPU 시간. 그리는 픽셀, 조명, 지오메트리가 늘면 올라갑니다."
+      },
+      "summary.cpu": {
+        "label": "CPU",
+        "hint": "지난 1초 동안 프레임당 메인 스레드 시간의 중앙값. GPU로 보내는 작업이 늘면 올라갑니다."
+      },
+      "summary.wait": {
+        "label": "대기",
+        "hint": "느린 프로세서가 끝난 뒤 프레임이 디스플레이를 기다리는 시간입니다."
+      },
+      "summary.bottleneck": {
+        "label": "제한 요인",
+        "hint": "프레임을 붙잡는 요인에 대한 엔진의 판정. 창이 처음 도달한 한계입니다."
+      },
+      "summary.screen": {
+        "label": "화면 {hz} Hz",
+        "hint": "각 이미지가 화면에 머무는 시간을 화면 갱신 횟수로 센 값: 1은 매 갱신, 더 크면 이미지가 늦은 것입니다."
+      },
+      "summary.screenValue": {
+        "label": "이미지 1장 / 갱신 {n}회",
+        "hint": "최근 1초의 대표적인 이미지가 화면에 머문 갱신 횟수."
+      },
+      "summary.screenShare": {
+        "label": "이미지의 {share} %가 갱신 {n}회",
+        "hint": "화면 분포의 한 구간: 최근 1초 이미지에서 차지하는 비율."
+      },
+      "summary.screenShareOrMore": {
+        "label": "{share} %가 {n}회 이상",
+        "hint": "화면 분포의 마지막 구간: 그 횟수 이상의 갱신에 해당하는 이미지의 비율."
+      },
+      "summary.gpuIdle": {
+        "label": "GPU 유휴",
+        "hint": "마지막으로 측정한 이미지 전에 GPU가 놀았던 시간. CPU가 늦게 공급하면 늘어납니다."
+      },
+      "summary.mainView": {
+        "label": "메인 뷰",
+        "hint": "페이지가 처음 만든 월드, 페이지의 메인 뷰."
+      },
+      "summary.world": {
+        "label": "월드",
+        "hint": "메인 뷰가 아닌 페이지의 월드."
+      },
+      "summary.budget": {
+        "label": "예산",
+        "hint": "한 번의 갱신이 프레임에 허용하는 시간. 그래프의 점선입니다."
+      },
+      "bottleneck.healthy": {
+        "label": "디스플레이",
+        "hint": "프레임이 한 번의 갱신 안에 들어옵니다. 프레임 속도는 디스플레이의 것입니다."
+      },
+      "bottleneck.memory_pressure": {
+        "label": "끊김",
+        "hint": "프레임이 끊김 한도보다 오래 걸렸습니다. 메모리를 비우거나 스트리밍 부하를 낮추세요."
+      },
+      "bottleneck.gpu_bound": {
+        "label": "GPU",
+        "hint": "GPU가 한 번의 갱신보다 오래 걸려 프레임을 붙잡고 있습니다. 해상도나 조명을 낮추세요."
+      },
+      "bottleneck.cpu_bound": {
+        "label": "CPU",
+        "hint": "메인 스레드가 한 번의 갱신보다 오래 걸려 프레임을 붙잡고 있습니다. 프레임당 작업을 줄이세요."
+      },
+      "bottleneck.gpu_submit_bound": {
+        "label": "GPU 제출",
+        "hint": "GPU로 명령을 보내는 데 갱신의 절반 넘게 걸립니다. 드로 콜과 패스를 줄이세요."
+      },
+      "bottleneck.streaming_bound": {
+        "label": "스트리밍",
+        "hint": "가져오기 워커가 처리할 수 있는 것보다 많은 페이지가 진행 중입니다. 네트워크나 디스크가 씬을 붙잡고 있습니다."
+      },
+      "panel.label": {
+        "label": "통계",
+        "hint": "프로파일러 오버레이입니다."
+      },
+      "panel.hint": {
+        "label": "클릭: 간략 · 드래그: 이동 · 키 ` / ²",
+        "hint": "헤더 줄의 동작입니다."
+      },
+      "unit.fps": {
+        "label": "fps",
+        "hint": "초당 그린 프레임 수입니다."
+      },
+      "summary.cpuShort": {
+        "label": "CPU",
+        "hint": "프레임 하나의 메인 스레드 시간입니다."
+      },
+      "summary.gpuShort": {
+        "label": "GPU",
+        "hint": "이미지 하나의 그래픽 프로세서 시간입니다."
+      },
+      "row.max": {
+        "label": "최대",
+        "hint": "지난 1초의 최댓값입니다."
+      },
+      "summary.held": {
+        "label": "유지",
+        "hint": "지난 1초 동안 새 프레임이 없습니다. 움직임이 없어 이미지를 다시 표시합니다."
+      },
+      "summary.last": {
+        "label": "최근",
+        "hint": "표시된 GPU 시간은 이전 이미지의 것입니다. 장치가 아직 더 새로운 것을 측정하지 못했습니다."
+      },
+      "gpu.physics": {
+        "label": "물리",
+        "hint": "GPU의 강체·연체 스텝. 시뮬레이션하는 물체가 늘면 올라갑니다."
+      },
+      "gpu.animations": {
+        "label": "애니메이션",
+        "hint": "애니메이션 오브젝트의 스키닝과 변형. 애니메이션 정점이 늘면 올라갑니다."
+      },
+      "gpu.lights": {
+        "label": "조명",
+        "hint": "프레임을 위한 씬 조명 준비. 조명 수가 늘면 올라갑니다."
+      },
+      "gpu.cutAdoption": {
+        "label": "컷 채택",
+        "hint": "선택이 고른 컷을 받아들입니다. 이미지 사이에 컷이 크게 바뀌면 올라갑니다."
+      },
+      "gpu.selection": {
+        "label": "선택",
+        "hint": "뷰와 디테일로 그릴 클러스터를 고릅니다. 검사하는 계층 노드가 늘면 올라갑니다."
+      },
+      "gpu.transparents": {
+        "label": "투명",
+        "hint": "비치는 표면 그리기. 투명 삼각형과 레이어가 늘면 올라갑니다."
+      },
+      "gpu.residency": {
+        "label": "상주",
+        "hint": "메모리에 있어야 할 지오메트리 페이지 결정. 뷰가 바뀌는 동안 올라갑니다."
+      },
+      "gpu.hostPages": {
+        "label": "호스트 페이지",
+        "hint": "CPU가 스트리밍한 페이지 데이터를 GPU로 복사합니다. 새 페이지가 도착하는 동안 올라갑니다."
+      },
+      "gpu.uploads": {
+        "label": "업로드",
+        "hint": "GPU 버퍼로 데이터 전송. 동적 지오메트리와 스트리밍으로 올라갑니다."
+      },
+      "gpu.textures": {
+        "label": "텍스처",
+        "hint": "텍스처 레벨의 스트리밍과 디코딩. 새 텍스처가 로드되는 동안 올라갑니다."
+      },
+      "gpu.partition": {
+        "label": "파티션",
+        "hint": "그린 클러스터를 드로 배치로 정렬합니다. 그린 클러스터가 늘면 올라갑니다."
+      },
+      "gpu.encode": {
+        "label": "인코드",
+        "hint": "래스터 단계가 읽는 명령 구성. 드로 배치가 늘면 올라갑니다."
+      },
+      "gpu.submit": {
+        "label": "제출",
+        "hint": "큐에 작업을 넘기는 패스. 제출 횟수가 늘면 올라갑니다."
+      },
+      "gpu.hiZ": {
+        "label": "Hi-Z",
+        "hint": "오클루전 검사가 읽는 깊이 피라미드 구성. 해상도가 높아지면 올라갑니다."
+      },
+      "gpu.geometry": {
+        "label": "지오메트리",
+        "hint": "가시성 버퍼 래스터화와 표면 기록. 그린 삼각형과 덮은 픽셀이 늘면 올라갑니다."
+      },
+      "gpu.coplanar": {
+        "label": "동일 평면",
+        "hint": "같은 평면의 표면 해결. 겹치는 데칼이 늘면 올라갑니다."
+      },
+      "gpu.shadows": {
+        "label": "그림자",
+        "hint": "그림자 페이지 렌더링과 투영. 그림자를 드리우는 조명과 다시 그린 페이지가 늘면 올라갑니다."
+      },
+      "gpu.lightLists": {
+        "label": "조명 목록",
+        "hint": "각 화면 타일에 닿는 조명 수집. 조명 수와 도달 범위가 늘면 올라갑니다."
+      },
+      "gpu.bounce": {
+        "label": "바운스",
+        "hint": "표면 사이에서 튕기는 빛. 추적하는 광선이 늘면 올라갑니다."
+      },
+      "gpu.reflections": {
+        "label": "반사",
+        "hint": "씬의 반사 이미지. 반사 픽셀과 추적 광선이 늘면 올라갑니다."
+      },
+      "gpu.lighting": {
+        "label": "라이팅",
+        "hint": "표면과 조명으로 각 픽셀을 셰이딩. 픽셀과 조명이 늘면 올라갑니다."
+      },
+      "gpu.antialiasing": {
+        "label": "안티앨리어싱",
+        "hint": "시간에 걸쳐 가장자리를 부드럽게 합니다. 해상도가 높아지면 올라갑니다."
+      },
+      "gpu.effects": {
+        "label": "이펙트",
+        "hint": "블룸, 노출, 안개 같은 후처리. 켜진 효과와 해상도에 따라 올라갑니다."
+      },
+      "gpu.present": {
+        "label": "출력",
+        "hint": "이미지를 리샘플링해 디스플레이로 넘깁니다. 디스플레이 해상도가 높아지면 올라갑니다."
+      },
+      "gpu.unclassified": {
+        "label": "미분류",
+        "hint": "어느 단계도 이름 붙이지 않은 측정 패스. 단계 합계가 맞도록 나열합니다."
+      },
+      "gpu.untimed": {
+        "label": "측정 패스 밖",
+        "hint": "어떤 측정 패스에도 속하지 않는 이미지의 GPU 시간: 복사, 패스 사이 틈, 타임스탬프 해석."
+      },
+      "cpu.physics": {
+        "label": "물리",
+        "hint": "메인 스레드의 시뮬레이션 스텝. 시뮬레이션하는 물체가 늘면 올라갑니다."
+      },
+      "cpu.animations": {
+        "label": "애니메이션",
+        "hint": "메인 스레드에서 애니메이션 오브젝트 준비. 오브젝트가 늘면 올라갑니다."
+      },
+      "cpu.textures": {
+        "label": "텍스처",
+        "hint": "메인 스레드에서 텍스처 스트리머 공급. 새 텍스처가 로드되는 동안 올라갑니다."
+      },
+      "cpu.transparents": {
+        "label": "투명",
+        "hint": "비치는 표면의 준비와 그리기. 투명 메시와 레이어가 늘면 올라갑니다."
+      },
+      "cpu.cutAdoption": {
+        "label": "컷 채택",
+        "hint": "선택이 고른 컷을 받아들입니다. 이미지 사이에 컷이 크게 바뀌면 올라갑니다."
+      },
+      "cpu.residency": {
+        "label": "상주",
+        "hint": "메모리에 있어야 할 지오메트리 페이지의 결정과 큐 등록. 뷰가 바뀌는 동안 올라갑니다."
+      },
+      "cpu.uploads": {
+        "label": "업로드",
+        "hint": "GPU 버퍼로 데이터 전송. 동적 지오메트리와 스트리밍으로 올라갑니다."
+      },
+      "cpu.selection": {
+        "label": "선택",
+        "hint": "클러스터 선택 디스패치. 검사하는 계층 노드가 늘면 올라갑니다."
+      },
+      "cpu.encode": {
+        "label": "인코드",
+        "hint": "GPU 명령 기록. 패스와 드로 배치가 늘면 올라갑니다."
+      },
+      "cpu.submit": {
+        "label": "제출",
+        "hint": "기록한 명령을 큐에 넘깁니다. 제출 횟수가 늘면 올라갑니다."
+      },
+      "cpu.hostPages": {
+        "label": "호스트 페이지",
+        "hint": "CPU가 스트리밍한 지오메트리 페이지 통합. 새 페이지가 도착하는 동안 올라갑니다."
+      },
+      "cpu.rest": {
+        "label": "프레임의 나머지",
+        "hint": "엔진의 프레임 전체 CPU 시간 중 위의 어떤 단계에도 포함되지 않는 부분(프레임 밖의 작업으로 단계 합이 초과하면 0). 페이지 스크립트, 입력, 레이아웃은 포함되지 않습니다."
+      },
+      "shadows.invalidation": {
+        "label": "무효화",
+        "hint": "무언가 움직인 뒤 오래된 그림자 페이지를 표시합니다. 움직이는 그림자 투영체가 늘면 올라갑니다."
+      },
+      "shadows.marking": {
+        "label": "마킹",
+        "hint": "뷰에 필요한 그림자 페이지 찾기. 그림자 조명이 비추는 픽셀이 늘면 올라갑니다."
+      },
+      "shadows.pageManagement": {
+        "label": "페이지 관리",
+        "hint": "그림자 페이지 할당과 재활용. 요청된 페이지가 늘면 올라갑니다."
+      },
+      "shadows.render": {
+        "label": "렌더",
+        "hint": "바뀐 그림자 페이지 그리기. 다시 그린 페이지와 그 안의 투영체가 늘면 올라갑니다."
+      },
+      "shadows.projection": {
+        "label": "투영",
+        "hint": "그림자 맵을 이미지에 투영합니다. 그림자 조명과 해상도가 늘면 올라갑니다."
+      },
+      "shadows.transmission": {
+        "label": "투과",
+        "hint": "반투명 그림자 투영체의 아틀라스. 반투명 투영체가 늘면 올라갑니다."
+      },
+      "shadows.lights": {
+        "label": "그림자 조명",
+        "hint": "이번 프레임에 가상 섀도 맵을 드리우는 조명. 씬의 수는 활성 조명 전체를 셉니다."
+      },
+      "shadows.maps": {
+        "label": "맵",
+        "hint": "이 프레임의 가상 그림자 맵. 그림자를 드리우는 조명이 늘면 올라갑니다."
+      },
+      "shadows.pagesRequested": {
+        "label": "요청된 그림자 페이지",
+        "hint": "프레임이 요청한 그림자 페이지. 화면의 그림자 면적이 늘면 올라갑니다."
+      },
+      "shadows.pagesAllocated": {
+        "label": "할당된 그림자 페이지",
+        "hint": "이 프레임에 풀에서 새로 가져온 그림자 페이지. 뷰나 조명이 움직이면 올라갑니다."
+      },
+      "shadows.pagesCached": {
+        "label": "캐시된 그림자 페이지",
+        "hint": "요청되었고 이미 그려져 있던 그림자 페이지. 투영체나 조명이 움직이면 내려갑니다."
+      },
+      "shadows.pagesRendered": {
+        "label": "렌더된 그림자 페이지",
+        "hint": "이 프레임에 지우고 그린 그림자 페이지. 투영체나 조명이 움직이면 올라갑니다."
+      },
+      "shadows.freePages": {
+        "label": "남은 그림자 페이지",
+        "hint": "풀에 남은 물리 그림자 페이지. 요청이 늘면 내려갑니다."
+      },
+      "shadows.lodBias": {
+        "label": "그림자 디테일 바이어스",
+        "hint": "그림자 맵이 요청보다 얼마나 거칠게 그려지는지. 풀이 가득 차면 올라갑니다."
+      },
+      "shadows.projectionPasses": {
+        "label": "투영 패스",
+        "hint": "이 프레임의 투영 패스, 패스당 조명 4개. 그림자 조명이 늘면 올라갑니다."
+      },
+      "shadows.resolutionBias": {
+        "label": "그림자 해상도 바이어스",
+        "hint": "풀 때문에 그림자가 요청보다 거칠어진 레벨 수. 0이 정상입니다."
+      },
+      "memory.screen": {
+        "label": "화면 이미지",
+        "hint": "해상도에 따라 달라지는 타깃. 렌더 크기가 커지면 올라갑니다."
+      },
+      "memory.shadows": {
+        "label": "그림자 풀",
+        "hint": "그림자 페이지 풀. 그림자 품질 설정에 따라 올라갑니다."
+      },
+      "memory.geometry": {
+        "label": "지오메트리",
+        "hint": "GPU에 예약된 지오메트리 페이지 풀(사용 여부와 무관). 사용량은 씬에 있습니다."
+      },
+      "memory.textures": {
+        "label": "텍스처 풀",
+        "hint": "세션 동안 고정된 텍스처 풀. 텍스처 예산으로 정해집니다."
+      },
+      "memory.liveTextures": {
+        "label": "라이브 텍스처",
+        "hint": "풀과 별도로 유지하는 작업용 텍스처. 씬의 라이브 텍스처가 늘면 올라갑니다."
+      },
+      "memory.other": {
+        "label": "기타 리소스",
+        "hint": "위의 어느 종류도 이름 붙이지 않은 GPU 메모리: 버퍼, 히스토리 이미지, 캐시."
+      },
+      "scene.trianglesSelected": {
+        "label": "선택된 삼각형",
+        "hint": "뷰와 디테일 검사 후 컷이 남긴 삼각형. 보이는 씬 디테일이 늘면 올라갑니다."
+      },
+      "scene.trianglesDrawn": {
+        "label": "그려진 삼각형",
+        "hint": "오클루전이 가려진 것을 버린 뒤 그린 삼각형. 보이는 디테일이 늘면 올라갑니다."
+      },
+      "scene.trianglesScene": {
+        "label": "삼각형 (씬)",
+        "hint": "씬에서 보이는 메시의 삼각형. 프레임이 선택된 삼각형을 내보내지 않을 때 페이지가 셉니다."
+      },
+      "scene.drawCalls": {
+        "label": "드로 콜",
+        "hint": "이 프레임에 보낸 그리기 명령. 배치 수가 늘면 올라갑니다."
+      },
+      "scene.geometryPages": {
+        "label": "지오메트리 페이지",
+        "hint": "메모리에 상주하는 지오메트리 페이지. 로드된 디테일이 늘면 올라갑니다."
+      },
+      "scene.poolUsed": {
+        "label": "사용 중인 지오메트리 풀",
+        "hint": "페이지를 담고 있는 지오메트리 풀의 바이트. 페이지가 로드되면 올라갑니다."
+      },
+      "scene.poolCapacity": {
+        "label": "지오메트리 풀 용량",
+        "hint": "지오메트리 풀에 예약된 바이트. 씬과 장치 한계로 정해집니다."
+      },
+      "scene.lights": {
+        "label": "조명",
+        "hint": "프레임을 비춘 씬 조명입니다."
+      },
+      "pass.compose roots": {
+        "label": "루트 계산",
+        "hint": "각 배치 루트의 월드 행렬을 부모로부터 계산합니다. 애니메이션 중이거나 움직이는 배치 수에 따라 늘어납니다."
+      },
+      "pass.compose motion": {
+        "label": "모션 계산",
+        "hint": "모션 벡터를 위해 각 배치가 이전 이미지 이후 어떻게 움직였는지 계산합니다. 움직이는 배치 수에 따라 늘어납니다."
+      },
+      "pass.compose rows": {
+        "label": "행 계산",
+        "hint": "배치 행의 월드 행렬을 계산합니다. 배치 수에 따라 늘어납니다."
+      },
+      "pass.root boxes": {
+        "label": "루트 박스",
+        "hint": "각 배치 루트의 월드 박스와 늘어남을 맞춥니다. 루트 수에 따라 늘어납니다."
+      },
+      "pass.placement tree leaves": {
+        "label": "배치 트리 잎",
+        "hint": "배치 트리 잎의 박스를 맞춥니다. 배치 수에 따라 늘어납니다."
+      },
+      "pass.placement tree refit": {
+        "label": "배치 트리 재맞춤",
+        "hint": "잎이 움직인 뒤 배치 트리의 안쪽 박스를 다시 맞춥니다. 움직이는 배치 수에 따라 늘어납니다."
+      },
+      "pass.DAG selection": {
+        "label": "DAG 선택",
+        "hint": "지오메트리 그래프를 따라가며 각 뷰에 필요한 디테일을 고릅니다. 시야 안의 디테일에 따라 늘어납니다."
+      },
+      "pass.DAG mask swap": {
+        "label": "DAG 마스크 교체",
+        "hint": "이미지 사이에서 선택 마스크를 교체합니다. 작고 고정적입니다."
+      },
+      "pass.partition": {
+        "label": "파티션",
+        "hint": "선택된 클러스터를 이미지의 그리기 호출로 압축합니다. 선택된 클러스터에 따라 늘어납니다."
+      },
+      "pass.HiZ": {
+        "label": "HiZ",
+        "hint": "가려진 것을 숨기는 데 쓰는 깊이 피라미드를 만듭니다. 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.visibility primary": {
+        "label": "가시성 1차",
+        "hint": "나머지를 비교할 수 있도록 가림막의 깊이를 그립니다. 시야 안의 가림막에 따라 늘어납니다."
+      },
+      "pass.visibility secondary": {
+        "label": "가시성 2차",
+        "hint": "검사 대상 지오메트리의 절반을 가림막의 깊이와 비교해 그립니다. 검사를 통과한 지오메트리에 따라 늘어납니다."
+      },
+      "pass.visibility identifiers": {
+        "label": "가시성 식별자",
+        "hint": "각 픽셀 아래 표면의 식별자를 그립니다. 렌더 크기와 그려진 지오메트리에 따라 늘어납니다."
+      },
+      "pass.raster binning": {
+        "label": "래스터 비닝",
+        "hint": "소프트웨어 래스터의 작은 삼각형을 화면 타일로 분류합니다. 시야 안의 작은 삼각형에 따라 늘어납니다."
+      },
+      "pass.raster occluder depth": {
+        "label": "래스터 가림막 깊이",
+        "hint": "가림막 깊이의 소프트웨어 래스터. 작은 가림 삼각형에 따라 늘어납니다."
+      },
+      "pass.raster tested depth": {
+        "label": "래스터 검사 깊이",
+        "hint": "검사 대상 지오메트리 깊이의 소프트웨어 래스터. 검사한 작은 삼각형에 따라 늘어납니다."
+      },
+      "pass.raster identifiers": {
+        "label": "래스터 식별자",
+        "hint": "표면 식별자의 소프트웨어 래스터. 그려진 작은 삼각형에 따라 늘어납니다."
+      },
+      "pass.raster occluder hiz": {
+        "label": "래스터 가림막 HiZ",
+        "hint": "소프트웨어 래스터의 가림막으로 깊이 피라미드를 만듭니다. 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.raster resolve": {
+        "label": "래스터 리졸브",
+        "hint": "소프트웨어 래스터의 픽셀을 가시성 버퍼에 병합합니다. 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.empty surfaces": {
+        "label": "빈 표면",
+        "hint": "이미지가 재질을 그리지 않을 때 표면 이미지를 지웁니다. 작고 고정적입니다."
+      },
+      "pass.material cache, bins and shading": {
+        "label": "재질 캐시, 빈, 셰이딩",
+        "hint": "프레임이 공유하는 것을 구성하고, 픽셀을 재질별로 정렬하고, 각 재질의 빈을 셰이딩합니다. 시야 안의 재질과 픽셀에 따라 늘어납니다."
+      },
+      "pass.material surfaces": {
+        "label": "재질 표면",
+        "hint": "재질을 셰이딩하기 전에 표면과 피드백 이미지를 지웁니다. 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.texture feedback reduce": {
+        "label": "텍스처 피드백 축소",
+        "hint": "이미지가 요청한 텍스처 타일을 축소합니다. 시야 안의 텍스처에 따라 늘어납니다."
+      },
+      "pass.texture eviction queue": {
+        "label": "텍스처 퇴출 대기열",
+        "hint": "풀이 가득 찼을 때 내놓을 텍스처 타일의 순위를 매깁니다. 풀의 크기에 따라 늘어납니다."
+      },
+      "pass.transparents": {
+        "label": "투명체",
+        "hint": "투명한 표면을 레이어별로 그립니다. 시야 안의 투명한 표면에 따라 늘어납니다."
+      },
+      "pass.blend companion": {
+        "label": "블렌드 보조 이미지",
+        "hint": "듀얼 블렌드의 보조 이미지를 그립니다. 시야 안의 투명한 표면에 따라 늘어납니다."
+      },
+      "pass.distortion": {
+        "label": "왜곡",
+        "hint": "투과하는 표면의 굴절을 누적합니다. 화면에서의 개수와 크기에 따라 늘어납니다."
+      },
+      "pass.distortion apply": {
+        "label": "왜곡 적용",
+        "hint": "누적된 굴절을 이미지에 적용합니다. 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.transparent compaction": {
+        "label": "투명체 압축",
+        "hint": "보이는 투명한 그리기를 압축합니다. 투명한 지오메트리에 따라 늘어납니다."
+      },
+      "pass.transparent occlusion": {
+        "label": "투명체 가림",
+        "hint": "투명한 지오메트리를 깊이와 비교해 검사합니다. 투명한 지오메트리에 따라 늘어납니다."
+      },
+      "pass.blend order and expansion": {
+        "label": "블렌드 순서와 확장",
+        "hint": "블렌딩을 위해 투명한 표면을 정렬하고 확장합니다. 시야 안의 투명한 표면에 따라 늘어납니다."
+      },
+      "pass.display mask": {
+        "label": "표시 마스크",
+        "hint": "표시 필터가 작용하는 픽셀의 마스크를 만듭니다. 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.display filter": {
+        "label": "표시 필터",
+        "hint": "이미지에 표시 필터를 적용합니다. 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.transparent front": {
+        "label": "투명체 앞면",
+        "hint": "반사가 추적하는 투명체의 앞면을 유지합니다. 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.particle draw": {
+        "label": "파티클 그리기",
+        "hint": "파티클을 그립니다. 살아 있는 파티클과 그것이 덮는 면적에 따라 늘어납니다."
+      },
+      "pass.light tiles": {
+        "label": "조명 타일",
+        "hint": "타일별 조명 목록을 만듭니다. 조명과 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.bounce": {
+        "label": "바운스",
+        "hint": "바운스 조명을 갱신합니다. 시야 안의 셀을 표시하고, 테이블을 쓰고, 프로브를 새로 고칩니다. 시야 안의 조명 받는 셀에 따라 늘어납니다."
+      },
+      "pass.bounce light lists": {
+        "label": "바운스 조명 목록",
+        "hint": "바운스의 월드 격자 위에 조명 목록을 만듭니다. 조명 받는 셀 근처의 조명에 따라 늘어납니다."
+      },
+      "pass.proxy pose": {
+        "label": "프록시 포즈",
+        "hint": "반사와 바운스를 위해 변형된 배치의 프록시에 포즈를 줍니다. 변형된 배치에 따라 늘어납니다."
+      },
+      "pass.reflections": {
+        "label": "반사",
+        "hint": "반사를 위해 깊이 피라미드를 축소합니다. 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.reflection trace": {
+        "label": "반사 추적",
+        "hint": "화면 타일을 분류하고 화면을 통해 반사를 추적합니다. 반사하는 픽셀에 따라 늘어납니다."
+      },
+      "pass.reflection scene": {
+        "label": "반사 장면",
+        "hint": "화면이 답하지 못한 광선을 장면 안에서 추적합니다. 화면이 놓친 반사 픽셀에 따라 늘어납니다."
+      },
+      "pass.reflection denoise": {
+        "label": "반사 디노이즈",
+        "hint": "이웃한 반사와 이전 반사를 재사용해 이미지를 깨끗하게 합니다. 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.reflection radiance": {
+        "label": "반사 휘도",
+        "hint": "다음 이미지의 반사를 위해 조명된 이미지의 휘도 피라미드를 만듭니다. 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.particles": {
+        "label": "파티클",
+        "hint": "파티클의 스텝을 시뮬레이션합니다. 살아 있는 파티클에 따라 늘어납니다."
+      },
+      "pass.deferred lighting": {
+        "label": "지연 조명",
+        "hint": "표면, 조명, 그림자로 모든 픽셀을 밝힙니다. 렌더 크기와 조명에 따라 늘어납니다."
+      },
+      "pass.as is share seed": {
+        "label": "그대로 유지 비율 시드",
+        "hint": "시간적 리졸브가 그대로 두는 이미지의 비율을 초기화합니다. 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.temporal antialiasing": {
+        "label": "시간적 안티에일리어싱",
+        "hint": "가장자리를 부드럽게 하려고 이미지를 이전 이미지와 섞습니다. 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.exposure": {
+        "label": "노출",
+        "hint": "이미지의 밝기를 측정하고 자동 노출을 갱신합니다. 작고 고정적입니다."
+      },
+      "pass.scene downsample": {
+        "label": "장면 다운샘플",
+        "hint": "블룸과 로컬 노출이 읽는, 점점 작아지는 이미지 복사본의 체인을 만듭니다. 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.local exposure": {
+        "label": "로컬 노출",
+        "hint": "노출을 영역별로 조정합니다. 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.bloom": {
+        "label": "블룸",
+        "hint": "이미지의 밝은 부분을 빛무리로 퍼뜨립니다. 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.outline": {
+        "label": "아웃라인",
+        "hint": "선택한 오브젝트의 윤곽을 스캔해 그립니다. 렌더 크기와 요청된 윤곽에 따라 늘어납니다."
+      },
+      "pass.HDR composition": {
+        "label": "HDR 합성",
+        "hint": "조명된 이미지와 효과로 최종 이미지를 합성합니다. 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.HDR composition + present": {
+        "label": "HDR 합성 + 표시",
+        "hint": "최종 이미지를 합성해 한 번의 패스로 화면에 표시합니다. 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.direct present": {
+        "label": "직접 표시",
+        "hint": "이미지를 화면에 곧바로 그립니다. 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.view present": {
+        "label": "뷰 표시",
+        "hint": "이미지를 페이지의 뷰에 그립니다. 뷰의 크기에 따라 늘어납니다."
+      },
+      "pass.guides": {
+        "label": "가이드",
+        "hint": "이미지 위에 가이드를 그립니다. 표시된 가이드에 따라 늘어납니다."
+      },
+      "pass.x ray": {
+        "label": "엑스레이",
+        "hint": "조명된 이미지 위에 엑스레이 뷰의 가장자리를 그립니다. 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.frame difference": {
+        "label": "프레임 차이",
+        "hint": "이미지를 직전 이미지와 비교해 보여 줍니다. 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.see through background": {
+        "label": "투시 뷰 배경",
+        "hint": "투시 뷰의 배경을 그 투명체보다 먼저 깝니다. 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.capture emission and occlusion": {
+        "label": "방출과 가림 캡처",
+        "hint": "표면의 방출과 가림 레이어를 캡처합니다. 렌더 크기에 따라 늘어납니다."
+      },
+      "pass.texture mips": {
+        "label": "텍스처 밉",
+        "hint": "방금 로드된 텍스처의 더 작은 레벨을 만듭니다. 업로드된 텍스처에 따라 늘어납니다."
+      },
+      "pass.deformation": {
+        "label": "변형",
+        "hint": "변형된 배치의 지오메트리를 변형합니다. 그 정점에 따라 늘어납니다."
+      },
+      "pass.animation banks": {
+        "label": "애니메이션 뱅크",
+        "hint": "군중의 애니메이션 뱅크를 재생합니다. 애니메이션 인스턴스에 따라 늘어납니다."
+      },
+      "pass.vsm": {
+        "label": "VSM",
+        "hint": "가상 섀도 맵의 모든 패스: 섀도 페이지의 렌더, 지우기, 투영, 병합. 그림자 드리운 조명과 그것이 필요로 하는 페이지에 따라 늘어납니다."
+      }
     },
     "failure": {
       "title": "이 예제는 오류로 멈췄어",

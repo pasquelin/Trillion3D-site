@@ -40,79 +40,709 @@
     },
     "stats": {
       "FPS": "Bilder/s",
-      "triangles selected": "Dreiecke ausgewählt",
-      "triangles drawn": "Dreiecke gezeichnet",
-      "triangles (scene)": "Dreiecke (Szene)",
-      "draw calls": "Zeichenaufrufe",
-      "pages": "Seiten",
-      "geometry pool": "Geometrie-Reserve",
-      "lights": "Lichter",
-      "GPU memory": "GPU-Speicher",
-      "screen images": "Bildschirmbilder",
-      "shadow memory": "Schattenspeicher",
-      "geometry memory": "Geometriespeicher",
-      "texture memory": "Texturspeicher",
-      "live textures": "aktive Texturen",
-      "transmission backdrop": "Transmissionshintergrund",
-      "GPU frame": "GPU-Bild",
-      "GPU frame (last)": "GPU-Bild (letztes)",
-      "CPU frame": "CPU-Bild",
-      "page hooks": "Code der Seite",
-      "engine CPU": "Engine-CPU",
-      "Statistics": "Statistik",
-      "hint": "Klick: kompakt · ziehen: verschieben · Taste ^ / `",
-      "fps": "B/s",
-      "budget": "Budget",
-      "held": "eingefroren",
-      "last": "zuletzt",
-      "others": "andere",
-      "Shadows": "Schatten",
-      "Scene and memory": "Szene und Speicher",
-      "cut and culling": "Schnitt und Culling",
-      "page preparation": "Seitenvorbereitung",
-      "command encoding": "Befehlskodierung",
-      "physics step": "Physikschritt",
-      "Cadence": "Takt",
-      "{n}× refresh": "{n}× Bildwechsel",
-      "GPU idle": "GPU-Leerlauf",
-      "All worlds": "Alle Welten",
-      "main view": "Hauptansicht",
-      "world": "Welt",
-      "view": "Ansicht",
-      "GPU busy": "GPU ausgelastet",
-      "CPU busy": "CPU ausgelastet"
+      "GPU frame": "GPU-Bild"
     },
-    "shadows": {
-      "lights": "Lichter",
-      "maps": "Maps",
-      "pagesRequested": "Seiten angefragt",
-      "pagesAllocated": "Seiten belegt",
-      "pagesCached": "Seiten im Cache",
-      "pagesRendered": "Seiten gerendert",
-      "freePages": "freie Seiten",
-      "lodBias": "LOD-Bias",
-      "projectionPasses": "Projektionsdurchläufe",
-      "invalidation": "Invalidierung",
-      "marking": "Markierung",
-      "pageManagement": "Seitenverwaltung",
-      "render": "Rendern",
-      "projection": "Projektion",
-      "transmission": "Transmission"
-    },
-    "passes": {
-      "vsm projection": "VSM-Projektion",
-      "vsm marking": "VSM-Markierung",
-      "vsm render": "VSM-Rendern",
-      "material surfaces": "Materialoberflächen",
-      "temporal antialiasing": "temporales Antialiasing",
-      "HDR composition + present": "HDR-Komposition + Ausgabe",
-      "deferred lighting": "verzögerte Beleuchtung",
-      "reflection source": "Reflexionsquelle",
-      "HiZ pyramid": "HiZ-Pyramide",
-      "light tiles": "Licht-Kacheln",
-      "texture mips": "Textur-Mips",
-      "reflection radiance mips": "Reflexions-Radianz-Mips",
-      "reflection depth bounds mips": "Reflexions-Tiefengrenzen-Mips"
+    "statsPanel": {
+      "tab.page": {
+        "label": "Alle Welten",
+        "hint": "Wie stark jede Welt und Ansicht der Seite GPU und Hauptthread auslastet, als Anteil jeder Sekunde; nur auf einer Seite mit mehreren Welten oder Ansichten sichtbar."
+      },
+      "tab.gpu": {
+        "label": "GPU",
+        "hint": "Wo die Grafikeinheit die Zeit eines Bildes verbringt, Stufe für Stufe."
+      },
+      "tab.cpu": {
+        "label": "CPU",
+        "hint": "Wo die Engine die CPU-Zeit eines Bildes verbringt, als Mediane der letzten Sekunde; der CPU-Wert der Kopfzeile ist das ganze Bild des Hauptthreads. Mehr Arbeit pro Bild erhöht ihn."
+      },
+      "tab.shadows": {
+        "label": "Schatten",
+        "hint": "Die Schattenpässe und ihre Seitenzähler; ihre Zeit ist Teil der GPU-Zeit."
+      },
+      "tab.memory": {
+        "label": "Speicher",
+        "hint": "Der GPU-Speicher, den die Engine hält, nach Art."
+      },
+      "tab.scene": {
+        "label": "Szene",
+        "hint": "Was der Schnitt ausgewählt und gezeichnet hat, und der Geometriepool."
+      },
+      "page.gpuBusy": {
+        "label": "GPU ausgelastet",
+        "hint": "Anteil jeder Sekunde, in dem die Welten und Ansichten der Seite die GPU beschäftigen; über 100 % überlappen ihre GPU-Zeiten und die GPU bestimmt das Bild."
+      },
+      "page.cpuBusy": {
+        "label": "CPU ausgelastet",
+        "hint": "Anteil jeder Sekunde, in dem die Welten der Seite den Hauptthread beschäftigen; sie teilen sich einen Hauptthread, also addiert es sich."
+      },
+      "page.view": {
+        "label": "Ansicht {n}",
+        "hint": "GPU-Zeit des letzten Bildes einer Ansicht neben der Hauptansicht und ihr Anteil am Bild der Welt."
+      },
+      "profile.cpuFrame": {
+        "label": "CPU-Frame",
+        "hint": "Hauptthread-Zeit der Animation-Frame-Callbacks eines Frames, als Median / 95. Perzentil der letzten Sekunde; nur mit ?profile."
+      },
+      "profile.pageHooks": {
+        "label": "Seiten-Hooks",
+        "hint": "Zeit der eigenen Frame-Hooks der Seite in einem Frame, als Median / 95. Perzentil der letzten Sekunde; nur mit ?profile."
+      },
+      "profile.engineCpu": {
+        "label": "Engine-CPU",
+        "hint": "Die CPU-Zeit der Engine für das ganze Bild, als Median / 95. Perzentil der letzten Sekunde; nur mit ?profile."
+      },
+      "profile.workerStep": {
+        "label": "Physik-Worker-Schritt",
+        "hint": "Der langsamste feste Schritt des Physik-Workers in einem Tick, als Median / 95. Perzentil der letzten Sekunde; nur mit ?profile."
+      },
+      "shadows.included": {
+        "label": "in GPU enthalten",
+        "hint": "Diese Zeiten stecken schon in der GPU-Summe: nie dazuaddieren."
+      },
+      "summary.frame": {
+        "label": "Bild",
+        "hint": "Zeit zwischen zwei angezeigten Bildern; steigt, wenn ein Prozessor länger als ein Refresh braucht."
+      },
+      "summary.gpu": {
+        "label": "GPU",
+        "hint": "Mittlere GPU-Zeit eines Bildes in der letzten Sekunde; steigt mit gezeichneten Pixeln, Lichtern und Geometrie."
+      },
+      "summary.cpu": {
+        "label": "CPU",
+        "hint": "Mediane Hauptthread-Zeit eines Bildes in der letzten Sekunde; steigt mit der an die GPU gesendeten Arbeit."
+      },
+      "summary.wait": {
+        "label": "Warten",
+        "hint": "Zeit, die das Bild auf die Anzeige wartet, nachdem der langsamere Prozessor fertig war."
+      },
+      "summary.bottleneck": {
+        "label": "Begrenzt durch",
+        "hint": "Das Urteil der Engine, was das Bild hält: die erste Grenze, die das Fenster erreicht."
+      },
+      "summary.screen": {
+        "label": "Bildschirm {hz} Hz",
+        "hint": "Wie lange jedes Bild auf dem Bildschirm bleibt, gezählt in Bildwiederholungen: 1 ist jede Wiederholung, mehr bedeutet verspätete Bilder."
+      },
+      "summary.screenValue": {
+        "label": "1 Bild / {n} Wiederholungen",
+        "hint": "Die Bildwiederholungen, die ein typisches Bild der letzten Sekunde auf dem Bildschirm blieb."
+      },
+      "summary.screenShare": {
+        "label": "{share} % der Bilder in {n} Wiederholungen",
+        "hint": "Ein Abschnitt der Bildschirmverteilung: sein Anteil an den Bildern der letzten Sekunde."
+      },
+      "summary.screenShareOrMore": {
+        "label": "{share} % in {n} oder mehr",
+        "hint": "Der letzte Abschnitt der Bildschirmverteilung: sein Anteil an den Bildern, bei dieser Zahl von Wiederholungen oder mehr."
+      },
+      "summary.gpuIdle": {
+        "label": "GPU im Leerlauf",
+        "hint": "Zeit, die die GPU vor ihrem letzten gemessenen Bild untätig war; steigt, wenn die CPU sie zu spät versorgt."
+      },
+      "summary.mainView": {
+        "label": "Hauptansicht",
+        "hint": "Die erste Welt, die die Seite erstellt hat, die Hauptansicht der Seite."
+      },
+      "summary.world": {
+        "label": "Welt",
+        "hint": "Eine Welt der Seite außer der Hauptansicht."
+      },
+      "summary.budget": {
+        "label": "Budget",
+        "hint": "Die Zeit, die ein Anzeige-Refresh einem Bild erlaubt; die gestrichelte Linie der Grafik."
+      },
+      "bottleneck.healthy": {
+        "label": "Anzeige",
+        "hint": "Das Bild passt in einen Refresh: die Bildrate ist die der Anzeige."
+      },
+      "bottleneck.memory_pressure": {
+        "label": "Ruckeln",
+        "hint": "Bilder dauerten länger als die Ruckelgrenze: Speicher freigeben oder Streaming senken."
+      },
+      "bottleneck.gpu_bound": {
+        "label": "GPU",
+        "hint": "Die GPU braucht länger als ein Refresh und hält das Bild: Auflösung oder Beleuchtung senken."
+      },
+      "bottleneck.cpu_bound": {
+        "label": "CPU",
+        "hint": "Der Hauptthread braucht länger als ein Refresh und hält das Bild: Arbeit pro Bild senken."
+      },
+      "bottleneck.gpu_submit_bound": {
+        "label": "GPU-Übergabe",
+        "hint": "Das Senden der Befehle an die GPU dauert über einen halben Refresh: Draw Calls und Pässe senken."
+      },
+      "bottleneck.streaming_bound": {
+        "label": "Streaming",
+        "hint": "Mehr Seiten sind unterwegs, als die Fetch-Worker liefern können: Netz oder Platte halten die Szene."
+      },
+      "panel.label": {
+        "label": "Statistik",
+        "hint": "Die Profiler-Einblendung."
+      },
+      "panel.hint": {
+        "label": "Klick: kompakt · Ziehen: verschieben · Taste ` / ²",
+        "hint": "Die Gesten der Kopfzeile."
+      },
+      "unit.fps": {
+        "label": "fps",
+        "hint": "Pro Sekunde gezeichnete Bilder."
+      },
+      "summary.cpuShort": {
+        "label": "CPU",
+        "hint": "Die Hauptthread-Zeit eines Bildes."
+      },
+      "summary.gpuShort": {
+        "label": "GPU",
+        "hint": "Die Grafikprozessor-Zeit eines Bildes."
+      },
+      "row.max": {
+        "label": "max",
+        "hint": "Der höchste Wert der letzten Sekunde."
+      },
+      "summary.held": {
+        "label": "gehalten",
+        "hint": "Kein neues Bild in der letzten Sekunde: nichts bewegte sich, das Bild wird erneut angezeigt."
+      },
+      "summary.last": {
+        "label": "letzte",
+        "hint": "Die gezeigte GPU-Zeit gehört zu einem früheren Bild: das Gerät hat noch kein neueres abgetastet."
+      },
+      "gpu.physics": {
+        "label": "Physik",
+        "hint": "Starr- und Weichkörper-Schritte auf der GPU; steigt mit den simulierten Körpern."
+      },
+      "gpu.animations": {
+        "label": "Animationen",
+        "hint": "Skinning und Verformung animierter Objekte; steigt mit den animierten Vertices."
+      },
+      "gpu.lights": {
+        "label": "Lichter",
+        "hint": "Vorbereitung der Szenenlichter für das Bild; steigt mit der Lichtzahl."
+      },
+      "gpu.cutAdoption": {
+        "label": "Schnitt-Übernahme",
+        "hint": "Übernahme des von der Auswahl gewählten Schnitts; steigt, wenn er sich zwischen Bildern stark ändert."
+      },
+      "gpu.selection": {
+        "label": "Auswahl",
+        "hint": "Wahl der zu zeichnenden Cluster nach Ansicht und Detail; steigt mit den getesteten Hierarchieknoten."
+      },
+      "gpu.transparents": {
+        "label": "Transparentes",
+        "hint": "Zeichnen durchsichtiger Flächen; steigt mit transparenten Dreiecken und Schichten."
+      },
+      "gpu.residency": {
+        "label": "Residenz",
+        "hint": "Entscheidung, welche Geometrieseiten im Speicher sein müssen; steigt, solange sich die Ansicht ändert."
+      },
+      "gpu.hostPages": {
+        "label": "Host-Seiten",
+        "hint": "Kopieren der vom CPU gestreamten Seitendaten zur GPU; steigt, solange neue Seiten ankommen."
+      },
+      "gpu.uploads": {
+        "label": "Uploads",
+        "hint": "Senden von Daten in GPU-Puffer; steigt mit dynamischer Geometrie und Streaming."
+      },
+      "gpu.textures": {
+        "label": "Texturen",
+        "hint": "Streaming und Dekodieren von Texturstufen; steigt, solange neue Texturen laden."
+      },
+      "gpu.partition": {
+        "label": "Partition",
+        "hint": "Sortieren der gezeichneten Cluster in Zeichenstapel; steigt mit den gezeichneten Clustern."
+      },
+      "gpu.encode": {
+        "label": "Encode",
+        "hint": "Aufbau der Befehle, die die Rasterstufe liest; steigt mit den Zeichenstapeln."
+      },
+      "gpu.submit": {
+        "label": "Übergabe",
+        "hint": "Pässe, die Arbeit an die Queue übergeben; steigt mit der Zahl der Übergaben."
+      },
+      "gpu.hiZ": {
+        "label": "Hi-Z",
+        "hint": "Aufbau der Tiefenpyramide für den Verdeckungstest; steigt mit der Auflösung."
+      },
+      "gpu.geometry": {
+        "label": "Geometrie",
+        "hint": "Rastern des Sichtbarkeitspuffers und Schreiben der Flächen; steigt mit gezeichneten Dreiecken und abgedeckten Pixeln."
+      },
+      "gpu.coplanar": {
+        "label": "Koplanar",
+        "hint": "Auflösen von Flächen in derselben Ebene; steigt mit überlappenden Decals."
+      },
+      "gpu.shadows": {
+        "label": "Schatten",
+        "hint": "Rendern und Projizieren von Schattenseiten; steigt mit werfenden Lichtern und neu gezeichneten Seiten."
+      },
+      "gpu.lightLists": {
+        "label": "Lichtlisten",
+        "hint": "Sammeln der Lichter, die jede Bildschirmkachel erreichen; steigt mit Lichtzahl und Reichweite."
+      },
+      "gpu.bounce": {
+        "label": "Bounce",
+        "hint": "Zwischen Flächen reflektiertes Licht; steigt mit den verfolgten Strahlen."
+      },
+      "gpu.reflections": {
+        "label": "Reflexionen",
+        "hint": "Gespiegelte Bilder der Szene; steigt mit spiegelnden Pixeln und verfolgten Strahlen."
+      },
+      "gpu.lighting": {
+        "label": "Beleuchtung",
+        "hint": "Schattieren jedes Pixels aus Fläche und Lichtern; steigt mit Pixeln und Lichtern."
+      },
+      "gpu.antialiasing": {
+        "label": "Kantenglättung",
+        "hint": "Glättung der Kanten über die Zeit; steigt mit der Auflösung."
+      },
+      "gpu.effects": {
+        "label": "Effekte",
+        "hint": "Nachbearbeitung wie Bloom, Belichtung und Nebel; steigt mit aktiven Effekten und der Auflösung."
+      },
+      "gpu.present": {
+        "label": "Ausgabe",
+        "hint": "Neuabtastung und Übergabe des Bildes an die Anzeige; steigt mit der Anzeigeauflösung."
+      },
+      "gpu.unclassified": {
+        "label": "Unklassifiziert",
+        "hint": "Zeitgemessene Pässe, die keine Stufe nennt; gelistet, damit die Stufen weiter die Summe ergeben."
+      },
+      "gpu.untimed": {
+        "label": "Außerhalb gemessener Pässe",
+        "hint": "GPU-Zeit des Bildes, die kein gemessener Pass abdeckt: Kopien, Lücken zwischen Pässen, Timestamp-Resolves."
+      },
+      "cpu.physics": {
+        "label": "Physik",
+        "hint": "Simulationsschritt auf dem Hauptthread; steigt mit den simulierten Körpern."
+      },
+      "cpu.animations": {
+        "label": "Animationen",
+        "hint": "Vorbereiten animierter Objekte auf dem Hauptthread; steigt mit den animierten Objekten."
+      },
+      "cpu.textures": {
+        "label": "Texturen",
+        "hint": "Füttern des Textur-Streamers auf dem Hauptthread; steigt, solange neue Texturen laden."
+      },
+      "cpu.transparents": {
+        "label": "Transparentes",
+        "hint": "Vorbereiten und Zeichnen durchsichtiger Flächen; steigt mit transparenten Meshes und Schichten."
+      },
+      "cpu.cutAdoption": {
+        "label": "Schnitt-Übernahme",
+        "hint": "Übernahme des von der Auswahl gewählten Schnitts; steigt, wenn er sich zwischen Bildern stark ändert."
+      },
+      "cpu.residency": {
+        "label": "Residenz",
+        "hint": "Entscheiden und Einreihen, welche Geometrieseiten im Speicher sein müssen; steigt, solange sich die Ansicht ändert."
+      },
+      "cpu.uploads": {
+        "label": "Uploads",
+        "hint": "Senden von Daten in GPU-Puffer; steigt mit dynamischer Geometrie und Streaming."
+      },
+      "cpu.selection": {
+        "label": "Auswahl",
+        "hint": "Anstoßen der Cluster-Auswahl; steigt mit den getesteten Hierarchieknoten."
+      },
+      "cpu.encode": {
+        "label": "Encode",
+        "hint": "Aufzeichnen der GPU-Befehle; steigt mit Pässen und Zeichenstapeln."
+      },
+      "cpu.submit": {
+        "label": "Übergabe",
+        "hint": "Übergabe der aufgezeichneten Befehle an die Queue; steigt mit der Zahl der Übergaben."
+      },
+      "cpu.hostPages": {
+        "label": "Host-Seiten",
+        "hint": "Einbinden der vom CPU gestreamten Geometrieseiten; steigt, solange neue Seiten ankommen."
+      },
+      "cpu.rest": {
+        "label": "Rest des Bildes",
+        "hint": "Die CPU-Zeit des ganzen Bildes in der Engine, die keine Stufe oben abdeckt (0, wenn Arbeit außerhalb des Bildes die Stufen darüber hinausgehen lässt); Seitenskripte, Eingabe und Layout sind nicht enthalten."
+      },
+      "shadows.invalidation": {
+        "label": "Invalidierung",
+        "hint": "Markieren veralteter Schattenseiten nach einer Bewegung; steigt mit bewegten Schattenwerfern."
+      },
+      "shadows.marking": {
+        "label": "Markierung",
+        "hint": "Finden der Schattenseiten, die die Ansicht braucht; steigt mit den von Schattenlichtern beleuchteten Pixeln."
+      },
+      "shadows.pageManagement": {
+        "label": "Seitenverwaltung",
+        "hint": "Zuweisen und Wiederverwenden von Schattenseiten; steigt mit den angeforderten Seiten."
+      },
+      "shadows.render": {
+        "label": "Rendern",
+        "hint": "Zeichnen der geänderten Schattenseiten; steigt mit neu gezeichneten Seiten und deren Werfern."
+      },
+      "shadows.projection": {
+        "label": "Projektion",
+        "hint": "Projizieren der Schattenkarten aufs Bild; steigt mit Schattenlichtern und Auflösung."
+      },
+      "shadows.transmission": {
+        "label": "Transmission",
+        "hint": "Der Atlas der durchsichtigen Schattenwerfer; steigt mit transluzenten Werfern."
+      },
+      "shadows.lights": {
+        "label": "Lichter mit Schatten",
+        "hint": "Lichter, die in diesem Bild virtuelle Schattenkarten werfen; die Zahl in Szene zählt alle aktiven Lichter."
+      },
+      "shadows.maps": {
+        "label": "Karten",
+        "hint": "Virtuelle Schattenkarten dieses Bildes; steigt mit den werfenden Lichtern."
+      },
+      "shadows.pagesRequested": {
+        "label": "Schattenseiten angefordert",
+        "hint": "Vom Bild angeforderte Schattenseiten; steigt mit der beschatteten Fläche im Bild."
+      },
+      "shadows.pagesAllocated": {
+        "label": "Schattenseiten zugewiesen",
+        "hint": "In diesem Bild neu aus dem Pool genommene Schattenseiten; steigt, wenn Ansicht oder Lichter sich bewegen."
+      },
+      "shadows.pagesCached": {
+        "label": "Schattenseiten im Cache",
+        "hint": "Angeforderte Schattenseiten, die schon gezeichnet waren; sinkt, wenn Werfer oder Lichter sich bewegen."
+      },
+      "shadows.pagesRendered": {
+        "label": "Schattenseiten gerendert",
+        "hint": "In diesem Bild gelöschte und gezeichnete Schattenseiten; steigt, wenn Werfer oder Lichter sich bewegen."
+      },
+      "shadows.freePages": {
+        "label": "Schattenseiten frei",
+        "hint": "Im Pool verbleibende physische Schattenseiten; sinkt bei mehr Anforderungen."
+      },
+      "shadows.lodBias": {
+        "label": "Schatten-Detailbias",
+        "hint": "Wie viel gröber als gefordert die Schattenkarten gezeichnet werden; steigt bei vollem Pool."
+      },
+      "shadows.projectionPasses": {
+        "label": "Projektionspässe",
+        "hint": "Projektionspässe dieses Bildes, je vier Lichter; steigt mit den Schattenlichtern."
+      },
+      "shadows.resolutionBias": {
+        "label": "Schatten-Auflösungsbias",
+        "hint": "Stufen, um die Schatten wegen ihres Pools gröber ausfallen; 0 ist gesund."
+      },
+      "memory.screen": {
+        "label": "Bildschirmbilder",
+        "hint": "Auflösungsabhängige Ziele; steigt mit der Render-Größe."
+      },
+      "memory.shadows": {
+        "label": "Schattenpool",
+        "hint": "Der Pool der Schattenseiten; steigt mit der Schattenqualität."
+      },
+      "memory.geometry": {
+        "label": "Geometrie",
+        "hint": "Der auf der GPU reservierte Geometrieseiten-Pool, benutzt oder nicht; seine Nutzung steht unter Szene."
+      },
+      "memory.textures": {
+        "label": "Texturpool",
+        "hint": "Der Texturpool, für die Sitzung fest; bestimmt durch das Texturbudget."
+      },
+      "memory.liveTextures": {
+        "label": "Live-Texturen",
+        "hint": "Arbeitstexturen außerhalb des Pools; steigt mit den Live-Texturen der Szene."
+      },
+      "memory.other": {
+        "label": "Sonstige Ressourcen",
+        "hint": "GPU-Speicher, den keine Art oben nennt: Puffer, Verlaufsbilder, Caches."
+      },
+      "scene.trianglesSelected": {
+        "label": "Dreiecke ausgewählt",
+        "hint": "Dreiecke, die der Schnitt nach Ansichts- und Detailtests behielt; steigt mit sichtbarem Szenendetail."
+      },
+      "scene.trianglesDrawn": {
+        "label": "Dreiecke gezeichnet",
+        "hint": "Dreiecke, die nach dem Verwerfen verdeckter gezeichnet wurden; steigt mit sichtbarem Detail."
+      },
+      "scene.trianglesScene": {
+        "label": "Dreiecke (Szene)",
+        "hint": "Dreiecke der sichtbaren Meshes der Szene, von der Seite gezählt, wenn das Bild keine ausgewählten Dreiecke meldet."
+      },
+      "scene.drawCalls": {
+        "label": "Draw Calls",
+        "hint": "In diesem Bild gesendete Zeichenbefehle; steigt mit der Zahl der Stapel."
+      },
+      "scene.geometryPages": {
+        "label": "Geometrieseiten",
+        "hint": "Im Speicher residente Geometrieseiten; steigt mit dem geladenen Detail."
+      },
+      "scene.poolUsed": {
+        "label": "Geometriepool belegt",
+        "hint": "Bytes des Geometriepools, die Seiten halten; steigt beim Laden von Seiten."
+      },
+      "scene.poolCapacity": {
+        "label": "Geometriepool-Kapazität",
+        "hint": "Für den Geometriepool reservierte Bytes; bestimmt durch Szene und Gerätegrenzen."
+      },
+      "scene.lights": {
+        "label": "Lichter",
+        "hint": "Szenenlichter, die das Bild beleuchtet haben."
+      },
+      "pass.compose roots": {
+        "label": "Wurzeln berechnen",
+        "hint": "Berechnet die Weltmatrix jeder Platzierungswurzel aus ihren Eltern; steigt mit der Zahl animierter oder bewegter Platzierungen."
+      },
+      "pass.compose motion": {
+        "label": "Bewegung berechnen",
+        "hint": "Berechnet für die Bewegungsvektoren, wie sich jede Platzierung seit dem vorigen Bild bewegt hat; steigt mit der Zahl bewegter Platzierungen."
+      },
+      "pass.compose rows": {
+        "label": "Zeilen berechnen",
+        "hint": "Berechnet die Weltmatrizen der Platzierungszeilen; steigt mit der Zahl der Platzierungen."
+      },
+      "pass.root boxes": {
+        "label": "Wurzel-Boxen",
+        "hint": "Passt die Weltbox und die Streckung jeder Platzierungswurzel an; steigt mit der Zahl der Wurzeln."
+      },
+      "pass.placement tree leaves": {
+        "label": "Blätter des Platzierungsbaums",
+        "hint": "Passt die Boxen der Blätter des Platzierungsbaums an; steigt mit der Zahl der Platzierungen."
+      },
+      "pass.placement tree refit": {
+        "label": "Platzierungsbaum aktualisieren",
+        "hint": "Aktualisiert die inneren Boxen des Platzierungsbaums, nachdem sich seine Blätter bewegt haben; steigt mit der Zahl bewegter Platzierungen."
+      },
+      "pass.DAG selection": {
+        "label": "DAG-Auswahl",
+        "hint": "Durchläuft den Geometriegraphen und wählt das Detail, das jede Ansicht braucht; steigt mit dem Detail im Bild."
+      },
+      "pass.DAG mask swap": {
+        "label": "DAG-Maskentausch",
+        "hint": "Tauscht die Auswahlmasken zwischen den Bildern; klein und fest."
+      },
+      "pass.partition": {
+        "label": "Partition",
+        "hint": "Verdichtet die gewählten Cluster zu den Zeichenaufrufen des Bildes; steigt mit den gewählten Clustern."
+      },
+      "pass.HiZ": {
+        "label": "HiZ",
+        "hint": "Baut die Tiefenpyramide, mit der Verdecktes ausgeblendet wird; steigt mit der Rendergröße."
+      },
+      "pass.visibility primary": {
+        "label": "Sichtbarkeit primär",
+        "hint": "Zeichnet die Tiefe der Verdecker, damit der Rest dagegen getestet werden kann; steigt mit den Verdeckern im Bild."
+      },
+      "pass.visibility secondary": {
+        "label": "Sichtbarkeit sekundär",
+        "hint": "Zeichnet die getestete Hälfte der Geometrie gegen die Tiefe der Verdecker; steigt mit der Geometrie, die den Test bestanden hat."
+      },
+      "pass.visibility identifiers": {
+        "label": "Sichtbarkeits-Kennungen",
+        "hint": "Zeichnet die Kennung der Oberfläche unter jedem Pixel; steigt mit der Rendergröße und der gezeichneten Geometrie."
+      },
+      "pass.raster binning": {
+        "label": "Raster-Binning",
+        "hint": "Sortiert die kleinen Dreiecke des Software-Rasters in Bildschirmkacheln; steigt mit den kleinen Dreiecken im Bild."
+      },
+      "pass.raster occluder depth": {
+        "label": "Raster-Verdeckertiefe",
+        "hint": "Software-Raster der Tiefe der Verdecker; steigt mit den kleinen verdeckenden Dreiecken."
+      },
+      "pass.raster tested depth": {
+        "label": "Raster-Testtiefe",
+        "hint": "Software-Raster der Tiefe der getesteten Geometrie; steigt mit den getesteten kleinen Dreiecken."
+      },
+      "pass.raster identifiers": {
+        "label": "Raster-Kennungen",
+        "hint": "Software-Raster der Oberflächenkennungen; steigt mit den gezeichneten kleinen Dreiecken."
+      },
+      "pass.raster occluder hiz": {
+        "label": "Raster-Verdecker-HiZ",
+        "hint": "Baut die Tiefenpyramide aus den Verdeckern des Software-Rasters; steigt mit der Rendergröße."
+      },
+      "pass.raster resolve": {
+        "label": "Raster-Auflösung",
+        "hint": "Führt die Pixel des Software-Rasters im Sichtbarkeitspuffer zusammen; steigt mit der Rendergröße."
+      },
+      "pass.empty surfaces": {
+        "label": "leere Oberflächen",
+        "hint": "Löscht die Oberflächenbilder, wenn das Bild kein Material zeichnet; klein und fest."
+      },
+      "pass.material cache, bins and shading": {
+        "label": "Materialcache, Bins und Shading",
+        "hint": "Stellt zusammen, was das Bild teilt, sortiert Pixel nach Material und schattiert den Bin jedes Materials; steigt mit den Materialien und Pixeln im Bild."
+      },
+      "pass.material surfaces": {
+        "label": "Materialoberflächen",
+        "hint": "Löscht die Oberflächen- und Feedback-Bilder, bevor die Materialien schattiert werden; steigt mit der Rendergröße."
+      },
+      "pass.texture feedback reduce": {
+        "label": "Textur-Feedback-Reduktion",
+        "hint": "Reduziert, welche Texturkacheln das Bild angefordert hat; steigt mit den Texturen im Bild."
+      },
+      "pass.texture eviction queue": {
+        "label": "Textur-Verdrängungswarteschlange",
+        "hint": "Reiht die Texturkacheln, die bei vollem Pool aufgegeben werden; steigt mit der Größe des Pools."
+      },
+      "pass.transparents": {
+        "label": "Transparente",
+        "hint": "Zeichnet die transparenten Oberflächen Schicht für Schicht; steigt mit den transparenten Oberflächen im Bild."
+      },
+      "pass.blend companion": {
+        "label": "Blend-Begleitbild",
+        "hint": "Zeichnet das Begleitbild des Dual-Blends; steigt mit den transparenten Oberflächen im Bild."
+      },
+      "pass.distortion": {
+        "label": "Verzerrung",
+        "hint": "Sammelt die Brechung der durchlässigen Oberflächen; steigt mit ihrer Zahl und ihrer Größe auf dem Bildschirm."
+      },
+      "pass.distortion apply": {
+        "label": "Verzerrung anwenden",
+        "hint": "Wendet die gesammelte Brechung auf das Bild an; steigt mit der Rendergröße."
+      },
+      "pass.transparent compaction": {
+        "label": "Transparenz-Verdichtung",
+        "hint": "Verdichtet die sichtbaren transparenten Zeichenaufrufe; steigt mit der transparenten Geometrie."
+      },
+      "pass.transparent occlusion": {
+        "label": "Transparenz-Verdeckung",
+        "hint": "Testet die transparente Geometrie gegen die Tiefe; steigt mit der transparenten Geometrie."
+      },
+      "pass.blend order and expansion": {
+        "label": "Blend-Reihenfolge und Expansion",
+        "hint": "Ordnet und erweitert die transparenten Oberflächen fürs Blenden; steigt mit den transparenten Oberflächen im Bild."
+      },
+      "pass.display mask": {
+        "label": "Anzeigemaske",
+        "hint": "Baut die Maske der Pixel, auf die der Anzeigefilter wirkt; steigt mit der Rendergröße."
+      },
+      "pass.display filter": {
+        "label": "Anzeigefilter",
+        "hint": "Wendet den Anzeigefilter auf das Bild an; steigt mit der Rendergröße."
+      },
+      "pass.transparent front": {
+        "label": "Transparente Vorderseite",
+        "hint": "Behält die Vorderseite der Transparenten, gegen die die Reflexionen tracen; steigt mit der Rendergröße."
+      },
+      "pass.particle draw": {
+        "label": "Partikel zeichnen",
+        "hint": "Zeichnet die Partikel; steigt mit den lebenden Partikeln und der Fläche, die sie bedecken."
+      },
+      "pass.light tiles": {
+        "label": "Licht-Kacheln",
+        "hint": "Baut die Lichtlisten je Kachel; steigt mit den Lichtern und der Rendergröße."
+      },
+      "pass.bounce": {
+        "label": "Bounce",
+        "hint": "Aktualisiert das gestreute Licht: markiert die sichtbaren Zellen, schreibt die Tabelle und frischt die Sonden auf; steigt mit den beleuchteten Zellen im Bild."
+      },
+      "pass.bounce light lists": {
+        "label": "Bounce-Lichtlisten",
+        "hint": "Baut die Lichtlisten über dem Weltgitter des Bounce; steigt mit den Lichtern nahe den beleuchteten Zellen."
+      },
+      "pass.proxy pose": {
+        "label": "Proxy-Pose",
+        "hint": "Posiert die Proxys der verformten Platzierungen für die Reflexionen und den Bounce; steigt mit den verformten Platzierungen."
+      },
+      "pass.reflections": {
+        "label": "Reflexionen",
+        "hint": "Reduziert die Tiefenpyramide für die Reflexionen; steigt mit der Rendergröße."
+      },
+      "pass.reflection trace": {
+        "label": "Reflexions-Trace",
+        "hint": "Klassifiziert die Bildschirmkacheln und traced die Reflexionen durch den Bildschirm; steigt mit den reflektierenden Pixeln."
+      },
+      "pass.reflection scene": {
+        "label": "Reflexionen der Szene",
+        "hint": "Traced die Strahlen, die der Bildschirm nicht beantworten konnte, durch die Szene; steigt mit den reflektierenden Pixeln, die der Bildschirm verfehlt hat."
+      },
+      "pass.reflection denoise": {
+        "label": "Reflexions-Entrauschen",
+        "hint": "Nutzt benachbarte und frühere Reflexionen, um das Bild zu säubern; steigt mit der Rendergröße."
+      },
+      "pass.reflection radiance": {
+        "label": "Reflexions-Radianz",
+        "hint": "Baut die Radianzpyramide des beleuchteten Bildes für die Reflexionen des nächsten Bildes; steigt mit der Rendergröße."
+      },
+      "pass.particles": {
+        "label": "Partikel",
+        "hint": "Simuliert den Schritt der Partikel; steigt mit den lebenden Partikeln."
+      },
+      "pass.deferred lighting": {
+        "label": "verzögerte Beleuchtung",
+        "hint": "Beleuchtet jeden Pixel aus den Oberflächen, den Lichtern und den Schatten; steigt mit der Rendergröße und den Lichtern."
+      },
+      "pass.as is share seed": {
+        "label": "Anteil-unverändert-Startwert",
+        "hint": "Setzt den Anteil des Bildes, den die zeitliche Auflösung unverändert behält; steigt mit der Rendergröße."
+      },
+      "pass.temporal antialiasing": {
+        "label": "temporales Antialiasing",
+        "hint": "Mischt das Bild mit den früheren, um die Kanten zu glätten; steigt mit der Rendergröße."
+      },
+      "pass.exposure": {
+        "label": "Belichtung",
+        "hint": "Misst die Helligkeit des Bildes und aktualisiert die automatische Belichtung; klein und fest."
+      },
+      "pass.scene downsample": {
+        "label": "Szenen-Downsampling",
+        "hint": "Baut die Kette immer kleinerer Kopien des Bildes, die Bloom und lokale Belichtung lesen; steigt mit der Rendergröße."
+      },
+      "pass.local exposure": {
+        "label": "lokale Belichtung",
+        "hint": "Passt die Belichtung Region für Region an; steigt mit der Rendergröße."
+      },
+      "pass.bloom": {
+        "label": "Bloom",
+        "hint": "Verteilt die hellen Teile des Bildes zu einem Glühen; steigt mit der Rendergröße."
+      },
+      "pass.outline": {
+        "label": "Umriss",
+        "hint": "Tastet die Umrisse der gewählten Objekte ab und zeichnet sie; steigt mit der Rendergröße und den angeforderten Umrissen."
+      },
+      "pass.HDR composition": {
+        "label": "HDR-Komposition",
+        "hint": "Setzt das Endbild aus dem beleuchteten Bild und den Effekten zusammen; steigt mit der Rendergröße."
+      },
+      "pass.HDR composition + present": {
+        "label": "HDR-Komposition + Ausgabe",
+        "hint": "Setzt das Endbild zusammen und gibt es in einem Durchgang auf den Bildschirm aus; steigt mit der Rendergröße."
+      },
+      "pass.direct present": {
+        "label": "direkte Ausgabe",
+        "hint": "Zeichnet das Bild direkt auf den Bildschirm; steigt mit der Rendergröße."
+      },
+      "pass.view present": {
+        "label": "Ansichtsausgabe",
+        "hint": "Zeichnet das Bild in eine Ansicht der Seite; steigt mit der Größe der Ansicht."
+      },
+      "pass.guides": {
+        "label": "Hilfslinien",
+        "hint": "Zeichnet die Hilfslinien über das Bild; steigt mit den angezeigten Hilfslinien."
+      },
+      "pass.x ray": {
+        "label": "Röntgen",
+        "hint": "Zeichnet die Kanten der Röntgenansicht über das beleuchtete Bild; steigt mit der Rendergröße."
+      },
+      "pass.frame difference": {
+        "label": "Bilddifferenz",
+        "hint": "Zeigt das Bild im Vergleich zum vorigen; steigt mit der Rendergröße."
+      },
+      "pass.see through background": {
+        "label": "Durchsicht-Hintergrund",
+        "hint": "Legt den Hintergrund der Durchsicht-Ansichten vor ihre Transparenten; steigt mit der Rendergröße."
+      },
+      "pass.capture emission and occlusion": {
+        "label": "Emission und Verdeckung erfassen",
+        "hint": "Erfasst die Emissions- und Verdeckungsebene der Oberflächen; steigt mit der Rendergröße."
+      },
+      "pass.texture mips": {
+        "label": "Textur-Mips",
+        "hint": "Baut die kleineren Stufen der gerade geladenen Texturen; steigt mit den hochgeladenen Texturen."
+      },
+      "pass.deformation": {
+        "label": "Verformung",
+        "hint": "Verformt die Geometrie der verformten Platzierungen; steigt mit ihren Eckpunkten."
+      },
+      "pass.animation banks": {
+        "label": "Animationsbänke",
+        "hint": "Spielt die Animationsbänke der Menschenmengen ab; steigt mit den animierten Instanzen."
+      },
+      "pass.vsm": {
+        "label": "VSM",
+        "hint": "Jeder Durchgang der virtuellen Schattenkarten: Rendern, Löschen, Projektion und Zusammenführen der Schattenseiten; steigt mit den schattenwerfenden Lichtern und den Seiten, die sie brauchen."
+      }
     },
     "failure": {
       "title": "Dieses Beispiel ist bei einem Fehler stehen geblieben",

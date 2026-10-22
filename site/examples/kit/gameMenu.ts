@@ -1,6 +1,6 @@
 import { foldPanels, overlay } from './overlay.ts'
 import { HUD_RULE, MENU_STYLE } from './gameMenuStyle.ts'
-import { make } from './statsDom.ts'
+import { make } from './dom.ts'
 import { exampleWord, kitWord, labelOf } from './words.ts'
 
 /**

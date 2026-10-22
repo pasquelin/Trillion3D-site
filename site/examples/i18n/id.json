@@ -40,79 +40,709 @@
     },
     "stats": {
       "FPS": "Bingkai/dtk",
-      "triangles selected": "segitiga terpilih",
-      "triangles drawn": "segitiga digambar",
-      "triangles (scene)": "segitiga (adegan)",
-      "draw calls": "panggilan gambar",
-      "pages": "halaman",
-      "geometry pool": "kolam geometri",
-      "lights": "lampu",
-      "GPU memory": "memori GPU",
-      "screen images": "gambar layar",
-      "shadow memory": "memori bayangan",
-      "geometry memory": "memori geometri",
-      "texture memory": "memori tekstur",
-      "live textures": "tekstur aktif",
-      "transmission backdrop": "latar transmisi",
-      "GPU frame": "bingkai GPU",
-      "GPU frame (last)": "bingkai GPU (terakhir)",
-      "CPU frame": "bingkai CPU",
-      "page hooks": "kode halaman",
-      "engine CPU": "CPU mesin",
-      "Statistics": "Statistik",
-      "hint": "Klik: ringkas · seret: pindah · tombol `",
-      "fps": "FPS",
-      "budget": "anggaran",
-      "held": "diam",
-      "last": "terakhir",
-      "others": "lainnya",
-      "Shadows": "Bayangan",
-      "Scene and memory": "Adegan dan memori",
-      "cut and culling": "potong dan culling",
-      "page preparation": "persiapan halaman",
-      "command encoding": "pengodean perintah",
-      "physics step": "langkah fisika",
-      "Cadence": "Ritme",
-      "{n}× refresh": "{n}× penyegaran",
-      "GPU idle": "GPU menganggur",
-      "All worlds": "Semua dunia",
-      "main view": "tampilan utama",
-      "world": "dunia",
-      "view": "tampilan",
-      "GPU busy": "GPU sibuk",
-      "CPU busy": "CPU sibuk"
+      "GPU frame": "bingkai GPU"
     },
-    "shadows": {
-      "lights": "lampu",
-      "maps": "peta",
-      "pagesRequested": "halaman diminta",
-      "pagesAllocated": "halaman dialokasikan",
-      "pagesCached": "halaman di cache",
-      "pagesRendered": "halaman digambar",
-      "freePages": "halaman bebas",
-      "lodBias": "bias LOD",
-      "projectionPasses": "lintasan proyeksi",
-      "invalidation": "invalidasi",
-      "marking": "penandaan",
-      "pageManagement": "pengelolaan halaman",
-      "render": "gambar",
-      "projection": "proyeksi",
-      "transmission": "transmisi"
-    },
-    "passes": {
-      "vsm projection": "proyeksi VSM",
-      "vsm marking": "penandaan VSM",
-      "vsm render": "gambar VSM",
-      "material surfaces": "permukaan material",
-      "temporal antialiasing": "antialiasing temporal",
-      "HDR composition + present": "komposisi HDR + tampil",
-      "deferred lighting": "pencahayaan tertunda",
-      "reflection source": "sumber pantulan",
-      "HiZ pyramid": "piramida HiZ",
-      "light tiles": "ubin cahaya",
-      "texture mips": "mip tekstur",
-      "reflection radiance mips": "mip radiansi pantulan",
-      "reflection depth bounds mips": "mip batas kedalaman pantulan"
+    "statsPanel": {
+      "tab.page": {
+        "label": "Semua dunia",
+        "hint": "Seberapa sibuk setiap dunia dan tampilan halaman membuat GPU dan thread utama, sebagai bagian dari setiap detik; hanya tampil pada halaman dengan beberapa dunia atau tampilan."
+      },
+      "tab.gpu": {
+        "label": "GPU",
+        "hint": "Tempat prosesor grafis menghabiskan waktu gambar, tahap demi tahap."
+      },
+      "tab.cpu": {
+        "label": "CPU",
+        "hint": "Tempat mesin menghabiskan waktu CPU satu gambar, median sedetik terakhir; CPU di header adalah seluruh frame thread utama. Lebih banyak kerja per frame menaikkannya."
+      },
+      "tab.shadows": {
+        "label": "Bayangan",
+        "hint": "Pass bayangan dan penghitung halamannya; waktunya bagian dari waktu GPU."
+      },
+      "tab.memory": {
+        "label": "Memori",
+        "hint": "Memori GPU yang ditahan mesin, per jenis."
+      },
+      "tab.scene": {
+        "label": "Adegan",
+        "hint": "Apa yang dipilih dan digambar oleh potongan, serta pool geometri."
+      },
+      "page.gpuBusy": {
+        "label": "GPU sibuk",
+        "hint": "Bagian dari setiap detik saat dunia dan tampilan halaman membuat GPU sibuk; di atas 100 % waktu GPU mereka tumpang tindih dan GPU menahan frame."
+      },
+      "page.cpuBusy": {
+        "label": "CPU sibuk",
+        "hint": "Bagian dari setiap detik saat dunia halaman membuat thread utama sibuk; mereka berbagi satu thread utama, jadi dijumlahkan."
+      },
+      "page.view": {
+        "label": "tampilan {n}",
+        "hint": "Waktu GPU gambar terakhir sebuah tampilan di samping tampilan utama, dan bagiannya dari frame dunia."
+      },
+      "profile.cpuFrame": {
+        "label": "Frame CPU",
+        "hint": "Waktu thread utama untuk callback animation frame dalam satu frame, sebagai median / persentil ke-95 selama detik terakhir; hanya dengan ?profile."
+      },
+      "profile.pageHooks": {
+        "label": "Hook halaman",
+        "hint": "Waktu hook frame milik halaman dalam satu frame, sebagai median / persentil ke-95 selama detik terakhir; hanya dengan ?profile."
+      },
+      "profile.engineCpu": {
+        "label": "CPU mesin",
+        "hint": "Waktu CPU mesin untuk seluruh gambar, sebagai median / persentil ke-95 selama detik terakhir; hanya dengan ?profile."
+      },
+      "profile.workerStep": {
+        "label": "Langkah worker fisika",
+        "hint": "Langkah tetap paling lambat dari worker fisika dalam satu tick, sebagai median / persentil ke-95 selama detik terakhir; hanya dengan ?profile."
+      },
+      "shadows.included": {
+        "label": "termasuk di GPU",
+        "hint": "Waktu ini sudah ada di total GPU: jangan pernah menambahkannya."
+      },
+      "summary.frame": {
+        "label": "Frame",
+        "hint": "Waktu antara dua gambar yang tampil; naik bila salah satu prosesor lebih lama dari satu refresh."
+      },
+      "summary.gpu": {
+        "label": "GPU",
+        "hint": "Rata-rata waktu GPU satu gambar dalam sedetik terakhir; naik dengan piksel, lampu, dan geometri yang digambar."
+      },
+      "summary.cpu": {
+        "label": "CPU",
+        "hint": "Median waktu thread utama per frame dalam sedetik terakhir; naik dengan kerja yang dikirim ke GPU."
+      },
+      "summary.wait": {
+        "label": "Tunggu",
+        "hint": "Waktu frame menunggu layar setelah prosesor yang lebih lambat selesai."
+      },
+      "summary.bottleneck": {
+        "label": "Dibatasi oleh",
+        "hint": "Putusan mesin tentang apa yang menahan frame: batas pertama yang dicapai jendela."
+      },
+      "summary.screen": {
+        "label": "Layar {hz} Hz",
+        "hint": "Berapa lama setiap gambar bertahan di layar, dihitung dalam penyegaran layar: 1 berarti setiap penyegaran, lebih banyak berarti gambar terlambat."
+      },
+      "summary.screenValue": {
+        "label": "1 gambar / {n} penyegaran",
+        "hint": "Jumlah penyegaran yang dilalui gambar tipikal pada detik terakhir di layar."
+      },
+      "summary.screenShare": {
+        "label": "{share} % gambar dalam {n} penyegaran",
+        "hint": "Satu bagian dari distribusi layar: porsinya dari gambar pada detik terakhir."
+      },
+      "summary.screenShareOrMore": {
+        "label": "{share} % dalam {n} atau lebih",
+        "hint": "Bagian terakhir dari distribusi layar: porsinya dari gambar, pada jumlah penyegaran tersebut atau lebih."
+      },
+      "summary.gpuIdle": {
+        "label": "GPU menganggur",
+        "hint": "Waktu GPU menganggur sebelum gambar terukur terakhirnya; naik saat CPU memberinya pekerjaan terlambat."
+      },
+      "summary.mainView": {
+        "label": "tampilan utama",
+        "hint": "Dunia pertama yang dibuat halaman, tampilan utama halaman."
+      },
+      "summary.world": {
+        "label": "dunia",
+        "hint": "Sebuah dunia halaman selain tampilan utama."
+      },
+      "summary.budget": {
+        "label": "anggaran",
+        "hint": "Waktu yang diberikan satu refresh layar untuk satu frame; garis putus-putus grafik."
+      },
+      "bottleneck.healthy": {
+        "label": "Layar",
+        "hint": "Frame muat dalam satu refresh: laju frame sama dengan layar."
+      },
+      "bottleneck.memory_pressure": {
+        "label": "Tersendat",
+        "hint": "Frame melampaui batas tersendat: bebaskan memori atau kurangi beban streaming."
+      },
+      "bottleneck.gpu_bound": {
+        "label": "GPU",
+        "hint": "GPU lebih lama dari satu refresh dan menahan frame: turunkan resolusi atau pencahayaan."
+      },
+      "bottleneck.cpu_bound": {
+        "label": "CPU",
+        "hint": "Thread utama lebih lama dari satu refresh dan menahan frame: kurangi kerja per frame."
+      },
+      "bottleneck.gpu_submit_bound": {
+        "label": "Kirim GPU",
+        "hint": "Mengirim perintah ke GPU melebihi setengah refresh: kurangi draw call dan pass."
+      },
+      "bottleneck.streaming_bound": {
+        "label": "Streaming",
+        "hint": "Lebih banyak halaman dalam perjalanan daripada yang bisa dilayani worker: jaringan atau disk menahan adegan."
+      },
+      "panel.label": {
+        "label": "Statistik",
+        "hint": "Overlay profiler."
+      },
+      "panel.hint": {
+        "label": "Klik: ringkas · seret: pindah · tombol ` / ²",
+        "hint": "Gestur baris header."
+      },
+      "unit.fps": {
+        "label": "fps",
+        "hint": "Frame yang digambar per detik."
+      },
+      "summary.cpuShort": {
+        "label": "CPU",
+        "hint": "Waktu thread utama satu frame."
+      },
+      "summary.gpuShort": {
+        "label": "GPU",
+        "hint": "Waktu prosesor grafis satu gambar."
+      },
+      "row.max": {
+        "label": "maks",
+        "hint": "Nilai tertinggi dalam sedetik terakhir."
+      },
+      "summary.held": {
+        "label": "tertahan",
+        "hint": "Tidak ada frame baru dalam sedetik terakhir: tak ada yang bergerak, gambar ditampilkan ulang."
+      },
+      "summary.last": {
+        "label": "terakhir",
+        "hint": "Waktu GPU yang tampil milik gambar sebelumnya: perangkat belum mengambil sampel yang lebih baru."
+      },
+      "gpu.physics": {
+        "label": "Fisika",
+        "hint": "Langkah benda kaku dan lunak di GPU; naik dengan benda yang disimulasikan."
+      },
+      "gpu.animations": {
+        "label": "Animasi",
+        "hint": "Skinning dan deformasi objek beranimasi; naik dengan vertex beranimasi."
+      },
+      "gpu.lights": {
+        "label": "Lampu",
+        "hint": "Menyiapkan lampu adegan untuk frame; naik dengan jumlah lampu."
+      },
+      "gpu.cutAdoption": {
+        "label": "Adopsi potongan",
+        "hint": "Menerima potongan yang dipilih seleksi; naik bila potongan banyak berubah antar gambar."
+      },
+      "gpu.selection": {
+        "label": "Seleksi",
+        "hint": "Memilih klaster yang digambar menurut pandangan dan detail; naik dengan node hierarki yang diuji."
+      },
+      "gpu.transparents": {
+        "label": "Transparan",
+        "hint": "Menggambar permukaan tembus pandang; naik dengan segitiga dan lapisan transparan."
+      },
+      "gpu.residency": {
+        "label": "Residensi",
+        "hint": "Memutuskan halaman geometri mana yang harus ada di memori; naik selama pandangan berubah."
+      },
+      "gpu.hostPages": {
+        "label": "Halaman host",
+        "hint": "Menyalin data halaman yang di-stream CPU ke GPU; naik selama halaman baru tiba."
+      },
+      "gpu.uploads": {
+        "label": "Unggahan",
+        "hint": "Mengirim data ke buffer GPU; naik dengan geometri dinamis dan streaming."
+      },
+      "gpu.textures": {
+        "label": "Tekstur",
+        "hint": "Streaming dan dekode level tekstur; naik selama tekstur baru dimuat."
+      },
+      "gpu.partition": {
+        "label": "Partisi",
+        "hint": "Menyortir klaster yang digambar ke batch gambar; naik dengan klaster yang digambar."
+      },
+      "gpu.encode": {
+        "label": "Encode",
+        "hint": "Menyusun perintah yang dibaca tahap raster; naik dengan batch gambar."
+      },
+      "gpu.submit": {
+        "label": "Submit",
+        "hint": "Pass yang menyerahkan kerja ke antrean; naik dengan jumlah submit."
+      },
+      "gpu.hiZ": {
+        "label": "Hi-Z",
+        "hint": "Membangun piramida kedalaman untuk uji oklusi; naik dengan resolusi."
+      },
+      "gpu.geometry": {
+        "label": "Geometri",
+        "hint": "Merasterisasi buffer visibilitas dan menulis permukaan; naik dengan segitiga digambar dan piksel tercakup."
+      },
+      "gpu.coplanar": {
+        "label": "Koplanar",
+        "hint": "Menyelesaikan permukaan di bidang yang sama; naik dengan decal yang bertumpuk."
+      },
+      "gpu.shadows": {
+        "label": "Bayangan",
+        "hint": "Merender dan memproyeksikan halaman bayangan; naik dengan lampu pembayang dan halaman yang digambar ulang."
+      },
+      "gpu.lightLists": {
+        "label": "Daftar lampu",
+        "hint": "Mengumpulkan lampu yang menjangkau tiap ubin layar; naik dengan jumlah dan jangkauan lampu."
+      },
+      "gpu.bounce": {
+        "label": "Pantulan cahaya",
+        "hint": "Cahaya yang memantul antar permukaan; naik dengan sinar yang dilacak."
+      },
+      "gpu.reflections": {
+        "label": "Refleksi",
+        "hint": "Gambar pantulan adegan; naik dengan piksel reflektif dan sinar yang dilacak."
+      },
+      "gpu.lighting": {
+        "label": "Pencahayaan",
+        "hint": "Menshade tiap piksel dari permukaan dan lampu; naik dengan piksel dan lampu."
+      },
+      "gpu.antialiasing": {
+        "label": "Antialiasing",
+        "hint": "Menghaluskan tepi sepanjang waktu; naik dengan resolusi."
+      },
+      "gpu.effects": {
+        "label": "Efek",
+        "hint": "Pascapemrosesan seperti bloom, eksposur, dan kabut; naik dengan efek yang aktif dan resolusi."
+      },
+      "gpu.present": {
+        "label": "Present",
+        "hint": "Resampling dan penyerahan gambar ke layar; naik dengan resolusi layar."
+      },
+      "gpu.unclassified": {
+        "label": "Tak terklasifikasi",
+        "hint": "Pass terukur yang tak dinamai tahap mana pun; didaftar agar tahap tetap berjumlah penuh."
+      },
+      "gpu.untimed": {
+        "label": "Di luar pass terukur",
+        "hint": "Waktu GPU gambar yang tak tercakup pass terukur: salinan, jeda antar pass, resolve timestamp."
+      },
+      "cpu.physics": {
+        "label": "Fisika",
+        "hint": "Langkah simulasi di thread utama; naik dengan benda yang disimulasikan."
+      },
+      "cpu.animations": {
+        "label": "Animasi",
+        "hint": "Menyiapkan objek beranimasi di thread utama; naik dengan objek beranimasi."
+      },
+      "cpu.textures": {
+        "label": "Tekstur",
+        "hint": "Memberi makan streamer tekstur di thread utama; naik selama tekstur baru dimuat."
+      },
+      "cpu.transparents": {
+        "label": "Transparan",
+        "hint": "Menyiapkan dan menggambar permukaan tembus pandang; naik dengan mesh dan lapisan transparan."
+      },
+      "cpu.cutAdoption": {
+        "label": "Adopsi potongan",
+        "hint": "Menerima potongan yang dipilih seleksi; naik bila potongan banyak berubah antar gambar."
+      },
+      "cpu.residency": {
+        "label": "Residensi",
+        "hint": "Memutuskan dan mengantrekan halaman geometri yang harus ada di memori; naik selama pandangan berubah."
+      },
+      "cpu.uploads": {
+        "label": "Unggahan",
+        "hint": "Mengirim data ke buffer GPU; naik dengan geometri dinamis dan streaming."
+      },
+      "cpu.selection": {
+        "label": "Seleksi",
+        "hint": "Menjalankan seleksi klaster; naik dengan node hierarki yang diuji."
+      },
+      "cpu.encode": {
+        "label": "Encode",
+        "hint": "Merekam perintah GPU; naik dengan pass dan batch gambar."
+      },
+      "cpu.submit": {
+        "label": "Submit",
+        "hint": "Menyerahkan perintah terekam ke antrean; naik dengan jumlah submit."
+      },
+      "cpu.hostPages": {
+        "label": "Halaman host",
+        "hint": "Mengintegrasikan halaman geometri yang di-stream CPU; naik selama halaman baru tiba."
+      },
+      "cpu.rest": {
+        "label": "Sisa frame",
+        "hint": "Waktu CPU seluruh frame mesin yang tidak dicakup tahap mana pun di atas (0 bila pekerjaan di luar frame membuat tahap melebihinya); skrip halaman, input, dan tata letak tidak termasuk."
+      },
+      "shadows.invalidation": {
+        "label": "Invalidasi",
+        "hint": "Menandai halaman bayangan usang setelah sesuatu bergerak; naik dengan pembayang yang bergerak."
+      },
+      "shadows.marking": {
+        "label": "Penandaan",
+        "hint": "Mencari halaman bayangan yang dibutuhkan pandangan; naik dengan piksel yang disinari lampu berbayang."
+      },
+      "shadows.pageManagement": {
+        "label": "Manajemen halaman",
+        "hint": "Mengalokasi dan mendaur ulang halaman bayangan; naik dengan halaman yang diminta."
+      },
+      "shadows.render": {
+        "label": "Render",
+        "hint": "Menggambar halaman bayangan yang berubah; naik dengan halaman yang digambar ulang dan pembayang di dalamnya."
+      },
+      "shadows.projection": {
+        "label": "Proyeksi",
+        "hint": "Memproyeksikan peta bayangan ke gambar; naik dengan lampu berbayang dan resolusi."
+      },
+      "shadows.transmission": {
+        "label": "Transmisi",
+        "hint": "Atlas pembayang tembus pandang; naik dengan pembayang tembus cahaya."
+      },
+      "shadows.lights": {
+        "label": "Lampu berbayangan",
+        "hint": "Lampu yang memproyeksikan peta bayangan virtual pada frame ini; jumlah di Scene menghitung semua lampu aktif."
+      },
+      "shadows.maps": {
+        "label": "Peta",
+        "hint": "Peta bayangan virtual frame ini; naik dengan lampu pembayang."
+      },
+      "shadows.pagesRequested": {
+        "label": "Halaman bayangan diminta",
+        "hint": "Halaman bayangan yang diminta frame; naik dengan area berbayang di layar."
+      },
+      "shadows.pagesAllocated": {
+        "label": "Halaman bayangan dialokasi",
+        "hint": "Halaman bayangan yang baru diambil dari pool frame ini; naik saat pandangan atau lampu bergerak."
+      },
+      "shadows.pagesCached": {
+        "label": "Halaman bayangan di cache",
+        "hint": "Halaman bayangan diminta yang sudah tergambar; turun saat pembayang atau lampu bergerak."
+      },
+      "shadows.pagesRendered": {
+        "label": "Halaman bayangan dirender",
+        "hint": "Halaman bayangan yang dibersihkan dan digambar frame ini; naik saat pembayang atau lampu bergerak."
+      },
+      "shadows.freePages": {
+        "label": "Halaman bayangan bebas",
+        "hint": "Halaman bayangan fisik yang tersisa di pool; turun saat lebih banyak diminta."
+      },
+      "shadows.lodBias": {
+        "label": "Bias detail bayangan",
+        "hint": "Seberapa kasar peta bayangan digambar dari yang diminta; naik saat pool penuh."
+      },
+      "shadows.projectionPasses": {
+        "label": "Pass proyeksi",
+        "hint": "Pass proyeksi frame ini, empat lampu masing-masing; naik dengan lampu berbayang."
+      },
+      "shadows.resolutionBias": {
+        "label": "Bias resolusi bayangan",
+        "hint": "Level bayangan lebih kasar dari yang diminta karena pool-nya; 0 sehat."
+      },
+      "memory.screen": {
+        "label": "Gambar layar",
+        "hint": "Target yang bergantung pada resolusi; naik dengan ukuran render."
+      },
+      "memory.shadows": {
+        "label": "Pool bayangan",
+        "hint": "Pool halaman bayangan; naik dengan kualitas bayangan."
+      },
+      "memory.geometry": {
+        "label": "Geometri",
+        "hint": "Pool halaman geometri yang dicadangkan di GPU, terpakai atau tidak; pemakaiannya ada di Adegan."
+      },
+      "memory.textures": {
+        "label": "Pool tekstur",
+        "hint": "Pool tekstur, tetap selama sesi; ditentukan anggaran tekstur."
+      },
+      "memory.liveTextures": {
+        "label": "Tekstur hidup",
+        "hint": "Tekstur kerja di luar pool; naik dengan tekstur hidup di adegan."
+      },
+      "memory.other": {
+        "label": "Sumber daya lain",
+        "hint": "Memori GPU yang tak dinamai jenis di atas: buffer, gambar riwayat, cache."
+      },
+      "scene.trianglesSelected": {
+        "label": "Segitiga terpilih",
+        "hint": "Segitiga yang dipertahankan potongan setelah uji pandangan dan detail; naik dengan detail adegan yang terlihat."
+      },
+      "scene.trianglesDrawn": {
+        "label": "Segitiga digambar",
+        "hint": "Segitiga yang digambar setelah oklusi membuang yang tersembunyi; naik dengan detail terlihat."
+      },
+      "scene.trianglesScene": {
+        "label": "Segitiga (scene)",
+        "hint": "Segitiga dari mesh terlihat di scene, dihitung halaman ketika frame tidak menerbitkan segitiga terpilih."
+      },
+      "scene.drawCalls": {
+        "label": "Draw call",
+        "hint": "Perintah gambar yang dikirim frame ini; naik dengan jumlah batch."
+      },
+      "scene.geometryPages": {
+        "label": "Halaman geometri",
+        "hint": "Halaman geometri yang berada di memori; naik dengan detail yang dimuat."
+      },
+      "scene.poolUsed": {
+        "label": "Pool geometri terpakai",
+        "hint": "Byte pool geometri yang berisi halaman; naik saat halaman dimuat."
+      },
+      "scene.poolCapacity": {
+        "label": "Kapasitas pool geometri",
+        "hint": "Byte yang dicadangkan untuk pool geometri; ditentukan adegan dan batas perangkat."
+      },
+      "scene.lights": {
+        "label": "Lampu",
+        "hint": "Lampu adegan yang menyinari frame."
+      },
+      "pass.compose roots": {
+        "label": "hitung akar",
+        "hint": "Menghitung matriks dunia setiap akar penempatan dari induknya; naik dengan jumlah penempatan yang beranimasi atau bergerak."
+      },
+      "pass.compose motion": {
+        "label": "hitung gerakan",
+        "hint": "Menghitung bagaimana tiap penempatan bergerak sejak gambar sebelumnya, untuk vektor gerak; naik dengan jumlah penempatan yang bergerak."
+      },
+      "pass.compose rows": {
+        "label": "hitung baris",
+        "hint": "Menghitung matriks dunia baris-baris penempatan; naik dengan jumlah penempatan."
+      },
+      "pass.root boxes": {
+        "label": "kotak akar",
+        "hint": "Menyesuaikan kotak dunia dan peregangan setiap akar penempatan; naik dengan jumlah akar."
+      },
+      "pass.placement tree leaves": {
+        "label": "daun pohon penempatan",
+        "hint": "Menyesuaikan kotak daun pohon penempatan; naik dengan jumlah penempatan."
+      },
+      "pass.placement tree refit": {
+        "label": "penyesuaian ulang pohon penempatan",
+        "hint": "Menyesuaikan ulang kotak dalam pohon penempatan setelah daunnya bergerak; naik dengan jumlah penempatan yang bergerak."
+      },
+      "pass.DAG selection": {
+        "label": "pemilihan DAG",
+        "hint": "Menelusuri graf geometri dan memilih detail yang dibutuhkan tiap tampilan; naik dengan detail yang terlihat."
+      },
+      "pass.DAG mask swap": {
+        "label": "pertukaran masker DAG",
+        "hint": "Menukar masker pemilihan antar gambar; kecil dan tetap."
+      },
+      "pass.partition": {
+        "label": "partisi",
+        "hint": "Memadatkan klaster terpilih menjadi pemanggilan gambar; naik dengan klaster yang dipilih."
+      },
+      "pass.HiZ": {
+        "label": "HiZ",
+        "hint": "Membangun piramida kedalaman untuk menyembunyikan yang terhalang; naik dengan ukuran render."
+      },
+      "pass.visibility primary": {
+        "label": "visibilitas primer",
+        "hint": "Menggambar kedalaman penghalang agar sisanya diuji terhadapnya; naik dengan penghalang yang terlihat."
+      },
+      "pass.visibility secondary": {
+        "label": "visibilitas sekunder",
+        "hint": "Menggambar separuh geometri yang diuji terhadap kedalaman penghalang; naik dengan geometri yang lolos uji."
+      },
+      "pass.visibility identifiers": {
+        "label": "pengenal visibilitas",
+        "hint": "Menggambar pengenal permukaan di bawah tiap piksel; naik dengan ukuran render dan geometri yang digambar."
+      },
+      "pass.raster binning": {
+        "label": "pengelompokan raster",
+        "hint": "Mengurutkan segitiga kecil raster perangkat lunak ke dalam ubin layar; naik dengan segitiga kecil yang terlihat."
+      },
+      "pass.raster occluder depth": {
+        "label": "kedalaman penghalang (raster)",
+        "hint": "Raster perangkat lunak untuk kedalaman penghalang; naik dengan segitiga kecil penghalang."
+      },
+      "pass.raster tested depth": {
+        "label": "kedalaman teruji (raster)",
+        "hint": "Raster perangkat lunak untuk kedalaman geometri yang diuji; naik dengan segitiga kecil yang diuji."
+      },
+      "pass.raster identifiers": {
+        "label": "pengenal (raster)",
+        "hint": "Raster perangkat lunak untuk pengenal permukaan; naik dengan segitiga kecil yang digambar."
+      },
+      "pass.raster occluder hiz": {
+        "label": "HiZ penghalang (raster)",
+        "hint": "Membangun piramida kedalaman dari penghalang raster perangkat lunak; naik dengan ukuran render."
+      },
+      "pass.raster resolve": {
+        "label": "resolusi raster",
+        "hint": "Menggabungkan piksel raster perangkat lunak ke buffer visibilitas; naik dengan ukuran render."
+      },
+      "pass.empty surfaces": {
+        "label": "permukaan kosong",
+        "hint": "Mengosongkan gambar permukaan saat gambar tidak menggambar material; kecil dan tetap."
+      },
+      "pass.material cache, bins and shading": {
+        "label": "cache, bin, dan shading material",
+        "hint": "Menyusun apa yang dibagi frame, mengurutkan piksel menurut material, dan menshade bin tiap material; naik dengan material dan piksel yang terlihat."
+      },
+      "pass.material surfaces": {
+        "label": "permukaan material",
+        "hint": "Mengosongkan gambar permukaan dan umpan balik sebelum material dishade; naik dengan ukuran render."
+      },
+      "pass.texture feedback reduce": {
+        "label": "reduksi umpan balik tekstur",
+        "hint": "Mereduksi ubin tekstur mana yang diminta gambar; naik dengan tekstur yang terlihat."
+      },
+      "pass.texture eviction queue": {
+        "label": "antrean pengusiran tekstur",
+        "hint": "Mengurutkan ubin tekstur yang dilepas saat kolam penuh; naik dengan ukuran kolam."
+      },
+      "pass.transparents": {
+        "label": "transparan",
+        "hint": "Menggambar permukaan transparan lapis demi lapis; naik dengan permukaan transparan yang terlihat."
+      },
+      "pass.blend companion": {
+        "label": "gambar pendamping blend",
+        "hint": "Menggambar gambar pendamping dari dual blend; naik dengan permukaan transparan yang terlihat."
+      },
+      "pass.distortion": {
+        "label": "distorsi",
+        "hint": "Mengakumulasi refraksi permukaan transmisif; naik dengan jumlah dan ukurannya di layar."
+      },
+      "pass.distortion apply": {
+        "label": "penerapan distorsi",
+        "hint": "Menerapkan refraksi yang terakumulasi ke gambar; naik dengan ukuran render."
+      },
+      "pass.transparent compaction": {
+        "label": "pemadatan transparan",
+        "hint": "Memadatkan pemanggilan gambar transparan yang terlihat; naik dengan geometri transparan."
+      },
+      "pass.transparent occlusion": {
+        "label": "oklusi transparan",
+        "hint": "Menguji geometri transparan terhadap kedalaman; naik dengan geometri transparan."
+      },
+      "pass.blend order and expansion": {
+        "label": "urutan dan ekspansi blend",
+        "hint": "Mengurutkan dan memperluas permukaan transparan untuk blending; naik dengan permukaan transparan yang terlihat."
+      },
+      "pass.display mask": {
+        "label": "masker tampilan",
+        "hint": "Membangun masker piksel yang dikenai filter tampilan; naik dengan ukuran render."
+      },
+      "pass.display filter": {
+        "label": "filter tampilan",
+        "hint": "Menerapkan filter tampilan pada gambar; naik dengan ukuran render."
+      },
+      "pass.transparent front": {
+        "label": "depan transparan",
+        "hint": "Menyimpan permukaan depan transparan yang menjadi target pelacakan pantulan; naik dengan ukuran render."
+      },
+      "pass.particle draw": {
+        "label": "gambar partikel",
+        "hint": "Menggambar partikel; naik dengan partikel yang hidup dan area yang ditutupinya."
+      },
+      "pass.light tiles": {
+        "label": "ubin cahaya",
+        "hint": "Membangun daftar cahaya per ubin; naik dengan jumlah cahaya dan ukuran render."
+      },
+      "pass.bounce": {
+        "label": "pantulan cahaya (bounce)",
+        "hint": "Memperbarui cahaya pantul: menandai sel yang terlihat, menulis tabel, dan menyegarkan probe; naik dengan sel yang tersinari dan terlihat."
+      },
+      "pass.bounce light lists": {
+        "label": "daftar cahaya bounce",
+        "hint": "Membangun daftar cahaya di atas kisi dunia bounce; naik dengan cahaya di dekat sel yang tersinari."
+      },
+      "pass.proxy pose": {
+        "label": "pose proksi",
+        "hint": "Memosisikan proksi penempatan yang berdeformasi untuk pantulan dan bounce; naik dengan penempatan yang berdeformasi."
+      },
+      "pass.reflections": {
+        "label": "pantulan",
+        "hint": "Mereduksi piramida kedalaman untuk pantulan; naik dengan ukuran render."
+      },
+      "pass.reflection trace": {
+        "label": "pelacakan pantulan",
+        "hint": "Mengklasifikasi ubin layar dan melacak pantulan melalui layar; naik dengan piksel reflektif."
+      },
+      "pass.reflection scene": {
+        "label": "pantulan adegan",
+        "hint": "Melacak melalui adegan sinar yang tidak bisa dijawab layar; naik dengan piksel reflektif yang terlewat oleh layar."
+      },
+      "pass.reflection denoise": {
+        "label": "denoise pantulan",
+        "hint": "Memakai ulang pantulan tetangga dan sebelumnya untuk membersihkan gambar; naik dengan ukuran render."
+      },
+      "pass.reflection radiance": {
+        "label": "radiansi pantulan",
+        "hint": "Membangun piramida radiansi gambar yang tersinari untuk pantulan gambar berikutnya; naik dengan ukuran render."
+      },
+      "pass.particles": {
+        "label": "partikel",
+        "hint": "Mensimulasikan langkah partikel; naik dengan partikel yang hidup."
+      },
+      "pass.deferred lighting": {
+        "label": "pencahayaan tertunda",
+        "hint": "Menyinari setiap piksel dari permukaan, cahaya, dan bayangan; naik dengan ukuran render dan jumlah cahaya."
+      },
+      "pass.as is share seed": {
+        "label": "benih bagian tak berubah",
+        "hint": "Menyemai bagian gambar yang dipertahankan apa adanya oleh resolusi temporal; naik dengan ukuran render."
+      },
+      "pass.temporal antialiasing": {
+        "label": "antialiasing temporal",
+        "hint": "Memadukan gambar dengan gambar sebelumnya untuk menghaluskan tepi; naik dengan ukuran render."
+      },
+      "pass.exposure": {
+        "label": "eksposur",
+        "hint": "Mengukur kecerahan gambar dan memperbarui eksposur otomatis; kecil dan tetap."
+      },
+      "pass.scene downsample": {
+        "label": "downsample adegan",
+        "hint": "Membangun rantai salinan gambar yang makin kecil untuk dibaca bloom dan eksposur lokal; naik dengan ukuran render."
+      },
+      "pass.local exposure": {
+        "label": "eksposur lokal",
+        "hint": "Menyesuaikan eksposur wilayah demi wilayah; naik dengan ukuran render."
+      },
+      "pass.bloom": {
+        "label": "bloom",
+        "hint": "Menyebarkan bagian terang gambar menjadi pendar; naik dengan ukuran render."
+      },
+      "pass.outline": {
+        "label": "kontur",
+        "hint": "Memindai dan menggambar kontur objek terpilih; naik dengan ukuran render dan kontur yang diminta."
+      },
+      "pass.HDR composition": {
+        "label": "komposisi HDR",
+        "hint": "Menyusun gambar akhir dari gambar tersinari dan efek; naik dengan ukuran render."
+      },
+      "pass.HDR composition + present": {
+        "label": "komposisi HDR + tampil",
+        "hint": "Menyusun gambar akhir dan menampilkannya ke layar dalam satu pass; naik dengan ukuran render."
+      },
+      "pass.direct present": {
+        "label": "tampil langsung",
+        "hint": "Menggambar gambar langsung ke layar; naik dengan ukuran render."
+      },
+      "pass.view present": {
+        "label": "tampil tampilan",
+        "hint": "Menggambar gambar ke dalam sebuah tampilan halaman; naik dengan ukuran tampilan."
+      },
+      "pass.guides": {
+        "label": "pemandu",
+        "hint": "Menggambar pemandu di atas gambar; naik dengan pemandu yang ditampilkan."
+      },
+      "pass.x ray": {
+        "label": "sinar X",
+        "hint": "Menggambar tepi tampilan sinar-X di atas gambar yang tersinari; naik dengan ukuran render."
+      },
+      "pass.frame difference": {
+        "label": "selisih gambar",
+        "hint": "Menampilkan gambar dibanding gambar sebelumnya; naik dengan ukuran render."
+      },
+      "pass.see through background": {
+        "label": "latar tampilan tembus",
+        "hint": "Membentangkan latar tampilan tembus sebelum transparannya; naik dengan ukuran render."
+      },
+      "pass.capture emission and occlusion": {
+        "label": "tangkapan emisi dan oklusi",
+        "hint": "Menangkap lapisan emisi dan oklusi permukaan; naik dengan ukuran render."
+      },
+      "pass.texture mips": {
+        "label": "mip tekstur",
+        "hint": "Membangun level lebih kecil dari tekstur yang baru dimuat; naik dengan tekstur yang diunggah."
+      },
+      "pass.deformation": {
+        "label": "deformasi",
+        "hint": "Mendeformasi geometri penempatan yang berdeformasi; naik dengan jumlah verteksnya."
+      },
+      "pass.animation banks": {
+        "label": "bank animasi",
+        "hint": "Memutar bank animasi kerumunan; naik dengan instans beranimasi."
+      },
+      "pass.vsm": {
+        "label": "VSM",
+        "hint": "Setiap pass peta bayangan virtual: render, hapus, proyeksi, dan penggabungan halaman bayangan; naik dengan cahaya berbayang dan halaman yang dibutuhkannya."
+      }
     },
     "failure": {
       "title": "Contoh ini berhenti karena sebuah kesalahan",
