@@ -27,6 +27,7 @@
       // A stress test of the physics: ten thousand boxes fall at once, every one of them a body
       // simulated by Jolt in a worker. The panel shows what it costs, live, on both threads.
       const world = createWorld('view', { controls: 'orbit', physics: true });
+      world.exposure = 1;
       world.scene.background = math.color('#1d2430');
       // The floor's far edge fades into the dark. The fog is light, exposed and tone-mapped like a
       // surface, the background is not: this is the radiance the display curve shows as #1d2430.

@@ -127,7 +127,9 @@
       }
 
       const first = createWorld('view', { controls: 'orbit' });
+      first.exposure = 1;
       const second = createWorld('second');
+      second.exposure = 1;
       const scenes = [desert(first), glacier(second)];
       const start = [-10, 6, 34], aim = [0, 3, 0];
       first.camera.position.set(...start);

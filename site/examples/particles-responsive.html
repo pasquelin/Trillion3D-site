@@ -29,9 +29,9 @@
     <canvas id="view"></canvas>
     <p data-words="credit"></p>
     <script type="module">
-      import { animation, createWorld, light, math } from '../runtime/engine.js'
-      import { controls, readout, viewModes, words } from '../runtime/kit.js'
-      const say = words()
+      import { animation, createWorld, light, math } from '../runtime/engine.js';
+      import { controls, readout, viewModes, words } from '../runtime/kit.js';
+      const say = words();
 
       // Temporal antialiasing mixes each image with the ones before it, followed as things move.
       // A small bright spark that crosses many pixels an image leaves a trail where the history
@@ -45,33 +45,30 @@
       // the material's own glTF `extras`. At `'medium'`: `materials`, then the extras, then extras
       // that `materials` overrides. At `'off'` the pink one asks `responsive` in its extras, but
       // `materials` sets it false, and that setting wins.
-      const world = createWorld('view', { controls: 'orbit', temporalAntialiasing: true })
-      world.scene.background = math.color('#05060a')
-      world.scene.add(
-        light.hemisphere({ intensity: 0.25, color: '#9aa6d6', groundColor: '#101014' }),
-      )
-      const sparks = await world.scene.load(
-        '../assets/examples/particles-responsive/cache/native/full/manifest.json',
-      )
-      const [clip] = sparks.animations
-      const motion = clip ? animation.createMixer(sparks).clipAction(clip).play() : null
+      const world = createWorld('view', { controls: 'orbit', temporalAntialiasing: true });
+      world.exposure = 1;
+      world.scene.background = math.color('#05060a');
+      world.scene.add(light.hemisphere({ intensity: 0.25, color: '#9aa6d6', groundColor: '#101014' }));
+      const sparks = await world.scene.load('../assets/examples/particles-responsive/cache/native/full/manifest.json');
+      const [clip] = sparks.animations;
+      const motion = clip ? animation.createMixer(sparks).clipAction(clip).play() : null;
 
-      world.camera.position.set(0, 7, 22)
-      world.controls.target.set(0, 1.2, 0)
-      world.controls.minDistance = 3
-      world.controls.maxDistance = 40
-      world.controls.maxPolarAngle = Math.PI / 2 - 0.05
+      world.camera.position.set(0, 7, 22);
+      world.controls.target.set(0, 1.2, 0);
+      world.controls.minDistance = 3;
+      world.controls.maxDistance = 40;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
 
-      let state = null
+      let state = null;
       controls({ smoothing: true, motion: true }, (values, key) => {
-        if (key === undefined || key === 'smoothing') world.temporalAntialiasing = values.smoothing
-        if (key === 'motion') values.motion ? motion?.play() : motion?.stop().seek(motion.time)
-        state?.(say(world.temporalAntialiasing !== 'off' ? 'on' : 'off'))
-        world.invalidate()
-      })
-      viewModes(world)
-      state = readout('temporalAntialiasing')
-      state(say(world.temporalAntialiasing !== 'off' ? 'on' : 'off'))
+        if (key === undefined || key === 'smoothing') world.temporalAntialiasing = values.smoothing;
+        if (key === 'motion') values.motion ? motion?.play() : motion?.stop().seek(motion.time);
+        state?.(say(world.temporalAntialiasing !== 'off' ? 'on' : 'off'));
+        world.invalidate();
+      });
+      viewModes(world);
+      state = readout('temporalAntialiasing');
+      state(say(world.temporalAntialiasing !== 'off' ? 'on' : 'off'));
     </script>
   </body>
 </html>

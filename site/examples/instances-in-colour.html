@@ -37,6 +37,7 @@
       const bands = Array.from({ length: BANDS }, () => material.meshStandard({ roughness: 0.4, emissive: '#000000', emissiveIntensity: 0.9 }));
 
       const world = createWorld('view', { controls: 'orbit' });
+      world.exposure = 1;
       world.scene.background = math.color('#05060c');
       const galaxy = object.group();
       world.scene.add(galaxy);

@@ -29,6 +29,7 @@
       // the physics' own, stands on the cooked floor and pushes the balls it meets. A click locks
       // the mouse to look; W A S D walk (Z Q S D on AZERTY), Shift sprints, Space jumps.
       const world = createWorld('view', { controls: 'character', physics: true });
+      world.exposure = 1;
       world.scene.background = math.color('#20252e');
       await world.scene.load('../assets/examples/hall/cache/native/full/manifest.json');
       const sun = light.directional({ intensity: 2.5, castShadow: true });

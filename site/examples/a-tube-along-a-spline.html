@@ -44,6 +44,7 @@
       };
 
       const world = createWorld('view', { controls: 'orbit' });
+      world.exposure = 1;
       const floor = object.mesh(geometry.cylinder(6, 6.2, 0.2, 96), material.meshStandard({ color: '#262b38', roughness: 0.55, metalness: 0.2 }));
       floor.position.y = -0.1;
       world.scene.add(floor);

@@ -31,6 +31,7 @@
       // it, and the listener, the ears, is the camera: copied from it before every frame, so
       // orbiting or zooming moves the sounds round your head. The engine draws; the browser hears.
       const world = createWorld('view', { controls: 'orbit' });
+      world.exposure = 1;
       const night = math.color('#070a14');
       world.scene.background = night;
       world.scene.fog = { color: night, density: 0.035, heightFalloff: 0.25 };

@@ -26,6 +26,7 @@
 
       // Physics is an option of the world: Jolt starts in a worker, fetched only now.
       const world = createWorld('view', { controls: 'orbit', physics: true });
+      world.exposure = 1;
       const sky = math.color('#cddbe8');
       world.scene.background = sky;
       world.scene.fog = { color: sky, near: 25, far: 60 };

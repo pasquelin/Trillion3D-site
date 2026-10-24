@@ -25,6 +25,7 @@
       import { controls, leafTexture, seeded } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
+      world.exposure = 1;
       world.scene.background = math.color('#a9c4dc');
       const ground = object.mesh(geometry.cylinder(3.2, 3.2, 0.2, 64), material.meshStandard({ color: '#5b6b3a', roughness: 0.95 }));
       ground.position.y = -0.1;

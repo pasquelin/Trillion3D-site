@@ -34,6 +34,7 @@
       const say = words();
 
       const world = createWorld('view', { controls: 'orbit' });
+      world.exposure = 1;
       world.scene.background = math.color('#b9d2ec');
       const sun = light.directional({ intensity: 3.4, color: '#ffe0b0', castShadow: true });
       world.scene.add(sun, light.hemisphere({ intensity: 0.85, color: '#cfe0ff', groundColor: '#8a6a50' }));

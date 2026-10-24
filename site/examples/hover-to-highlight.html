@@ -25,6 +25,7 @@
       import { controls, latestOnly } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
+      world.exposure = 1;
       world.scene.background = math.color('#18212c');
       const makePart = (shape, color, at) => {
         const part = object.mesh(shape, material.meshStandard({ color, roughness: 0.55 }));

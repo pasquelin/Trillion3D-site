@@ -8,6 +8,7 @@ export const PHYSICS_CHAPTERS: ChapterCode[] = [
     example: 'falling-boxes',
     code: [
       `const world = createWorld('view', { controls: 'orbit', physics: true });
+world.exposure = 1;
 
 const floor = object.mesh(geometry.box(40, 1, 40), material.meshStandard({ physics: 'stone' }));
 floor.physics = 'static'; // holds the others, never moves
@@ -28,6 +29,7 @@ world.physics.gravity = 'moon'; // or 'earth', 'mars', 'none'`,
     example: 'walk-with-collisions',
     code: [
       `const world = createWorld('view', { controls: 'character', physics: true });
+world.exposure = 1;
 
 floor.physics = 'static'; // the ground, the stairs, the walls: they never move
 platform.physics = 'kinematic'; // moved by your code, it carries what stands on it

@@ -30,6 +30,7 @@
       // takes as a hull. Neighbouring pieces are welded by a fixed joint that breaks past its
       // strength; an iron ball thrown from the camera does the rest.
       const world = createWorld('view', { controls: 'orbit', physics: true });
+      world.exposure = 1;
       const dusk = math.color('#2a2230');
       world.scene.background = dusk;
       world.scene.fog = { color: dusk, near: 28, far: 70 };

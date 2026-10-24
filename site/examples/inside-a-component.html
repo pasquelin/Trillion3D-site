@@ -31,6 +31,7 @@
         connectedCallback() {
           if (this.world) return;
           const world = (this.world = createWorld(this, { controls: 'orbit' }));
+          world.exposure = 1;
           world.canvas.id = 'view';
           world.scene.background = math.color('#182431');
           const gold = material.meshStandard({

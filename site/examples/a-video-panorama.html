@@ -85,6 +85,7 @@
       // The video on a great sphere seen from inside, unlit, and the camera at its centre. The
       // sphere's picture runs from +x towards +z, left to right for an eye at its centre.
       const world = createWorld('view', { controls: 'orbit' });
+      world.exposure = 1;
       const dome = object.mesh(geometry.sphere(100, 96, 48), material.meshBasic({ map: texture.video(video), side: side.back }));
       world.scene.add(dome);
       world.camera.far = 300;

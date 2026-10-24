@@ -31,6 +31,7 @@
       // Light tinted by the glass it crosses is not drawn by the engine yet: the patch on the
       // floor keeps the sun's colour.
       const world = createWorld('view', { controls: 'orbit' });
+      world.exposure = 1;
       world.scene.background = math.color('#9ec3e6');
       const stone = material.meshStandard({ color: '#d8d0c2', roughness: 0.9 });
       const put = (shape, matter, x, y, z) => {

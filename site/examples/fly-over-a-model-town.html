@@ -109,6 +109,7 @@
       // controller does not know: thrust, gravity along the path, the stall, the runway, the
       // gear, the crash.
       const world = createWorld('view', { controls: 'fly', physics: true });
+      world.exposure = 1;
       const HORIZON = '#f6c592';
       world.scene.background = math.color(HORIZON);
       const camera = world.camera, canvas = document.getElementById('view');

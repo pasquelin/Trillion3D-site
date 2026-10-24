@@ -99,6 +99,7 @@
         geometry.ring(0.25, 0.6, 64, 4),
       ];
       const world = createWorld('view', { controls: 'orbit' });
+      world.exposure = 1;
       const floor = object.mesh(geometry.box(12, 0.2, 9), material.meshStandard({ color: '#2a2f3a', roughness: 0.8 }));
       floor.position.y = -0.1;
       world.scene.add(floor);

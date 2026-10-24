@@ -23,6 +23,7 @@ export const CHAPTERS: ChapterCode[] = [
       `import { createWorld, geometry, material, object, light } from 'trillion3d';
 
 const world = createWorld('view', { controls: 'orbit' });
+world.exposure = 1;
 const cube = object.mesh(geometry.box(1, 1, 1), material.meshStandard({ color: '#3c8ce0' }));
 cube.position.set(0, 0.5, 0);
 world.scene.add(cube);
@@ -76,6 +77,7 @@ sun.color.set('#ffb070'); // an evening sun`,
     example: 'orbit-around-a-clockwork',
     code: [
       `const world = createWorld('view', { controls: 'orbit' });
+world.exposure = 1;
 world.camera.position.set(2.6, 3, 4.4);
 world.camera.lookAt(0.2, 2.2, 0);
 world.controls.target.set(0.2, 2.2, 0); // the point the camera turns around
@@ -124,6 +126,7 @@ world.diagnostic.mode = 'clusters'; // paint each piece in its own colour`,
     example: 'a-scene-of-your-own',
     code: [
       `const world = createWorld('view', { controls: 'orbit' });
+world.exposure = 1;
 
 const wall = material.meshStandard({ color: '#efe6d2', roughness: 0.8 });
 const house = object.mesh(geometry.box(1.6, 1.2, 1.4), wall);

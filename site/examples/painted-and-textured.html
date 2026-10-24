@@ -39,6 +39,7 @@
       const checks = texture.canvas(board);
 
       const world = createWorld('view', { controls: 'orbit' });
+      world.exposure = 1;
       world.scene.background = math.color('#2e2a27');
       const slab = object.mesh(geometry.box(7, 0.3, 5), material.meshStandard({ color: '#2a2f3a', roughness: 0.85 }));
       slab.position.y = -0.15;

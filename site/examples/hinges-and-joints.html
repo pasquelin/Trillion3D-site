@@ -28,6 +28,7 @@
       // that breaks under a weight. Every joint is one of Jolt's constraints between two bodies,
       // or between a body and the world (`null`); `world.physics.add` puts it in the simulation.
       const world = createWorld('view', { controls: 'orbit', physics: true });
+      world.exposure = 1;
       world.scene.background = math.color('#e6d3b8');
       world.camera.far = 300;
 

@@ -30,6 +30,7 @@
       // body: once the physics is on, the bodies are restored as the model loads, and each one
       // moves its own drawn node. The plinth declares nothing and stays static ground.
       const world = createWorld('view', { controls: 'orbit', physics: true });
+      world.exposure = 1;
       world.scene.background = math.color('#d6e2ec');
       const MODEL = '../assets/examples/cooked-blocks/cache/native/full/manifest.json';
       let model = await world.scene.load(MODEL),

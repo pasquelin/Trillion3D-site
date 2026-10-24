@@ -281,6 +281,7 @@
       // wall — at the display's resolution; the others, as a real monitor wall does, at half of it
       // and without temporal antialiasing, their image upscaled as drawn.
       const world = createWorld('view');
+      world.exposure = 1;
       const scene = build(world);
       const feeds = [world, ...cells.slice(1).map(({ cell }) => world.addView({ canvas: cell.querySelector('canvas') }))];
       for (const { camera } of feeds) camera.far = 900;

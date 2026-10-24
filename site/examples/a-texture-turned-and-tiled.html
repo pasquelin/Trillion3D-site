@@ -81,6 +81,7 @@
       tile.anisotropy = 8;
       const reference = texture.canvas(card);
       const world = createWorld('view', { controls: 'orbit' });
+      world.exposure = 1;
       world.scene.background = math.color('#1a1714');
       const floor = object.mesh(geometry.plane(8, 8), material.meshStandard({ map: tile, roughness: 0.45 }));
       floor.rotation.x = -Math.PI / 2;

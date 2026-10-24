@@ -82,6 +82,7 @@
       // nothing between it and the screen but the page's nearest-neighbour blow-up.
       const canvas = document.getElementById('view');
       const world = createWorld('view', { pixelRatio: 1, temporalAntialiasing: false, renderScale: 1 });
+      world.exposure = 1;
       world.scene.background = math.color('#1d1838');
       world.scene.fog = { color: math.color('#1d1838'), near: 40, far: 70 };
 

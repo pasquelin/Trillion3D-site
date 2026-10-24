@@ -29,6 +29,7 @@
       // on the floor is as dark as the pane is opaque. The engine keeps the pane out of the opaque
       // image and only lets its opacity through the shadow pass.
       const world = createWorld('view', { controls: 'orbit' });
+      world.exposure = 1;
       world.scene.background = math.color('#cfd8e3');
       const floor = object.mesh(
         geometry.box(16, 0.2, 10),

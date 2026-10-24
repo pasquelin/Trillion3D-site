@@ -53,6 +53,7 @@
 
       // The hedges: one box shape, each run of wall along a row or a column one placement of it.
       const world = createWorld('view', { controls: 'orbit' });
+      world.exposure = 1;
       world.scene.background = math.color('#b7d3ef');
       const block = geometry.box(1, 1, 1), hedge = material.meshStandard({ color: '#3d7a3c', roughness: 0.95 });
       const centre = (i) => (i - (SIZE - 1) / 2) * CELL, edge = (i) => (i - SIZE / 2) * CELL;

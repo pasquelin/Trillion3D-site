@@ -35,6 +35,7 @@
       const paints = ['#e04040', '#f2c14e', '#3c8ee0', '#f4f4f4'].map((colour) => matte(colour, 0.3, 0.3));
 
       const world = createWorld('view', { controls: 'orbit' });
+      world.exposure = 1;
       const asphalt = object.mesh(geometry.box(1, 0.1, 1), matte('#2b2e35', 0.95));
       asphalt.position.y = -0.05;
       world.scene.add(asphalt);

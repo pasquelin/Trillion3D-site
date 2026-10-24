@@ -159,7 +159,9 @@
       // eye-distance to the right, and turns it onto the same point: the point where the two
       // pictures coincide sits on the screen, nearer things come out of it, farther ones sink in.
       const world = createWorld('view', { controls: 'orbit' });
+      world.exposure = 1;
       const other = createWorld('right');
+      other.exposure = 1;
       const moveLeft = hall(world), moveRight = hall(other);
       const target = [0, 3.2, 0], start = [2.4, 7.5, 30];
       world.camera.position.set(...start);

@@ -39,6 +39,7 @@
       // A grid cell is 22 cm; the letters stand 8 cm proud of the slab, their rims rounded.
       const cell = 0.22, word = [W, E, B];
       const world = createWorld('view', { controls: 'orbit' });
+      world.exposure = 1;
       const stone = material.meshStandard({ color: '#d8cfbf', roughness: 0.85 });
       const letters = material.meshStandard({ roughness: 0.35, metalness: 0.5 });
       const slab = object.mesh(geometry.box(word.length * 6 * cell + 0.6, 7 * cell + 0.8, 0.2), stone);
