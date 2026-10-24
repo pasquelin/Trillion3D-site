@@ -28,8 +28,8 @@ export async function buildRuntime(root: string, outdir: string) {
     absWorkingDir: root,
     metafile: true,
     entryPoints: {
-      pageWorker: sdk('page/work/pageWorker.ts'),
-      pageIntegrationWorker: sdk('page/integration/pageIntegrationWorker.ts'),
+      pageWorker: sdk('geometry/work/pageWorker.ts'),
+      pageIntegrationWorker: sdk('geometry/integration/pageIntegrationWorker.ts'),
       // The physics worker, spawned only by a world that turns physics on.
       physicsWorker: sdk('physics/physicsWorker.ts'),
       ...RUNTIME_ENTRIES,
@@ -58,12 +58,14 @@ export async function buildRuntime(root: string, outdir: string) {
   )
   if (folded.length)
     throw new Error(`the runtime folds in a rendering library:\n${folded.join('\n')}`)
-  for (const wasm of [
+  // The binary resources the engine reads beside its modules: the kernels, the physics, the blue noise.
+  for (const resource of [
     'wasm/kernels.wasm',
     'physics/joltPhysics.wasm',
     'physics/joltPhysicsThreads.wasm',
+    'gpu/noise/blueNoise.bin',
   ])
-    await copyFile(sdk(wasm), resolve(outdir, wasm.slice(wasm.lastIndexOf('/') + 1)))
+    await copyFile(sdk(resource), resolve(outdir, resource.slice(resource.lastIndexOf('/') + 1)))
   // Jolt's licence travels with the physics modules it is built into.
   await copyFile(
     resolve(ENGINE, 'THIRD_PARTY_NOTICES.md'),

@@ -923,7 +923,7 @@ const spin = (axis: Vec3, phase: number, turns: number, step: number) =>
  *  thicken their wires and rails into bars, and beyond their cell's range they are under a
  *  pixel —, and what moves — the driving cars, the tram, the wheel, the rotors, the flags, the
  *  lift — is never placed in a cell: neither enters an HLOD. */
-export const DISTRICT_HLOD: HlodOptions = { levels: 4, quality: 'balanced' }
+export const DISTRICT_HLOD: HlodOptions = { levels: 4 }
 
 /** Writes `district.gltf`, `district.bin` and the textures into `directory`. */
 export async function writeDistrict(directory: string) {

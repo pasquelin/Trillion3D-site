@@ -29,7 +29,7 @@
     <canvas id="view"></canvas>
     <p data-words="credit"></p>
     <script type="module">
-      import { animation, createWorld, light, math } from '../runtime/engine.js';
+      import { animation, createWorld } from '../runtime/engine.js';
       import { controls, opening, readout, viewModes, words, language } from '../runtime/kit.js';
       const say = words();
 
@@ -43,11 +43,9 @@
       // things along the way, and what moves — cars, a tram, a Ferris wheel, turbines, a lift,
       // flags — in the one clip the file carries.
       const world = createWorld('view', { controls: 'firstPerson' });
-      world.scene.background = math.color('#aac4e2');
-      world.scene.add(
-        light.directional({ intensity: 3.2, color: '#ffe8c8', position: [60, 90, 40], castShadow: true }),
-        light.hemisphere({ intensity: 1.2, color: '#d2e4ff', groundColor: '#7a7466' }),
-      );
+      // The sky module: the air, the sun, the sky light, the height fog and the clouds of a new
+      // world's level, in place of a flat background and two lights.
+      world.scene.sky = true;
       const district = await world.scene.load('../assets/examples/long-district/cache/native/full/manifest.json');
       const [clip] = district.animations;
       const motion = clip ? animation.createMixer(district).clipAction(clip).play() : null;
