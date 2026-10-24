@@ -18,7 +18,6 @@ test('the module carries the public maths the demos call', () => {
     'createCameraFrame',
     'updateCameraFrame',
     'frustumExcludesBox',
-    'boxConeRejects',
     'createTransformTree',
     'srgbToLinear',
   ].filter((name) => typeof exports[name] !== 'function')

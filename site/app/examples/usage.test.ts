@@ -11,7 +11,6 @@ const FAMILIES = [
   'light',
   'object',
   'effect',
-  'Fog',
   'world.physics',
   'joint',
   'animation',

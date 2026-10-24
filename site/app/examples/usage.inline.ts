@@ -9,13 +9,13 @@ export const SHOWN = 6
 const WRITTEN_AS: Record<string, RegExp> = {
   WorldControls: /\bcontrols:\s*'|\.controls\.kind\s*=/,
   Scene: /\bscene\.(?:load|toJSON|fromJSON)\(/,
-  Fog: /\.fog\s*=/,
+  SceneFog: /\bheightFog:\s*\{/,
   ObjectPhysics: /\.physics\s*=/,
   LoadedModel: /\bscene\.load\(/,
 }
 
 /** The types used wherever another entry is: what it returns, or the same thing. */
-const SAME_AS: Record<string, string> = { World: 'createWorld', SceneFog: 'Fog' }
+const SAME_AS: Record<string, string> = { World: 'createWorld' }
 
 /** The module scripts of each ready example, in the gallery's order, their comments left out; what
  *  they import from the engine — each name and the local name it is read by (`controls as
