@@ -4,9 +4,11 @@ import { writeChessObj } from './chess-obj.ts'
 import { writeChessSet } from './chess-set.ts'
 import { writeCookedBlocks } from './cooked-blocks.ts'
 import { writeCourtyard } from './courtyard.ts'
+import { writeDistrict } from './district.ts'
 import { writeFlag } from './flag.ts'
 import { writeForest } from './forest.ts'
 import { writeRing } from './ring.ts'
+import { writeSparks } from './sparks.ts'
 import { writeTerrain } from './terrain.ts'
 import { writeTerrainTiles } from './terrain-tiles.ts'
 
@@ -28,4 +30,6 @@ export const codeScenes = {
   chalet: inCode(writeChalet),
   'instanced-gltf': inCode(writeForest),
   'cooked-blocks': inCode(writeCookedBlocks),
+  'long-district': inCode(writeDistrict),
+  'particles-responsive': inCode(writeSparks),
 }

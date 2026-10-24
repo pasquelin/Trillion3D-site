@@ -9,7 +9,10 @@ The models under `models/` are kept as imported — mesh, textures and, when the
 the licence file — and never edited. An OBJ model enters a scene as a copy whose `v` lines alone
 are scaled to metres and moved into place (`scripts/docs/examples/obj.ts`, `placeObj`), beside an
 original setting written as boxes; a glTF model enters as-is, the setting appended to a copy of
-its scene file as one more node (`scripts/docs/examples/gltf.ts`, `appendSurfacesGltf`).
+its scene file as one more node (`scripts/docs/examples/gltf.ts`, `appendSurfacesGltf`). A
+model's file a scene serves unchanged is kept once, here: it is placed in the scene's `source/`,
+ignored by git, before a cook or a build reads it (`scripts/docs/examples/library.ts`,
+`LIBRARY_FILES`), so the scene's addresses stay the same.
 
 | Model | Folder | Author | Source and licence | Used by |
 | --- | --- | --- | --- | --- |
@@ -32,12 +35,14 @@ scene of the lessons.
 
 ## Scenes modelled in code
 
-Eleven scenes are modelled in code for their example and released under
+Thirteen scenes are modelled in code for their example and released under
 [CC0](https://creativecommons.org/publicdomain/zero/1.0/): nothing in them was taken from another
 work. Each has a writer under `scripts/docs/examples/`, seeded so the same code writes the same
 bytes on every machine, and is rebuilt, source and cache, by
 `node scripts/docs/examples-assets.ts <folder>` with the same compiler arguments as the model
-scenes above (`full`, 2 threads, 256 MB, `qem-endpoints`, the default `bc7` texture family).
+scenes above (`full`, 2 threads, 256 MB, `qem-endpoints`, the default `bc7` texture family);
+`long-district` adds its HLOD (`DISTRICT_HLOD`) and `particles-responsive` its responsive materials
+(`SPARKS_RESPONSIVE`, `SPARKS_MATERIALS`), each written beside its writer (`scripts/site-caches.ts`).
 
 | Folder | Writer | Source |
 | --- | --- | --- |
@@ -52,6 +57,8 @@ scenes above (`full`, 2 threads, 256 MB, `qem-endpoints`, the default `bc7` text
 | `chalet/` | `chalet.ts` | `chalet.gltf`: a chalet of thin closed shapes, a whitewash ground floor, walls of logs, balcony boards, a shingle roof |
 | `instanced-gltf/` | `forest.ts` | `forest.gltf`: a valley, its lake, four tree shapes and a rock placed 4,250 times by `EXT_mesh_gpu_instancing` |
 | `cooked-blocks/` | `cooked-blocks.ts` | `blocks.gltf`: forty-eight painted blocks over a stepped plinth, each node declaring a dynamic rigid body |
+| `long-district/` | `district.ts` | `district.gltf`: a street two kilometres long in metres, a bus shelter, shop windows, cars, flats with glazed windows, glass towers and a lake, a few models placed many times, each node marked for its HLOD group (`extras.hlod`) |
+| `particles-responsive/` | `sparks.ts` | `sparks.gltf`: two swarms of 150 glowing sparks whirling over a floor, one clip; the left swarm's materials keep a responsive temporal history |
 
 ## Public animation samples
 

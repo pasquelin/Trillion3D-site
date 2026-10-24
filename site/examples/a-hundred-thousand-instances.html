@@ -21,7 +21,7 @@
     <canvas id="view"></canvas>
     <script type="module">
       import { createWorld, geometry, light, material, math, object } from '../runtime/engine.js';
-      import { controls, language, readout } from '../runtime/kit.js';
+      import { controls, language, readout, viewModes } from '../runtime/kit.js';
 
       const COUNT = 100000;
       const COLUMNS = 316;
@@ -62,21 +62,18 @@
       let visible = COUNT;
       let shown = null;
       const ui = controls(
-        { count: [10000, COUNT, COUNT, 1000], view: ['beauty', 'clusters'] },
-        (values, key) => {
+        { count: [10000, COUNT, COUNT, 1000] },
+        (values) => {
           const next = Math.round(values.count);
-          if (key === undefined || key === 'count') {
-            if (next < visible)
-              for (let index = next; index < visible; index++) instances[index].visible = false;
-            else for (let index = visible; index < next; index++) instances[index].visible = true;
-            visible = next;
-            shown?.(visible.toLocaleString(language()));
-          }
-          world.diagnostic.mode = values.view;
+          if (next < visible)
+            for (let index = next; index < visible; index++) instances[index].visible = false;
+          else for (let index = visible; index < next; index++) instances[index].visible = true;
+          visible = next;
+          shown?.(visible.toLocaleString(language()));
           world.invalidate();
         },
-        world,
       );
+      viewModes(world);
       shown = readout('objectsShown');
       shown(ui.count.toLocaleString(language()));
       readout('objectsBuilt')(COUNT.toLocaleString(language()));

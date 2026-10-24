@@ -21,7 +21,7 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { createWorld, geometry, material, object, light } from '../runtime/engine.js';
+      import { createWorld, geometry, material, object, light, side } from '../runtime/engine.js';
       import { controls, readout } from '../runtime/kit.js';
 
       // Low-poly shapes, so their triangles are few enough to read one by one.
@@ -37,7 +37,8 @@
         { shape: icosahedron, colour: '#f2b134' },
         { shape: geometry.torusKnot(0.5, 0.17, 72, 8), colour: '#2f8f83' },
         { shape: geometry.cylinder(0.5, 0.6, 1.3, 12, 2), colour: '#3c6ee0' },
-        { shape: geometry.lathe(vase, 14), colour: '#a04ad0' },
+        // A vase open at its rim: its inside is seen through it, so it draws both faces.
+        { shape: geometry.lathe(vase, 14), colour: '#a04ad0', faces: side.double },
       ];
 
       const world = createWorld('view', { controls: 'orbit' });
@@ -49,12 +50,12 @@
       // more than the threshold angle — and its wireframe, every side of every triangle. The two
       // line sets are geometry too, drawn two corners per segment.
       const ink = material.line({ color: '#e8f1ff' });
-      const pieces = shapes.map(({ shape, colour }, index) => {
+      const pieces = shapes.map(({ shape, colour, faces = side.front }, index) => {
         const holder = object.group();
         const angle = (index / shapes.length) * Math.PI * 2;
         shape.computeBoundingBox();
         holder.position.set(Math.sin(angle) * 3.2, -shape.boundingBox.min.y + 0.02, Math.cos(angle) * 3.2);
-        const solid = object.mesh(shape, material.meshStandard({ color: colour, roughness: 0.45 }));
+        const solid = object.mesh(shape, material.meshStandard({ color: colour, roughness: 0.45, side: faces }));
         const edges = object.lineSegments(geometry.edges(shape, 20), ink);
         const wire = object.lineSegments(geometry.wireframe(shape), ink);
         // A hair larger than the surface, so the lines are never hidden inside it.
@@ -96,7 +97,7 @@
         ink.color.set(values.lines);
         edgeCount?.(String(segments(pieces.map(({ edges }) => edges))));
         world.invalidate();
-      }, world);
+      });
       edgeCount = readout('edgeSegments');
       edgeCount(String(segments(pieces.map(({ edges }) => edges))));
       readout('wireframeSegments')(String(segments(pieces.map(({ wire }) => wire))));

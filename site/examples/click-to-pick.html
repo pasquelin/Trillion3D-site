@@ -58,8 +58,8 @@
       // A click that did not drag the camera: the ray through the pointer, nearest object first.
       // The point it met is marked, with a short line along the surface's normal there.
       let chosen = null, marks = [];
-      onClick(world.canvas, (event) => {
-        const hit = world.raycast({ x: event.offsetX, y: event.offsetY }, { objects: pickable });
+      onClick(world.canvas, async (event) => {
+        const hit = await world.raycast({ x: event.offsetX, y: event.offsetY }, { objects: pickable });
         chosen?.material.emissive.set('#000000');
         chosen = hit?.object ?? null;
         chosen?.material.emissive.set('#ff9a3c');

@@ -94,11 +94,11 @@
       }, (values, key) => {
         if (key === 'circle') values.circle ? round.restart() : round.stop();
         if (key === undefined || key === 'smoothing') world.temporalAntialiasing = values.smoothing;
-        state?.(say(world.temporalAntialiasing ? 'on' : 'off'));
+        state?.(say(world.temporalAntialiasing !== 'off' ? 'on' : 'off'));
         world.invalidate();
-      }, world);
+      });
       state = readout('temporalAntialiasing');
-      state(say(world.temporalAntialiasing ? 'on' : 'off'));
+      state(say(world.temporalAntialiasing !== 'off' ? 'on' : 'off'));
 
       // The camera circles slowly, so the wires cross the pixels, until the first press or wheel.
       const round = circling(world, -0.06);

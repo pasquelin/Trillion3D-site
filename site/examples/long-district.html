@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>HLOD across a long district</title>
+    <meta name="thumbnail" content="10" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #aac4e2;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      p {
+        position: absolute;
+        top: 0;
+        margin: 0.5rem;
+        color: #1d2a3a;
+        font: 12px system-ui;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <p data-words="credit"></p>
+    <script type="module">
+      import { animation, createWorld, light, math } from '../runtime/engine.js';
+      import { controls, opening, readout, viewModes, words, language } from '../runtime/kit.js';
+      const say = words();
+
+      // A city street two kilometres long, in metres, walked from one end in first person: click,
+      // look with the mouse, walk with W/A/S/D. A bus shelter, shop windows and parked cars at the
+      // first metre; flats with framed windows along the way; glass towers past a kilometre; a
+      // lake at the end. The compiler cut every shape into clusters and each cluster into coarser
+      // versions of itself: the walk shows where the cut falls, from the kerb to the far shore.
+      // It is also a bench for distant levels: a test chart faces the street from the far shore
+      // (fins from 3 cm to 2 m, window grids, signs), with glossy, cut-out, concave and thin
+      // things along the way, and what moves — cars, a tram, a Ferris wheel, turbines, a lift,
+      // flags — in the one clip the file carries.
+      const world = createWorld('view', { controls: 'firstPerson' });
+      world.scene.background = math.color('#aac4e2');
+      world.scene.add(
+        light.directional({ intensity: 3.2, color: '#ffe8c8', position: [60, 90, 40], castShadow: true }),
+        light.hemisphere({ intensity: 1.2, color: '#d2e4ff', groundColor: '#7a7466' }),
+      );
+      const district = await world.scene.load('../assets/examples/long-district/cache/native/full/manifest.json');
+      const [clip] = district.animations;
+      const motion = clip ? animation.createMixer(district).clipAction(clip).play() : null;
+
+      // The near plane a hand's breadth away, the far one past the shore across the lake.
+      world.camera.near = 0.05;
+      world.camera.far = 3000;
+      const HOME = { position: [0, 1.7, 12], target: [0, 1.7, -100] };
+
+      // Camera paths that replay the same frames on every run — a fixed sixtieth of a second a
+      // frame, whatever the frame rate —, the clip posed by the same clock: a capture before a
+      // change and one after compare like for like. A press on the view hands the camera back.
+      const STEP = 1 / 60;
+      const ahead = (x, y, z, turn) => ({
+        position: [x, y, z],
+        target: [x + 100 * Math.sin(turn), y, z - 100 * Math.cos(turn)],
+      });
+      const PATHS = {
+        forwardRun: [45, (t) => ahead(0, 1.7, 12 - 40 * t, 0)],
+        fastStrafe: [12, (t) => ahead(6 * Math.sin((Math.PI * t) / 2), 3, -60, 0)],
+        slowPan: [40, (t) => ahead(0, 1.7, 12, 0.7 * Math.sin((Math.PI * t) / 20))],
+        rotation: [24, (t) => ahead(0, 1.7, -400, (Math.PI * t) / 12)],
+        highOrbit: [
+          60,
+          (t) => ({
+            position: [1000 * Math.sin((Math.PI * t) / 30), 400, -1100 + 1000 * Math.cos((Math.PI * t) / 30)],
+            target: [0, 0, -1100],
+          }),
+        ],
+      };
+      let path = null, frame = 0, frames = 0;
+      const resume = () => {
+        if (!values.motion) motion?.stop().seek(motion.time);
+        else if (!motion?.playingNow) motion?.play();
+      };
+      const replay = (name) => {
+        const [seconds, at] = PATHS[name];
+        path?.dispose();
+        frames = Math.round(seconds / STEP);
+        path = opening(
+          world,
+          (time) => {
+            world.camera.set(at(Math.min(time, seconds)));
+            motion?.stop().seek(time % clip.duration);
+            frame = Math.round(time / STEP);
+            return frame < frames;
+          },
+          STEP,
+        );
+      };
+      const home = () => {
+        path?.stop();
+        world.camera.set(HOME);
+      };
+      home();
+
+      // `world.pixelError` is how far, in screen pixels, a coarser version of a cluster may stray
+      // from the exact surface before the engine draws a finer one: the far blocks and towers
+      // cover few pixels, and a coarse version is already exact to the eye there.
+      const values = controls(
+        {
+          walkSpeed: [1, 80, 4, 1],
+          pixelError: [0, 24, 4, 0.5],
+          motion: true,
+          ...Object.fromEntries(Object.keys(PATHS).map((name) => [name, () => replay(name)])),
+          home,
+        },
+        (values, key) => {
+          if (key === undefined || key === 'walkSpeed')
+            world.controls.movementSpeed = values.walkSpeed;
+          if (key === undefined || key === 'pixelError') world.pixelError = values.pixelError;
+          if (key === 'motion' && !path?.gliding) resume();
+          world.invalidate();
+        },
+      );
+      viewModes(world);
+      const drawn = readout('trianglesDrawn'), share = readout('shareDistrict'), step = readout('pathFrame');
+      const total = district.metadata.sourceTriangles;
+      readout('trianglesDistrict')(total.toLocaleString(language()));
+      world.onFrame(({ metrics }) => {
+        const selected = metrics.selectedTriangles;
+        drawn(selected == null ? say('notCounted') : selected.toLocaleString(language()));
+        share(selected == null ? '—' : `${((100 * selected) / total).toFixed(1)} %`);
+        // A path ended, or the viewer took the camera: the clip runs on its own clock again.
+        if (path && !path.gliding) {
+          path.dispose();
+          path = null;
+          resume();
+        }
+        step(path ? `${frame} / ${frames}` : '—');
+      });
+    </script>
+  </body>
+</html>

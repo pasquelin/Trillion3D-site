@@ -6,7 +6,7 @@
 import { statSync } from 'node:fs'
 import { join } from 'node:path'
 import { ENGINE, ROOT } from './engine.ts'
-import { repositoryFiles } from './repository-files.ts'
+import { repositoryFiles } from '#engine/scripts/git/repository-files.ts'
 
 /** Where the reference and the inventory are written. */
 export const API_FILES = {

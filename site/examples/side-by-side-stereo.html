@@ -66,9 +66,10 @@
       import { controls, words, opening } from '../runtime/kit.js';
       const say = words();
 
-      // Two worlds, one per eye, each drawing its own copy of the same orrery. The left half takes
-      // the mouse; the right half's camera is the left one moved sideways by the eye separation
-      // and turned back onto the same point, so both eyes converge on the orrery's centre.
+      // One orrery seen by two eyes: the world draws it into the left canvas, and a second view of
+      // the same world into the right one, sharing its scene, its shadows and its frame. The left
+      // half takes the mouse; the right eye's camera is the left one moved sideways by the eye
+      // separation and turned back onto the same point, so both eyes converge on the orrery's centre.
       const PLANETS = [
         { radius: 2.2, size: 0.22, color: '#b7a58f', height: 2.6, period: 5 },
         { radius: 3.2, size: 0.36, color: '#e8c27a', height: 2.2, period: 8 },
@@ -144,8 +145,8 @@
       }
 
       const world = createWorld('view', { controls: 'orbit' });
-      const other = createWorld('right');
-      const turnLeft = orrery(world), turnRight = orrery(other);
+      const other = world.addView({ canvas: 'right' });
+      const turn = orrery(world);
       const target = [0, 2.4, 0];
       world.camera.position.set(0, 12, 30);
       world.camera.lookAt(...target);
@@ -180,16 +181,14 @@
       const side = math.vector3();
       world.onFrame(({ delta }) => {
         time += Math.min(delta, 0.1) * ui.speed;
-        turnLeft(time);
+        turn(time);
         // The other eye: the same camera, moved along its own right-hand axis and aimed back.
         const sign = ui.viewing === 'cross-eyed' ? -1 : 1;
         side.set(1, 0, 0).applyQuaternion(world.camera.quaternion);
         other.camera.position.copy(world.camera.position).addScaledVector(side, sign * ui.separation);
         other.camera.lookAt(world.controls.target);
-        // The other eye draws one frame for each of this one's, which asks for more only while
-        // the planets turn: a still orrery is drawn again only when the viewer moves the camera.
-        turnRight(time);
-        other.invalidate();
+        // Both eyes are drawn in each frame of the world, which asks for more only while the
+        // planets turn: a still orrery is drawn again only when the viewer moves the camera.
         if (ui.speed) world.invalidate();
       });
       world.invalidate();

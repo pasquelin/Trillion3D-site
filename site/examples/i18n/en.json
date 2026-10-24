@@ -17,7 +17,9 @@
   },
   "kit": {
     "panel": {
-      "controls": "Controls"
+      "controls": "Controls",
+      "view": "View",
+      "freeze": "Freeze culling"
     },
     "menu": {
       "play": "Play",
@@ -38,72 +40,709 @@
     },
     "stats": {
       "FPS": "FPS",
-      "triangles": "triangles",
-      "triangles (scene)": "triangles (scene)",
-      "draw calls": "draw calls",
-      "pages": "pages",
-      "geometry pool": "geometry pool",
-      "lights": "lights",
-      "GPU memory": "GPU memory",
-      "screen images": "screen images",
-      "shadow memory": "shadow memory",
-      "geometry memory": "geometry memory",
-      "texture memory": "texture memory",
-      "live textures": "live textures",
-      "transmission backdrop": "transmission backdrop",
-      "GPU frame": "GPU frame",
-      "GPU frame (last)": "GPU frame (last)",
-      "CPU frame": "CPU frame",
-      "page hooks": "page hooks",
-      "engine CPU": "engine CPU",
-      "Statistics": "Statistics",
-      "hint": "Click: compact · drag: move · key ` / ²",
-      "fps": "FPS",
-      "budget": "budget",
-      "held": "held",
-      "last": "last",
-      "others": "others",
-      "Shadows": "Shadows",
-      "Scene and memory": "Scene and memory",
-      "cut and culling": "cut and culling",
-      "page preparation": "page preparation",
-      "command encoding": "command encoding",
-      "physics step": "physics step",
-      "Cadence": "Cadence",
-      "{n}× refresh": "{n}× refresh",
-      "GPU idle": "GPU idle"
+      "GPU frame": "GPU frame"
     },
-    "shadows": {
-      "lights": "lights",
-      "maps": "maps",
-      "pagesRequested": "pages requested",
-      "pagesAllocated": "pages allocated",
-      "pagesCached": "pages cached",
-      "pagesRendered": "pages rendered",
-      "freePages": "free pages",
-      "lodBias": "LOD bias",
-      "projectionPasses": "projection passes",
-      "invalidation": "invalidation",
-      "marking": "marking",
-      "pageManagement": "page management",
-      "render": "render",
-      "projection": "projection",
-      "transmission": "transmission"
-    },
-    "passes": {
-      "vsm projection": "VSM projection",
-      "vsm marking": "VSM marking",
-      "vsm render": "VSM render",
-      "material surfaces": "material surfaces",
-      "temporal antialiasing": "temporal antialiasing",
-      "HDR composition + present": "HDR composition + present",
-      "deferred lighting": "deferred lighting",
-      "reflection source": "reflection source",
-      "HiZ pyramid": "HiZ pyramid",
-      "light tiles": "light tiles",
-      "texture mips": "texture mips",
-      "reflection radiance mips": "reflection radiance mips",
-      "reflection depth bounds mips": "reflection depth bounds mips"
+    "statsPanel": {
+      "tab.page": {
+        "label": "All worlds",
+        "hint": "How busy every world and view of the page keeps the GPU and the main thread, as a share of each second; shown only on a page of several worlds or views."
+      },
+      "tab.gpu": {
+        "label": "GPU",
+        "hint": "Where the graphics processor spends the image, stage by stage."
+      },
+      "tab.cpu": {
+        "label": "CPU",
+        "hint": "Where the engine spends the CPU time of an image, as medians over the last second; the header's CPU figure is the main thread's whole frame. More work per frame raises it."
+      },
+      "tab.shadows": {
+        "label": "Shadows",
+        "hint": "The shadow passes and their page counters; their time is part of the GPU time."
+      },
+      "tab.memory": {
+        "label": "Memory",
+        "hint": "The GPU memory the engine holds, by kind."
+      },
+      "tab.scene": {
+        "label": "Scene",
+        "hint": "What the cut selected and drew, and the geometry pool."
+      },
+      "page.gpuBusy": {
+        "label": "GPU busy",
+        "hint": "Share of each second the page's worlds and views keep the GPU busy; past 100 % their GPU times overlap and the GPU holds the frame."
+      },
+      "page.cpuBusy": {
+        "label": "CPU busy",
+        "hint": "Share of each second the page's worlds keep the main thread busy; they share one main thread, so it adds up."
+      },
+      "page.view": {
+        "label": "view {n}",
+        "hint": "GPU time of the last image of a view beside the main one, and its share of the world's frame."
+      },
+      "profile.cpuFrame": {
+        "label": "CPU frame",
+        "hint": "Main-thread time of the animation-frame callbacks of a frame, as median / 95th percentile over the last second; only with ?profile."
+      },
+      "profile.pageHooks": {
+        "label": "Page hooks",
+        "hint": "Time of the page's own frame hooks in a frame, as median / 95th percentile over the last second; only with ?profile."
+      },
+      "profile.engineCpu": {
+        "label": "Engine CPU",
+        "hint": "The engine's whole-image CPU time, as median / 95th percentile over the last second; only with ?profile."
+      },
+      "profile.workerStep": {
+        "label": "Physics worker step",
+        "hint": "The physics worker's slowest fixed step of a tick, as median / 95th percentile over the last second; only with ?profile."
+      },
+      "shadows.included": {
+        "label": "included in GPU",
+        "hint": "These times are already inside the GPU total: never add them to it."
+      },
+      "summary.frame": {
+        "label": "Frame",
+        "hint": "Time between two displayed images; rises when either processor takes longer than a refresh."
+      },
+      "summary.gpu": {
+        "label": "GPU",
+        "hint": "Mean GPU time of an image over the last second; rises with pixels, lights and geometry drawn."
+      },
+      "summary.cpu": {
+        "label": "CPU",
+        "hint": "Median main-thread time of a frame over the last second; rises with the work sent to the GPU."
+      },
+      "summary.wait": {
+        "label": "Wait",
+        "hint": "Time the frame waits for the display after the slower processor finished."
+      },
+      "summary.bottleneck": {
+        "label": "Limited by",
+        "hint": "The engine's verdict on what holds the frame: the first limit the window hits."
+      },
+      "summary.screen": {
+        "label": "Screen {hz} Hz",
+        "hint": "How long each image stays on screen, counted in the display's refreshes: 1 is every refresh, more means images are late."
+      },
+      "summary.screenValue": {
+        "label": "1 image / {n} refreshes",
+        "hint": "The refreshes a typical image of the last second stayed on screen."
+      },
+      "summary.screenShare": {
+        "label": "{share} % of images in {n} refreshes",
+        "hint": "One bucket of the screen distribution: its share of the last second's images."
+      },
+      "summary.screenShareOrMore": {
+        "label": "{share} % in {n} or more",
+        "hint": "The last bucket of the screen distribution: its share of the images, at that many refreshes or more."
+      },
+      "summary.gpuIdle": {
+        "label": "GPU idle",
+        "hint": "Time the GPU sat idle before its last measured image; rises when the CPU feeds it late."
+      },
+      "summary.mainView": {
+        "label": "main view",
+        "hint": "The first world the page made, the page's main view."
+      },
+      "summary.world": {
+        "label": "world",
+        "hint": "A world of the page other than the main view."
+      },
+      "summary.budget": {
+        "label": "budget",
+        "hint": "The time one display refresh allows a frame; the dashed line of the graph."
+      },
+      "bottleneck.healthy": {
+        "label": "Display",
+        "hint": "The frame fits in a refresh: the frame rate is the display's."
+      },
+      "bottleneck.memory_pressure": {
+        "label": "Stutters",
+        "hint": "Frames took longer than the stutter limit: free memory or lower the streaming load."
+      },
+      "bottleneck.gpu_bound": {
+        "label": "GPU",
+        "hint": "The GPU takes longer than a refresh and holds the frame: lower the resolution or the lighting."
+      },
+      "bottleneck.cpu_bound": {
+        "label": "CPU",
+        "hint": "The main thread takes longer than a refresh and holds the frame: lower the work per frame."
+      },
+      "bottleneck.gpu_submit_bound": {
+        "label": "GPU submit",
+        "hint": "Sending the commands to the GPU takes over half a refresh: lower the draw calls and passes."
+      },
+      "bottleneck.streaming_bound": {
+        "label": "Streaming",
+        "hint": "More pages are in flight than the fetch workers can serve: the network or the disk holds the scene."
+      },
+      "panel.label": {
+        "label": "Statistics",
+        "hint": "The profiler overlay."
+      },
+      "panel.hint": {
+        "label": "Click: compact · drag: move · key ` / ²",
+        "hint": "The header line gestures."
+      },
+      "unit.fps": {
+        "label": "fps",
+        "hint": "Frames drawn a second."
+      },
+      "summary.cpuShort": {
+        "label": "CPU",
+        "hint": "The main thread time of a frame."
+      },
+      "summary.gpuShort": {
+        "label": "GPU",
+        "hint": "The graphics processor time of an image."
+      },
+      "row.max": {
+        "label": "max",
+        "hint": "The highest value in the last second."
+      },
+      "summary.held": {
+        "label": "held",
+        "hint": "No new frame in the last second: nothing moved, the image is redisplayed."
+      },
+      "summary.last": {
+        "label": "last",
+        "hint": "The GPU time shown is an earlier image's: the device has not sampled a newer one yet."
+      },
+      "gpu.physics": {
+        "label": "Physics",
+        "hint": "Rigid and soft body steps on the GPU; rises with the bodies simulated."
+      },
+      "gpu.animations": {
+        "label": "Animations",
+        "hint": "Skinning and deformation of animated objects; rises with the animated vertices."
+      },
+      "gpu.lights": {
+        "label": "Lights",
+        "hint": "Preparing the scene lights for the frame; rises with the light count."
+      },
+      "gpu.cutAdoption": {
+        "label": "Cut adoption",
+        "hint": "Taking in the cut the selection chose; rises when the cut changes much between images."
+      },
+      "gpu.selection": {
+        "label": "Selection",
+        "hint": "Choosing which clusters to draw by view and detail; rises with the hierarchy nodes tested."
+      },
+      "gpu.transparents": {
+        "label": "Transparents",
+        "hint": "Drawing see-through surfaces; rises with transparent triangles and layers."
+      },
+      "gpu.residency": {
+        "label": "Residency",
+        "hint": "Deciding which geometry pages must be in memory; rises while the view changes."
+      },
+      "gpu.hostPages": {
+        "label": "Host pages",
+        "hint": "Copying page data the CPU streamed to the GPU; rises while new pages arrive."
+      },
+      "gpu.uploads": {
+        "label": "Uploads",
+        "hint": "Sending data to GPU buffers; rises with dynamic geometry and streaming."
+      },
+      "gpu.textures": {
+        "label": "Textures",
+        "hint": "Streaming and decoding texture levels; rises while new textures load."
+      },
+      "gpu.partition": {
+        "label": "Partition",
+        "hint": "Sorting the drawn clusters into draw batches; rises with the clusters drawn."
+      },
+      "gpu.encode": {
+        "label": "Encode",
+        "hint": "Building the commands the raster stage reads; rises with the draw batches."
+      },
+      "gpu.submit": {
+        "label": "Submit",
+        "hint": "Passes that hand work to the queue; rises with the number of submissions."
+      },
+      "gpu.hiZ": {
+        "label": "Hi-Z",
+        "hint": "Building the depth pyramid the occlusion test reads; rises with the resolution."
+      },
+      "gpu.geometry": {
+        "label": "Geometry",
+        "hint": "Rasterising the visibility buffer and writing surfaces; rises with triangles drawn and pixels covered."
+      },
+      "gpu.coplanar": {
+        "label": "Coplanar",
+        "hint": "Resolving surfaces that lie on the same plane; rises with overlapping decals."
+      },
+      "gpu.shadows": {
+        "label": "Shadows",
+        "hint": "Rendering and projecting shadow pages; rises with the lights that cast and the pages redrawn."
+      },
+      "gpu.lightLists": {
+        "label": "Light lists",
+        "hint": "Gathering the lights that reach each screen tile; rises with the light count and their reach."
+      },
+      "gpu.bounce": {
+        "label": "Bounce",
+        "hint": "Light bounced between surfaces; rises with the rays traced."
+      },
+      "gpu.reflections": {
+        "label": "Reflections",
+        "hint": "Reflected images of the scene; rises with reflective pixels and the rays traced."
+      },
+      "gpu.lighting": {
+        "label": "Lighting",
+        "hint": "Shading every pixel from its surface and the lights; rises with pixels and lights."
+      },
+      "gpu.antialiasing": {
+        "label": "Antialiasing",
+        "hint": "Smoothing edges over time; rises with the resolution."
+      },
+      "gpu.effects": {
+        "label": "Effects",
+        "hint": "Post-processing such as bloom, exposure and fog; rises with the effects switched on and the resolution."
+      },
+      "gpu.present": {
+        "label": "Present",
+        "hint": "Resampling and handing the image to the display; rises with the display resolution."
+      },
+      "gpu.unclassified": {
+        "label": "Unclassified",
+        "hint": "Timed passes that no stage names; they are listed so the stages still add up."
+      },
+      "gpu.untimed": {
+        "label": "Outside timed passes",
+        "hint": "GPU time of the image no timed pass covers: copies, gaps between passes, timestamp resolves."
+      },
+      "cpu.physics": {
+        "label": "Physics",
+        "hint": "Stepping the simulation on the main thread; rises with the bodies simulated."
+      },
+      "cpu.animations": {
+        "label": "Animations",
+        "hint": "Preparing animated objects on the main thread; rises with the animated objects."
+      },
+      "cpu.textures": {
+        "label": "Textures",
+        "hint": "Feeding the texture streamer on the main thread; rises while new textures load."
+      },
+      "cpu.transparents": {
+        "label": "Transparents",
+        "hint": "Preparing and drawing see-through surfaces; rises with transparent meshes and layers."
+      },
+      "cpu.cutAdoption": {
+        "label": "Cut adoption",
+        "hint": "Taking in the cut the selection chose; rises when the cut changes much between images."
+      },
+      "cpu.residency": {
+        "label": "Residency",
+        "hint": "Deciding and queuing which geometry pages must be in memory; rises while the view changes."
+      },
+      "cpu.uploads": {
+        "label": "Uploads",
+        "hint": "Sending data to GPU buffers; rises with dynamic geometry and streaming."
+      },
+      "cpu.selection": {
+        "label": "Selection",
+        "hint": "Dispatching the cluster selection; rises with the hierarchy nodes tested."
+      },
+      "cpu.encode": {
+        "label": "Encode",
+        "hint": "Recording the GPU commands; rises with passes and draw batches."
+      },
+      "cpu.submit": {
+        "label": "Submit",
+        "hint": "Handing the recorded commands to the queue; rises with the number of submissions."
+      },
+      "cpu.hostPages": {
+        "label": "Host pages",
+        "hint": "Integrating geometry pages the CPU streamed; rises while new pages arrive."
+      },
+      "cpu.rest": {
+        "label": "Rest of the frame",
+        "hint": "The engine's whole-image CPU time that no stage above covers (0 when work outside the image makes the stages exceed it); page scripts, input and layout are not in it."
+      },
+      "shadows.invalidation": {
+        "label": "Invalidation",
+        "hint": "Marking shadow pages stale after something moved; rises with moving casters."
+      },
+      "shadows.marking": {
+        "label": "Marking",
+        "hint": "Finding which shadow pages the view needs; rises with the pixels lit by shadowed lights."
+      },
+      "shadows.pageManagement": {
+        "label": "Page management",
+        "hint": "Allocating and recycling shadow pages; rises with the pages requested."
+      },
+      "shadows.render": {
+        "label": "Render",
+        "hint": "Drawing the shadow pages that changed; rises with the pages redrawn and the casters in them."
+      },
+      "shadows.projection": {
+        "label": "Projection",
+        "hint": "Projecting shadow maps onto the image; rises with the shadowed lights and the resolution."
+      },
+      "shadows.transmission": {
+        "label": "Transmission",
+        "hint": "The see-through casters' atlas; rises with translucent casters."
+      },
+      "shadows.lights": {
+        "label": "Shadowed lights",
+        "hint": "Lights that cast virtual shadow maps this frame; the scene count in Scene is all active lights."
+      },
+      "shadows.maps": {
+        "label": "Maps",
+        "hint": "Virtual shadow maps this frame; rises with the lights that cast."
+      },
+      "shadows.pagesRequested": {
+        "label": "Shadow pages requested",
+        "hint": "Shadow pages the frame asked for; rises with the shadowed area on screen."
+      },
+      "shadows.pagesAllocated": {
+        "label": "Shadow pages allocated",
+        "hint": "Shadow pages newly taken from the pool this frame; rises when the view or lights move."
+      },
+      "shadows.pagesCached": {
+        "label": "Shadow pages cached",
+        "hint": "Requested shadow pages found already drawn; falls when casters or lights move."
+      },
+      "shadows.pagesRendered": {
+        "label": "Shadow pages rendered",
+        "hint": "Shadow pages cleared and drawn this frame; rises when casters or lights move."
+      },
+      "shadows.freePages": {
+        "label": "Shadow pages free",
+        "hint": "Physical shadow pages left in the pool; falls when more are requested."
+      },
+      "shadows.lodBias": {
+        "label": "Shadow detail bias",
+        "hint": "How much coarser than asked the shadow maps are drawn; rises when the pool is full."
+      },
+      "shadows.projectionPasses": {
+        "label": "Projection passes",
+        "hint": "Projection passes this frame, four lights each; rises with the shadowed lights."
+      },
+      "shadows.resolutionBias": {
+        "label": "Shadow resolution bias",
+        "hint": "Levels the shadows draw coarser than asked because of their pool; 0 is healthy."
+      },
+      "memory.screen": {
+        "label": "Screen images",
+        "hint": "Targets that depend on the resolution; rises with the render size."
+      },
+      "memory.shadows": {
+        "label": "Shadow pool",
+        "hint": "The shadow page pool; rises with the shadow quality setting."
+      },
+      "memory.geometry": {
+        "label": "Geometry",
+        "hint": "The geometry page pool reserved on the GPU, used or not; its use is in Scene."
+      },
+      "memory.textures": {
+        "label": "Texture pool",
+        "hint": "The texture pool, fixed for the session; set by the texture budget."
+      },
+      "memory.liveTextures": {
+        "label": "Live textures",
+        "hint": "Working textures kept apart from the pool; rises with the live textures in the scene."
+      },
+      "memory.other": {
+        "label": "Other resources",
+        "hint": "GPU memory no kind above names: buffers, history images, caches."
+      },
+      "scene.trianglesSelected": {
+        "label": "Triangles selected",
+        "hint": "Triangles the cut kept past the view and detail tests; rises with scene detail in view."
+      },
+      "scene.trianglesDrawn": {
+        "label": "Triangles drawn",
+        "hint": "Triangles drawn once occlusion dropped the hidden ones; rises with visible detail."
+      },
+      "scene.trianglesScene": {
+        "label": "Triangles (scene)",
+        "hint": "Triangles of the visible meshes in the scene, counted by the page when the frame publishes no selected triangles."
+      },
+      "scene.drawCalls": {
+        "label": "Draw calls",
+        "hint": "Draw commands sent this frame; rises with the number of batches."
+      },
+      "scene.geometryPages": {
+        "label": "Geometry pages",
+        "hint": "Geometry pages resident in memory; rises with the detail loaded."
+      },
+      "scene.poolUsed": {
+        "label": "Geometry pool used",
+        "hint": "Bytes of the geometry pool that hold pages; rises as pages load."
+      },
+      "scene.poolCapacity": {
+        "label": "Geometry pool capacity",
+        "hint": "Bytes reserved for the geometry pool; set by the scene and the device limits."
+      },
+      "scene.lights": {
+        "label": "Lights",
+        "hint": "Scene lights that lit the frame."
+      },
+      "pass.compose roots": {
+        "label": "compose roots",
+        "hint": "Computes the world matrix of every placement root from its parents; rises with the number of animated or moving placements."
+      },
+      "pass.compose motion": {
+        "label": "compose motion",
+        "hint": "Computes how each placement moved since the previous image, for motion vectors; rises with the number of moving placements."
+      },
+      "pass.compose rows": {
+        "label": "compose rows",
+        "hint": "Computes the world matrices of the placement rows; rises with the number of placements."
+      },
+      "pass.root boxes": {
+        "label": "root boxes",
+        "hint": "Fits the world box and stretch of every placement root; rises with the number of roots."
+      },
+      "pass.placement tree leaves": {
+        "label": "placement tree leaves",
+        "hint": "Fits the boxes of the placement tree's leaves; rises with the number of placements."
+      },
+      "pass.placement tree refit": {
+        "label": "placement tree refit",
+        "hint": "Refits the placement tree's inner boxes after its leaves moved; rises with the number of moving placements."
+      },
+      "pass.DAG selection": {
+        "label": "DAG selection",
+        "hint": "Walks the geometry graph and selects the detail each view needs; rises with the detail in view."
+      },
+      "pass.DAG mask swap": {
+        "label": "DAG mask swap",
+        "hint": "Swaps the selection masks between images; small and fixed."
+      },
+      "pass.partition": {
+        "label": "partition",
+        "hint": "Compacts the selected clusters into the draws of the image; rises with the clusters selected."
+      },
+      "pass.HiZ": {
+        "label": "HiZ",
+        "hint": "Builds the depth pyramid used to hide what is occluded; rises with the render size."
+      },
+      "pass.visibility primary": {
+        "label": "visibility primary",
+        "hint": "Draws the depth of the occluders so the rest can be tested against it; rises with the occluders in view."
+      },
+      "pass.visibility secondary": {
+        "label": "visibility secondary",
+        "hint": "Draws the tested half of the geometry against the occluders' depth; rises with the geometry that passed the test."
+      },
+      "pass.visibility identifiers": {
+        "label": "visibility identifiers",
+        "hint": "Draws the identifier of the surface under each pixel; rises with the render size and the geometry drawn."
+      },
+      "pass.raster binning": {
+        "label": "raster binning",
+        "hint": "Sorts the small triangles of the software raster into screen tiles; rises with the small triangles in view."
+      },
+      "pass.raster occluder depth": {
+        "label": "raster occluder depth",
+        "hint": "Software raster of the occluders' depth; rises with the small occluding triangles."
+      },
+      "pass.raster tested depth": {
+        "label": "raster tested depth",
+        "hint": "Software raster of the depth of the tested geometry; rises with the small triangles tested."
+      },
+      "pass.raster identifiers": {
+        "label": "raster identifiers",
+        "hint": "Software raster of the surface identifiers; rises with the small triangles drawn."
+      },
+      "pass.raster occluder hiz": {
+        "label": "raster occluder hiz",
+        "hint": "Builds the depth pyramid from the software raster's occluders; rises with the render size."
+      },
+      "pass.raster resolve": {
+        "label": "raster resolve",
+        "hint": "Merges the software raster's pixels into the visibility buffer; rises with the render size."
+      },
+      "pass.empty surfaces": {
+        "label": "empty surfaces",
+        "hint": "Clears the surface images when the image draws no material; small and fixed."
+      },
+      "pass.material cache, bins and shading": {
+        "label": "material cache, bins and shading",
+        "hint": "Composes what the frame shares, sorts pixels by material and shades each material's bin; rises with the materials and pixels in view."
+      },
+      "pass.material surfaces": {
+        "label": "material surfaces",
+        "hint": "Clears the surface and feedback images before the materials are shaded; rises with the render size."
+      },
+      "pass.texture feedback reduce": {
+        "label": "texture feedback reduce",
+        "hint": "Reduces which texture tiles the image asked for; rises with the textures in view."
+      },
+      "pass.texture eviction queue": {
+        "label": "texture eviction queue",
+        "hint": "Ranks the texture tiles to give up when the pool is full; rises with the pool's size."
+      },
+      "pass.transparents": {
+        "label": "transparents",
+        "hint": "Draws the transparent surfaces layer by layer; rises with the transparent surfaces in view."
+      },
+      "pass.blend companion": {
+        "label": "blend companion",
+        "hint": "Draws the companion image of the dual blend; rises with the transparent surfaces in view."
+      },
+      "pass.distortion": {
+        "label": "distortion",
+        "hint": "Accumulates the refraction of the transmissive surfaces; rises with their number and size on screen."
+      },
+      "pass.distortion apply": {
+        "label": "distortion apply",
+        "hint": "Applies the accumulated refraction to the image; rises with the render size."
+      },
+      "pass.transparent compaction": {
+        "label": "transparent compaction",
+        "hint": "Compacts the visible transparent draws; rises with the transparent geometry."
+      },
+      "pass.transparent occlusion": {
+        "label": "transparent occlusion",
+        "hint": "Tests the transparent geometry against the depth; rises with the transparent geometry."
+      },
+      "pass.blend order and expansion": {
+        "label": "blend order and expansion",
+        "hint": "Orders and expands the transparent surfaces for blending; rises with the transparent surfaces in view."
+      },
+      "pass.display mask": {
+        "label": "display mask",
+        "hint": "Builds the mask of the pixels the display filter acts on; rises with the render size."
+      },
+      "pass.display filter": {
+        "label": "display filter",
+        "hint": "Applies the display filter over the image; rises with the render size."
+      },
+      "pass.transparent front": {
+        "label": "transparent front",
+        "hint": "Keeps the transparents' front surface the reflections trace against; rises with the render size."
+      },
+      "pass.particle draw": {
+        "label": "particle draw",
+        "hint": "Draws the particles; rises with the particles alive and the area they cover."
+      },
+      "pass.light tiles": {
+        "label": "light tiles",
+        "hint": "Builds the per-tile light lists; rises with the lights and the render size."
+      },
+      "pass.bounce": {
+        "label": "bounce",
+        "hint": "Updates the bounced light: marks the cells in view, writes the table and refreshes the probes; rises with the lit cells in view."
+      },
+      "pass.bounce light lists": {
+        "label": "bounce light lists",
+        "hint": "Builds the light lists over the bounce's world lattice; rises with the lights near the lit cells."
+      },
+      "pass.proxy pose": {
+        "label": "proxy pose",
+        "hint": "Poses the proxies of the deformed placements for the reflections and the bounce; rises with the deformed placements."
+      },
+      "pass.reflections": {
+        "label": "reflections",
+        "hint": "Reduces the depth pyramid for the reflections; rises with the render size."
+      },
+      "pass.reflection trace": {
+        "label": "reflection trace",
+        "hint": "Classifies the screen tiles and traces the reflections through the screen; rises with the reflective pixels."
+      },
+      "pass.reflection scene": {
+        "label": "reflection scene",
+        "hint": "Traces the rays the screen could not answer through the scene; rises with the reflective pixels the screen missed."
+      },
+      "pass.reflection denoise": {
+        "label": "reflection denoise",
+        "hint": "Reuses neighbouring and earlier reflections to clean the image; rises with the render size."
+      },
+      "pass.reflection radiance": {
+        "label": "reflection radiance",
+        "hint": "Builds the radiance pyramid of the lit image for the next image's reflections; rises with the render size."
+      },
+      "pass.particles": {
+        "label": "particles",
+        "hint": "Simulates the particles' step; rises with the particles alive."
+      },
+      "pass.deferred lighting": {
+        "label": "deferred lighting",
+        "hint": "Lights every pixel from the surfaces, the lights and the shadows; rises with the render size and the lights."
+      },
+      "pass.as is share seed": {
+        "label": "as is share seed",
+        "hint": "Seeds the share of the image kept as it is by the temporal resolve; rises with the render size."
+      },
+      "pass.temporal antialiasing": {
+        "label": "temporal antialiasing",
+        "hint": "Blends the image with the earlier ones to smooth the edges; rises with the render size."
+      },
+      "pass.exposure": {
+        "label": "exposure",
+        "hint": "Meters the image's brightness and updates the automatic exposure; small and fixed."
+      },
+      "pass.scene downsample": {
+        "label": "scene downsample",
+        "hint": "Builds the chain of ever smaller copies of the image read by the bloom and the local exposure; rises with the render size."
+      },
+      "pass.local exposure": {
+        "label": "local exposure",
+        "hint": "Adapts the exposure region by region; rises with the render size."
+      },
+      "pass.bloom": {
+        "label": "bloom",
+        "hint": "Spreads the bright parts of the image into a glow; rises with the render size."
+      },
+      "pass.outline": {
+        "label": "outline",
+        "hint": "Scans and draws the outlines of the selected objects; rises with the render size and the outlines asked."
+      },
+      "pass.HDR composition": {
+        "label": "HDR composition",
+        "hint": "Composes the final image from the lit image and the effects; rises with the render size."
+      },
+      "pass.HDR composition + present": {
+        "label": "HDR composition + present",
+        "hint": "Composes the final image and presents it to the screen in one pass; rises with the render size."
+      },
+      "pass.direct present": {
+        "label": "direct present",
+        "hint": "Draws the image straight to the screen; rises with the render size."
+      },
+      "pass.view present": {
+        "label": "view present",
+        "hint": "Draws the image into a view of the page; rises with the view's size."
+      },
+      "pass.guides": {
+        "label": "guides",
+        "hint": "Draws the guides over the image; rises with the guides shown."
+      },
+      "pass.x ray": {
+        "label": "x ray",
+        "hint": "Draws the edges of the x-ray view over the lit image; rises with the render size."
+      },
+      "pass.frame difference": {
+        "label": "frame difference",
+        "hint": "Shows the image against the one before it; rises with the render size."
+      },
+      "pass.see through background": {
+        "label": "see through background",
+        "hint": "Lays the background of the see-through views before their transparents; rises with the render size."
+      },
+      "pass.capture emission and occlusion": {
+        "label": "capture emission and occlusion",
+        "hint": "Captures the emission and occlusion layer of the surfaces; rises with the render size."
+      },
+      "pass.texture mips": {
+        "label": "texture mips",
+        "hint": "Builds the smaller levels of the textures just loaded; rises with the textures uploaded."
+      },
+      "pass.deformation": {
+        "label": "deformation",
+        "hint": "Deforms the geometry of the deformed placements; rises with their vertices."
+      },
+      "pass.animation banks": {
+        "label": "animation banks",
+        "hint": "Plays the animation banks of the crowds; rises with the animated instances."
+      },
+      "pass.vsm": {
+        "label": "vsm",
+        "hint": "Any pass of the virtual shadow maps: render, clear, projection and merge of the shadow pages; rises with the shadowed lights and the pages they need."
+      }
     },
     "failure": {
       "title": "This example stopped on an error",
@@ -112,6 +751,59 @@
     "banner": {
       "close": "Close",
       "waiting": "Waiting for the engine (#{issue})"
+    },
+    "views": {
+      "beauty": "beauty",
+      "wireframe": "triangles",
+      "xray": "x-ray",
+      "clusters": "clusters",
+      "lod": "detail levels",
+      "hlod": "HLOD",
+      "screen-error": "screen error",
+      "materials": "materials",
+      "visibility": "pages seen",
+      "pages": "pages held",
+      "texture-mip": "texture size",
+      "overdraw": "overdraw",
+      "frame-difference": "frame difference",
+      "reflections": "reflections",
+      "shadows": "shadows",
+      "lighting": "lighting",
+      "no-temporal-aa": "no temporal AA",
+      "taa-input": "TAA input",
+      "taa-rejection": "TAA rejection",
+      "taa-validity": "TAA history",
+      "taa-flicker": "TAA flicker",
+      "taa-shading": "TAA shading",
+      "taa-reprojection": "TAA reprojection",
+      "taa-motion": "TAA motion",
+      "taa-thin": "TAA thin geometry",
+      "taa-material-history": "TAA history by material"
+    },
+    "viewHints": {
+      "wireframe": "One colour per triangle drawn, edges dark: far away, fewer and larger triangles.",
+      "xray": "The edges of every triangle the engine submitted, seen through walls: what culling dropped is gone. Freeze culling, then step aside to check.",
+      "clusters": "One colour per cluster, the group of triangles the cut swaps for a coarser one.",
+      "lod": "Detail level drawn — blue: full detail, then cyan, green, yellow, red as it gets coarser (red: 8 levels and more).",
+      "hlod": "White: the object itself, near. Blue: HLOD 0, the cell's objects batched. Yellow, purple, cyan: HLOD 1, 2, 3, one simple shell per cell, coarser at each level.",
+      "screen-error": "Green: exact. Yellow: near the allowed pixel error. Red: at it.",
+      "materials": "One colour per kind of material.",
+      "visibility": "Green: every page drawn this frame.",
+      "pages": "Green: every page held in memory and drawn.",
+      "frame-difference": "Black: the pixel did not change since the last frame. Grey to white: it changed, eight times amplified — whatever flickers lights up.",
+      "reflections": "Only the light the surfaces reflect, from the screen trace and the probes; black where nothing is reflected.",
+      "shadows": "How much sunlight reaches each surface — white: lit, black: in shadow. No material colour.",
+      "lighting": "All the light on a white surface: direct, reflected, bounced and ambient. No material colour.",
+      "no-temporal-aa": "The normal image without temporal accumulation: the raw image of this frame, its aliasing and noise included.",
+      "taa-input": "The image the temporal AA receives, jitter on, nothing accumulated: each pixel shows the rendered pixel it falls in — it shimmers from frame to frame.",
+      "taa-rejection": "How much history each pixel keeps — white: history kept, black: rejected (a change of shading, off screen).",
+      "taa-validity": "How much history each pixel holds after the update — white: a full history, black: it starts again. Grey: still converging.",
+      "taa-flicker": "The flicker measure — red: its error, green: how many flickers it counted, blue: the transparents' coverage that cancels it.",
+      "taa-shading": "The shading rejection, white: history kept — red: without the flicker widening, green: with it, blue: spread to the neighbours, what the update applies.",
+      "taa-reprojection": "Why the history restarts — red: disoccluded, green: disoccluded and filled with the occluder's motion, blue: off the last screen.",
+      "taa-motion": "The motion the accumulation sees — red: moving for the flicker measure, green: a pixel animation, blue: the reprojection edge (white: flat motion).",
+      "taa-thin": "Thin geometry — red: how far the history clamp relaxes, green: a cluster hole region, blue: the coverage history.",
+      "taa-material-history": "Each material's share of history as grey — white: 1, the full smoothing; black: 0, the current image alone."
     }
   },
   "a-city-from-rules": {
@@ -845,6 +1537,55 @@
       "notCounted": "not counted here"
     }
   },
+  "long-district": {
+    "banner": "Two kilometres of street in four HLOD levels: choose the HLOD view to see them. Click the view, then walk with W A S D and look with the mouse; Space and Shift lift and lower you.",
+    "controls": {
+      "walkSpeed": "Walk speed",
+      "pixelError": "Pixel error",
+      "motion": "Moving parts",
+      "forwardRun": "Forward run",
+      "fastStrafe": "Fast strafe",
+      "slowPan": "Slow pan",
+      "rotation": "Rotation",
+      "highOrbit": "High orbit",
+      "home": "Return home"
+    },
+    "readouts": {
+      "trianglesDrawn": "Triangles drawn",
+      "shareDistrict": "Share of the district",
+      "trianglesDistrict": "Triangles in the district",
+      "pathFrame": "Path frame"
+    },
+    "words": {
+      "credit": "District modelled in code for this example, CC0 — see assets/examples/CREDITS.md",
+      "notCounted": "not counted here"
+    }
+  },
+  "nine-emerald-squares": {
+    "banner": "Click the view, then fly over the nine squares with W A S D and look with the mouse; Space and Shift lift and lower you.",
+    "controls": {
+      "flySpeed": "Fly speed",
+      "pixelError": "Pixel error",
+      "memory": "Memory",
+      "view": "View",
+      "home": "Return home"
+    },
+    "choices": {
+      "view": {
+        "beauty": "beauty",
+        "lod": "lod",
+        "clusters": "clusters"
+      }
+    },
+    "readouts": {
+      "trianglesGrid": "Triangles in the grid",
+      "trianglesDrawn": "Triangles drawn"
+    },
+    "words": {
+      "credit": "Emerald Square by Nicholas Hull and Kate Anderson (NVIDIA ORCA), foliage by SpeedTree, CC BY-NC-SA 3.0 — see assets/examples/CREDITS.md",
+      "notCounted": "not counted here"
+    }
+  },
   "edges-and-wireframe": {
     "banner": "Drag to look around. Raise the threshold to keep only sharp edges.",
     "controls": {
@@ -1421,15 +2162,7 @@
     "controls": {
       "walkSpeed": "Walk speed",
       "memory": "Memory",
-      "view": "View",
       "home": "Return home"
-    },
-    "choices": {
-      "view": {
-        "beauty": "beauty",
-        "lod": "lod",
-        "clusters": "clusters"
-      }
     },
     "words": {
       "credit": "Emerald Square by Nicholas Hull and Kate Anderson (NVIDIA ORCA), foliage by SpeedTree, CC BY-NC-SA 3.0 — see assets/examples/CREDITS.md"
@@ -1440,15 +2173,7 @@
     "controls": {
       "walkSpeed": "Walk speed",
       "memory": "Memory",
-      "view": "View",
       "home": "Return home"
-    },
-    "choices": {
-      "view": {
-        "beauty": "beauty",
-        "lod": "lod",
-        "clusters": "clusters"
-      }
     },
     "words": {
       "credit": "Amazon Lumberyard Bistro (NVIDIA ORCA), CC BY 4.0 — see assets/examples/CREDITS.md"
@@ -1516,7 +2241,7 @@
     }
   },
   "no-hitch-on-first-draw": {
-    "banner": "Drag to look around. The graph shows the time between pictures.",
+    "banner": "Drag to look around. The stats corner draws each frame's time.",
     "controls": {
       "turning": "Turning",
       "revealAgain": "Reveal again"
@@ -1526,7 +2251,7 @@
       "worstFrameAfter": "Worst frame after"
     },
     "words": {
-      "note": "Fourteen surfaces, each a different material or setting, all shown on the same frame. The graph plots the time between frames; the gold line is the moment they appear.",
+      "note": "Fourteen surfaces, each a different material or setting, all shown on the same frame. The panel gives the worst time between frames before and after they appear; the stats corner draws each frame.",
       "measuring": "measuring",
       "hidden": "hidden"
     }
@@ -1836,6 +2561,21 @@
     "words": {
       "on": "on",
       "off": "off"
+    }
+  },
+  "particles-responsive": {
+    "banner": "Two swarms of sparks, the same motion: the left one's history is responsive, its trails short. Drag to turn around them.",
+    "controls": {
+      "smoothing": "Smoothing",
+      "motion": "Motion"
+    },
+    "readouts": {
+      "temporalAntialiasing": "Temporal antialiasing"
+    },
+    "words": {
+      "on": "on",
+      "off": "off",
+      "credit": "Sparks modelled in code for this example, CC0 — see assets/examples/CREDITS.md"
     }
   },
   "snow-of-sprites": {
@@ -2478,18 +3218,11 @@
   "a-hundred-thousand-instances": {
     "banner": "Drag to orbit the field. Change the count or view.",
     "controls": {
-      "count": "Count",
-      "view": "View"
+      "count": "Count"
     },
     "readouts": {
       "objectsShown": "Objects shown",
       "objectsBuilt": "Objects built"
-    },
-    "choices": {
-      "view": {
-        "beauty": "beauty",
-        "clusters": "clusters"
-      }
     }
   },
   "inside-a-component": {

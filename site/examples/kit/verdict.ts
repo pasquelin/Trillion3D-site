@@ -1,9 +1,9 @@
 import { resultRow, type Measurement, type ResultRow } from '#engine/bench/kit/measureTypes.ts'
 import { failures } from './failure.ts'
-import { spread } from './profile.ts'
-import { statsCard } from './stats.ts'
-import { rate } from './statsLines.ts'
-import { ms } from './statUnit.ts'
+import { ms } from './measure.ts'
+import { frameStatistics } from '#engine/packages/sdk-core/src/runtime/stats.ts'
+import { spread } from '#engine/packages/math/src/scalar/quantile.ts'
+import { statsCard } from './card.ts'
 import { exampleId, kitWord } from './words.ts'
 
 /**
@@ -54,8 +54,12 @@ function line(name: string, values: number[], key: keyof typeof BUDGETS) {
  *  of its GPU and shadow times. */
 function partLines(part: string, frames: Frame[]): ResultRow[] {
   const at = frames.map((frame) => frame.at),
-    gaps = spread(at.slice(1).map((time, k) => time - at[k])),
-    [fps, mean] = [Math.round(1000 / (gaps?.p50 ?? NaN)), Math.round(rate(at) ?? 0)]
+    between = at.slice(1).map((time, k) => time - at[k]),
+    gaps = spread(between),
+    [fps, mean] = [
+      Math.round(1000 / (gaps?.p50 ?? NaN)),
+      Math.round(frameStatistics(between).fps ?? 0),
+    ]
   return [
     {
       ...resultRow({ name: `${part}: FPS`, motif: '—' }),

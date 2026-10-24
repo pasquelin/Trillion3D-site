@@ -150,15 +150,15 @@
         if (glide.gliding) flight.resume = values.drift;
         else if (values.drift) drift.restart();
         else drift.stop();
-      }, world);
+      });
       name = readout('framing');
       radius = readout('radius');
       distance = readout('distance');
 
       // Double-click: the engine casts the ray through the pointer; the exhibit holding the
       // nearest surface it meets is framed.
-      world.canvas.addEventListener('dblclick', (event) => {
-        let hit = world.raycast({ x: event.offsetX, y: event.offsetY }, { objects: [exhibits] })?.object;
+      world.canvas.addEventListener('dblclick', async (event) => {
+        let hit = (await world.raycast({ x: event.offsetX, y: event.offsetY }, { objects: [exhibits] }))?.object;
         while (hit && hit.parent !== exhibits) hit = hit.parent;
         if (hit) frame(hit, ui.margin);
       });

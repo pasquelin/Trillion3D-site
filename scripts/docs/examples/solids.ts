@@ -32,6 +32,26 @@ export function box(sx: number, sy: number, sz: number, uvScale?: number): Mesh 
   return mesh
 }
 
+/** `box`'s four upright faces, open at top and bottom: a wall that wraps a core without capping it. */
+export function sleeve(sx: number, sy: number, sz: number): Mesh {
+  const closed = box(sx, sy, sz),
+    kept = new Map<number, number>(),
+    mesh: Mesh = { positions: [], normals: [], uvs: [], indices: [] }
+  for (let t = 0; t < closed.indices.length; t += 3) {
+    const triangle = closed.indices.slice(t, t + 3)
+    if (corner(closed.normals, triangle[0])[1] !== 0) continue
+    for (const v of triangle) {
+      if (!kept.has(v)) {
+        kept.set(v, kept.size)
+        mesh.positions.push(...corner(closed.positions, v))
+        mesh.normals.push(...corner(closed.normals, v))
+      }
+      mesh.indices.push(kept.get(v)!)
+    }
+  }
+  return mesh
+}
+
 /** A square of side `size` centred on the origin, `cells` cells a side, `y = height(x, z)`. */
 export function heightfield(size: number, cells: number, height: (x: number, z: number) => number) {
   const ground = fromGeometry(geometry.plane(size, size, cells, cells).rotateX(-HALF_PI))

@@ -67,7 +67,7 @@
       world.camera.lookAt(world.controls.target);
 
       // Readouts join the panel, so the panel comes first; its button calls `clear` below.
-      controls({ clear: () => clear() }, world);
+      controls({ clear: () => clear() });
       const pointA = readout('pointA'),
         pointB = readout('pointB'),
         distance = readout('distance');
@@ -103,8 +103,8 @@
         pointB(format(picked[1]));
         distance(`${picked[0].distanceTo(picked[1]).toFixed(2)} m`);
       };
-      const measure = (x, y) => {
-        const hit = world.raycast({ x, y }, { objects: [exhibits] });
+      const measure = async (x, y) => {
+        const hit = await world.raycast({ x, y }, { objects: [exhibits] });
         if (hit) pick(hit.point.clone());
       };
       // The page opens on one measurement already taken, the arch's crown to the plinth

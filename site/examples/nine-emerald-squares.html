@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Nine Emerald Squares</title>
+    <meta name="thumbnail" content="10" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #b7cde6;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      p {
+        position: absolute;
+        top: 0;
+        margin: 0.5rem;
+        color: #1d2a3a;
+        font: 12px system-ui;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <p data-words="credit"></p>
+    <script type="module">
+      import {
+        createWorld,
+        geometry,
+        light,
+        material,
+        math,
+        object,
+        side,
+        texture,
+      } from '../runtime/engine.js'
+      import { controls, readout, words, language } from '../runtime/kit.js'
+      const say = words()
+
+      // NVIDIA's Emerald Square, ten million triangles in metres, placed nine times on a three by
+      // three grid: ninety million triangles in view from the air, a heavy load for the clusters'
+      // levels of detail. Click, look with the mouse, fly with W/A/S/D, Space and Shift.
+      const world = createWorld('view', { controls: 'firstPerson' })
+      world.scene.background = math.color('#b7cde6')
+      world.scene.add(
+        light.directional({ intensity: 3.4, color: '#fff1d6', position: [40, 90, 30] }),
+        light.hemisphere({ intensity: 1.6, color: '#d6e6ff', groundColor: '#8a7c64' }),
+      )
+      // The sky: a painted dome seen from inside, unlit, centred on the camera so it never comes
+      // nearer — deep blue overhead, paling to a hazy horizon. It casts and takes no shadow. Wider
+      // than the grid, so the far squares stand in front of it.
+      const sky = document.createElement('canvas')
+      sky.width = 16
+      sky.height = 512
+      const brush = sky.getContext('2d')
+      const air = brush.createLinearGradient(0, 0, 0, 256)
+      air.addColorStop(0, '#3f78c8')
+      air.addColorStop(0.65, '#8fb8e6')
+      air.addColorStop(1, '#dfe9f2')
+      brush.fillStyle = air
+      brush.fillRect(0, 0, 16, 256)
+      brush.fillStyle = '#dfe9f2'
+      brush.fillRect(0, 256, 16, 256)
+      const dome = object.mesh(
+        geometry.sphere(3000, 48, 24),
+        material.meshBasic({ map: texture.canvas(sky), side: side.double }),
+      )
+      dome.castShadow = dome.receiveShadow = false
+      world.scene.add(dome)
+      world.beforeFrame(() => dome.position.copy(world.camera.position))
+
+      // From the air, the whole grid in view; the far plane past its far corner.
+      world.camera.near = 0.1
+      world.camera.far = 4000
+      const HOME = { position: [0, 380, 760], target: [0, 0, 20] }
+      const home = () => world.camera.set(HOME)
+      home()
+
+      // One compiled model, nine placements. The first load reads the manifest, its pages and its
+      // images; the eight others name the same manifest, so the world reads nothing again and
+      // each returns another placement of the model read first — its own position over the same
+      // pages, images and buffers. Each square is cut for its own distance: the near ones draw
+      // fine clusters, the far ones coarse. The squares stand 230 m apart.
+      const MANIFEST = '../assets/examples/emerald-square/cache/native/full/manifest.json'
+      const SPAN = 230
+      const squares = await Promise.all(
+        Array.from({ length: 9 }, (_, i) =>
+          world.scene.load(MANIFEST, {
+            position: [((i % 3) - 1) * SPAN, 0, (Math.floor(i / 3) - 1) * SPAN],
+          }),
+        ),
+      )
+
+      // `world.pixelError` is how far, in screen pixels, a coarser version of a cluster may stray
+      // from the exact surface before a finer one is drawn. The geometry pool in MiB, from the
+      // engine's default of 512: the nine squares share one set of pages.
+      const MiB = 1024 * 1024
+      controls(
+        {
+          flySpeed: [1, 150, 30, 1],
+          pixelError: [0, 24, 1, 0.5],
+          memory: [128, 2048, 512, 64],
+          view: ['beauty', 'lod', 'clusters'],
+          home,
+        },
+        (values, key) => {
+          if (key === undefined || key === 'flySpeed')
+            world.controls.movementSpeed = values.flySpeed
+          if (key === undefined || key === 'pixelError') world.pixelError = values.pixelError
+          if (key === undefined || key === 'memory') world.budget.geometryPool = values.memory * MiB
+          if (key === undefined || key === 'view') world.diagnostic.mode = values.view
+          world.invalidate()
+        },
+      )
+      const total = squares.reduce((sum, square) => sum + square.metadata.sourceTriangles, 0)
+      readout('trianglesGrid')(total.toLocaleString(language()))
+      const drawn = readout('trianglesDrawn')
+      world.onFrame(({ metrics }) => {
+        const selected = metrics.selectedTriangles
+        drawn(selected == null ? say('notCounted') : selected.toLocaleString(language()))
+      })
+    </script>
+  </body>
+</html>

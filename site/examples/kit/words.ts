@@ -1,3 +1,5 @@
+import type { StatsWords } from '#engine/packages/sdk-core/src/modules/stats/words.ts'
+
 /**
  * The examples' words, in the reader's language. One dictionary a language,
  * `examples/i18n/<code>.json` beside the example pages, English the reference: a `kit` part for
@@ -7,7 +9,7 @@
  * frame sets it; a sandbox sets it on its `<base>`), else the browser's, else English. A word
  * the dictionary lacks falls back on what the code gives: a humanised key, an identifier.
  */
-interface WordTree {
+export interface WordTree {
   [key: string]: string | WordTree
 }
 
@@ -57,6 +59,17 @@ export function labelOf(key: string): string {
 export const kitWord = (group: string, key: string, fallback = labelOf(key)) =>
   lookup(['kit', group, key]) ?? fallback
 
+/** The kit's whole section `kit.<group>` as the dictionary has it, empty when it has none. */
+export const kitSection = (group: string): WordTree => {
+  const kit = tree.kit
+  const node = typeof kit === 'object' ? kit[group] : undefined
+  return typeof node === 'object' ? node : {}
+}
+
+/** The kit's `statsPanel` section as the engine's stats words: its `{ label, hint }` by key (the
+ *  dictionary is the one place that vouches for the shape). */
+export const statsWords = () => kitSection('statsPanel') as StatsWords
+
 /** The example's word at `<id>.<group>.<key>…`, else `fallback`: a label, a choice, a readout. */
 export const exampleWord = (fallback: string, ...path: string[]) =>
   lookup([exampleId(), ...path]) ?? fallback
@@ -77,8 +90,9 @@ function useWords(dictionary: WordTree, language: string) {
 }
 
 /** Reads the dictionary of the asked language, or English's when it has none. A dictionary that
- * cannot be read leaves every word on its fallback. */
-async function fetchWords(asked: string): Promise<void> {
+ * cannot be read leaves every word on its fallback. A page outside the examples (the scene
+ * editor) reads the kit's words through it, without `loadWords`'s writes to its document. */
+export async function fetchWords(asked: string): Promise<void> {
   for (const candidate of asked === 'en' ? ['en'] : [asked, 'en']) {
     const url = new URL(`../examples/i18n/${candidate}.json`, import.meta.url)
     const answer = await fetch(url).catch(() => null)

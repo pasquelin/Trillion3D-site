@@ -95,7 +95,7 @@
         if (key === undefined || key === 'count') stars.forEach((star, index) => (star.mesh.visible = index < values.count));
         shown?.(values.count.toLocaleString(language()));
         world.invalidate();
-      }, world);
+      });
       shown = readout('placementsDrawn');
       shown(ui.count.toLocaleString(language()));
       readout('materials')(String(BANDS));

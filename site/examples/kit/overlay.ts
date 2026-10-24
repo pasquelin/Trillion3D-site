@@ -10,8 +10,10 @@ export function overlay(): HTMLElement {
   if (layer) return layer
   const host = document.createElement('div')
   host.dataset.exampleOverlay = ''
-  // Hidden until the stylesheet arrives, so no unstyled panel flashes over the render.
-  host.style.cssText = 'position:fixed;inset:0;pointer-events:none;visibility:hidden'
+  // Hidden until the stylesheet arrives, so no unstyled panel flashes over the render. Above the
+  // page's own layers: a view the page adds after it, positioned, would otherwise paint over it.
+  host.style.cssText =
+    'position:fixed;inset:0;z-index:2147483647;pointer-events:none;visibility:hidden'
   const root = host.attachShadow({ mode: 'open' })
   const sheet = document.createElement('link')
   sheet.rel = 'stylesheet'
@@ -40,9 +42,6 @@ globalThis.addEventListener?.('message', (event) => {
 
 /** Whether a game's menu owns the frame: its panels then start folded, one click away. */
 let folded = false
-
-/** Whether the hosting page shows the panels now. */
-export const panelsShown = () => visible
 
 /** Puts `panel` under the page's show/hide message, in its current state. */
 export function hideable(panel: HTMLElement) {

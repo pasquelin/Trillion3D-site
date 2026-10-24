@@ -61,6 +61,8 @@ export const exampleMissing = (id: string, locale: Locale) =>
 
 /** The flagships, shown large on the home page, one per band of its mosaic. */
 const FLAGSHIPS = [
+  'long-district',
+  'particles-responsive',
   'a-ring-of-lamps',
   'glass-on-the-table',
   'orbit-around-a-clockwork',

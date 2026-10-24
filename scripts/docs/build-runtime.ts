@@ -14,7 +14,8 @@ const sdk = (path: string) => resolve(ENGINE, 'packages/sdk-browser/src', path)
 
 /** The two modules an example page imports, `../runtime/<name>.js`. */
 const RUNTIME_ENTRIES = {
-  engine: sdk('index.ts'),
+  // The SDK whole, its `createWorld` telling the kit of each world (`site/examples/engine.ts`).
+  engine: 'site/examples/engine.ts',
   // The examples' own panels and pieces, imported beside the engine; they bundle nothing of it,
   // and a piece builds with the engine families the page hands it. The few `packages/math`
   // constants and helpers they read are a chunk the engine shares, loaded once.
@@ -27,12 +28,10 @@ export async function buildRuntime(root: string, outdir: string) {
     absWorkingDir: root,
     metafile: true,
     entryPoints: {
-      pageWorker: sdk('page/work/pageWorker.ts'),
-      pageIntegrationWorker: sdk('page/integration/pageIntegrationWorker.ts'),
+      pageWorker: sdk('geometry/work/pageWorker.ts'),
+      pageIntegrationWorker: sdk('geometry/integration/pageIntegrationWorker.ts'),
       // The physics worker, spawned only by a world that turns physics on.
       physicsWorker: sdk('physics/physicsWorker.ts'),
-      // The animation worker, started only by a world whose clips play at a fixed step.
-      animationWorker: sdk('animation/animationWorker.ts'),
       ...RUNTIME_ENTRIES,
     },
     outdir,

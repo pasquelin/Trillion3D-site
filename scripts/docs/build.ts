@@ -8,7 +8,7 @@
  * deployment builds it from main (docs/LEARNING_PORTAL.md).
  */
 import { buildSite, trackedOutput } from './site.ts'
-import { heavyStep } from '../heavy-lock.ts'
+import { heavyStep } from '#engine/scripts/native/heavy-lock.ts'
 
 if (!process.argv.includes('--untracked'))
   await heavyStep('build:docs', () =>

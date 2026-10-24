@@ -31,9 +31,22 @@ export const ENGINE = resolve(ROOT, '.engine')
  *  the root's among them: the notices, `.gitmodules`). `packages`: the browser engine, its
  *  workers and WebAssembly, the maths, the public facade the API reference reads, the native
  *  compiler's crate and the Jolt submodule it links. `.cargo`: the compiler's build flags.
- *  `bench/kit`: the measurement contract the examples' kit reads. `scripts/installed-package`: the
- *  package fixture the Install page proof packs. */
-const SPARSE = ['packages', '.cargo', 'bench/kit', 'scripts/installed-package']
+ *  `bench/kit`: the measurement contract the examples' kit reads. `scripts/release/installed-package`:
+ *  the package fixture the Install page proof packs. The shared script folders the site's tools
+ *  import instead of copying: `scripts/git` (the maintained files, git's paths), `scripts/native`
+ *  (the heavy-step lock), `scripts/lint` (the maths' inline forms), `scripts/check` (the French
+ *  words) and `scripts/test` (the static server's helpers). */
+const SPARSE = [
+  'packages',
+  '.cargo',
+  'bench/kit',
+  'scripts/release/installed-package',
+  'scripts/git',
+  'scripts/native',
+  'scripts/lint',
+  'scripts/check',
+  'scripts/test',
+]
 
 /** The submodule the native compiler links. */
 const JOLT = 'packages/physics-jolt-wasm/JoltPhysics'

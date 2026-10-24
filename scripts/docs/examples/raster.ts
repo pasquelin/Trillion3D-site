@@ -5,8 +5,8 @@ import { clampLowWins, lerp, wrap } from '#engine/packages/math/src/scalar/reals
 import { smoothstep } from '../../../site/maths.ts'
 
 /**
- * A small raster toolkit for the textures drawn in code: square float images of one or three
- * channels, in 0–255, drawn at twice their size, then brought down and softened. Every filter
+ * A small raster toolkit for the textures drawn in code: square float images of one, three or
+ * four channels (the fourth an alpha), in 0–255, drawn at twice their size, then brought down and softened. Every filter
  * wraps around the edges, so each image tiles without a seam.
  */
 export interface Raster {
@@ -139,13 +139,13 @@ export function valueNoise(size: number, cells: number, octaves: number, random:
   return total.map((value) => value / peak)
 }
 
-/** The image as an opaque 8-bit PNG. */
+/** The image as an 8-bit PNG: opaque, unless a fourth channel gives its alpha. */
 export function png(image: Raster) {
   const rgba = new Uint8Array(image.size * image.size * 4)
   for (let p = 0; p < image.size * image.size; p++)
     for (let k = 0; k < 4; k++)
       rgba[p * 4 + k] =
-        k === 3
+        k === 3 && image.channels < 4
           ? 255
           : Math.floor(
               clampLowWins(

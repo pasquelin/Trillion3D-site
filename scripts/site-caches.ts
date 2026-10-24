@@ -16,11 +16,16 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs'
-import { resolve } from 'node:path'
+import { basename, resolve } from 'node:path'
 import { firstNewer } from '#engine/packages/sdk-node/src/compiler/freshness.mts'
+import { resolveHlod } from '#engine/packages/sdk-core/src/contracts/hlodOptions.ts'
+import { materialJobFields } from '#engine/packages/sdk-core/src/contracts/materialOptions.ts'
+import { DISTRICT_HLOD } from './docs/examples/district.ts'
+import { SPARKS_MATERIALS, SPARKS_RESPONSIVE } from './docs/examples/sparks.ts'
+import { MODEL_LIBRARY, placeLibraryFiles } from './docs/examples/library.ts'
 import { modelScenes } from './docs/examples/models.ts'
 import { ROOT } from './engine.ts'
-import { heavyStep } from './heavy-lock.ts'
+import { heavyStep } from '#engine/scripts/native/heavy-lock.ts'
 import {
   compileFullCache,
   type FullCompile,
@@ -40,7 +45,16 @@ export interface Download {
  *  `download` scene's source is that file instead, and its folder holds only the cache. */
 export interface CookedScene extends Pick<
   FullCompile,
-  'source' | 'cache' | 'simplification' | 'stdio' | 'threads' | 'ramMb'
+  | 'source'
+  | 'cache'
+  | 'simplification'
+  | 'hlod'
+  | 'temporalAntialiasing'
+  | 'responsive'
+  | 'materials'
+  | 'stdio'
+  | 'threads'
+  | 'ramMb'
 > {
   directory: string
   download?: Download
@@ -88,6 +102,14 @@ export const COOKED_SCENES: Record<string, CookedScene> = {
   ...Object.fromEntries(
     [...Object.keys(modelScenes), ...COMMITTED_SOURCES].map((name) => [name, example(name)]),
   ),
+  // The district's HLOD is written in its example's code (`DISTRICT_HLOD`).
+  'long-district': { ...example('long-district'), hlod: DISTRICT_HLOD },
+  // The sparks' responsive materials are named in their example's code (`sparks.ts`).
+  'particles-responsive': {
+    ...example('particles-responsive'),
+    responsive: SPARKS_RESPONSIVE,
+    materials: SPARKS_MATERIALS,
+  },
   'terrain-tiles-none': {
     ...example('terrain-tiles'),
     cache: 'cache-none',
@@ -112,6 +134,12 @@ export const COOKED_SCENES: Record<string, CookedScene> = {
 export const sourceOf = ({ directory }: CookedScene, root = ROOT) =>
   resolve(root, directory, 'source')
 
+/** Places in the source folder of `scene` the model library's files it serves (`LIBRARY_FILES`),
+ *  listed in the scene's git ignore file: before its stamp, its freshness or its cook reads the
+ *  folder. */
+const placeLibrary = (scene: CookedScene) =>
+  placeLibraryFiles(basename(scene.directory), sourceOf(scene), resolve(ROOT, MODEL_LIBRARY))
+
 /** Whether `manifest`, under `site/`, is in the cache of a scene `compile:caches` cooks, and exists
  *  once that cache is compiled: a checkout without the compiler (a documentation-only run) has
  *  none. */
@@ -131,11 +159,23 @@ export function isCookedManifest(manifest: string, root = ROOT): boolean {
 const stampPath = (scene: CookedScene, root = ROOT) =>
   resolve(root, scene.directory, cacheOf(scene), 'compiled-with.json')
 const stampOf = (scene: CookedScene, root = ROOT) => {
-  const { source, simplification = 'none', download } = scene
+  const { source, simplification = 'none', hlod, download } = scene
+  const { temporalAntialiasing, responsive, materials } = scene
   const files = download
     ? [download.sha256]
     : readdirSync(sourceOf(scene, root), { recursive: true }).map(String).sort()
-  return JSON.stringify({ source, simplification, budget: TRIANGLE_BUDGET, files })
+  // The HLOD as the compiler reads it, absent for a scene naming none: its stamp is unchanged.
+  const wire = hlod === undefined ? undefined : resolveHlod(hlod)
+  // The temporal anti-aliasing options likewise, each absent for a scene naming none.
+  const named = materialJobFields({ temporalAntialiasing, responsive, materials })
+  return JSON.stringify({
+    source,
+    simplification,
+    budget: TRIANGLE_BUDGET,
+    files,
+    hlod: wire,
+    ...named,
+  })
 }
 
 /** The sha256 of the file at `path`, read a chunk at a time: a source may pass a gigabyte. */
@@ -190,6 +230,7 @@ export function compileCache(scene: CookedScene): void {
   if (download) fetchDownload(download)
   const cwd = resolve(ROOT, directory),
     cache = cacheOf(scene)
+  placeLibrary(scene)
   rmSync(resolve(cwd, cache), { recursive: true, force: true })
   // A downloaded scene's folder holds only its cache, so nothing in git makes it.
   mkdirSync(cwd, { recursive: true })
@@ -211,6 +252,7 @@ export function isStale(scene: CookedScene, root = ROOT, compiled = compilerTime
 /** Compiles every stale cache of `scenes`. Without a compiler, a `required` run throws; another
  *  names what it left and goes on, for a caller that may read none of them. */
 export function compileSiteCaches(required = true, scenes = Object.values(COOKED_SCENES)): void {
+  for (const scene of scenes) placeLibrary(scene)
   const compiled = compilerTime()
   const stale = scenes.filter((scene) => isStale(scene, ROOT, compiled))
   if (!stale.length) return

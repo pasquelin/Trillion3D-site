@@ -32,6 +32,15 @@ export interface Primitive {
   material: number
   attributes: { POSITION: number; NORMAL: number; TEXCOORD_0?: number }
   indices: number
+  /** Morph targets: each a displacement of every vertex, blended by the node's weights. */
+  targets?: { POSITION: number }[]
+}
+
+/** An animation: each channel moves one node's `path` along the keys of its sampler. */
+export interface GltfAnimation {
+  name: string
+  channels: { sampler: number; target: { node: number; path: string } }[]
+  samplers: { input: number; output: number; interpolation: 'LINEAR' | 'STEP' }[]
 }
 
 export interface GltfMaterial {
@@ -48,6 +57,7 @@ export interface GltfMaterial {
   alphaMode?: string
   alphaCutoff?: number
   extensions?: Record<string, unknown>
+  extras?: Record<string, unknown>
 }
 
 /** The shape read from and written to `geometry.gltf`, the fields this recipe touches. */
@@ -56,7 +66,7 @@ export interface GltfDocument {
   scene?: number
   scenes: { nodes: number[] }[]
   nodes: GltfNode[]
-  meshes: { name: string; primitives: Primitive[] }[]
+  meshes: { name: string; primitives: Primitive[]; weights?: number[] }[]
   materials: GltfMaterial[]
   buffers: { uri: string; byteLength: number }[]
   bufferViews: BufferView[]
@@ -64,6 +74,7 @@ export interface GltfDocument {
   images?: { uri: string }[]
   textures?: { sampler: number; source: number }[]
   samplers?: { magFilter: number; minFilter: number; wrapS: number; wrapT: number }[]
+  animations?: GltfAnimation[]
   /** The document's physics: the `KHR_physics_rigid_bodies` matters, `KHR_implicit_shapes`. */
   extensions?: Record<string, unknown>
   extensionsUsed?: string[]
@@ -76,8 +87,9 @@ export interface GltfNode {
   rotation?: readonly number[]
   scale?: readonly number[]
   children?: number[]
-  /** What the compiler reads beside the node: a soft body's `physics` options. */
-  extras?: { physics?: PhysicsOption }
+  /** What the compiler reads beside the node: a soft body's `physics` options, the HLOD group or
+   *  layer its object enters (`HLOD_MARK`). */
+  extras?: { physics?: PhysicsOption; hlod?: string }
   /** What the node declares: a rigid body (`KHR_physics_rigid_bodies`), its motion and its
    *  collider, or its mesh drawn once per pose (`EXT_mesh_gpu_instancing`). */
   extensions?: Record<string, unknown>

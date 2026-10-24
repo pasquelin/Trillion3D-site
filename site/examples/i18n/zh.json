@@ -17,7 +17,9 @@
   },
   "kit": {
     "panel": {
-      "controls": "设置"
+      "controls": "设置",
+      "view": "视图",
+      "freeze": "冻结剔除"
     },
     "menu": {
       "play": "开始",
@@ -38,72 +40,709 @@
     },
     "stats": {
       "FPS": "帧/秒",
-      "triangles": "三角形",
-      "triangles (scene)": "三角形（场景）",
-      "draw calls": "绘制调用",
-      "pages": "页",
-      "geometry pool": "几何体存储",
-      "lights": "灯光",
-      "GPU memory": "GPU 内存",
-      "screen images": "屏幕图像",
-      "shadow memory": "阴影内存",
-      "geometry memory": "几何体内存",
-      "texture memory": "纹理内存",
-      "live textures": "活动纹理",
-      "transmission backdrop": "透射背景",
-      "GPU frame": "GPU 帧",
-      "GPU frame (last)": "GPU 帧（上次）",
-      "CPU frame": "CPU 帧",
-      "page hooks": "页面代码",
-      "engine CPU": "引擎 CPU",
-      "Statistics": "统计",
-      "hint": "点击：紧凑 · 拖动：移动 · 按键 `",
-      "fps": "帧/秒",
-      "budget": "预算",
-      "held": "静止",
-      "last": "上次",
-      "others": "其他",
-      "Shadows": "阴影",
-      "Scene and memory": "场景与内存",
-      "cut and culling": "裁切与剔除",
-      "page preparation": "页面准备",
-      "command encoding": "命令编码",
-      "physics step": "物理步进",
-      "Cadence": "节奏",
-      "{n}× refresh": "{n}× 刷新",
-      "GPU idle": "GPU 空闲"
+      "GPU frame": "GPU 帧"
     },
-    "shadows": {
-      "lights": "灯光",
-      "maps": "贴图",
-      "pagesRequested": "请求的页",
-      "pagesAllocated": "分配的页",
-      "pagesCached": "缓存的页",
-      "pagesRendered": "绘制的页",
-      "freePages": "空闲页",
-      "lodBias": "LOD 偏移",
-      "projectionPasses": "投影通道",
-      "invalidation": "失效",
-      "marking": "标记",
-      "pageManagement": "页面管理",
-      "render": "渲染",
-      "projection": "投影",
-      "transmission": "透射"
-    },
-    "passes": {
-      "vsm projection": "VSM 投影",
-      "vsm marking": "VSM 标记",
-      "vsm render": "VSM 渲染",
-      "material surfaces": "材质表面",
-      "temporal antialiasing": "时间抗锯齿",
-      "HDR composition + present": "HDR 合成 + 呈现",
-      "deferred lighting": "延迟光照",
-      "reflection source": "反射源",
-      "HiZ pyramid": "HiZ 金字塔",
-      "light tiles": "灯光分块",
-      "texture mips": "纹理 mip",
-      "reflection radiance mips": "反射辐射 mip",
-      "reflection depth bounds mips": "反射深度边界 mip"
+    "statsPanel": {
+      "tab.page": {
+        "label": "所有世界",
+        "hint": "页面的每个世界和视图占用 GPU 与主线程的程度，以每秒的占比表示；仅在含多个世界或视图的页面显示。"
+      },
+      "tab.gpu": {
+        "label": "GPU",
+        "hint": "图形处理器在每个阶段花掉图像时间的位置。"
+      },
+      "tab.cpu": {
+        "label": "CPU",
+        "hint": "引擎在一帧中花掉 CPU 时间的位置，取最近一秒的中位数；标题中的 CPU 是主线程的整帧。每帧工作越多，数值越高。"
+      },
+      "tab.shadows": {
+        "label": "阴影",
+        "hint": "阴影通道及其页面计数；它们的耗时已包含在 GPU 时间内。"
+      },
+      "tab.memory": {
+        "label": "内存",
+        "hint": "引擎持有的 GPU 内存，按类型划分。"
+      },
+      "tab.scene": {
+        "label": "场景",
+        "hint": "裁剪选中并绘制的内容，以及几何池。"
+      },
+      "page.gpuBusy": {
+        "label": "GPU 占用",
+        "hint": "页面的世界和视图每秒占用 GPU 的比例；超过 100 % 时它们的 GPU 时间重叠，帧由 GPU 决定。"
+      },
+      "page.cpuBusy": {
+        "label": "CPU 占用",
+        "hint": "页面的世界每秒占用主线程的比例；它们共用一个主线程，因此会累加。"
+      },
+      "page.view": {
+        "label": "视图 {n}",
+        "hint": "主视图之外某个视图最后一张图像的 GPU 时间，及其占世界帧的比例。"
+      },
+      "profile.cpuFrame": {
+        "label": "CPU 帧",
+        "hint": "一帧中 animation-frame 回调的主线程时间，取最近一秒的中位数 / 第 95 百分位；仅在带 ?profile 时。"
+      },
+      "profile.pageHooks": {
+        "label": "页面钩子",
+        "hint": "一帧中页面自有帧钩子的耗时，取最近一秒的中位数 / 第 95 百分位；仅在带 ?profile 时。"
+      },
+      "profile.engineCpu": {
+        "label": "引擎 CPU",
+        "hint": "引擎处理整张图像的 CPU 时间，取最近一秒的中位数 / 第 95 百分位；仅在带 ?profile 时。"
+      },
+      "profile.workerStep": {
+        "label": "物理 worker 步长",
+        "hint": "物理 worker 在一个 tick 中最慢的固定步，取最近一秒的中位数 / 第 95 百分位；仅在带 ?profile 时。"
+      },
+      "shadows.included": {
+        "label": "计入 GPU",
+        "hint": "这些时间已在 GPU 总计内：切勿再加到总计上。"
+      },
+      "summary.frame": {
+        "label": "帧",
+        "hint": "两幅显示图像之间的时间；任一处理器耗时超过一次刷新时会升高。"
+      },
+      "summary.gpu": {
+        "label": "GPU",
+        "hint": "最近一秒一幅图像的平均 GPU 时间；随绘制的像素、光源和几何增加而升高。"
+      },
+      "summary.cpu": {
+        "label": "CPU",
+        "hint": "最近一秒每帧主线程时间的中位数；随发送给 GPU 的工作增加而升高。"
+      },
+      "summary.wait": {
+        "label": "等待",
+        "hint": "较慢的处理器完成后，帧等待显示器的时间。"
+      },
+      "summary.bottleneck": {
+        "label": "受限于",
+        "hint": "引擎对拖住帧的因素的判断：窗口首先触及的限制。"
+      },
+      "summary.screen": {
+        "label": "屏幕 {hz} Hz",
+        "hint": "每幅图像在屏幕上停留的时间，以屏幕刷新次数计：1 为每次刷新，更多表示图像延迟。"
+      },
+      "summary.screenValue": {
+        "label": "1 幅图像 / {n} 次刷新",
+        "hint": "最近一秒内典型图像在屏幕上停留的刷新次数。"
+      },
+      "summary.screenShare": {
+        "label": "{share} % 的图像用 {n} 次刷新",
+        "hint": "屏幕分布的一个区间：它在最近一秒图像中所占的比例。"
+      },
+      "summary.screenShareOrMore": {
+        "label": "{share} % 用 {n} 次或更多",
+        "hint": "屏幕分布的最后一个区间：刷新次数达到或超过该值的图像所占比例。"
+      },
+      "summary.gpuIdle": {
+        "label": "GPU 空闲",
+        "hint": "GPU 在其最近一次测得的图像之前空闲的时间；CPU 供给过晚时上升。"
+      },
+      "summary.mainView": {
+        "label": "主视图",
+        "hint": "页面创建的第一个世界，即页面的主视图。"
+      },
+      "summary.world": {
+        "label": "世界",
+        "hint": "页面中主视图之外的世界。"
+      },
+      "summary.budget": {
+        "label": "预算",
+        "hint": "一次显示刷新允许一帧使用的时间；图表中的虚线。"
+      },
+      "bottleneck.healthy": {
+        "label": "显示器",
+        "hint": "帧能在一次刷新内完成：帧率由显示器决定。"
+      },
+      "bottleneck.memory_pressure": {
+        "label": "卡顿",
+        "hint": "帧耗时超过卡顿上限：释放内存或降低流式加载量。"
+      },
+      "bottleneck.gpu_bound": {
+        "label": "GPU",
+        "hint": "GPU 耗时超过一次刷新并拖住了帧：降低分辨率或光照。"
+      },
+      "bottleneck.cpu_bound": {
+        "label": "CPU",
+        "hint": "主线程耗时超过一次刷新并拖住了帧：减少每帧的工作。"
+      },
+      "bottleneck.gpu_submit_bound": {
+        "label": "GPU 提交",
+        "hint": "向 GPU 发送命令耗时超过半次刷新：减少绘制调用和通道。"
+      },
+      "bottleneck.streaming_bound": {
+        "label": "流式加载",
+        "hint": "在途页面多于获取线程能提供的数量：网络或磁盘拖住了场景。"
+      },
+      "panel.label": {
+        "label": "统计",
+        "hint": "性能分析叠加层。"
+      },
+      "panel.hint": {
+        "label": "点击：紧凑 · 拖动：移动 · 按键 ` / ²",
+        "hint": "标题行的手势。"
+      },
+      "unit.fps": {
+        "label": "fps",
+        "hint": "每秒绘制的帧数。"
+      },
+      "summary.cpuShort": {
+        "label": "CPU",
+        "hint": "一帧的主线程时间。"
+      },
+      "summary.gpuShort": {
+        "label": "GPU",
+        "hint": "一幅图像的图形处理器时间。"
+      },
+      "row.max": {
+        "label": "最大",
+        "hint": "最近一秒的最高值。"
+      },
+      "summary.held": {
+        "label": "保持",
+        "hint": "最近一秒没有新帧：没有任何变化，图像被重新显示。"
+      },
+      "summary.last": {
+        "label": "最近",
+        "hint": "显示的 GPU 时间属于较早的图像：设备尚未采样到更新的图像。"
+      },
+      "gpu.physics": {
+        "label": "物理",
+        "hint": "GPU 上的刚体和软体步进；随模拟物体增加而升高。"
+      },
+      "gpu.animations": {
+        "label": "动画",
+        "hint": "动画对象的蒙皮和变形；随动画顶点增加而升高。"
+      },
+      "gpu.lights": {
+        "label": "光源",
+        "hint": "为该帧准备场景光源；随光源数量增加而升高。"
+      },
+      "gpu.cutAdoption": {
+        "label": "采纳裁剪",
+        "hint": "接收选择阶段选出的裁剪结果；图像之间裁剪变化大时升高。"
+      },
+      "gpu.selection": {
+        "label": "选择",
+        "hint": "按视角和细节选出要绘制的簇；随测试的层级节点增加而升高。"
+      },
+      "gpu.transparents": {
+        "label": "透明物体",
+        "hint": "绘制半透明表面；随透明三角形和层数增加而升高。"
+      },
+      "gpu.residency": {
+        "label": "驻留",
+        "hint": "决定哪些几何页面必须在内存中；视图变化时升高。"
+      },
+      "gpu.hostPages": {
+        "label": "主机页面",
+        "hint": "把 CPU 流式传来的页面数据复制到 GPU；新页面到达时升高。"
+      },
+      "gpu.uploads": {
+        "label": "上传",
+        "hint": "向 GPU 缓冲发送数据；随动态几何和流式加载增加而升高。"
+      },
+      "gpu.textures": {
+        "label": "纹理",
+        "hint": "纹理层级的流式加载与解码；新纹理加载时升高。"
+      },
+      "gpu.partition": {
+        "label": "分区",
+        "hint": "把已绘制的簇排入绘制批次；随绘制的簇增加而升高。"
+      },
+      "gpu.encode": {
+        "label": "编码",
+        "hint": "构建光栅阶段读取的命令；随绘制批次增加而升高。"
+      },
+      "gpu.submit": {
+        "label": "提交",
+        "hint": "把工作交给队列的通道；随提交次数增加而升高。"
+      },
+      "gpu.hiZ": {
+        "label": "Hi-Z",
+        "hint": "构建遮挡测试读取的深度金字塔；随分辨率升高而升高。"
+      },
+      "gpu.geometry": {
+        "label": "几何",
+        "hint": "光栅化可见性缓冲并写入表面；随绘制的三角形和覆盖的像素增加而升高。"
+      },
+      "gpu.coplanar": {
+        "label": "共面",
+        "hint": "处理位于同一平面的表面；随重叠贴花增加而升高。"
+      },
+      "gpu.shadows": {
+        "label": "阴影",
+        "hint": "渲染并投射阴影页面；随投射阴影的光源和重绘的页面增加而升高。"
+      },
+      "gpu.lightLists": {
+        "label": "光源列表",
+        "hint": "收集到达每个屏幕图块的光源；随光源数量及其范围增加而升高。"
+      },
+      "gpu.bounce": {
+        "label": "反弹",
+        "hint": "表面之间反弹的光；随追踪的光线增加而升高。"
+      },
+      "gpu.reflections": {
+        "label": "反射",
+        "hint": "场景的反射图像；随反射像素和追踪的光线增加而升高。"
+      },
+      "gpu.lighting": {
+        "label": "光照",
+        "hint": "根据表面和光源为每个像素着色；随像素和光源增加而升高。"
+      },
+      "gpu.antialiasing": {
+        "label": "抗锯齿",
+        "hint": "随时间平滑边缘；随分辨率升高而升高。"
+      },
+      "gpu.effects": {
+        "label": "特效",
+        "hint": "泛光、曝光和雾等后期处理；随开启的特效和分辨率增加而升高。"
+      },
+      "gpu.present": {
+        "label": "输出",
+        "hint": "重采样并把图像交给显示器；随显示分辨率升高而升高。"
+      },
+      "gpu.unclassified": {
+        "label": "未分类",
+        "hint": "没有任何阶段命名的计时通道；列出以便各阶段仍能相加。"
+      },
+      "gpu.untimed": {
+        "label": "计时通道之外",
+        "hint": "没有任何计时通道覆盖的图像 GPU 时间：复制、通道之间的间隙、时间戳解析。"
+      },
+      "cpu.physics": {
+        "label": "物理",
+        "hint": "主线程上的模拟步进；随模拟物体增加而升高。"
+      },
+      "cpu.animations": {
+        "label": "动画",
+        "hint": "在主线程准备动画对象；随动画对象增加而升高。"
+      },
+      "cpu.textures": {
+        "label": "纹理",
+        "hint": "在主线程喂给纹理流式加载器；新纹理加载时升高。"
+      },
+      "cpu.transparents": {
+        "label": "透明物体",
+        "hint": "准备并绘制半透明表面；随透明网格和层数增加而升高。"
+      },
+      "cpu.cutAdoption": {
+        "label": "采纳裁剪",
+        "hint": "接收选择阶段选出的裁剪结果；图像之间裁剪变化大时升高。"
+      },
+      "cpu.residency": {
+        "label": "驻留",
+        "hint": "决定并排队哪些几何页面必须在内存中；视图变化时升高。"
+      },
+      "cpu.uploads": {
+        "label": "上传",
+        "hint": "向 GPU 缓冲发送数据；随动态几何和流式加载增加而升高。"
+      },
+      "cpu.selection": {
+        "label": "选择",
+        "hint": "调度簇的选择；随测试的层级节点增加而升高。"
+      },
+      "cpu.encode": {
+        "label": "编码",
+        "hint": "记录 GPU 命令；随通道和绘制批次增加而升高。"
+      },
+      "cpu.submit": {
+        "label": "提交",
+        "hint": "把已记录的命令交给队列；随提交次数增加而升高。"
+      },
+      "cpu.hostPages": {
+        "label": "主机页面",
+        "hint": "整合 CPU 流式传来的几何页面；新页面到达时升高。"
+      },
+      "cpu.rest": {
+        "label": "帧的其余部分",
+        "hint": "引擎整帧的CPU时间中上面任何阶段都未涵盖的部分（帧外的工作使各阶段之和超出时为0）；页面脚本、输入和布局不包含在内。"
+      },
+      "shadows.invalidation": {
+        "label": "失效",
+        "hint": "物体移动后把过期的阴影页面标记出来；随移动的投影体增加而升高。"
+      },
+      "shadows.marking": {
+        "label": "标记",
+        "hint": "找出视图所需的阴影页面；随被带阴影光源照亮的像素增加而升高。"
+      },
+      "shadows.pageManagement": {
+        "label": "页面管理",
+        "hint": "分配并回收阴影页面；随请求的页面增加而升高。"
+      },
+      "shadows.render": {
+        "label": "渲染",
+        "hint": "绘制发生变化的阴影页面；随重绘的页面及其中的投影体增加而升高。"
+      },
+      "shadows.projection": {
+        "label": "投射",
+        "hint": "把阴影贴图投射到图像上；随带阴影的光源和分辨率增加而升高。"
+      },
+      "shadows.transmission": {
+        "label": "透射",
+        "hint": "半透明投影体的图集；随半透明投影体增加而升高。"
+      },
+      "shadows.lights": {
+        "label": "投影光源",
+        "hint": "本帧投射虚拟阴影贴图的光源；场景中的数量统计所有启用的光源。"
+      },
+      "shadows.maps": {
+        "label": "贴图",
+        "hint": "本帧的虚拟阴影贴图；随投射阴影的光源增加而升高。"
+      },
+      "shadows.pagesRequested": {
+        "label": "请求的阴影页面",
+        "hint": "该帧请求的阴影页面；随屏幕上的阴影面积增加而升高。"
+      },
+      "shadows.pagesAllocated": {
+        "label": "已分配的阴影页面",
+        "hint": "本帧新从池中取出的阴影页面；视图或光源移动时升高。"
+      },
+      "shadows.pagesCached": {
+        "label": "已缓存的阴影页面",
+        "hint": "请求的阴影页面中已绘制过的；投影体或光源移动时下降。"
+      },
+      "shadows.pagesRendered": {
+        "label": "已渲染的阴影页面",
+        "hint": "本帧清除并绘制的阴影页面；投影体或光源移动时升高。"
+      },
+      "shadows.freePages": {
+        "label": "空闲阴影页面",
+        "hint": "池中剩余的物理阴影页面；请求增多时下降。"
+      },
+      "shadows.lodBias": {
+        "label": "阴影细节偏移",
+        "hint": "阴影贴图比请求粗糙多少；池满时升高。"
+      },
+      "shadows.projectionPasses": {
+        "label": "投射通道",
+        "hint": "本帧的投射通道，每个四个光源；随带阴影的光源增加而升高。"
+      },
+      "shadows.resolutionBias": {
+        "label": "阴影分辨率偏移",
+        "hint": "因阴影池而比请求粗糙的级数；0 为正常。"
+      },
+      "memory.screen": {
+        "label": "屏幕图像",
+        "hint": "取决于分辨率的目标；随渲染尺寸增大而升高。"
+      },
+      "memory.shadows": {
+        "label": "阴影池",
+        "hint": "阴影页面池；随阴影质量设置升高。"
+      },
+      "memory.geometry": {
+        "label": "几何",
+        "hint": "在 GPU 上预留的几何页面池，无论是否使用；使用情况见场景。"
+      },
+      "memory.textures": {
+        "label": "纹理池",
+        "hint": "整个会话固定的纹理池；由纹理预算决定。"
+      },
+      "memory.liveTextures": {
+        "label": "实时纹理",
+        "hint": "池之外保留的工作纹理；随场景中的实时纹理增加而升高。"
+      },
+      "memory.other": {
+        "label": "其他资源",
+        "hint": "上述类型都未命名的 GPU 内存：缓冲、历史图像、缓存。"
+      },
+      "scene.trianglesSelected": {
+        "label": "选中的三角形",
+        "hint": "通过视图和细节测试后裁剪保留的三角形；随可见场景细节增加而升高。"
+      },
+      "scene.trianglesDrawn": {
+        "label": "绘制的三角形",
+        "hint": "遮挡剔除掉隐藏部分后绘制的三角形；随可见细节增加而升高。"
+      },
+      "scene.trianglesScene": {
+        "label": "三角形（场景）",
+        "hint": "场景中可见网格的三角形，在帧未发布选中三角形时由页面统计。"
+      },
+      "scene.drawCalls": {
+        "label": "绘制调用",
+        "hint": "本帧发送的绘制命令；随批次数量增加而升高。"
+      },
+      "scene.geometryPages": {
+        "label": "几何页面",
+        "hint": "驻留在内存中的几何页面；随加载的细节增加而升高。"
+      },
+      "scene.poolUsed": {
+        "label": "几何池已用",
+        "hint": "几何池中存放页面的字节数；随页面加载而升高。"
+      },
+      "scene.poolCapacity": {
+        "label": "几何池容量",
+        "hint": "为几何池预留的字节数；由场景和设备限制决定。"
+      },
+      "scene.lights": {
+        "label": "光源",
+        "hint": "照亮该帧的场景光源。"
+      },
+      "pass.compose roots": {
+        "label": "根节点计算",
+        "hint": "由父级计算每个摆放根的世界矩阵；随动画或移动中的摆放数增加。"
+      },
+      "pass.compose motion": {
+        "label": "运动计算",
+        "hint": "为运动向量计算每个摆放自上一帧以来的移动；随移动中的摆放数增加。"
+      },
+      "pass.compose rows": {
+        "label": "行计算",
+        "hint": "计算摆放行的世界矩阵；随摆放数增加。"
+      },
+      "pass.root boxes": {
+        "label": "根包围盒",
+        "hint": "拟合每个摆放根的世界包围盒与拉伸；随根的数量增加。"
+      },
+      "pass.placement tree leaves": {
+        "label": "摆放树叶节点",
+        "hint": "拟合摆放树叶节点的包围盒；随摆放数增加。"
+      },
+      "pass.placement tree refit": {
+        "label": "摆放树重新拟合",
+        "hint": "叶节点移动后重新拟合摆放树的内部包围盒；随移动中的摆放数增加。"
+      },
+      "pass.DAG selection": {
+        "label": "DAG 选择",
+        "hint": "遍历几何图，选出每个视图所需的细节；随视野内的细节增加。"
+      },
+      "pass.DAG mask swap": {
+        "label": "DAG 掩码交换",
+        "hint": "在帧之间交换选择掩码；小而固定。"
+      },
+      "pass.partition": {
+        "label": "分区",
+        "hint": "把选中的簇压缩成该帧的绘制调用；随选中的簇数增加。"
+      },
+      "pass.HiZ": {
+        "label": "HiZ",
+        "hint": "构建用于隐藏被遮挡物的深度金字塔；随渲染尺寸增加。"
+      },
+      "pass.visibility primary": {
+        "label": "可见性 主遍",
+        "hint": "绘制遮挡物的深度，以便用它测试其余部分；随视野内的遮挡物增加。"
+      },
+      "pass.visibility secondary": {
+        "label": "可见性 次遍",
+        "hint": "对照遮挡物深度绘制被测试的那一半几何；随通过测试的几何增加。"
+      },
+      "pass.visibility identifiers": {
+        "label": "可见性 标识符",
+        "hint": "绘制每个像素下表面的标识符；随渲染尺寸和绘制的几何增加。"
+      },
+      "pass.raster binning": {
+        "label": "光栅分箱",
+        "hint": "把软件光栅的小三角形分入屏幕分块；随视野内的小三角形增加。"
+      },
+      "pass.raster occluder depth": {
+        "label": "光栅 遮挡物深度",
+        "hint": "遮挡物深度的软件光栅；随小遮挡三角形增加。"
+      },
+      "pass.raster tested depth": {
+        "label": "光栅 测试深度",
+        "hint": "被测试几何深度的软件光栅；随被测试的小三角形增加。"
+      },
+      "pass.raster identifiers": {
+        "label": "光栅 标识符",
+        "hint": "表面标识符的软件光栅；随绘制的小三角形增加。"
+      },
+      "pass.raster occluder hiz": {
+        "label": "光栅 遮挡物 HiZ",
+        "hint": "由软件光栅的遮挡物构建深度金字塔；随渲染尺寸增加。"
+      },
+      "pass.raster resolve": {
+        "label": "光栅解析",
+        "hint": "把软件光栅的像素合并进可见性缓冲；随渲染尺寸增加。"
+      },
+      "pass.empty surfaces": {
+        "label": "空表面",
+        "hint": "当该帧不绘制任何材质时清除表面图像；小而固定。"
+      },
+      "pass.material cache, bins and shading": {
+        "label": "材质缓存、分箱与着色",
+        "hint": "合成该帧共享的内容，按材质对像素排序，并对每种材质的分箱着色；随视野内的材质和像素增加。"
+      },
+      "pass.material surfaces": {
+        "label": "材质表面",
+        "hint": "在材质着色之前清除表面与反馈图像；随渲染尺寸增加。"
+      },
+      "pass.texture feedback reduce": {
+        "label": "纹理反馈归约",
+        "hint": "归约该帧请求了哪些纹理分块；随视野内的纹理增加。"
+      },
+      "pass.texture eviction queue": {
+        "label": "纹理淘汰队列",
+        "hint": "池满时为要舍弃的纹理分块排序；随池的大小增加。"
+      },
+      "pass.transparents": {
+        "label": "透明物",
+        "hint": "逐层绘制透明表面；随视野内的透明表面增加。"
+      },
+      "pass.blend companion": {
+        "label": "混合伴随图像",
+        "hint": "绘制双重混合的伴随图像；随视野内的透明表面增加。"
+      },
+      "pass.distortion": {
+        "label": "扭曲",
+        "hint": "累积透射表面的折射；随其数量和屏幕尺寸增加。"
+      },
+      "pass.distortion apply": {
+        "label": "扭曲应用",
+        "hint": "把累积的折射应用到图像上；随渲染尺寸增加。"
+      },
+      "pass.transparent compaction": {
+        "label": "透明物压缩",
+        "hint": "压缩可见的透明绘制；随透明几何增加。"
+      },
+      "pass.transparent occlusion": {
+        "label": "透明物遮挡",
+        "hint": "用深度测试透明几何；随透明几何增加。"
+      },
+      "pass.blend order and expansion": {
+        "label": "混合排序与展开",
+        "hint": "为混合对透明表面排序并展开；随视野内的透明表面增加。"
+      },
+      "pass.display mask": {
+        "label": "显示掩码",
+        "hint": "构建显示滤镜所作用像素的掩码；随渲染尺寸增加。"
+      },
+      "pass.display filter": {
+        "label": "显示滤镜",
+        "hint": "对图像应用显示滤镜；随渲染尺寸增加。"
+      },
+      "pass.transparent front": {
+        "label": "透明物正面",
+        "hint": "保留反射所追踪的透明物正面；随渲染尺寸增加。"
+      },
+      "pass.particle draw": {
+        "label": "粒子绘制",
+        "hint": "绘制粒子；随存活粒子数及其覆盖面积增加。"
+      },
+      "pass.light tiles": {
+        "label": "灯光分块",
+        "hint": "构建每个分块的灯光列表；随灯光数和渲染尺寸增加。"
+      },
+      "pass.bounce": {
+        "label": "反弹",
+        "hint": "更新反弹光：标记视野内的单元，写入表并刷新探针；随视野内被照亮的单元增加。"
+      },
+      "pass.bounce light lists": {
+        "label": "反弹灯光列表",
+        "hint": "在反弹的世界网格上构建灯光列表；随被照亮单元附近的灯光增加。"
+      },
+      "pass.proxy pose": {
+        "label": "代理姿态",
+        "hint": "为反射和反弹摆放变形摆放的代理；随变形摆放数增加。"
+      },
+      "pass.reflections": {
+        "label": "反射",
+        "hint": "为反射归约深度金字塔；随渲染尺寸增加。"
+      },
+      "pass.reflection trace": {
+        "label": "反射追踪",
+        "hint": "对屏幕分块分类，并穿过屏幕追踪反射；随反射像素增加。"
+      },
+      "pass.reflection scene": {
+        "label": "反射场景",
+        "hint": "在场景中追踪屏幕无法回答的光线；随屏幕未命中的反射像素增加。"
+      },
+      "pass.reflection denoise": {
+        "label": "反射降噪",
+        "hint": "复用相邻和先前的反射来清理图像；随渲染尺寸增加。"
+      },
+      "pass.reflection radiance": {
+        "label": "反射辐射",
+        "hint": "为下一帧的反射构建已照亮图像的辐射金字塔；随渲染尺寸增加。"
+      },
+      "pass.particles": {
+        "label": "粒子",
+        "hint": "模拟粒子的步进；随存活粒子数增加。"
+      },
+      "pass.deferred lighting": {
+        "label": "延迟光照",
+        "hint": "根据表面、灯光和阴影照亮每个像素；随渲染尺寸和灯光增加。"
+      },
+      "pass.as is share seed": {
+        "label": "保持不变部分种子",
+        "hint": "为时间解析原样保留的图像比例设置种子；随渲染尺寸增加。"
+      },
+      "pass.temporal antialiasing": {
+        "label": "时间抗锯齿",
+        "hint": "把图像与先前的图像混合以平滑边缘；随渲染尺寸增加。"
+      },
+      "pass.exposure": {
+        "label": "曝光",
+        "hint": "测量图像亮度并更新自动曝光；小而固定。"
+      },
+      "pass.scene downsample": {
+        "label": "场景降采样",
+        "hint": "构建越来越小的图像副本链，供泛光和局部曝光读取；随渲染尺寸增加。"
+      },
+      "pass.local exposure": {
+        "label": "局部曝光",
+        "hint": "逐区域调整曝光；随渲染尺寸增加。"
+      },
+      "pass.bloom": {
+        "label": "泛光",
+        "hint": "把图像的明亮部分扩散成光晕；随渲染尺寸增加。"
+      },
+      "pass.outline": {
+        "label": "轮廓",
+        "hint": "扫描并绘制选中对象的轮廓；随渲染尺寸和所请求的轮廓增加。"
+      },
+      "pass.HDR composition": {
+        "label": "HDR 合成",
+        "hint": "由已照亮的图像和特效合成最终图像；随渲染尺寸增加。"
+      },
+      "pass.HDR composition + present": {
+        "label": "HDR 合成 + 呈现",
+        "hint": "合成最终图像并在一遍内呈现到屏幕；随渲染尺寸增加。"
+      },
+      "pass.direct present": {
+        "label": "直接呈现",
+        "hint": "把图像直接绘制到屏幕；随渲染尺寸增加。"
+      },
+      "pass.view present": {
+        "label": "视图呈现",
+        "hint": "把图像绘制到页面的一个视图；随视图尺寸增加。"
+      },
+      "pass.guides": {
+        "label": "参考线",
+        "hint": "在图像上方绘制参考线；随显示的参考线增加。"
+      },
+      "pass.x ray": {
+        "label": "X 光",
+        "hint": "在已照亮的图像上方绘制 X 光视图的边缘；随渲染尺寸增加。"
+      },
+      "pass.frame difference": {
+        "label": "帧差",
+        "hint": "把图像与前一帧对照显示；随渲染尺寸增加。"
+      },
+      "pass.see through background": {
+        "label": "透视视图背景",
+        "hint": "在透视视图的透明物之前铺上其背景；随渲染尺寸增加。"
+      },
+      "pass.capture emission and occlusion": {
+        "label": "自发光与遮蔽捕获",
+        "hint": "捕获表面的自发光与遮蔽层；随渲染尺寸增加。"
+      },
+      "pass.texture mips": {
+        "label": "纹理 mip",
+        "hint": "构建刚加载纹理的较小层级；随上传的纹理增加。"
+      },
+      "pass.deformation": {
+        "label": "变形",
+        "hint": "使变形摆放的几何变形；随其顶点数增加。"
+      },
+      "pass.animation banks": {
+        "label": "动画库",
+        "hint": "播放人群的动画库；随动画实例增加。"
+      },
+      "pass.vsm": {
+        "label": "VSM",
+        "hint": "虚拟阴影贴图的任一遍：阴影页的渲染、清除、投影与合并；随投射阴影的灯光及其所需的页增加。"
+      }
     },
     "failure": {
       "title": "这个示例因为一个错误停下了",
@@ -112,6 +751,59 @@
     "banner": {
       "close": "关闭",
       "waiting": "等待引擎（#{issue}）"
+    },
+    "views": {
+      "beauty": "正常",
+      "wireframe": "三角形",
+      "xray": "X 光",
+      "clusters": "簇",
+      "lod": "细节层级",
+      "hlod": "HLOD",
+      "screen-error": "屏幕误差",
+      "materials": "材质",
+      "visibility": "可见页",
+      "pages": "驻留页",
+      "texture-mip": "纹理尺寸",
+      "overdraw": "过度绘制",
+      "frame-difference": "帧间差异",
+      "reflections": "反射",
+      "shadows": "阴影",
+      "lighting": "光照",
+      "no-temporal-aa": "无时间抗锯齿",
+      "taa-input": "TAA 输入",
+      "taa-rejection": "TAA 拒绝",
+      "taa-validity": "TAA 历史",
+      "taa-flicker": "TAA 闪烁",
+      "taa-shading": "TAA 着色",
+      "taa-reprojection": "TAA 重投影",
+      "taa-motion": "TAA 运动",
+      "taa-thin": "TAA 细几何",
+      "taa-material-history": "按材质的 TAA 历史"
+    },
+    "viewHints": {
+      "wireframe": "每个绘制的三角形一种颜色，边为深色：越远三角形越少越大。",
+      "xray": "引擎提交的每个三角形的边，可透过墙壁看到：被剔除的部分不会出现。冻结剔除后移到侧面检查。",
+      "clusters": "每个簇一种颜色，即切割换成更粗版本的一组三角形。",
+      "lod": "绘制的细节层级 — 蓝：完整细节，越粗依次为青、绿、黄、红（红：8 级及以上）。",
+      "hlod": "白：近处的物体本身。蓝：HLOD 0，单元内的物体合批绘制。黄、紫、青：HLOD 1、2、3，每个单元一个简单外壳，每一级更粗。",
+      "screen-error": "绿：精确。黄：接近允许的像素误差。红：达到上限。",
+      "materials": "每种材质一种颜色。",
+      "visibility": "绿：本帧绘制的每个页面。",
+      "pages": "绿：驻留内存并被绘制的每个页面。",
+      "frame-difference": "黑色：像素自上一帧以来没有变化。灰到白：有变化，放大八倍——闪烁的地方会亮起来。",
+      "reflections": "只显示表面反射的光，来自屏幕追踪和探针；没有反射的地方为黑色。",
+      "shadows": "每个表面接收到多少阳光——白色：受光，黑色：在阴影中。不显示材质颜色。",
+      "lighting": "白色表面上的全部光照：直射、反射、反弹和环境光。不显示材质颜色。",
+      "no-temporal-aa": "没有时间累积的正常图像：这一帧的原始图像，包括锯齿和噪点。",
+      "taa-input": "时间抗锯齿接收到的图像，抖动开启，不做累积：每个像素显示它所落入的渲染像素——逐帧闪动。",
+      "taa-rejection": "每个像素保留多少历史——白色：保留历史，黑色：被拒绝（光照变化、屏幕外）。",
+      "taa-validity": "更新后每个像素持有多少历史——白色：完整历史，黑色：重新开始。灰色：仍在收敛。",
+      "taa-flicker": "闪烁测量 — 红：其误差，绿：计到的闪烁次数，蓝：抵消它的透明物覆盖率。",
+      "taa-shading": "着色拒绝，白：保留历史 — 红：不含闪烁放宽，绿：含放宽，蓝：扩散到邻域，即更新所用的值。",
+      "taa-reprojection": "历史为何重新开始 — 红：去遮挡，绿：去遮挡并以遮挡物的运动填充，蓝：在上一帧屏幕之外。",
+      "taa-motion": "累积所见的运动 — 红：对闪烁测量而言在运动，绿：像素动画，蓝：重投影边缘（白：运动平坦）。",
+      "taa-thin": "细几何 — 红：历史钳制放宽的程度，绿：簇空洞区域，蓝：覆盖率历史。",
+      "taa-material-history": "每种材质可保留的历史比例，以灰度显示——白：1，完整平滑；黑：0，只用当前图像。"
     }
   },
   "a-city-from-rules": {
@@ -845,6 +1537,55 @@
       "notCounted": "这里没有计数"
     }
   },
+  "long-district": {
+    "banner": "两公里长的街道，分为四个 HLOD 层级：选择 HLOD 视图即可看到。点击画面，然后用 W A S D 沿街行走，用鼠标环顾；空格键和 Shift 键让你升高和降低。",
+    "controls": {
+      "walkSpeed": "步行速度",
+      "pixelError": "像素误差",
+      "motion": "运动部件",
+      "forwardRun": "向前行进",
+      "fastStrafe": "快速横移",
+      "slowPan": "缓慢平移",
+      "rotation": "旋转",
+      "highOrbit": "高空环绕",
+      "home": "回到起点"
+    },
+    "readouts": {
+      "trianglesDrawn": "绘制的三角形",
+      "shareDistrict": "街区占比",
+      "trianglesDistrict": "街区的三角形",
+      "pathFrame": "路径帧"
+    },
+    "words": {
+      "credit": "为本例用代码建模的街区，CC0 — 见 assets/examples/CREDITS.md",
+      "notCounted": "这里没有计数"
+    }
+  },
+  "nine-emerald-squares": {
+    "banner": "点击视图，然后用 W A S D 飞越九座广场，用鼠标环顾；空格和 Shift 让你升降。",
+    "controls": {
+      "flySpeed": "飞行速度",
+      "pixelError": "像素误差",
+      "memory": "内存",
+      "view": "视图",
+      "home": "回到起点"
+    },
+    "choices": {
+      "view": {
+        "beauty": "成品",
+        "lod": "细节层级",
+        "clusters": "簇"
+      }
+    },
+    "readouts": {
+      "trianglesGrid": "网格中的三角形",
+      "trianglesDrawn": "绘制的三角形"
+    },
+    "words": {
+      "credit": "Emerald Square：Nicholas Hull、Kate Anderson（NVIDIA ORCA），植被 SpeedTree，CC BY-NC-SA 3.0 — 见 assets/examples/CREDITS.md",
+      "notCounted": "这里没有计数"
+    }
+  },
   "edges-and-wireframe": {
     "banner": "拖动四处看看。调高阈值，只留下锋利的棱。",
     "controls": {
@@ -1421,15 +2162,7 @@
     "controls": {
       "walkSpeed": "步行速度",
       "memory": "内存",
-      "view": "视图",
       "home": "回到起点"
-    },
-    "choices": {
-      "view": {
-        "beauty": "成品",
-        "lod": "细节层级",
-        "clusters": "簇"
-      }
     },
     "words": {
       "credit": "Emerald Square：Nicholas Hull、Kate Anderson（NVIDIA ORCA），植被 SpeedTree，CC BY-NC-SA 3.0 — 见 assets/examples/CREDITS.md"
@@ -1440,15 +2173,7 @@
     "controls": {
       "walkSpeed": "步行速度",
       "memory": "内存",
-      "view": "视图",
       "home": "回到起点"
-    },
-    "choices": {
-      "view": {
-        "beauty": "成品",
-        "lod": "细节层级",
-        "clusters": "簇"
-      }
     },
     "words": {
       "credit": "Amazon Lumberyard Bistro (NVIDIA ORCA), CC BY 4.0 — 见 assets/examples/CREDITS.md"
@@ -1516,7 +2241,7 @@
     }
   },
   "no-hitch-on-first-draw": {
-    "banner": "拖动四处看看。图表显示两幅画面之间的时间。",
+    "banner": "拖动四处看看。统计角画出每一帧的时间。",
     "controls": {
       "turning": "旋转",
       "revealAgain": "再显示一次"
@@ -1526,7 +2251,7 @@
       "worstFrameAfter": "之后最差的帧"
     },
     "words": {
-      "note": "十四个表面，每个都有不同的材质或设置，全部出现在同一帧里。图表画出帧与帧之间的时间；金线是它们出现的那一刻。",
+      "note": "十四个表面，每个都有不同的材质或设置，全部出现在同一帧里。面板给出它们出现前后帧与帧之间最差的时间；统计角画出每一帧。",
       "measuring": "测量中",
       "hidden": "隐藏"
     }
@@ -1836,6 +2561,21 @@
     "words": {
       "on": "开",
       "off": "关"
+    }
+  },
+  "particles-responsive": {
+    "banner": "两群运动相同的火花：左边那群的历史是响应式的，拖尾很短。拖动以绕着它们旋转。",
+    "controls": {
+      "smoothing": "平滑",
+      "motion": "运动"
+    },
+    "readouts": {
+      "temporalAntialiasing": "时间抗锯齿"
+    },
+    "words": {
+      "on": "开",
+      "off": "关",
+      "credit": "火花为本示例用代码建模，CC0 — 见 assets/examples/CREDITS.md"
     }
   },
   "snow-of-sprites": {
@@ -2478,18 +3218,11 @@
   "a-hundred-thousand-instances": {
     "banner": "拖动以环绕实例场。更改数量或视图。",
     "controls": {
-      "count": "数量",
-      "view": "视图"
+      "count": "数量"
     },
     "readouts": {
       "objectsShown": "显示的对象",
       "objectsBuilt": "创建的对象"
-    },
-    "choices": {
-      "view": {
-        "beauty": "成品",
-        "clusters": "簇"
-      }
     }
   },
   "inside-a-component": {

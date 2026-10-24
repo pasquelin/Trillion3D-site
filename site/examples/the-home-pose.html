@@ -95,7 +95,7 @@
       world.controls.maxDistance = 55;
       world.controls.maxPolarAngle = Math.PI / 2 - 0.04;
 
-      controls(Object.fromEntries(VIEWS.map((view) => [view.name, () => apply(view)])), world);
+      controls(Object.fromEntries(VIEWS.map((view) => [view.name, () => apply(view)])));
       addEventListener('pagehide', () => world.dispose(), { once: true });
     </script>
   </body>

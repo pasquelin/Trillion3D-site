@@ -96,3 +96,30 @@ export function onClick(
     if (dx * dx + dy * dy <= slop * slop) click(event)
   })
 }
+
+/**
+ * `ask` — a query answered later, such as `world.raycast` — asked one at a time, the latest
+ * only: a call while one is in flight takes the place of any still waiting and is asked once
+ * that one lands, and `found` gets each answer with what it was asked about. A hover asks at
+ * every pointer move; the GPU answers a frame later, and no stale answer queues behind it.
+ */
+export function latestOnly<At, Answer>(
+  ask: (at: At) => Promise<Answer>,
+  found: (answer: Answer, at: At) => void,
+) {
+  let flying = false,
+    waiting: { at: At } | null = null
+  const run = (at: At): void => {
+    if (flying) return void (waiting = { at })
+    flying = true
+    void ask(at)
+      .then((answer) => found(answer, at))
+      .finally(() => {
+        flying = false
+        const next = waiting
+        waiting = null
+        if (next) run(next.at)
+      })
+  }
+  return run
+}

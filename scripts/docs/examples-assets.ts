@@ -1,4 +1,5 @@
 import { resolve } from 'node:path'
+import { MODEL_LIBRARY } from './examples/library.ts'
 import { modelScenes, writeModelScenes } from './examples/models.ts'
 import { nativeCompiler } from '../native-compiler.ts'
 import { COOKED_SCENES, compileCache } from '../site-caches.ts'
@@ -18,7 +19,7 @@ if (!names.length) throw new Error(`Unknown example scene: ${only}`)
 const sourceOnly = process.argv.includes('--source-only')
 if (!sourceOnly) nativeCompiler()
 
-await writeModelScenes(examples, resolve(examples, 'models'), names)
+await writeModelScenes(examples, resolve(root, MODEL_LIBRARY), names)
 if (sourceOnly) process.exit(0)
 
 // Every cache of a rewritten source: the terrain tiles' exact cook with their simplified one.

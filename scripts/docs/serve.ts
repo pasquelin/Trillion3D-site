@@ -2,7 +2,8 @@
 import { pathToFileURL } from 'node:url'
 import { isCacheObject } from '../compress-cache-objects.ts'
 import { buildSite, SITE_OUTPUT } from './site.ts'
-import { listen, staticServer, type StaticOptions } from '../static-server.ts'
+import { listen } from '#engine/scripts/test/static-server.ts'
+import { staticServer, type StaticOptions } from '../static-server.ts'
 
 /** A static server over `root`: the built site by default, any site-shaped tree otherwise;
  *  `extra` adds the development server's answer and transform (`docs/dev.ts`). */

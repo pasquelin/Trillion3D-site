@@ -6,13 +6,14 @@
  */
 import { spawnSync } from 'node:child_process'
 import { generateApiFiles } from '../generate-api-reference.ts'
-import { heavyStep } from '../heavy-lock.ts'
-import { repositoryFiles } from '../repository-files.ts'
+import { heavyStep } from '#engine/scripts/native/heavy-lock.ts'
+import { ROOT } from '../engine.ts'
+import { repositoryFiles } from '#engine/scripts/git/repository-files.ts'
 
 /** Whether `file`, a path from the root, is a unit test of the site. */
 export const isUnitTest = (file: string) => /^(?:scripts|site|tests)\/.*\.test\.m?ts$/.test(file)
 
-const tests = (repositoryFiles() ?? []).filter(isUnitTest).sort()
+const tests = (repositoryFiles(ROOT) ?? []).filter(isUnitTest).sort()
 if (!tests.length) throw new Error('No unit test found.')
 console.log(`Unit tests: ${tests.length}`)
 await generateApiFiles()

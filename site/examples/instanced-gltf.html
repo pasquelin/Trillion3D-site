@@ -72,7 +72,7 @@
         sun.position.set(-Math.cos(height) * 100, Math.sin(height) * 100, -25);
         world.scene.fog = { color: haze, density: 0.012 * values.mist, heightFalloff: 0.125, baseHeight: water };
         world.invalidate();
-      }, world);
+      });
 
       // What the file says and what the cook made of it: a handful of nodes, thousands of objects.
       const poses = file.nodes.reduce((sum, node) => {

@@ -182,7 +182,7 @@
         if (key === 'view') look(VIEWS[values.view]);
         if (key === 'brass' || key === undefined) brass.color.set(values.brass);
         world.invalidate();
-      }, world);
+      });
       let time = 0;
       world.onFrame(({ delta }) => {
         time += delta * ui.speed;

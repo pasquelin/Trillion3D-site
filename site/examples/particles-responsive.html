@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Responsive particles</title>
+    <meta name="thumbnail" content="3" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #05060a;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+      p {
+        position: absolute;
+        bottom: 0;
+        margin: 0.5rem;
+        color: #9aa3b8;
+        font: 12px system-ui;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <p data-words="credit"></p>
+    <script type="module">
+      import { animation, createWorld, light, math } from '../runtime/engine.js';
+      import { controls, readout, viewModes, words } from '../runtime/kit.js';
+      const say = words();
+
+      // Temporal antialiasing mixes each image with the ones before it, followed as things move.
+      // A small bright spark that crosses many pixels an image leaves a trail where the history
+      // lags. A material can cap the share of history kept on its pixels (`temporalAntialiasing`,
+      // set when the scene is compiled): the lower, the shorter the trail. The four swarms move
+      // alike; left to right their materials keep 1 (the default), 0.75 (`'responsive'`), 0.5
+      // (`'soft'`) and 0 (`'off'`, the current image alone) of their history.
+      //
+      // Each swarm names its share three ways, one colour each. At 0.75: orange by the compile
+      // option `responsive` matching the material's name, cyan by the option `materials`, pink by
+      // the material's own glTF `extras`. At 0.5 and 0: a name and a number in `materials`, then
+      // the extras. At 1 the pink one asks `responsive` in its extras, but `materials` sets it
+      // false, and that setting wins.
+      const world = createWorld('view', { controls: 'orbit', temporalAntialiasing: true });
+      world.scene.background = math.color('#05060a');
+      world.scene.add(light.hemisphere({ intensity: 0.25, color: '#9aa6d6', groundColor: '#101014' }));
+      const sparks = await world.scene.load('../assets/examples/particles-responsive/cache/native/full/manifest.json');
+      const [clip] = sparks.animations;
+      const motion = clip ? animation.createMixer(sparks).clipAction(clip).play() : null;
+
+      world.camera.position.set(0, 7, 22);
+      world.controls.target.set(0, 1.2, 0);
+      world.controls.minDistance = 3;
+      world.controls.maxDistance = 40;
+      world.controls.maxPolarAngle = Math.PI / 2 - 0.05;
+
+      let state = null;
+      controls({ smoothing: true, motion: true }, (values, key) => {
+        if (key === undefined || key === 'smoothing') world.temporalAntialiasing = values.smoothing;
+        if (key === 'motion') values.motion ? motion?.play() : motion?.stop().seek(motion.time);
+        state?.(say(world.temporalAntialiasing !== 'off' ? 'on' : 'off'));
+        world.invalidate();
+      });
+      viewModes(world);
+      state = readout('temporalAntialiasing');
+      state(say(world.temporalAntialiasing !== 'off' ? 'on' : 'off'));
+    </script>
+  </body>
+</html>

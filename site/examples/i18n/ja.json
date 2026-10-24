@@ -17,7 +17,9 @@
   },
   "kit": {
     "panel": {
-      "controls": "設定"
+      "controls": "設定",
+      "view": "表示",
+      "freeze": "カリングを固定"
     },
     "menu": {
       "play": "プレイ",
@@ -38,72 +40,709 @@
     },
     "stats": {
       "FPS": "FPS",
-      "triangles": "三角形",
-      "triangles (scene)": "三角形（シーン）",
-      "draw calls": "描画呼び出し",
-      "pages": "ページ",
-      "geometry pool": "ジオメトリ置き場",
-      "lights": "ライト",
-      "GPU memory": "GPU メモリ",
-      "screen images": "画面イメージ",
-      "shadow memory": "影のメモリ",
-      "geometry memory": "ジオメトリのメモリ",
-      "texture memory": "テクスチャのメモリ",
-      "live textures": "使用中のテクスチャ",
-      "transmission backdrop": "透過の背景",
-      "GPU frame": "GPUフレーム",
-      "GPU frame (last)": "GPUフレーム（直近）",
-      "CPU frame": "CPUフレーム",
-      "page hooks": "ページのコード",
-      "engine CPU": "エンジンCPU",
-      "Statistics": "統計",
-      "hint": "クリック: 縮小 · ドラッグ: 移動 · キー 半角/全角 / `",
-      "fps": "FPS",
-      "budget": "予算",
-      "held": "停止",
-      "last": "前回",
-      "others": "その他",
-      "Shadows": "影",
-      "Scene and memory": "シーンとメモリ",
-      "cut and culling": "カットとカリング",
-      "page preparation": "ページ準備",
-      "command encoding": "コマンドのエンコード",
-      "physics step": "物理ステップ",
-      "Cadence": "ケイデンス",
-      "{n}× refresh": "{n}× リフレッシュ",
-      "GPU idle": "GPU アイドル"
+      "GPU frame": "GPUフレーム"
     },
-    "shadows": {
-      "lights": "ライト",
-      "maps": "マップ",
-      "pagesRequested": "要求ページ",
-      "pagesAllocated": "割り当てページ",
-      "pagesCached": "キャッシュ済みページ",
-      "pagesRendered": "描画ページ",
-      "freePages": "空きページ",
-      "lodBias": "LOD バイアス",
-      "projectionPasses": "投影パス",
-      "invalidation": "無効化",
-      "marking": "マーキング",
-      "pageManagement": "ページ管理",
-      "render": "描画",
-      "projection": "投影",
-      "transmission": "透過"
-    },
-    "passes": {
-      "vsm projection": "VSM 投影",
-      "vsm marking": "VSM マーキング",
-      "vsm render": "VSM 描画",
-      "material surfaces": "マテリアル表面",
-      "temporal antialiasing": "テンポラルアンチエイリアス",
-      "HDR composition + present": "HDR 合成 + 表示",
-      "deferred lighting": "ディファードライティング",
-      "reflection source": "反射ソース",
-      "HiZ pyramid": "HiZ ピラミッド",
-      "light tiles": "ライトタイル",
-      "texture mips": "テクスチャ mip",
-      "reflection radiance mips": "反射ラジアンスの mip",
-      "reflection depth bounds mips": "反射深度境界の mip"
+    "statsPanel": {
+      "tab.page": {
+        "label": "すべてのワールド",
+        "hint": "ページの各ワールドとビューが GPU とメインスレッドを毎秒のうちどれだけ占有するか。複数のワールドまたはビューを持つページにのみ表示されます。"
+      },
+      "tab.gpu": {
+        "label": "GPU",
+        "hint": "グラフィックプロセッサが画像の時間を費やす場所を、段階ごとに示します。"
+      },
+      "tab.cpu": {
+        "label": "CPU",
+        "hint": "エンジンが1枚のCPU時間を費やす場所を、直近1秒の中央値で示します。ヘッダーのCPUはメインスレッドのフレーム全体です。フレームあたりの処理が増えると上がります。"
+      },
+      "tab.shadows": {
+        "label": "シャドウ",
+        "hint": "シャドウパスとページカウンター。その時間はGPU時間に含まれます。"
+      },
+      "tab.memory": {
+        "label": "メモリ",
+        "hint": "エンジンが保持するGPUメモリを種類別に示します。"
+      },
+      "tab.scene": {
+        "label": "シーン",
+        "hint": "カットが選んで描画したものと、ジオメトリプールです。"
+      },
+      "page.gpuBusy": {
+        "label": "GPU 使用率",
+        "hint": "ページのワールドとビューが毎秒のうち GPU を占有する割合。100 % を超えると GPU 時間が重なり、フレームは GPU が律速します。"
+      },
+      "page.cpuBusy": {
+        "label": "CPU 使用率",
+        "hint": "ページのワールドが毎秒のうちメインスレッドを占有する割合。メインスレッドは共有されるため合算されます。"
+      },
+      "page.view": {
+        "label": "ビュー {n}",
+        "hint": "メインビューの隣にあるビューの最後の画像の GPU 時間と、ワールドのフレームに占める割合。"
+      },
+      "profile.cpuFrame": {
+        "label": "CPU フレーム",
+        "hint": "1 フレームの animation-frame コールバックのメインスレッド時間。直近 1 秒の中央値 / 95 パーセンタイル。?profile のときのみ。"
+      },
+      "profile.pageHooks": {
+        "label": "ページフック",
+        "hint": "1 フレーム内のページ独自のフレームフックの時間。直近 1 秒の中央値 / 95 パーセンタイル。?profile のときのみ。"
+      },
+      "profile.engineCpu": {
+        "label": "エンジン CPU",
+        "hint": "画像全体に対するエンジンの CPU 時間。直近 1 秒の中央値 / 95 パーセンタイル。?profile のときのみ。"
+      },
+      "profile.workerStep": {
+        "label": "物理ワーカーのステップ",
+        "hint": "1 ティックにおける物理ワーカーの最も遅い固定ステップ。直近 1 秒の中央値 / 95 パーセンタイル。?profile のときのみ。"
+      },
+      "shadows.included": {
+        "label": "GPUに含む",
+        "hint": "これらの時間はすでにGPU合計に含まれています。加算しないでください。"
+      },
+      "summary.frame": {
+        "label": "フレーム",
+        "hint": "表示される2枚の画像の間隔。いずれかのプロセッサがリフレッシュより長くかかると上がります。"
+      },
+      "summary.gpu": {
+        "label": "GPU",
+        "hint": "直近1秒の1枚あたり平均GPU時間。描画するピクセル、ライト、ジオメトリが増えると上がります。"
+      },
+      "summary.cpu": {
+        "label": "CPU",
+        "hint": "直近1秒のフレームあたりメインスレッド時間の中央値。GPUへ送る処理が増えると上がります。"
+      },
+      "summary.wait": {
+        "label": "待ち",
+        "hint": "遅い方のプロセッサが終わった後、フレームがディスプレイを待つ時間です。"
+      },
+      "summary.bottleneck": {
+        "label": "制限要因",
+        "hint": "フレームを抑えているものについてのエンジンの判定。ウィンドウが最初に達した上限です。"
+      },
+      "summary.screen": {
+        "label": "画面 {hz} Hz",
+        "hint": "各画像が画面に表示される時間を、画面の更新回数で数えたもの。1 は毎回の更新、それより大きいと画像が遅れています。"
+      },
+      "summary.screenValue": {
+        "label": "1 画像 / {n} 回の更新",
+        "hint": "直近 1 秒の典型的な画像が画面に留まった更新回数。"
+      },
+      "summary.screenShare": {
+        "label": "画像の {share} % が {n} 回の更新",
+        "hint": "画面分布の 1 区分：直近 1 秒の画像に占める割合。"
+      },
+      "summary.screenShareOrMore": {
+        "label": "{share} % が {n} 回以上",
+        "hint": "画面分布の最後の区分：その更新回数以上の画像が占める割合。"
+      },
+      "summary.gpuIdle": {
+        "label": "GPU アイドル",
+        "hint": "最後に計測した画像の前に GPU が遊んでいた時間。CPU の供給が遅れると増えます。"
+      },
+      "summary.mainView": {
+        "label": "メインビュー",
+        "hint": "ページが最初に作ったワールド。ページのメインビュー。"
+      },
+      "summary.world": {
+        "label": "ワールド",
+        "hint": "メインビュー以外のページのワールド。"
+      },
+      "summary.budget": {
+        "label": "予算",
+        "hint": "1回のリフレッシュがフレームに許す時間。グラフの破線です。"
+      },
+      "bottleneck.healthy": {
+        "label": "ディスプレイ",
+        "hint": "フレームがリフレッシュに収まっています。フレームレートはディスプレイのものです。"
+      },
+      "bottleneck.memory_pressure": {
+        "label": "カクつき",
+        "hint": "フレームがカクつきの上限より長くかかりました。メモリを空けるかストリーミング負荷を下げてください。"
+      },
+      "bottleneck.gpu_bound": {
+        "label": "GPU",
+        "hint": "GPUがリフレッシュより長くかかりフレームを抑えています。解像度かライティングを下げてください。"
+      },
+      "bottleneck.cpu_bound": {
+        "label": "CPU",
+        "hint": "メインスレッドがリフレッシュより長くかかりフレームを抑えています。フレームあたりの処理を減らしてください。"
+      },
+      "bottleneck.gpu_submit_bound": {
+        "label": "GPU送信",
+        "hint": "GPUへのコマンド送信がリフレッシュの半分を超えています。ドローコールとパスを減らしてください。"
+      },
+      "bottleneck.streaming_bound": {
+        "label": "ストリーミング",
+        "hint": "取得ワーカーが処理できる数より多くのページが処理中です。ネットワークかディスクがシーンを抑えています。"
+      },
+      "panel.label": {
+        "label": "統計",
+        "hint": "プロファイラーのオーバーレイです。"
+      },
+      "panel.hint": {
+        "label": "クリック: コンパクト · ドラッグ: 移動 · キー ` / ²",
+        "hint": "ヘッダー行の操作です。"
+      },
+      "unit.fps": {
+        "label": "fps",
+        "hint": "1秒あたりに描画したフレーム数です。"
+      },
+      "summary.cpuShort": {
+        "label": "CPU",
+        "hint": "1フレームのメインスレッド時間です。"
+      },
+      "summary.gpuShort": {
+        "label": "GPU",
+        "hint": "1枚あたりのグラフィックプロセッサ時間です。"
+      },
+      "row.max": {
+        "label": "最大",
+        "hint": "直近1秒の最大値です。"
+      },
+      "summary.held": {
+        "label": "保持",
+        "hint": "直近1秒に新しいフレームがありません。何も動かず、画像を再表示しています。"
+      },
+      "summary.last": {
+        "label": "直近",
+        "hint": "表示中のGPU時間は以前の画像のものです。デバイスがまだ新しい画像を計測していません。"
+      },
+      "gpu.physics": {
+        "label": "物理",
+        "hint": "GPU上の剛体・軟体のステップ。シミュレートする物体が増えると上がります。"
+      },
+      "gpu.animations": {
+        "label": "アニメーション",
+        "hint": "アニメーションするオブジェクトのスキニングと変形。アニメーション頂点が増えると上がります。"
+      },
+      "gpu.lights": {
+        "label": "ライト",
+        "hint": "フレーム用にシーンのライトを準備します。ライト数が増えると上がります。"
+      },
+      "gpu.cutAdoption": {
+        "label": "カット採用",
+        "hint": "選択が選んだカットの取り込み。画像間でカットが大きく変わると上がります。"
+      },
+      "gpu.selection": {
+        "label": "選択",
+        "hint": "ビューと詳細度で描画するクラスターを選びます。判定する階層ノードが増えると上がります。"
+      },
+      "gpu.transparents": {
+        "label": "透過",
+        "hint": "透けた面の描画。透過三角形とレイヤーが増えると上がります。"
+      },
+      "gpu.residency": {
+        "label": "常駐",
+        "hint": "メモリに置くジオメトリページの判断。ビューが変わっている間は上がります。"
+      },
+      "gpu.hostPages": {
+        "label": "ホストページ",
+        "hint": "CPUがストリームしたページデータのGPUへのコピー。新しいページが届く間は上がります。"
+      },
+      "gpu.uploads": {
+        "label": "アップロード",
+        "hint": "GPUバッファへのデータ送信。動的ジオメトリとストリーミングで上がります。"
+      },
+      "gpu.textures": {
+        "label": "テクスチャ",
+        "hint": "テクスチャレベルのストリーミングとデコード。新しいテクスチャの読み込み中は上がります。"
+      },
+      "gpu.partition": {
+        "label": "パーティション",
+        "hint": "描画したクラスターを描画バッチへ並べ替えます。描画クラスターが増えると上がります。"
+      },
+      "gpu.encode": {
+        "label": "エンコード",
+        "hint": "ラスターステージが読むコマンドの構築。描画バッチが増えると上がります。"
+      },
+      "gpu.submit": {
+        "label": "サブミット",
+        "hint": "キューへ作業を渡すパス。サブミット数が増えると上がります。"
+      },
+      "gpu.hiZ": {
+        "label": "Hi-Z",
+        "hint": "オクルージョン判定が読む深度ピラミッドの構築。解像度が上がると上がります。"
+      },
+      "gpu.geometry": {
+        "label": "ジオメトリ",
+        "hint": "可視性バッファのラスタライズとサーフェスの書き込み。描画三角形と覆うピクセルが増えると上がります。"
+      },
+      "gpu.coplanar": {
+        "label": "コプラナー",
+        "hint": "同一平面上のサーフェスの解決。重なるデカールが増えると上がります。"
+      },
+      "gpu.shadows": {
+        "label": "シャドウ",
+        "hint": "シャドウページの描画と投影。影を落とすライトと再描画ページが増えると上がります。"
+      },
+      "gpu.lightLists": {
+        "label": "ライトリスト",
+        "hint": "各画面タイルに届くライトの収集。ライト数と到達範囲が増えると上がります。"
+      },
+      "gpu.bounce": {
+        "label": "バウンス",
+        "hint": "サーフェス間で跳ね返る光。トレースするレイが増えると上がります。"
+      },
+      "gpu.reflections": {
+        "label": "リフレクション",
+        "hint": "シーンの反射像。反射ピクセルとトレースするレイが増えると上がります。"
+      },
+      "gpu.lighting": {
+        "label": "ライティング",
+        "hint": "サーフェスとライトから各ピクセルをシェーディング。ピクセルとライトが増えると上がります。"
+      },
+      "gpu.antialiasing": {
+        "label": "アンチエイリアス",
+        "hint": "エッジを時間方向に滑らかにします。解像度が上がると上がります。"
+      },
+      "gpu.effects": {
+        "label": "エフェクト",
+        "hint": "ブルーム、露出、フォグなどの後処理。有効なエフェクトと解像度で上がります。"
+      },
+      "gpu.present": {
+        "label": "表示",
+        "hint": "画像のリサンプリングとディスプレイへの受け渡し。表示解像度が上がると上がります。"
+      },
+      "gpu.unclassified": {
+        "label": "未分類",
+        "hint": "どの段階にも属さない計測済みパス。段階の合計が合うように並べています。"
+      },
+      "gpu.untimed": {
+        "label": "計測パス外",
+        "hint": "どの計測パスにも含まれないGPU時間: コピー、パス間の隙間、タイムスタンプ解決。"
+      },
+      "cpu.physics": {
+        "label": "物理",
+        "hint": "メインスレッドでのシミュレーションステップ。シミュレートする物体が増えると上がります。"
+      },
+      "cpu.animations": {
+        "label": "アニメーション",
+        "hint": "メインスレッドでのアニメーションオブジェクトの準備。オブジェクトが増えると上がります。"
+      },
+      "cpu.textures": {
+        "label": "テクスチャ",
+        "hint": "メインスレッドでのテクスチャストリーマーへの供給。新しいテクスチャの読み込み中は上がります。"
+      },
+      "cpu.transparents": {
+        "label": "透過",
+        "hint": "透けた面の準備と描画。透過メッシュとレイヤーが増えると上がります。"
+      },
+      "cpu.cutAdoption": {
+        "label": "カット採用",
+        "hint": "選択が選んだカットの取り込み。画像間でカットが大きく変わると上がります。"
+      },
+      "cpu.residency": {
+        "label": "常駐",
+        "hint": "メモリに置くジオメトリページの判断とキュー登録。ビューが変わっている間は上がります。"
+      },
+      "cpu.uploads": {
+        "label": "アップロード",
+        "hint": "GPUバッファへのデータ送信。動的ジオメトリとストリーミングで上がります。"
+      },
+      "cpu.selection": {
+        "label": "選択",
+        "hint": "クラスター選択のディスパッチ。判定する階層ノードが増えると上がります。"
+      },
+      "cpu.encode": {
+        "label": "エンコード",
+        "hint": "GPUコマンドの記録。パスと描画バッチが増えると上がります。"
+      },
+      "cpu.submit": {
+        "label": "サブミット",
+        "hint": "記録したコマンドのキューへの受け渡し。サブミット数が増えると上がります。"
+      },
+      "cpu.hostPages": {
+        "label": "ホストページ",
+        "hint": "CPUがストリームしたジオメトリページの取り込み。新しいページが届く間は上がります。"
+      },
+      "cpu.rest": {
+        "label": "フレームの残り",
+        "hint": "エンジンのフレーム全体のCPU時間のうち、上のどの段階にも含まれない分（フレーム外の処理で段階の合計が超える場合は0）。ページのスクリプト、入力、レイアウトは含まれません。"
+      },
+      "shadows.invalidation": {
+        "label": "無効化",
+        "hint": "何かが動いた後に古いシャドウページを印付けます。動く影の投影物が増えると上がります。"
+      },
+      "shadows.marking": {
+        "label": "マーキング",
+        "hint": "ビューが必要とするシャドウページの特定。影付きライトに照らされるピクセルが増えると上がります。"
+      },
+      "shadows.pageManagement": {
+        "label": "ページ管理",
+        "hint": "シャドウページの割り当てと再利用。要求ページが増えると上がります。"
+      },
+      "shadows.render": {
+        "label": "レンダー",
+        "hint": "変更されたシャドウページの描画。再描画ページとその投影物が増えると上がります。"
+      },
+      "shadows.projection": {
+        "label": "投影",
+        "hint": "シャドウマップの画像への投影。影付きライトと解像度が増えると上がります。"
+      },
+      "shadows.transmission": {
+        "label": "透過光",
+        "hint": "半透明な影の投影物のアトラス。半透明の投影物が増えると上がります。"
+      },
+      "shadows.lights": {
+        "label": "影付きライト",
+        "hint": "このフレームで仮想シャドウマップを落とすライト。シーンの数はアクティブなライトすべてを数えます。"
+      },
+      "shadows.maps": {
+        "label": "マップ",
+        "hint": "このフレームの仮想シャドウマップ。影を落とすライトが増えると上がります。"
+      },
+      "shadows.pagesRequested": {
+        "label": "要求シャドウページ",
+        "hint": "フレームが要求したシャドウページ。画面上の影の面積が増えると上がります。"
+      },
+      "shadows.pagesAllocated": {
+        "label": "割り当てシャドウページ",
+        "hint": "このフレームでプールから新たに取ったシャドウページ。ビューやライトが動くと上がります。"
+      },
+      "shadows.pagesCached": {
+        "label": "キャッシュ済みシャドウページ",
+        "hint": "要求され既に描画済みだったシャドウページ。投影物やライトが動くと下がります。"
+      },
+      "shadows.pagesRendered": {
+        "label": "描画済みシャドウページ",
+        "hint": "このフレームで消去して描画したシャドウページ。投影物やライトが動くと上がります。"
+      },
+      "shadows.freePages": {
+        "label": "空きシャドウページ",
+        "hint": "プールに残る物理シャドウページ。要求が増えると下がります。"
+      },
+      "shadows.lodBias": {
+        "label": "シャドウ詳細バイアス",
+        "hint": "シャドウマップが要求より粗く描かれる度合い。プールが満杯になると上がります。"
+      },
+      "shadows.projectionPasses": {
+        "label": "投影パス",
+        "hint": "このフレームの投影パス。1パスあたり4ライト。影付きライトが増えると上がります。"
+      },
+      "shadows.resolutionBias": {
+        "label": "シャドウ解像度バイアス",
+        "hint": "プールの都合で影が要求より粗くなるレベル数。0が正常です。"
+      },
+      "memory.screen": {
+        "label": "画面イメージ",
+        "hint": "解像度に依存するターゲット。レンダーサイズが大きいと上がります。"
+      },
+      "memory.shadows": {
+        "label": "シャドウプール",
+        "hint": "シャドウページのプール。シャドウ品質設定で上がります。"
+      },
+      "memory.geometry": {
+        "label": "ジオメトリ",
+        "hint": "GPU上に確保されたジオメトリページのプール(使用中かどうかを問わず)。使用量はシーンにあります。"
+      },
+      "memory.textures": {
+        "label": "テクスチャプール",
+        "hint": "セッション中固定のテクスチャプール。テクスチャ予算で決まります。"
+      },
+      "memory.liveTextures": {
+        "label": "ライブテクスチャ",
+        "hint": "プールとは別に保持する作業用テクスチャ。シーンのライブテクスチャが増えると上がります。"
+      },
+      "memory.other": {
+        "label": "その他のリソース",
+        "hint": "上のどの種類にも属さないGPUメモリ: バッファ、履歴イメージ、キャッシュ。"
+      },
+      "scene.trianglesSelected": {
+        "label": "選択三角形",
+        "hint": "ビューと詳細度の判定後にカットが残した三角形。見える詳細が増えると上がります。"
+      },
+      "scene.trianglesDrawn": {
+        "label": "描画三角形",
+        "hint": "オクルージョンで隠れたものを除いて描画した三角形。見える詳細が増えると上がります。"
+      },
+      "scene.trianglesScene": {
+        "label": "三角形 (シーン)",
+        "hint": "シーン内の可視メッシュの三角形。フレームが選択三角形を公開しないとき、ページが数えます。"
+      },
+      "scene.drawCalls": {
+        "label": "ドローコール",
+        "hint": "このフレームで送信した描画コマンド。バッチ数が増えると上がります。"
+      },
+      "scene.geometryPages": {
+        "label": "ジオメトリページ",
+        "hint": "メモリに常駐するジオメトリページ。読み込んだ詳細が増えると上がります。"
+      },
+      "scene.poolUsed": {
+        "label": "ジオメトリプール使用量",
+        "hint": "ページを保持しているジオメトリプールのバイト数。ページの読み込みで上がります。"
+      },
+      "scene.poolCapacity": {
+        "label": "ジオメトリプール容量",
+        "hint": "ジオメトリプール用に確保したバイト数。シーンとデバイスの制限で決まります。"
+      },
+      "scene.lights": {
+        "label": "ライト",
+        "hint": "フレームを照らしたシーンのライトです。"
+      },
+      "pass.compose roots": {
+        "label": "ルートの計算",
+        "hint": "各配置ルートのワールド行列を親から計算する。アニメーション中または移動中の配置の数に応じて増える。"
+      },
+      "pass.compose motion": {
+        "label": "モーションの計算",
+        "hint": "モーションベクトルのため、各配置が前の画像からどう動いたかを計算する。移動中の配置の数に応じて増える。"
+      },
+      "pass.compose rows": {
+        "label": "行の計算",
+        "hint": "配置の行のワールド行列を計算する。配置の数に応じて増える。"
+      },
+      "pass.root boxes": {
+        "label": "ルートボックス",
+        "hint": "各配置ルートのワールドボックスと伸びを合わせる。ルートの数に応じて増える。"
+      },
+      "pass.placement tree leaves": {
+        "label": "配置ツリーの葉",
+        "hint": "配置ツリーの葉のボックスを合わせる。配置の数に応じて増える。"
+      },
+      "pass.placement tree refit": {
+        "label": "配置ツリーの再フィット",
+        "hint": "葉が動いたあと配置ツリーの内側のボックスを合わせ直す。移動中の配置の数に応じて増える。"
+      },
+      "pass.DAG selection": {
+        "label": "DAG 選択",
+        "hint": "ジオメトリグラフをたどり、各ビューに必要な詳細度を選ぶ。視界内の詳細度に応じて増える。"
+      },
+      "pass.DAG mask swap": {
+        "label": "DAG マスク入れ替え",
+        "hint": "画像間で選択マスクを入れ替える。小さく固定。"
+      },
+      "pass.partition": {
+        "label": "パーティション",
+        "hint": "選ばれたクラスターを画像の描画呼び出しにまとめる。選ばれたクラスターに応じて増える。"
+      },
+      "pass.HiZ": {
+        "label": "HiZ",
+        "hint": "隠れたものを除くための深度ピラミッドを作る。レンダーサイズに応じて増える。"
+      },
+      "pass.visibility primary": {
+        "label": "可視性 プライマリ",
+        "hint": "残りを照合できるよう、遮蔽物の深度を描く。視界内の遮蔽物に応じて増える。"
+      },
+      "pass.visibility secondary": {
+        "label": "可視性 セカンダリ",
+        "hint": "照合対象のジオメトリ半分を遮蔽物の深度に対して描く。照合を通ったジオメトリに応じて増える。"
+      },
+      "pass.visibility identifiers": {
+        "label": "可視性 識別子",
+        "hint": "各ピクセルの下にある表面の識別子を描く。レンダーサイズと描かれたジオメトリに応じて増える。"
+      },
+      "pass.raster binning": {
+        "label": "ラスターのビニング",
+        "hint": "ソフトウェアラスターの小さな三角形を画面タイルに振り分ける。視界内の小さな三角形に応じて増える。"
+      },
+      "pass.raster occluder depth": {
+        "label": "ラスター 遮蔽物の深度",
+        "hint": "遮蔽物の深度のソフトウェアラスター。小さな遮蔽三角形に応じて増える。"
+      },
+      "pass.raster tested depth": {
+        "label": "ラスター 照合した深度",
+        "hint": "照合対象ジオメトリの深度のソフトウェアラスター。照合した小さな三角形に応じて増える。"
+      },
+      "pass.raster identifiers": {
+        "label": "ラスター 識別子",
+        "hint": "表面識別子のソフトウェアラスター。描かれた小さな三角形に応じて増える。"
+      },
+      "pass.raster occluder hiz": {
+        "label": "ラスター 遮蔽物の HiZ",
+        "hint": "ソフトウェアラスターの遮蔽物から深度ピラミッドを作る。レンダーサイズに応じて増える。"
+      },
+      "pass.raster resolve": {
+        "label": "ラスターの解決",
+        "hint": "ソフトウェアラスターのピクセルを可視性バッファに統合する。レンダーサイズに応じて増える。"
+      },
+      "pass.empty surfaces": {
+        "label": "空の表面",
+        "hint": "画像がマテリアルを描かないとき、表面画像をクリアする。小さく固定。"
+      },
+      "pass.material cache, bins and shading": {
+        "label": "マテリアルキャッシュ・ビン・シェーディング",
+        "hint": "フレームが共有するものを組み立て、ピクセルをマテリアルごとに並べ、各マテリアルのビンをシェーディングする。視界内のマテリアルとピクセルに応じて増える。"
+      },
+      "pass.material surfaces": {
+        "label": "マテリアル表面",
+        "hint": "マテリアルをシェーディングする前に、表面とフィードバックの画像をクリアする。レンダーサイズに応じて増える。"
+      },
+      "pass.texture feedback reduce": {
+        "label": "テクスチャフィードバックの縮約",
+        "hint": "画像が要求したテクスチャタイルを縮約する。視界内のテクスチャに応じて増える。"
+      },
+      "pass.texture eviction queue": {
+        "label": "テクスチャ退避キュー",
+        "hint": "プールが満杯のとき手放すテクスチャタイルを順位付けする。プールの大きさに応じて増える。"
+      },
+      "pass.transparents": {
+        "label": "透明",
+        "hint": "透明な表面を層ごとに描く。視界内の透明な表面に応じて増える。"
+      },
+      "pass.blend companion": {
+        "label": "ブレンドコンパニオン",
+        "hint": "デュアルブレンドのコンパニオン画像を描く。視界内の透明な表面に応じて増える。"
+      },
+      "pass.distortion": {
+        "label": "歪み",
+        "hint": "透過する表面の屈折を蓄積する。画面上の数と大きさに応じて増える。"
+      },
+      "pass.distortion apply": {
+        "label": "歪みの適用",
+        "hint": "蓄積した屈折を画像に適用する。レンダーサイズに応じて増える。"
+      },
+      "pass.transparent compaction": {
+        "label": "透明のコンパクション",
+        "hint": "見える透明の描画をまとめる。透明なジオメトリに応じて増える。"
+      },
+      "pass.transparent occlusion": {
+        "label": "透明のオクルージョン",
+        "hint": "透明なジオメトリを深度に対して照合する。透明なジオメトリに応じて増える。"
+      },
+      "pass.blend order and expansion": {
+        "label": "ブレンド順序と展開",
+        "hint": "ブレンドのため透明な表面を並べ、展開する。視界内の透明な表面に応じて増える。"
+      },
+      "pass.display mask": {
+        "label": "表示マスク",
+        "hint": "表示フィルターが作用するピクセルのマスクを作る。レンダーサイズに応じて増える。"
+      },
+      "pass.display filter": {
+        "label": "表示フィルター",
+        "hint": "画像に表示フィルターを適用する。レンダーサイズに応じて増える。"
+      },
+      "pass.transparent front": {
+        "label": "透明の前面",
+        "hint": "反射がトレースする透明の前面を保持する。レンダーサイズに応じて増える。"
+      },
+      "pass.particle draw": {
+        "label": "パーティクル描画",
+        "hint": "パーティクルを描く。生きているパーティクルとその覆う面積に応じて増える。"
+      },
+      "pass.light tiles": {
+        "label": "ライトタイル",
+        "hint": "タイルごとのライトリストを作る。ライトとレンダーサイズに応じて増える。"
+      },
+      "pass.bounce": {
+        "label": "バウンス",
+        "hint": "バウンス光を更新する。視界内のセルに印を付け、テーブルを書き、プローブを更新する。視界内の照らされたセルに応じて増える。"
+      },
+      "pass.bounce light lists": {
+        "label": "バウンスのライトリスト",
+        "hint": "バウンスのワールド格子上にライトリストを作る。照らされたセルの近くのライトに応じて増える。"
+      },
+      "pass.proxy pose": {
+        "label": "プロキシのポーズ",
+        "hint": "反射とバウンスのため、変形した配置のプロキシにポーズを付ける。変形した配置に応じて増える。"
+      },
+      "pass.reflections": {
+        "label": "反射",
+        "hint": "反射のため深度ピラミッドを縮約する。レンダーサイズに応じて増える。"
+      },
+      "pass.reflection trace": {
+        "label": "反射トレース",
+        "hint": "画面タイルを分類し、画面を通して反射をトレースする。反射するピクセルに応じて増える。"
+      },
+      "pass.reflection scene": {
+        "label": "反射シーン",
+        "hint": "画面では答えられなかったレイをシーン内でトレースする。画面が外した反射ピクセルに応じて増える。"
+      },
+      "pass.reflection denoise": {
+        "label": "反射デノイズ",
+        "hint": "近傍と過去の反射を再利用して画像をきれいにする。レンダーサイズに応じて増える。"
+      },
+      "pass.reflection radiance": {
+        "label": "反射ラジアンス",
+        "hint": "次の画像の反射のため、照らされた画像のラジアンスピラミッドを作る。レンダーサイズに応じて増える。"
+      },
+      "pass.particles": {
+        "label": "パーティクル",
+        "hint": "パーティクルのステップをシミュレートする。生きているパーティクルに応じて増える。"
+      },
+      "pass.deferred lighting": {
+        "label": "ディファードライティング",
+        "hint": "サーフェス、ライト、影から各ピクセルを照らす。レンダーサイズとライトに応じて増える。"
+      },
+      "pass.as is share seed": {
+        "label": "そのまま残す割合の初期化",
+        "hint": "テンポラル解決がそのまま残す画像の割合を初期化する。レンダーサイズに応じて増える。"
+      },
+      "pass.temporal antialiasing": {
+        "label": "テンポラルアンチエイリアス",
+        "hint": "エッジを滑らかにするため、画像を過去の画像とブレンドする。レンダーサイズに応じて増える。"
+      },
+      "pass.exposure": {
+        "label": "露出",
+        "hint": "画像の明るさを測り、自動露出を更新する。小さく固定。"
+      },
+      "pass.scene downsample": {
+        "label": "シーンのダウンサンプル",
+        "hint": "ブルームとローカル露出が読む、だんだん小さくなる画像の縮小チェーンを作る。レンダーサイズに応じて増える。"
+      },
+      "pass.local exposure": {
+        "label": "ローカル露出",
+        "hint": "領域ごとに露出を調整する。レンダーサイズに応じて増える。"
+      },
+      "pass.bloom": {
+        "label": "ブルーム",
+        "hint": "画像の明るい部分を光のにじみに広げる。レンダーサイズに応じて増える。"
+      },
+      "pass.outline": {
+        "label": "アウトライン",
+        "hint": "選択したオブジェクトの輪郭をスキャンして描く。レンダーサイズと求められた輪郭に応じて増える。"
+      },
+      "pass.HDR composition": {
+        "label": "HDR 合成",
+        "hint": "ライティング済みの画像とエフェクトから最終画像を合成する。レンダーサイズに応じて増える。"
+      },
+      "pass.HDR composition + present": {
+        "label": "HDR 合成 + 表示",
+        "hint": "最終画像を合成し、1 パスで画面に表示する。レンダーサイズに応じて増える。"
+      },
+      "pass.direct present": {
+        "label": "直接表示",
+        "hint": "画像を画面に直接描く。レンダーサイズに応じて増える。"
+      },
+      "pass.view present": {
+        "label": "ビュー表示",
+        "hint": "画像をページのビューに描く。ビューの大きさに応じて増える。"
+      },
+      "pass.guides": {
+        "label": "ガイド",
+        "hint": "画像の上にガイドを描く。表示したガイドに応じて増える。"
+      },
+      "pass.x ray": {
+        "label": "X 線",
+        "hint": "ライティング済みの画像の上に X 線ビューの輪郭を描く。レンダーサイズに応じて増える。"
+      },
+      "pass.frame difference": {
+        "label": "フレーム差分",
+        "hint": "画像を直前の画像と比べて表示する。レンダーサイズに応じて増える。"
+      },
+      "pass.see through background": {
+        "label": "透過ビューの背景",
+        "hint": "透過ビューの背景を、その透明より前に敷く。レンダーサイズに応じて増える。"
+      },
+      "pass.capture emission and occlusion": {
+        "label": "放射とオクルージョンのキャプチャ",
+        "hint": "表面の放射とオクルージョンのレイヤーを取り込む。レンダーサイズに応じて増える。"
+      },
+      "pass.texture mips": {
+        "label": "テクスチャ mip",
+        "hint": "読み込んだばかりのテクスチャの小さいレベルを作る。アップロードしたテクスチャに応じて増える。"
+      },
+      "pass.deformation": {
+        "label": "変形",
+        "hint": "変形した配置のジオメトリを変形させる。その頂点に応じて増える。"
+      },
+      "pass.animation banks": {
+        "label": "アニメーションバンク",
+        "hint": "群衆のアニメーションバンクを再生する。アニメーションするインスタンスに応じて増える。"
+      },
+      "pass.vsm": {
+        "label": "VSM",
+        "hint": "仮想シャドウマップの任意のパス。シャドウページの描画、クリア、投影、統合。影付きのライトとそれが必要とするページに応じて増える。"
+      }
     },
     "failure": {
       "title": "この例はエラーで止まりました",
@@ -112,6 +751,59 @@
     "banner": {
       "close": "閉じる",
       "waiting": "エンジン待ち（#{issue}）"
+    },
+    "views": {
+      "beauty": "通常",
+      "wireframe": "三角形",
+      "xray": "X線",
+      "clusters": "クラスタ",
+      "lod": "詳細レベル",
+      "hlod": "HLOD",
+      "screen-error": "画面上の誤差",
+      "materials": "マテリアル",
+      "visibility": "見えるページ",
+      "pages": "保持ページ",
+      "texture-mip": "テクスチャサイズ",
+      "overdraw": "オーバードロー",
+      "frame-difference": "フレーム差分",
+      "reflections": "反射",
+      "shadows": "影",
+      "lighting": "ライティング",
+      "no-temporal-aa": "時間的AAなし",
+      "taa-input": "TAA入力",
+      "taa-rejection": "TAAリジェクト",
+      "taa-validity": "TAA履歴",
+      "taa-flicker": "TAAちらつき",
+      "taa-shading": "TAAシェーディング",
+      "taa-reprojection": "TAA再投影",
+      "taa-motion": "TAAモーション",
+      "taa-thin": "TAA細いジオメトリ",
+      "taa-material-history": "マテリアル別TAA履歴"
+    },
+    "viewHints": {
+      "wireframe": "描いた三角形ごとに1色、辺は暗色：遠くほど三角形は少なく大きい。",
+      "xray": "エンジンが送信した全三角形の辺を壁越しに表示：カリングで除外されたものは表示されません。カリングを固定し、横へ移動して確認します。",
+      "clusters": "クラスタごとに1色。カットがより粗いものに置き換える三角形のまとまり。",
+      "lod": "描かれた詳細レベル — 青：完全な詳細、粗くなるにつれシアン、緑、黄、赤（赤：8レベル以上）。",
+      "hlod": "白：近くの物体そのもの。青：HLOD 0、セルの物体をまとめて描いたもの。黄、紫、シアン：HLOD 1、2、3、セルごとに1つの単純な外殻で、レベルごとに粗くなる。",
+      "screen-error": "緑：正確。黄：許容ピクセル誤差に近い。赤：上限。",
+      "materials": "マテリアルの種類ごとに1色。",
+      "visibility": "緑：このフレームで描いた各ページ。",
+      "pages": "緑：メモリに保持され描かれた各ページ。",
+      "frame-difference": "黒：前のフレームから変化していないピクセル。灰色から白：変化あり、8倍に増幅 — ちらつくものが光ります。",
+      "reflections": "表面が反射する光のみ（画面トレースとプローブ）。何も映らない場所は黒。",
+      "shadows": "各表面に届く太陽光の割合 — 白：照らされている、黒：影。マテリアルの色なし。",
+      "lighting": "白い表面に当たるすべての光：直接光、反射、間接光、環境光。マテリアルの色なし。",
+      "no-temporal-aa": "時間的蓄積なしの通常の画像：このフレームの生の画像。ジャギーとノイズを含みます。",
+      "taa-input": "時間的AAが受け取る画像。ジッターあり、蓄積なし：各ピクセルは自分が含まれるレンダーピクセルを表示します — フレームごとにちらつきます。",
+      "taa-rejection": "各ピクセルが保持する履歴の割合 — 白：履歴を保持、黒：破棄（照明の変化、画面外）。",
+      "taa-validity": "更新後に各ピクセルが持つ履歴の量 — 白：完全な履歴、黒：やり直し。灰色：収束中。",
+      "taa-flicker": "ちらつきの測定 — 赤：その誤差、緑：数えたちらつきの回数、青：それを打ち消す透明物の被覆率。",
+      "taa-shading": "シェーディングによる棄却、白：履歴を保持 — 赤：ちらつきによる拡張なし、緑：拡張あり、青：近傍へ広げた、更新が適用する値。",
+      "taa-reprojection": "履歴がやり直す理由 — 赤：ディスオクルージョン、緑：ディスオクルージョンを遮蔽物の動きで補填、青：前の画面の外。",
+      "taa-motion": "蓄積が見る動き — 赤：ちらつき測定にとって動いている、緑：ピクセルアニメーション、青：再投影の境界（白：動きが平坦）。",
+      "taa-thin": "細いジオメトリ — 赤：履歴クランプの緩和量、緑：クラスタ穴領域、青：カバレッジ履歴。",
+      "taa-material-history": "マテリアルごとに保つ履歴の割合を灰色で表示 — 白：1、完全なスムージング。黒：0、現在の画像のみ。"
     }
   },
   "a-city-from-rules": {
@@ -845,6 +1537,55 @@
       "notCounted": "ここでは数えていない"
     }
   },
+  "long-district": {
+    "banner": "4 段階の HLOD で描いた 2 キロメートルの通り：HLOD 表示を選ぶと見えます。ビューをクリックし、W A S D で通りを歩き、マウスで見回します。Space と Shift で上下に移動します。",
+    "controls": {
+      "walkSpeed": "歩く速さ",
+      "pixelError": "ピクセル誤差",
+      "motion": "動く部分",
+      "forwardRun": "前進",
+      "fastStrafe": "高速の横移動",
+      "slowPan": "ゆっくりパン",
+      "rotation": "回転",
+      "highOrbit": "高い周回",
+      "home": "最初に戻る"
+    },
+    "readouts": {
+      "trianglesDrawn": "描いた三角形",
+      "shareDistrict": "街区の割合",
+      "trianglesDistrict": "街区の三角形",
+      "pathFrame": "経路のフレーム"
+    },
+    "words": {
+      "credit": "この例のためにコードで作った街区、CC0 — assets/examples/CREDITS.md を見てね",
+      "notCounted": "ここでは数えていない"
+    }
+  },
+  "nine-emerald-squares": {
+    "banner": "ビューをクリックし、W A S D で九つの広場の上を飛び、マウスで見回します。Space と Shift で上昇・下降します。",
+    "controls": {
+      "flySpeed": "飛行速度",
+      "pixelError": "ピクセル誤差",
+      "memory": "メモリ",
+      "view": "表示",
+      "home": "最初に戻る"
+    },
+    "choices": {
+      "view": {
+        "beauty": "仕上がり",
+        "lod": "詳細度",
+        "clusters": "クラスター"
+      }
+    },
+    "readouts": {
+      "trianglesGrid": "グリッドの三角形",
+      "trianglesDrawn": "描いた三角形"
+    },
+    "words": {
+      "credit": "Emerald Square：Nicholas Hull、Kate Anderson（NVIDIA ORCA）、植生 SpeedTree、CC BY-NC-SA 3.0 — assets/examples/CREDITS.md を見てね",
+      "notCounted": "ここでは数えていない"
+    }
+  },
   "edges-and-wireframe": {
     "banner": "ドラッグして見回そう。しきい値を上げると、とがったふちだけ残るよ。",
     "controls": {
@@ -1421,15 +2162,7 @@
     "controls": {
       "walkSpeed": "歩く速さ",
       "memory": "メモリ",
-      "view": "表示",
       "home": "最初に戻る"
-    },
-    "choices": {
-      "view": {
-        "beauty": "仕上がり",
-        "lod": "詳細度",
-        "clusters": "クラスター"
-      }
     },
     "words": {
       "credit": "Emerald Square：Nicholas Hull、Kate Anderson（NVIDIA ORCA）、植生 SpeedTree、CC BY-NC-SA 3.0 — assets/examples/CREDITS.md を見てね"
@@ -1440,15 +2173,7 @@
     "controls": {
       "walkSpeed": "歩く速さ",
       "memory": "メモリ",
-      "view": "表示",
       "home": "最初に戻る"
-    },
-    "choices": {
-      "view": {
-        "beauty": "仕上がり",
-        "lod": "詳細度",
-        "clusters": "クラスター"
-      }
     },
     "words": {
       "credit": "Amazon Lumberyard Bistro (NVIDIA ORCA), CC BY 4.0 — assets/examples/CREDITS.md を見てね"
@@ -1516,7 +2241,7 @@
     }
   },
   "no-hitch-on-first-draw": {
-    "banner": "ドラッグして見回そう。グラフは絵と絵のあいだの時間だよ。",
+    "banner": "ドラッグして見回そう。統計の隅が一枚ごとの時間をえがくよ。",
     "controls": {
       "turning": "回転",
       "revealAgain": "もう一度見せる"
@@ -1526,7 +2251,7 @@
       "worstFrameAfter": "後の最悪フレーム"
     },
     "words": {
-      "note": "14の面、それぞれちがうマテリアルや設定で、すべて同じフレームに表示。グラフはフレームの間の時間をえがき、金色の線は面が現れた瞬間だよ。",
+      "note": "14の面、それぞれちがうマテリアルや設定で、すべて同じフレームに表示。パネルは面が現れる前と後のフレーム間の最悪の時間を示し、統計の隅は毎フレームをえがくよ。",
       "measuring": "はかり中",
       "hidden": "かくれている"
     }
@@ -1836,6 +2561,21 @@
     "words": {
       "on": "オン",
       "off": "オフ"
+    }
+  },
+  "particles-responsive": {
+    "banner": "同じ動きをする二つの火花の群れ：左の群れの履歴は応答性が高く、軌跡が短い。ドラッグで周りを回れます。",
+    "controls": {
+      "smoothing": "スムージング",
+      "motion": "動き"
+    },
+    "readouts": {
+      "temporalAntialiasing": "テンポラルアンチエイリアス"
+    },
+    "words": {
+      "on": "オン",
+      "off": "オフ",
+      "credit": "この例のためにコードでモデリングした火花、CC0 — assets/examples/CREDITS.md を参照"
     }
   },
   "snow-of-sprites": {
@@ -2478,18 +3218,11 @@
   "a-hundred-thousand-instances": {
     "banner": "ドラッグしてフィールドを回り、数や表示を変更します。",
     "controls": {
-      "count": "数",
-      "view": "表示"
+      "count": "数"
     },
     "readouts": {
       "objectsShown": "表示中のオブジェクト",
       "objectsBuilt": "作成済みオブジェクト"
-    },
-    "choices": {
-      "view": {
-        "beauty": "仕上がり",
-        "clusters": "クラスター"
-      }
     }
   },
   "inside-a-component": {

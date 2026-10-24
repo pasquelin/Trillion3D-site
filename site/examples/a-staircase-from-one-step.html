@@ -75,7 +75,7 @@
         flights.forEach((flight, index) => (flight.rotation.y = math.degToRad(index * values.turnPerStep)));
         lantern.color.set(values.lantern);
         world.invalidate();
-      }, world);
+      });
       world.onFrame(({ delta }) => {
         if (resting) return;
         resting = !ui.climb;

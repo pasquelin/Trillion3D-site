@@ -20,33 +20,39 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      // Needs the outline pass: effect.outline({ objects, color: ColorInput, thickness }) with watched setters.
       import { createWorld } from '../runtime/engine.js';
       import { effect, geometry, light, material, math, object } from '../runtime/engine.js';
       import { controls, onClick } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
       world.scene.background = math.color('#18202c');
-      const shapes = [
-        geometry.box(1, 1, 1),
-        geometry.sphere(0.62, 32, 20),
-        geometry.cone(0.62, 1.2, 32),
-        geometry.torus(0.48, 0.18, 20, 48),
-        geometry.cylinder(0.55, 0.55, 1.1, 32),
+      const paint = (color) => material.meshStandard({ color, roughness: 0.42, metalness: 0.18 });
+      // Three assemblies, each a group of parts that overlap: a click outlines the whole assembly,
+      // its subtree, and the line follows only what is seen of it.
+      const assembly = (x, z, color) => {
+        const group = object.group();
+        const base = object.mesh(geometry.box(1.4, 0.3, 1.4), paint('#3a4659'));
+        base.position.y = 0.15;
+        const core = object.mesh(geometry.sphere(0.5, 32, 20), paint(color));
+        core.position.y = 0.85;
+        const ring = object.mesh(geometry.torus(0.72, 0.09, 16, 64), paint('#d9dee8'));
+        ring.position.y = 0.85;
+        ring.rotation.x = Math.PI / 2.6;
+        const mast = object.mesh(geometry.cylinder(0.08, 0.08, 1.2, 16), paint('#d9dee8'));
+        mast.position.set(0.5, 0.9, -0.5);
+        group.add(base, core, ring, mast);
+        group.position.set(x, 0, z);
+        world.scene.add(group);
+        return group;
+      };
+      const assemblies = [
+        assembly(-1.25, 0.35, '#72a7ff'),
+        assembly(0.05, -0.65, '#f29b64'),
+        assembly(1.2, 0.45, '#77cf94'),
       ];
-      const surfaces = ['#72a7ff', '#f29b64', '#77cf94', '#c58cff', '#f0cf61'].map((color) =>
-        material.meshStandard({ color, roughness: 0.42, metalness: 0.18 }),
-      );
-      const exhibits = shapes.map((shape, index) => {
-        const mesh = object.mesh(shape, surfaces[index]);
-        const angle = (index / shapes.length) * Math.PI * 2;
-        mesh.position.set(Math.cos(angle) * 2.1, 0.7, Math.sin(angle) * 2.1);
-        world.scene.add(mesh);
-        return mesh;
-      });
       const floor = object.mesh(
-        geometry.cylinder(3.4, 3.4, 0.18, 64),
-        material.meshStandard({ color: '#303c4d', roughness: 0.8 }),
+        geometry.box(7, 0.2, 7),
+        material.meshStandard({ color: '#2a3342', roughness: 0.85 }),
       );
       floor.position.y = -0.1;
       floor.receiveShadow = true;
@@ -60,11 +66,11 @@
         }),
         light.hemisphere({ intensity: 0.7, color: '#b8d3ff', groundColor: '#202738' }),
       );
-      world.camera.position.set(0, 4.4, 6.2);
-      world.camera.lookAt(0, 0.6, 0);
-      world.controls.target.set(0, 0.6, 0);
+      world.camera.position.set(0.8, 3.8, 6.8);
+      world.camera.lookAt(0, 0.5, 0);
+      world.controls.target.set(0, 0.5, 0);
 
-      const outline = effect.outline({ objects: [exhibits[0]], color: '#ffe36e', thickness: 3 });
+      const outline = effect.outline({ objects: [assemblies[1]], color: '#ffe36e', thickness: 3 });
       world.effects.add(outline);
       controls(
         { color: '#ffe36e', thickness: [1, 8, 3, 0.5] },
@@ -72,13 +78,12 @@
           outline.color.set(values.color);
           outline.thickness = values.thickness;
         },
-        world,
       );
 
-      // A click that did not drag the camera outlines what it hit, or nothing.
-      onClick(world.canvas, (event) => {
-        const hit = world.raycast({ x: event.offsetX, y: event.offsetY }, { objects: exhibits });
-        outline.objects = hit ? [hit.object] : [];
+      // A click that did not drag the camera outlines the assembly it hit, or nothing.
+      onClick(world.canvas, async (event) => {
+        const hit = await world.raycast({ x: event.offsetX, y: event.offsetY }, { objects: assemblies });
+        outline.objects = hit ? assemblies.filter((group) => hit.object.parent === group) : [];
       });
     </script>
   </body>

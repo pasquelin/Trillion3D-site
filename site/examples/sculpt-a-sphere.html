@@ -22,7 +22,7 @@
     <canvas id="view"></canvas>
     <script type="module">
       import { createWorld, geometry, material, object, light, math, buffer } from '../runtime/engine.js';
-      import { controls } from '../runtime/kit.js';
+      import { controls, latestOnly } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
       world.scene.background = math.color('#1a1918');
@@ -108,7 +108,7 @@
         clayPaint.color.set(values.clay);
         ring.scale.set(values.brush, values.brush, values.brush);
         world.invalidate();
-      }, world);
+      });
 
       // A stroke: every vertex within the brush moves along the normal of the face under the
       // pointer, the most at the centre and nothing at the rim. With `mirror`, each half of the
@@ -162,33 +162,42 @@
       // Pressing on the clay sculpts and holds the camera still; pressing beside it turns the
       // camera as usual.
       let pointer = null, moved = false, sculpting = null, hit = null;
-      // The ring under the pointer, on the surface as it is now.
-      function aimRing() {
-        hit = aim();
+      // The presses still down, by pointer.
+      const down = new Set();
+      // The ring under the pointer, on the surface as it is now: one ray in flight, its answer a
+      // frame later, the latest pointer asked once it lands.
+      const ringAt = (answer) => {
+        hit = pointer ? answer : null;
         ring.visible = !!hit;
+        world.invalidate();
         if (!hit) return;
         const { point, normal } = hit;
         ring.position.set(point.x + normal.x * 0.02, point.y + normal.y * 0.02, point.z + normal.z * 0.02);
         ring.lookAt(point.x + normal.x, point.y + normal.y, point.z + normal.z);
-      }
-      const aim = () => pointer && world.raycast(pointer, { objects: [clay] });
+      };
+      const aim = (at) => world.raycast(at, { objects: [clay] });
+      const aimed = latestOnly(aim, ringAt);
+      const aimRing = () => (pointer ? aimed(pointer) : ringAt(null));
       const follow = (event) => {
         pointer = event.type === 'pointerleave' ? null : { x: event.offsetX, y: event.offsetY };
         moved = true;
         world.invalidate();
       };
       for (const name of ['pointermove', 'pointerleave']) world.canvas.addEventListener(name, follow);
-      world.canvas.addEventListener('pointerdown', (event) => {
+      world.canvas.addEventListener('pointerdown', async (event) => {
         follow(event);
         if (event.button !== 0 || sculpting) return;
-        aimRing();
         moved = false;
-        if (!hit) return;
+        down.add(event.pointerId);
+        ringAt(await aim(pointer));
+        // A press released while its ray flew sculpts nothing.
+        if (!hit || sculpting || !down.has(event.pointerId)) return;
         sculpting = { id: event.pointerId, controls: world.controls.enabled };
         world.controls.enabled = false;
         world.canvas.setPointerCapture(event.pointerId);
       });
       const lift = (event) => {
+        down.delete(event.pointerId);
         if (!sculpting || event.pointerId !== sculpting.id) return;
         world.controls.enabled = sculpting.controls;
         sculpting = null;

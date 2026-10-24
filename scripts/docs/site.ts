@@ -4,12 +4,14 @@
  * Every consumer — `build:docs`, `docs:serve`, the browser proofs, the site deployment — builds
  * the same tree from the same function; nothing under `site/` is a build product.
  */
-import { copyFile, mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, readdir, rm, stat, writeFile } from 'node:fs/promises'
 import { extname, relative, resolve } from 'node:path'
 import { API_FILES, API_SOURCES, generateApiFiles } from '../generate-api-reference.ts'
 import { ROOT } from '../engine.ts'
-import { gitPathsSync } from '../git-paths.ts'
+import { gitPathsSync } from '#engine/scripts/git/git-paths.ts'
 import { cacheOf, COOKED_SCENES, compileSiteCaches } from '../site-caches.ts'
+import { MODEL_LIBRARY, PLACED_LIST } from './examples/library.ts'
+import { copyChanged } from './copy-changed.ts'
 import { buildFlags } from './build-flags.ts'
 import { FRAMED_MEASUREMENT_TAG, withMeasurement } from './measurement.ts'
 import { buildPortal } from './build-portal.ts'
@@ -32,29 +34,21 @@ const METADATA_ENTRIES = ['index.html', 'robots.txt', ...Object.keys(REDIRECTS)]
 /** Source modules living beside the statics (the examples' kit) are not served. */
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx'])
 
-async function unchanged(source: string, target: string): Promise<boolean> {
-  try {
-    const [from, to] = await Promise.all([stat(source), stat(target)])
-    return from.size === to.size && from.mtimeMs <= to.mtimeMs
-  } catch {
-    return false
-  }
-}
-
 /** Removes from `folder` every entry `keep` does not name: the copy mirrors its sources. */
 async function prune(folder: string, keep: readonly string[]) {
   for (const name of await readdir(folder))
     if (!keep.includes(name)) await rm(resolve(folder, name), { recursive: true, force: true })
 }
 
-/** Copies `source` into `target`, files only when missing or older, sources never; what the
- * sources do not have, the copy loses. A `published` copy gives every page the measurement
- * tag of a framed page: the statics' pages are the examples the portal frames. */
+/** Copies `source` into `target`, files only when missing or changed (`copyChanged`), sources
+ * and the lists of placed library files (`PLACED_LIST`) never; what the sources do not have, the
+ * copy loses. A `published` copy gives every page the measurement tag of a framed page: the
+ * statics' pages are the examples the portal frames. */
 async function copyTree(source: string, target: string, published: boolean) {
   const entry = await stat(source)
   if (entry.isDirectory()) {
     await mkdir(target, { recursive: true })
-    const names = await readdir(source)
+    const names = (await readdir(source)).filter((name) => name !== PLACED_LIST)
     for (const name of names)
       await copyTree(resolve(source, name), resolve(target, name), published)
     await prune(target, names)
@@ -63,14 +57,13 @@ async function copyTree(source: string, target: string, published: boolean) {
   if (SOURCE_EXTENSIONS.has(extname(source))) return
   /* A published page is written and not copied, every time: the measurement tag comes from this
      build and not from the page, so a page whose own source has not moved must still pick up a
-     change made there. An unpublished one is copied as is; the size check below tells it apart
-     from a published copy left by an earlier build, which the tag makes longer. */
+     change made there. An unpublished one is copied as is; the size check of `copyChanged` tells
+     it apart from a published copy left by an earlier build, which the tag makes longer. */
   if (published && extname(source) === '.html') {
     await writeFile(target, withMeasurement(await readFile(source, 'utf8'), FRAMED_MEASUREMENT_TAG))
     return
   }
-  if (await unchanged(source, target)) return
-  await copyFile(source, target)
+  copyChanged(source, target)
 }
 
 /** One step of the build, with the paths under the root (files or folders) it reads and writes:
@@ -104,7 +97,8 @@ export const SITE_STEPS: readonly SiteStep[] = [
   },
   {
     name: 'caches',
-    reads: [...new Set(scenes.map(({ directory }) => `${directory}/source`))],
+    // The model library too: its files are placed in the sources they serve (`LIBRARY_FILES`).
+    reads: [...new Set(scenes.map(({ directory }) => `${directory}/source`)), MODEL_LIBRARY],
     writes: scenes.map((scene) => `${scene.directory}/${cacheOf(scene)}`),
     run: () => compileSiteCaches(false),
   },

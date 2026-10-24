@@ -164,7 +164,7 @@
         shown.sky?.(lux(moment.sky));
         shown.lamp?.(`${lumens.toLocaleString(language())} lm · ${Math.round(lumens / (4 * Math.PI)).toLocaleString(language())} cd`);
         world.invalidate();
-      }, world);
+      });
       shown = { sun: readout('sun'), sky: readout('sky'), lamp: readout('eachLamp'), ev: readout('exposureValue') };
       shown.sun(lux(MOMENTS[ui.moment].sun));
       shown.sky(lux(MOMENTS[ui.moment].sky));
