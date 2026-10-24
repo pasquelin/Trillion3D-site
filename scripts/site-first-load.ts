@@ -12,7 +12,7 @@ import { routeThree } from './three-route.ts'
 import { quantileOf } from '#engine/packages/math/src/scalar/quantile.ts'
 import { launchChrome } from './chrome.ts'
 import { createDocsServer } from './docs/serve.ts'
-import { listen } from './static-server.ts'
+import { listen } from '#engine/scripts/test/static-server.ts'
 import { SITE_OUTPUT } from './docs/site.ts'
 
 const DEFAULT_ROUTES = ['#/en/learn/home', '#/en/examples/observatory-streamed']

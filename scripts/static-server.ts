@@ -1,34 +1,19 @@
-// The one local static server: the docs portal, the installed-package proof, the bench harness and
-// the blank GPU pages all answer through it. What sets them apart is an option, never a copy.
+// The site's static server: the engine's (`scripts/test/static-server.ts`), whose content types,
+// byte ranges, replies and port it reads, with the brotli encoding the docs portal serves its scene
+// caches in (`compress`). What sets one use apart is an option, never a copy.
 import { once } from 'node:events'
 import { createReadStream } from 'node:fs'
 import { stat } from 'node:fs/promises'
 import { createServer, type IncomingMessage, type Server, type ServerResponse } from 'node:http'
-import type { AddressInfo } from 'node:net'
 import { extname, resolve, sep } from 'node:path'
 import { pipeline } from 'node:stream'
 import { constants, createBrotliCompress } from 'node:zlib'
-
-const TYPES: Record<string, string> = {
-  '.html': 'text/html; charset=utf-8',
-  '.css': 'text/css; charset=utf-8',
-  '.js': 'text/javascript; charset=utf-8',
-  '.json': 'application/json; charset=utf-8',
-  '.wasm': 'application/wasm',
-  '.gltf': 'model/gltf+json',
-  '.svg': 'image/svg+xml',
-  '.png': 'image/png',
-  '.jpg': 'image/jpeg',
-  '.ico': 'image/x-icon',
-  '.ktx2': 'image/ktx2',
-}
-
-/** The content type of a file ending in `extension`; text is always utf-8. */
-export const contentType = (extension: string): string =>
-  TYPES[extension] ?? 'application/octet-stream'
-
-/** A URL prefix served from a directory. */
-export type Mount = { prefix: string; dir: string }
+import {
+  byteRange,
+  contentType,
+  reply,
+  type StaticOptions as EngineStaticOptions,
+} from '#engine/scripts/test/static-server.ts'
 
 /** The file the URL-encoded `path` names under `dir`, or `null` when it leaves `dir`. */
 function fileUnder(dir: string, path: string): string | null {
@@ -37,23 +22,9 @@ function fileUnder(dir: string, path: string): string | null {
   return file === base || file.startsWith(base + sep) ? file : null
 }
 
-/** Ends `response` with `status`, and `body` of `type` when given; true, as an `answer` returns. */
-function reply(response: ServerResponse, status: number, type?: string, body?: string) {
-  response.writeHead(status, type ? { 'content-type': type } : {}).end(body)
-  return true
-}
-
-/** What sets one server apart. Without options it answers 404 to everything. */
-export interface StaticOptions {
-  mounts?: Mount[]
-  /** Headers on every response. */
-  headers?: Record<string, string>
-  /** Whether a file inside its mount is refused all the same, as one outside it is (403). */
-  refuse?: (file: string) => boolean
-  /** Answers a request before any file is looked for; returns whether it did. */
-  answer?: (request: IncomingMessage, response: ServerResponse, url: URL) => boolean
-  /** The text a file is served as and its content type, or `undefined` to serve its bytes. */
-  transform?: (file: string) => { type: string; text: string } | undefined
+/** What sets one server apart: the engine's options, and the encoding. Without options it answers
+ *  404 to everything. */
+export interface StaticOptions extends EngineStaticOptions {
   /** Whether a file is sent brotli-encoded to a request that accepts it (`Content-Encoding: br`):
    *  the client reads the file's own bytes once it decodes them. */
   compress?: (file: string) => boolean
@@ -70,23 +41,6 @@ function acceptsBrotli(header: string | undefined) {
 /** Brotli as a local server can afford per request: quality 5 of 11 compresses tens of megabytes a
  *  second; a published tree carries its files compressed at the top quality (`site.yml`). */
 const ON_THE_FLY = { params: { [constants.BROTLI_PARAM_QUALITY]: 5 } }
-
-/** The bytes a `Range` header asks of a file of `size` bytes, first and last included: `undefined`
- *  when it asks nothing this server serves — none, several ranges, or not a byte range —, the whole
- *  file then answering; `null` when no byte of it lies in the file (416). */
-export function byteRange(header: string | undefined, size: number) {
-  const [, first, last] = /^bytes=(\d*)-(\d*)$/.exec(header?.trim() ?? '') ?? []
-  if (!first && !last) return undefined
-  // `bytes=-n`: the last n bytes.
-  if (!first) {
-    const suffix = Number(last)
-    return suffix > 0 && size > 0 ? { start: Math.max(0, size - suffix), end: size - 1 } : null
-  }
-  const start = Number(first),
-    stop = last ? Number(last) : size - 1
-  if (last && stop < start) return undefined
-  return start < size ? { start, end: Math.min(stop, size - 1) } : null
-}
 
 /** Serves the file `path` names under `dir`, a directory by its `index.html`; one byte range
  *  (`byteRange`) answers 206 with those bytes alone, never encoded. */
@@ -150,18 +104,5 @@ export function staticServer(options: StaticOptions = {}): Server {
         if (!response.headersSent) reply(response, 404)
       },
     )
-  })
-}
-
-/** Listens on the loopback interface (`port` 0 picks a free one) and resolves with the port. */
-export function listen(server: Server, port = 0): Promise<number> {
-  return new Promise((ready, reject) => {
-    server.once('error', reject)
-    server.listen(port, '127.0.0.1', () => {
-      // Only a failure to listen rejects; a later server error is not swallowed here.
-      server.off('error', reject)
-      // A server bound to an IP address has an `AddressInfo`, never a pipe name.
-      ready((server.address() as AddressInfo).port)
-    })
   })
 }

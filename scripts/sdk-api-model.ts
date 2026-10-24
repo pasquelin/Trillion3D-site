@@ -3,7 +3,7 @@ import { dirname, join, relative } from 'node:path'
 import prettier from 'prettier'
 import ts from 'typescript'
 import { ENGINE, ROOT } from './engine.ts'
-import { repositoryFiles } from './repository-files.ts'
+import { repositoryFiles } from '#engine/scripts/git/repository-files.ts'
 
 /** The public entries of the engine, under its checkout (`ENGINE`). */
 export const ENTRIES = {

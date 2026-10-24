@@ -16,7 +16,7 @@ import type { PortalEntry } from '../../site/content/model.ts'
 import { ENGINE, ROOT } from '../engine.ts'
 import { API_FILES } from '../generate-api-reference.ts'
 import { assertUntracked } from '../git-paths.ts'
-import { repositoryFiles } from '../repository-files.ts'
+import { repositoryFiles } from '#engine/scripts/git/repository-files.ts'
 import { apiProgram, entryModules, PUBLIC_ENTRIES } from '../sdk-api-model.ts'
 
 const api = entriesIn('en').filter((entry) => !LEARN_SECTIONS.includes(entry.section))

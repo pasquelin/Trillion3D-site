@@ -28,8 +28,8 @@ export async function buildRuntime(root: string, outdir: string) {
     absWorkingDir: root,
     metafile: true,
     entryPoints: {
-      pageWorker: sdk('page/work/pageWorker.ts'),
-      pageIntegrationWorker: sdk('page/integration/pageIntegrationWorker.ts'),
+      pageWorker: sdk('geometry/work/pageWorker.ts'),
+      pageIntegrationWorker: sdk('geometry/integration/pageIntegrationWorker.ts'),
       // The physics worker, spawned only by a world that turns physics on.
       physicsWorker: sdk('physics/physicsWorker.ts'),
       ...RUNTIME_ENTRIES,

@@ -1,13 +1,15 @@
 // A ratchet on the French left in the code (CONTRIBUTING.md: all wording in English). It counts,
-// per package, the words of `scripts/french-words.ts` in the identifiers, comments and strings of
-// every tracked source file — each word of a camelCase or snake_case name counts — the strings that
-// must stay excepted. A count above `scripts/english-baseline.json` fails; one below is
-// written there, to be committed. `pnpm run check:english`; `--write` records today's counts.
+// per package, the words of the engine's `scripts/check/french-words.ts` in the identifiers,
+// comments and strings of every tracked source file — each word of a camelCase or snake_case name
+// counts — but the strings `scripts/french-words.ts` excepts. A count above
+// `scripts/english-baseline.json` fails; one below is written there, to be committed.
+// `pnpm run check:english`; `--write` records today's counts.
 import { existsSync, readFileSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { pathToFileURL } from 'node:url'
-import { FRENCH_EXCEPTIONS, FRENCH_WORDS } from './french-words.ts'
-import { repositoryFiles } from './repository-files.ts'
+import { FRENCH_WORDS } from '#engine/scripts/check/french-words.ts'
+import { FRENCH_EXCEPTIONS } from './french-words.ts'
+import { repositoryFiles } from '#engine/scripts/git/repository-files.ts'
 
 const SOURCE = /\.(?:[cm]?ts|tsx|rs|wgsl)$/
 /** The files that hold French words on purpose: the list, and the test that plants them. */

@@ -1,7 +1,8 @@
-import { copyFile, cp, mkdir, readFile, writeFile } from 'node:fs/promises'
+import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import { geometry } from '#engine/packages/sdk-core/src/world/geometry/index.ts'
 import { appendSurfacesGltf } from './gltf.ts'
+import { placeLibraryFiles } from './library.ts'
 import { codeScenes } from './code-scenes.ts'
 import { fromGeometry, merge } from './mesh.ts'
 import { placeObj, writeBoxesObj, type BoxRow } from './obj.ts'
@@ -11,22 +12,13 @@ import type { GltfDocument } from './gltf-types.ts'
  * The scenes built around an imported model (`site/assets/examples/models/`, credited in
  * `CREDITS.md`): an OBJ model is copied into the scene's source folder, scaled to metres and
  * placed, with an original setting written as boxes beside it, and the compiler merges the
- * folder; a glTF model is copied as-is and the setting appended to it as one more node.
+ * folder; a glTF model is read as-is and the setting appended to it as one more node. The model's
+ * files the scene uses unchanged stay in the library, placed beside them (`LIBRARY_FILES`).
  */
-async function copyModel(
-  models: string,
-  name: string,
-  files: readonly string[],
-  directory: string,
-) {
-  for (const file of files) await copyFile(resolve(models, name, file), resolve(directory, file))
-}
 
 /** A marble bust on a stone pedestal, a wall behind it to catch its shadow. */
 async function bust(models: string, directory: string) {
   const source = resolve(models, 'marble-bust')
-  await cp(resolve(source, 'textures'), resolve(directory, 'textures'), { recursive: true })
-  await copyModel(models, 'marble-bust', ['marble_bust_01.bin'], directory)
   // Per material, boxes `x, y, z, width, height, depth`: the niche's floor and back; the pedestal.
   const surfaces = [
     [0, -1.15, 0, 4, 0.3, 4, 0, 0.3, -1.85, 4, 3.2, 0.3],
@@ -54,11 +46,6 @@ async function bust(models: string, directory: string) {
   )
 }
 
-/** The marble bust alone, nothing around it: an object to place in a scene of one's own. */
-async function marbleBust(models: string, directory: string) {
-  await cp(resolve(models, 'marble-bust'), directory, { recursive: true })
-}
-
 /**
  * A street corner closed on four sides, so a camera turning inside it never looks at the back of
  * a wall: two facades meet at the corner behind a raised pavement and its kerb, a road runs a step
@@ -68,7 +55,6 @@ async function marbleBust(models: string, directory: string) {
  * lit pane and the bulb glow by themselves (`Ke`), a dark pane only mirrors the sky.
  */
 async function streetCorner(models: string, directory: string) {
-  await copyModel(models, 'lantern', ['lantaarn.mtl', 'lantaarn.png'], directory)
   await placeObj(resolve(models, 'lantern/lantaarn.obj'), resolve(directory, 'lantaarn.obj'), {
     scale: 0.033,
     offset: [1.6, 0, -1.9],
@@ -144,7 +130,6 @@ function cornerWindow(
 
 /** Three crates on a dark floor, stacked so one spotlight draws their edges and shadows. */
 async function crates(models: string, directory: string) {
-  await copyModel(models, 'crate', ['box1.mtl', 'box1.png'], directory)
   const places: readonly [file: string, offset: readonly [number, number, number]][] = [
     ['crate-a.obj', [-0.9, 0, 0.3]],
     ['crate-b.obj', [0.7, 0, -0.5]],
@@ -162,13 +147,16 @@ async function crates(models: string, directory: string) {
 
 export const modelScenes = {
   bust,
-  'marble-bust': marbleBust,
+  // The marble bust alone, an object to place in a scene of one's own: its source is the
+  // library's model as is, nothing written, every file placed (`LIBRARY_FILES`).
+  'marble-bust': async () => {},
   'street-corner': streetCorner,
   crates,
   ...codeScenes,
 }
 
-/** Assembles the source folder of the model scenes `names` under `examples` from `models`. */
+/** Assembles the source folder of the model scenes `names` under `examples` from `models`, the
+ *  library's files placed in it. */
 export async function writeModelScenes(
   examples: string,
   models: string,
@@ -179,5 +167,6 @@ export async function writeModelScenes(
     const directory = resolve(examples, name, 'source')
     await mkdir(directory, { recursive: true })
     await write(models, directory)
+    placeLibraryFiles(name, directory, models)
   }
 }

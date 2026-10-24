@@ -4,7 +4,8 @@
 // enclosing headings says so; any other mention fails `validate`.
 import { readFileSync } from 'node:fs'
 import { pathToFileURL } from 'node:url'
-import { repositoryFiles } from './repository-files.ts'
+import { ROOT } from './engine.ts'
+import { repositoryFiles } from '#engine/scripts/git/repository-files.ts'
 
 /**
  * A sentence that names the library, not the number: the capitalised word counts mid-sentence
@@ -42,7 +43,7 @@ export function libraryMentions(markdown: string): LibraryMention[] {
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  const files = repositoryFiles()
+  const files = repositoryFiles(ROOT)
   if (!files) throw new Error('Not a Git repository.')
   const failures = files
     .filter((file) => file.endsWith('.md'))

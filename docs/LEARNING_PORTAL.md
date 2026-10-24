@@ -40,8 +40,10 @@ push to `main`; its comments state each step. A manual run publishes only from `
    No visible word in the page: the words go in `site/examples/i18n/<code>.json`
    (`site/examples/kit/words.ts`). Live counters describe the current browser and scene, never a
    comparison.
-2. A scene around an imported model: add it to `scripts/docs/examples/models.ts`, credit it in
-   `site/assets/examples/CREDITS.md`, then `pnpm build:native` and
+2. A scene around an imported model: add the model once to `site/assets/examples/models/`, the
+   scene to `scripts/docs/examples/models.ts`, the model's files (or folder) it serves unchanged
+   to `LIBRARY_FILES` (`scripts/docs/examples/library.ts`; placing them writes the scene's
+   `.gitignore`), credit it in `site/assets/examples/CREDITS.md`, then `pnpm build:native` and
    `node scripts/docs/examples-assets.ts <scene>`.
 3. Add its entry to `site/content/gallery-roadmap.json`, in learning order within its theme; the
    entry statuses are stated in `site/app/examples/list.ts`.

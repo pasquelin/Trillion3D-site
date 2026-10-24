@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises'
 import { resolve } from 'node:path'
 import type { BrowserContext, Page, Route } from 'playwright'
-import { contentType } from './static-server.ts'
+import { contentType } from '#engine/scripts/test/static-server.ts'
 
 /** Where the portal loads Three from in production. */
 const THREE_CDN = 'https://cdn.jsdelivr.net/npm/three@0.174.0/'

@@ -1,9 +1,13 @@
-import { MATHS_FORMS, MATHS_ORACLES } from './scripts/lint-maths.ts'
+import { MATHS_FORMS } from '#engine/scripts/lint/lint-maths.ts'
 import js from '@eslint/js'
 import tseslint from 'typescript-eslint'
 import globals from 'globals'
 import react from 'eslint-plugin-react'
 import reactHooks from 'eslint-plugin-react-hooks'
+
+/** Where the maths' inline forms are written on purpose, the declared oracles: the tests, whose
+ *  expectations are their own arithmetic, independent of the code they check. */
+const MATHS_ORACLES = ['**/*.test.{ts,mts}']
 
 export default tseslint.config(
   {
@@ -18,9 +22,9 @@ export default tseslint.config(
   },
   js.configs.recommended,
   {
-    // The inline forms of a formula the engine's `packages/math` holds (`scripts/lint-maths.ts`),
-    // refused outside the declared oracles. A later block that sets `no-restricted-syntax` for its
-    // own files replaces these entries there, so it lists them too.
+    // The inline forms of a formula the engine's `packages/math` holds (the engine's
+    // `scripts/lint/lint-maths.ts`), refused outside the declared oracles. A later block that sets
+    // `no-restricted-syntax` for its own files replaces these entries there, so it lists them too.
     files: ['**/*.{ts,mts,tsx}'],
     ignores: MATHS_ORACLES,
     rules: { 'no-restricted-syntax': ['error', ...MATHS_FORMS] },

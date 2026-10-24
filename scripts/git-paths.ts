@@ -1,23 +1,6 @@
 import assert from 'node:assert/strict'
-import { execFileSync, spawnSync } from 'node:child_process'
-import { closeSync, mkdtempSync, openSync, readFileSync, rmSync } from 'node:fs'
-import { tmpdir } from 'node:os'
-import { join } from 'node:path'
-
-/** Synchronous configuration readers keep their contract without buffering child stdout. */
-export function gitPathsSync(args: string[], cwd = process.cwd()): string[] {
-  const directory = mkdtempSync(join(tmpdir(), 'geometry-git-output-'))
-  let descriptor: number | undefined
-  try {
-    const output = join(directory, 'paths')
-    descriptor = openSync(output, 'w')
-    execFileSync('git', args, { cwd, stdio: ['ignore', descriptor, 'inherit'] })
-    return readFileSync(output, 'utf8').split('\0').filter(Boolean)
-  } finally {
-    if (descriptor !== undefined) closeSync(descriptor)
-    rmSync(directory, { recursive: true, force: true })
-  }
-}
+import { spawnSync } from 'node:child_process'
+import { gitPathsSync } from '#engine/scripts/git/git-paths.ts'
 
 /** Fails unless git tracks none of `paths` and its ignore rules name every one, on disk or not. */
 export function assertUntracked(paths: string[], cwd = process.cwd()): void {

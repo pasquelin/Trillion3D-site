@@ -9,7 +9,10 @@ The models under `models/` are kept as imported — mesh, textures and, when the
 the licence file — and never edited. An OBJ model enters a scene as a copy whose `v` lines alone
 are scaled to metres and moved into place (`scripts/docs/examples/obj.ts`, `placeObj`), beside an
 original setting written as boxes; a glTF model enters as-is, the setting appended to a copy of
-its scene file as one more node (`scripts/docs/examples/gltf.ts`, `appendSurfacesGltf`).
+its scene file as one more node (`scripts/docs/examples/gltf.ts`, `appendSurfacesGltf`). A
+model's file a scene serves unchanged is kept once, here: it is placed in the scene's `source/`,
+ignored by git, before a cook or a build reads it (`scripts/docs/examples/library.ts`,
+`LIBRARY_FILES`), so the scene's addresses stay the same.
 
 | Model | Folder | Author | Source and licence | Used by |
 | --- | --- | --- | --- | --- |

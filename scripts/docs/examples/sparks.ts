@@ -9,9 +9,10 @@ import { box } from './solids.ts'
 
 /**
  * `particles-responsive`: four swarms of small glowing sparks whirling over a dark floor, side by
- * side, the same motion in each, so the trail each leaves behind it can be compared. Each keeps a
- * share of its temporal anti-aliasing history of its own (the material's `temporalAntialiasing`),
- * left to right 1, 0.75, 0.5 and 0, each in three colours that name it three ways:
+ * side, the same motion in each, so the trail each leaves behind it can be compared. The sparks are
+ * blended (`SPARK_OPACITY`), as sparks are drawn: each keeps a share of its temporal anti-aliasing
+ * history of its own (the material's `temporalAntialiasing`) over the floor it crosses, left to
+ * right 1, 0.75, 0.5 and 0, each in three colours that name it three ways:
  * - 1, `still …`: `still pattern` no option names; `still listed` set `responsive: false` by
  *   `materials`; `still extras` asking `responsive` in its extras, which `materials` sets false;
  * - 0.75, a responsive history, `spark …`: `spark pattern` the compile option `responsive` matches
@@ -30,7 +31,9 @@ const PER_COLOUR = 30,
   /** Where each swarm turns, left to right. */
   CENTRES = [-12, -4, 4, 12] as const,
   /** The side of a spark, metres. */
-  SPARK = 0.08
+  SPARK = 0.08,
+  /** A spark's coverage: blended over what lies behind it, not opaque. */
+  SPARK_OPACITY = 0.85
 
 /** The responsive swarm's pattern option: the materials named `spark pattern`, on whatever node
  *  wears them. */
@@ -74,13 +77,18 @@ export async function writeSparks(directory: string) {
   gltf.node({ name: 'floor', mesh: gltf.mesh('floor', [[box(32, 0.2, 12), floor]]) }, true)
 
   // A glowing material: black, its colour given off `GLOW` times over
-  // (`KHR_materials_emissive_strength`), `extras` beside it when asked.
+  // (`KHR_materials_emissive_strength`), blended at `SPARK_OPACITY`, `extras` beside it when asked.
   const used = (gltf.document.extensionsUsed ??= [])
   used.push('KHR_materials_emissive_strength')
   const glowing = (name: string, colour: (typeof COLOURS)[number], extras?: object) => {
     const index = gltf.material(name, [0, 0, 0], { roughness: 1, emissive: colour })
     const material = gltf.document.materials[index]
     material.extensions = { KHR_materials_emissive_strength: { emissiveStrength: GLOW } }
+    material.alphaMode = 'BLEND'
+    material.pbrMetallicRoughness = {
+      ...material.pbrMetallicRoughness,
+      baseColorFactor: [0, 0, 0, SPARK_OPACITY],
+    }
     if (extras) material.extras = { ...extras }
     return gltf.mesh(name, [[box(SPARK, SPARK, SPARK), index]])
   }

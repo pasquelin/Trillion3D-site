@@ -16,15 +16,16 @@ import {
   statSync,
   writeFileSync,
 } from 'node:fs'
-import { resolve } from 'node:path'
+import { basename, resolve } from 'node:path'
 import { firstNewer } from '#engine/packages/sdk-node/src/compiler/freshness.mts'
 import { resolveHlod } from '#engine/packages/sdk-core/src/contracts/hlodOptions.ts'
 import { materialJobFields } from '#engine/packages/sdk-core/src/contracts/materialOptions.ts'
 import { DISTRICT_HLOD } from './docs/examples/district.ts'
 import { SPARKS_MATERIALS, SPARKS_RESPONSIVE } from './docs/examples/sparks.ts'
+import { MODEL_LIBRARY, placeLibraryFiles } from './docs/examples/library.ts'
 import { modelScenes } from './docs/examples/models.ts'
 import { ROOT } from './engine.ts'
-import { heavyStep } from './heavy-lock.ts'
+import { heavyStep } from '#engine/scripts/native/heavy-lock.ts'
 import {
   compileFullCache,
   type FullCompile,
@@ -127,6 +128,12 @@ export const COOKED_SCENES: Record<string, CookedScene> = {
 export const sourceOf = ({ directory }: CookedScene, root = ROOT) =>
   resolve(root, directory, 'source')
 
+/** Places in the source folder of `scene` the model library's files it serves (`LIBRARY_FILES`),
+ *  listed in the scene's git ignore file: before its stamp, its freshness or its cook reads the
+ *  folder. */
+const placeLibrary = (scene: CookedScene) =>
+  placeLibraryFiles(basename(scene.directory), sourceOf(scene), resolve(ROOT, MODEL_LIBRARY))
+
 /** Whether `manifest`, under `site/`, is in the cache of a scene `compile:caches` cooks, and exists
  *  once that cache is compiled: a checkout without the compiler (a documentation-only run) has
  *  none. */
@@ -217,6 +224,7 @@ export function compileCache(scene: CookedScene): void {
   if (download) fetchDownload(download)
   const cwd = resolve(ROOT, directory),
     cache = cacheOf(scene)
+  placeLibrary(scene)
   rmSync(resolve(cwd, cache), { recursive: true, force: true })
   // A downloaded scene's folder holds only its cache, so nothing in git makes it.
   mkdirSync(cwd, { recursive: true })
@@ -238,6 +246,7 @@ export function isStale(scene: CookedScene, root = ROOT, compiled = compilerTime
 /** Compiles every stale cache of `scenes`. Without a compiler, a `required` run throws; another
  *  names what it left and goes on, for a caller that may read none of them. */
 export function compileSiteCaches(required = true, scenes = Object.values(COOKED_SCENES)): void {
+  for (const scene of scenes) placeLibrary(scene)
   const compiled = compilerTime()
   const stale = scenes.filter((scene) => isStale(scene, ROOT, compiled))
   if (!stale.length) return

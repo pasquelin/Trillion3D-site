@@ -915,15 +915,16 @@ function keyed(step: number, value: (t: number) => readonly number[]) {
 const spin = (axis: Vec3, phase: number, turns: number, step: number) =>
   keyed(step, (t) => turn(axis, phase + (TAU * turns * t) / PERIOD))
 
-/** The district's HLOD, through the compiler's `hlod` option (`resolveHlod`): four levels at the
- *  balanced preset. Its objects are marked where `writeDistrict` makes them (`extras.hlod`): the
- *  street, the lake, the shore, the blocks, the towers and the large structures `buildings`; the
- *  trees, the street's and the card trees, `foliage`; the lamps, the cars, the shelter and the
- *  flagpoles `props`. The cables and the lakeside fence are not marked — a voxel shell would
- *  thicken their wires and rails into bars, and beyond their cell's range they are under a
- *  pixel —, and what moves — the driving cars, the tram, the wheel, the rotors, the flags, the
- *  lift — is never placed in a cell: neither enters an HLOD. */
-export const DISTRICT_HLOD: HlodOptions = { levels: 4, quality: 'balanced' }
+/** The district's HLOD, through the compiler's `hlod` option (`resolveHlod`): four levels — HLOD 0
+ *  the objects themselves, three merged levels above it, each baking the normal, roughness,
+ *  metallic, specular and emissive images beside the base colour. Its objects are marked where
+ *  `writeDistrict` makes them (`extras.hlod`): the street, the lake, the shore, the blocks, the
+ *  towers and the large structures `buildings`; the trees, the street's and the card trees,
+ *  `foliage`; the lamps, the cars, the shelter and the flagpoles `props`. The cables and the
+ *  lakeside fence carry no mark, and the option names no `default`: they enter the default group,
+ *  `buildings`, as the blocks do. What moves — the driving cars, the tram, the wheel, the rotors,
+ *  the flags, the lift — is never placed in a cell, so it enters no HLOD. */
+export const DISTRICT_HLOD: HlodOptions = { levels: 4 }
 
 /** Writes `district.gltf`, `district.bin` and the textures into `directory`. */
 export async function writeDistrict(directory: string) {
