@@ -9,7 +9,7 @@ export const SHOWN = 6
 const WRITTEN_AS: Record<string, RegExp> = {
   WorldControls: /\bcontrols:\s*'|\.controls\.kind\s*=/,
   Scene: /\bscene\.(?:load|toJSON|fromJSON)\(/,
-  SceneFog: /\bheightFog:\s*\{/,
+  SceneFog: /\bheightFog:/,
   ObjectPhysics: /\.physics\s*=/,
   LoadedModel: /\bscene\.load\(/,
 }
