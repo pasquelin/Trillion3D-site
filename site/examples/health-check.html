@@ -51,7 +51,14 @@
       const check = healthCheck(world, () => flown?.part ?? null);
       const refuse = (reason, documented) => (announce(say('refused'), reason), check.refuse(reason, documented));
       diagnostic.createChannel().observe(({ kind, message }) => kind.includes('refused') && refuse(message));
+      // The background is a luminance like every light here: this blue as the eye sees it under the
+      // exposure the sun asks for.
       world.scene.background = math.color('#bcd3e6');
+      world.scene.background.setRGB(
+        world.scene.background.r / world.exposure,
+        world.scene.background.g / world.exposure,
+        world.scene.background.b / world.exposure,
+      );
       world.camera.far = 600;
       const [valley, sky, observatory] = await Promise.all([
         world.scene.load('../assets/examples/terrain/cache/native/full/manifest.json'),
