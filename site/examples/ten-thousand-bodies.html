@@ -31,7 +31,7 @@
       world.scene.background = math.color('#1d2430');
       // The floor's far edge fades into the dark. The fog is light, exposed and tone-mapped like a
       // surface, the background is not: this is the radiance the display curve shows as #1d2430.
-      world.scene.fog = { color: math.color([0.027, 0.035, 0.05]), near: 90, far: 220 };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: [0.027, 0.035, 0.05], near: 90, far: 220 } };
       world.camera.far = 600;
       const floor = object.mesh(geometry.box(120, 2, 120), material.meshStandard({ color: '#a7815f', roughness: 0.85, physics: 'stone' }));
       floor.position.y = -1;

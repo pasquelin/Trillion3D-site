@@ -32,7 +32,7 @@
       // and tone-mapped like a surface, the background is not: this is the radiance the display
       // curve shows as #d9c6a8.
       world.scene.background = math.color('#d9c6a8');
-      world.scene.fog = { color: math.color([0.75, 0.504, 0.284]), density: 0.008 };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: [0.75, 0.504, 0.284], density: 0.008 } };
       const sand = material.meshStandard({ color: '#b59a73', roughness: 0.9 });
       const chalk = material.meshStandard({ color: '#eee5d2', roughness: 0.7 });
       const floor = object.mesh(geometry.box(6, 0.3, 30), sand);

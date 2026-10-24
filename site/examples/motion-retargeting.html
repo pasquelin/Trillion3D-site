@@ -56,7 +56,7 @@
       world.exposure = 1;
       const night = math.color('#0e1420');
       world.scene.background = night;
-      world.scene.fog = { color: night, near: 7, far: 16 };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: night.toArray(), near: 7, far: 16 } };
 
       // A dark lacquered stage, a warm key that throws the three shadows forward, a cool sky to
       // fill, and two coloured rims behind that draw each outline against the night.
@@ -80,7 +80,7 @@
         rimWarm,
         light.hemisphere({ intensity: 1.3, color: '#bcd2ff', groundColor: '#2a2018' }),
       );
-      world.effects.add(effect.bloom({ intensity: 0.1, radius: 1.2 }));
+      world.effects.add(effect.bloom({ intensity: 0.1 }));
 
       // The source: CesiumMan and the walk his file carries, on his own 19 bones. His bones lie
       // along their local x, each turned about its own y: frames no other rig shares.
@@ -531,7 +531,6 @@
           }
           world.invalidate();
         },
-        world,
       );
       const bones = readout('bones'),
         baked = readout('keys');

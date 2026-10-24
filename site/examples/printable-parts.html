@@ -21,7 +21,7 @@
   <body>
     <canvas id="view"></canvas>
     <script type="module">
-      import { buffer, createWorld, geometry, light, loader, material, math, object, srgbToLinearBatch } from '../runtime/engine.js';
+      import { buffer, createWorld, geometry, light, loader, material, math, object } from '../runtime/engine.js';
       import { controls, ease, flights, language, readout, words } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
@@ -81,6 +81,9 @@
           return value;
         };
         const positions = [], colours = [], indices = [];
+        // Colours in the file are sRGB bytes; the vertex colours the engine blends are linear,
+        // which a colour made from the bytes holds.
+        const decoded = math.color();
         for (const element of elements)
           for (let item = 0; item < element.count; item++) {
             const values = {};
@@ -88,16 +91,16 @@
               values[property.name] = property.list ? Array.from({ length: read(property.countType) }, () => read(property.type)) : read(property.type);
             if (element.name === 'vertex') {
               positions.push(values.x, values.y, values.z);
-              if ('red' in values) colours.push(values.red / 255, values.green / 255, values.blue / 255);
+              if ('red' in values) {
+                decoded.setHex((values.red << 16) | (values.green << 8) | values.blue);
+                colours.push(decoded.r, decoded.g, decoded.b);
+              }
             } else if (element.name === 'face') {
               const corners = values.vertex_indices ?? values.vertex_index;
               for (let k = 1; k + 1 < corners.length; k++) indices.push(corners[0], corners[k], corners[k + 1]);
             }
           }
-        // Colours in the file are sRGB bytes; the vertex colours the engine blends are linear.
-        const linear = new Float64Array(colours.length);
-        srgbToLinearBatch(linear, colours, colours.length);
-        return [{ positions, indices, colours: colours.length ? Array.from(linear) : null, colour: null }];
+        return [{ positions, indices, colours: colours.length ? colours : null, colour: null }];
       }
 
       const hexOf = (rgb) => '#' + rgb.map((value) => Math.round(value * 255).toString(16).padStart(2, '0')).join('');
@@ -314,7 +317,7 @@
           }
         }
         world.invalidate();
-      }, world);
+      });
       for (const [name, part] of Object.entries(parts)) {
         const triangles = part.built.reduce((sum, { triangles }) => sum + triangles, 0);
         readout(name)(say('summary', { size: (part.bytes / 1024).toFixed(0), triangles: triangles.toLocaleString(language()) }));

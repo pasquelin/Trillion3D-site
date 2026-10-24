@@ -33,7 +33,7 @@
       world.exposure = 1;
       const dusk = math.color('#2a2230');
       world.scene.background = dusk;
-      world.scene.fog = { color: dusk, near: 28, far: 70 };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: dusk.toArray(), near: 28, far: 70 } };
       world.camera.far = 200;
 
       // A few vector words on plain arrays, enough to cut a convex solid by planes.
@@ -342,7 +342,6 @@
             pending = setTimeout(rebuild, 350);
           }
         },
-        world,
       );
       // The strength slider reads kilonewtons; a weld's breakForce is in newtons.
       const rebuild = () => build(settings.pieces, settings.strength * 1000);

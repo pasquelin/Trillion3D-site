@@ -22,7 +22,7 @@
     <canvas id="view"></canvas>
     <script type="module">
       import { createWorld, geometry, material, object, light, texture, effect, buffer, math } from '../runtime/engine.js';
-      import { controls, mix, onClick, readout, seeded } from '../runtime/kit.js';
+      import { controls, latestOnly, mix, onClick, readout, seeded } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
       world.exposure = 1;
@@ -299,10 +299,16 @@
 
       // From a world hit to the pebble's frame: the point carried in, and the normal as the step
       // from it to the point one unit ahead along the world normal, carried in too.
-      const local = (hit) => {
-        const point = pebble.worldToLocal(hit.point.clone()).toArray();
-        const ahead = pebble.worldToLocal(hit.point.clone().add(hit.normal)).toArray();
+      const local = (hit, toLocal) => {
+        const point = hit.point.clone().applyMatrix4(toLocal).toArray();
+        const ahead = hit.point.clone().add(hit.normal).applyMatrix4(toLocal).toArray();
         return { point, normal: unit(ahead.map((v, k) => v - point[k])) };
+      };
+      // One ray at the pebble, answered in its frame: the answer lands a frame later and the
+      // pebble turns meanwhile, so the frame is the one it stood in when the ray was cast.
+      const cast = (at) => {
+        const toLocal = pebble.matrixWorld.clone().invert();
+        return world.raycast(at, { objects: [pebble] }).then((hit) => hit && local(hit, toLocal));
       };
       // The next decal is drawn in advance, sticker and turn, so the box shown is the one cut.
       const pick = seeded(3);
@@ -316,8 +322,7 @@
       };
 
       let decals = [];
-      function stamp(hit) {
-        const { point, normal } = local(hit);
+      function stamp({ point, normal }) {
         const { sticker, angle } = next;
         choose();
         const frame = frameAt(point, normal, angle);
@@ -361,7 +366,7 @@
         reaim = true;
         box.setVisible(values.box && box.visible);
         world.invalidate();
-      }, world);
+      });
       choose();
       const shown = readout('decals'), kept = readout('kept');
       shown('0');
@@ -379,10 +384,19 @@
         reaim = true;
         world.invalidate();
       });
-      onClick(world.canvas, (event) => {
-        const hit = world.raycast({ x: event.offsetX, y: event.offsetY }, { objects: [pebble] });
-        if (hit) stamp(hit);
+      onClick(world.canvas, async (event) => {
+        const spot = await cast({ x: event.offsetX, y: event.offsetY });
+        if (spot) stamp(spot);
       });
+      // The projector over the spot under the pointer, from the one hover ray in flight: an
+      // answer that lands once the pointer left shows nothing.
+      const show = (spot) => {
+        world.canvas.style.cursor = spot ? 'crosshair' : '';
+        if (spot) showBox(frameAt(spot.point, spot.normal, next.angle), ui.size);
+        else box.setVisible(false);
+        world.invalidate();
+      };
+      const aimHover = latestOnly(cast, (spot) => hover.inside && show(spot));
 
       // The opening: a burst of stickers slapped on the turning pebble, each through the same
       // ray a click casts, aimed at points scattered over its silhouette.
@@ -401,8 +415,7 @@
           opened++;
           const { clientWidth: w, clientHeight: h } = world.canvas;
           const [a, r] = [aim() * Math.PI * 2, Math.sqrt(aim()) * 0.2];
-          const hit = world.raycast({ x: w * (0.5 + Math.cos(a) * r * (h / w)), y: h * (0.5 + Math.sin(a) * r) }, { objects: [pebble] });
-          if (hit) stamp(hit);
+          cast({ x: w * (0.5 + Math.cos(a) * r * (h / w)), y: h * (0.5 + Math.sin(a) * r) }).then((spot) => spot && stamp(spot));
         }
         // The pebble is 32 000 triangles: cast at it only when the answer may have changed.
         if (!eye.equals(world.camera.position)) {
@@ -411,12 +424,8 @@
         }
         if (reaim) {
           reaim = false;
-          const hit = hover.inside ? world.raycast(hover, { objects: [pebble] }) : null;
-          world.canvas.style.cursor = hit ? 'crosshair' : '';
-          if (hit) {
-            const { point, normal } = local(hit);
-            showBox(frameAt(point, normal, next.angle), ui.size);
-          } else box.setVisible(false);
+          if (hover.inside) aimHover({ x: hover.x, y: hover.y });
+          else show(null);
         }
         if (ui.spin || opened < OPENING) world.invalidate();
       });

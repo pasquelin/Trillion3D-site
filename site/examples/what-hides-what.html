@@ -152,13 +152,11 @@
         world.invalidate();
       });
       readout('gildedKnots')(String(deadEnds));
-      const tested = readout('clustersTested'), hidden = readout('clustersHidden'), triangles = readout('trianglesHidden');
+      // What the previous image's depth hid in the cut's main pass: cells, nodes and clusters, one
+      // count (`metrics.occluded`), none without a GPU cut.
+      const hidden = readout('clustersHidden');
       const count = (value) => (value == null ? say('notCounted') : value.toLocaleString(language()));
-      world.onFrame(({ metrics }) => {
-        tested(count(metrics.hizTestedClusters));
-        hidden(count(metrics.hizRejectedClusters));
-        triangles(count(metrics.hizRejectedTriangles));
-      });
+      world.onFrame(({ metrics }) => hidden(count(metrics.occluded)));
 
       // The opening: the maze from above, everything in sight; then down through the gate to the
       // eye of a walker, where the first hedge hides nearly all the rest. The knots turn slowly.

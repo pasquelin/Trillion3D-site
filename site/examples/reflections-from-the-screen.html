@@ -28,7 +28,7 @@
       const dusk = math.color('#1b2236');
       world.scene.background = dusk;
       world.exposure = 1.4;
-      world.scene.fog = { color: dusk, density: 0.018 };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: dusk.toArray(), density: 0.018 } };
       const next = seeded(11);
       const put = (mesh, x, y, z, parent = world.scene) => (mesh.position.set(x, y, z), parent.add(mesh), mesh);
 

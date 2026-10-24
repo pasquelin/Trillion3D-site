@@ -58,6 +58,12 @@
       // steps back as it rises, a few become round towers, the rest are blocks with a cornice.
       const PITCH = 5, LOT = 1.9;
       let counts = { buildings: 0, parks: 0 };
+      // The haze is the sky's colour over the city's reach: it is written again when a new city
+      // changes the reach, and when the hour changes the sky.
+      let hazeReach = null;
+      const haze = () => {
+        if (hazeReach) world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: sky.toArray(), ...hazeReach } };
+      };
       function build({ blocks, maxHeight, density, parks, seed }) {
         for (const each of pools) each.used = 0;
         counts = { buildings: 0, parks: 0 };
@@ -106,7 +112,8 @@
         placeTraffic(blocks, next);
         // The haze starts at the near edge of the city as first seen and keeps the far edge
         // seven tenths clear, whatever its size.
-        world.scene.fog = { color: sky, near: 47 - half, far: 47 + 6 * half };
+        hazeReach = { near: 47 - half, far: 47 + 6 * half };
+        haze();
       }
 
       // Cars run along the roads between the blocks, each on its lane, in both directions: one
@@ -167,6 +174,7 @@
           sun.position.set(Math.cos(angle) * 40, 6 + height * 36, 18);
           sun.color.set('#ffae66').lerp(math.color('#fff6e8'), height);
           sky.set('#6a6f86').lerp(math.color('#a9bfd6'), height);
+          haze();
         }
         if (key !== 'hour' && key !== 'traffic') build(values);
         buildings?.(String(counts.buildings));

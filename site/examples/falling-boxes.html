@@ -29,7 +29,7 @@
       world.exposure = 1;
       const sky = math.color('#cddbe8');
       world.scene.background = sky;
-      world.scene.fog = { color: sky, near: 25, far: 60 };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: sky.toArray(), near: 25, far: 60 } };
       world.camera.far = 400;
 
       // The floor is a static body: it holds the others and never moves.

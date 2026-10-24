@@ -67,8 +67,8 @@
       const backdrop = math.color(), haze = math.color();
       world.scene.background = backdrop;
       // At dusk a mist settles on the lawn, thick at the grass and gone a few metres up. Its
-      // colour is heard when written; its density is read when the fog is set again.
-      const mist = { color: haze, density: 0, heightFalloff: 1.2 };
+      // colour and its density are read when the sky word is set, each frame.
+      const mist = { density: 0, heightFalloff: 1.2 };
       world.camera.position.set(7, 4.4, 7.8);
       world.camera.lookAt(0, 0.6, 0);
       world.controls.target.set(0, 0.6, 0);
@@ -98,7 +98,7 @@
         haze.copy(low.haze).lerp(high.haze, share).multiplyScalar(1 / world.exposure);
         mist.density = 0.15 * (1 - height) ** 2;
         // No mist at all, not one of no density, costs nothing.
-        world.scene.fog = mist.density > 1e-4 ? mist : null;
+        world.scene.sky = mist.density > 1e-4 ? { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: haze.toArray(), ...mist } } : null;
         world.invalidate();
       });
       world.invalidate();

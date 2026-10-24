@@ -37,7 +37,7 @@
       world.exposure = 1;
       const sky = math.color('#9fb4cc');
       world.scene.background = sky;
-      world.scene.fog = { color: sky, near: 12, far: 30 };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: sky.toArray(), near: 12, far: 30 } };
       const floor = object.mesh(
         geometry.box(12, 0.2, 9),
         material.meshStandard({ color: '#d7c8aa', roughness: 0.9 }),

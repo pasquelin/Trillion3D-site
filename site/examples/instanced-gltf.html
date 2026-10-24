@@ -35,11 +35,11 @@
 
       const world = createWorld('view', { controls: 'orbit' });
       world.exposure = 1;
-      // Evening haze: the fog and the sky are one colour, and a linear display curve keeps them
+      // Evening haze: the fog and the sky are one colour, and no display curve (`'none'`) keeps them
       // one, so the far hills melt into the sky.
       const haze = math.color('#e7a273');
       world.scene.background = haze;
-      world.toneMapping = 'linear';
+      world.toneMapping = 'none';
       // A low sun beyond the lake, warm, its shadows long; a cool sky fills what it leaves.
       const sun = light.directional({ intensity: 2.6, color: '#ffb26b', castShadow: true });
       world.scene.add(sun, light.hemisphere({ intensity: 0.5, color: '#9aa6d6', groundColor: '#5a3a26' }));
@@ -71,7 +71,7 @@
       }, (values) => {
         const height = math.degToRad(values.sunHeight);
         sun.position.set(-Math.cos(height) * 100, Math.sin(height) * 100, -25);
-        world.scene.fog = { color: haze, density: 0.012 * values.mist, heightFalloff: 0.125, baseHeight: water };
+        world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: haze.toArray(), density: 0.012 * values.mist, heightFalloff: 0.125, baseHeight: water } };
         world.invalidate();
       });
 

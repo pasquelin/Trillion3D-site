@@ -145,7 +145,7 @@
 
       // The glow: a bloom pass spreads the sun's disc. The flare itself is no image pass — it is
       // sprites, laid along the line from the sun through the middle of the picture.
-      world.effects.add(effect.bloom({ intensity: 0.1, radius: 1.4 }));
+      world.effects.add(effect.bloom({ intensity: 0.1 }));
 
       // The flare's pictures, drawn once in white on canvases: a starburst with its halo, the
       // hexagon the aperture's six blades leave in each ghost, a soft disc, a rainbow ring and a
@@ -279,7 +279,8 @@
       // each tested against the hills, whose height is known, and against the turbines
       // (`world.raycast`). The share that reaches the sun dims the flare, so a blade crossing it
       // flickers it. The hills stand still: their answer is kept until the eye or the sun moves;
-      // the blades turn, so they are asked every frame.
+      // the blades turn, so they are asked again as soon as the last answer has landed, and the
+      // frames take the share of the last batch.
       const SAMPLES = Array.from({ length: 16 }, (_, k) => {
         const angle = k * 2.39996, reach = Math.sqrt((k + 0.5) / 16) * 0.0105;
         return { a: Math.cos(angle) * reach, b: Math.sin(angle) * reach, direction: math.vector3(), behindHill: false };
@@ -293,7 +294,7 @@
       };
       const UP = math.vector3(0, 1, 0), side = math.vector3(), lift = math.vector3();
       const hillsEye = math.vector3(Infinity, 0, 0), hillsSun = math.vector3();
-      const ray = math.ray(math.vector3(), math.vector3(0, 0, -1));
+      let share = 1, asking = false;
       const sunShows = (eye) => {
         if (!eye.equals(hillsEye) || !sunDir.equals(hillsSun)) {
           hillsEye.copy(eye);
@@ -305,14 +306,16 @@
             sample.behindHill = hillsBlock(eye, sample.direction);
           }
         }
-        let clear = 0;
-        ray.origin.copy(eye);
-        for (const { direction, behindHill } of SAMPLES) {
-          if (behindHill) continue;
-          ray.direction.copy(direction);
-          if (!world.raycast(ray, { objects: occluders })) clear++;
+        // One batch of rays in flight: the blades have turned on by the time it lands, which the
+        // smoothing of the flare below hides.
+        if (!asking) {
+          asking = true;
+          const rays = SAMPLES.filter((sample) => !sample.behindHill).map((sample) => math.ray(eye.clone(), sample.direction.clone()));
+          Promise.all(rays.map((ray) => world.raycast(ray, { objects: occluders })))
+            .then((hits) => (share = hits.filter((hit) => !hit).length / SAMPLES.length))
+            .finally(() => (asking = false));
         }
-        return clear / SAMPLES.length;
+        return share;
       };
 
       // The settings: the flare on or off, the lens it comes from, its strength and the sun's
@@ -326,7 +329,6 @@
           }
           world.invalidate();
         },
-        world,
       );
       const counter = readout('sunShowing');
 

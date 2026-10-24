@@ -213,7 +213,7 @@
           for (const run of runs) run.ink.color.copy(inkFor(values.colour, run.kind, run.layer, run.speed));
         if (key === 'travel') for (const run of runs) if (run.kind === 'TRAVEL') showRun(run, run.end <= reached);
         world.invalidate();
-      }, world);
+      });
       const shownAt = readout('layer');
       readout('filament')(`${(program.filament / 1000).toFixed(2)} m`);
       const shownTime = readout('printTime');

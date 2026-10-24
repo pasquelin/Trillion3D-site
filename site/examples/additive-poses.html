@@ -56,7 +56,7 @@
       const sky = math.color('#8fb4d8');
       world.scene.background = sky;
       // A stage that takes his shadow, its rim lost in a fog of the sky's colour.
-      world.scene.fog = { color: sky, near: 6, far: 13 };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: sky.toArray(), near: 6, far: 13 } };
       world.effects.add(effect.bloom({ intensity: 0.06 }));
       const stage = object.mesh(
         geometry.cylinder(8, 8, 0.1, 96),

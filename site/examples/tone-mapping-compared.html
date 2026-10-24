@@ -128,13 +128,28 @@
       world.controls.enablePan = false;
 
       // The curve and the exposure belong to the world: they act on the finished image's light,
-      // after every light and material, so the same scene is shown six ways.
+      // after every light and material, so the same scene is shown four ways. The engine has two
+      // curves, `'none'`, which shows the light as it is, and `'filmic'`. The filmic one has a film
+      // curve of its own (`world.colorGrading`: slope, toe, shoulder, white clip) and a second
+      // method, the standard output transform. A choice writes the settings it uses and gives the
+      // others back with `null`, so the choice before leaves nothing behind.
+      const FILM = { tonemappingMethod: null, filmSlope: null, filmToe: null, filmShoulder: null, filmBlackClip: null, filmWhiteClip: null };
+      const CURVES = {
+        filmic: { toneMapping: 'filmic', film: {} },
+        none: { toneMapping: 'none', film: {} },
+        standardAces: { toneMapping: 'filmic', film: { tonemappingMethod: 'standardAces' } },
+        anotherFilm: { toneMapping: 'filmic', film: { filmSlope: 0.91, filmToe: 0.53, filmShoulder: 0.23, filmWhiteClip: 0.035 } },
+      };
       controls({
-        toneMapping: ['aces', 'agx', 'neutral', 'reinhard', 'cineon', 'linear'],
+        toneMapping: Object.keys(CURVES),
         exposure: [0.2, 4, 1],
         lamps: true,
       }, (values, key) => {
-        if (key === undefined || key === 'toneMapping') world.toneMapping = values.toneMapping;
+        if (key === undefined || key === 'toneMapping') {
+          const curve = CURVES[values.toneMapping];
+          world.toneMapping = curve.toneMapping;
+          world.colorGrading = { ...FILM, ...curve.film };
+        }
         if (key === undefined || key === 'exposure') world.exposure = values.exposure;
         if (key !== 'lamps') return;
         bulb.emissiveIntensity = values.lamps ? BULB : 0;

@@ -56,7 +56,7 @@
       world.exposure = 1;
       const dusk = math.color('#17130f');
       world.scene.background = dusk;
-      world.scene.fog = { color: dusk, near: 6, far: 12 };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: dusk.toArray(), near: 6, far: 12 } };
 
       // A gallery: a polished stone floor, a warm plaster wall, three dark plinths a pace apart.
       const floor = object.mesh(
@@ -200,7 +200,6 @@
           // The panel's first call comes before its readouts exist: `show(ui)` below draws the start.
           if (key !== undefined) show(values);
         },
-        world,
       );
       const stored = readout('stored');
       const decoded = readout('decoded');

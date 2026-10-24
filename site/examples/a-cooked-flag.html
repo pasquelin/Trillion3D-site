@@ -42,7 +42,7 @@
       world.scene.background = math.color('#a4cbec');
       // The fog is light, exposed and tone-mapped like a surface, the background is not: this is
       // the radiance the display curve shows as #a4cbec.
-      world.scene.fog = { color: math.color([0.194, 0.557, 1.466]), density: 0.008, heightFalloff: 0.3, baseHeight: 0 };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: [0.194, 0.557, 1.466], density: 0.008, heightFalloff: 0.3, baseHeight: 0 } };
       const MODEL = '../assets/examples/flag/cache/native/full/manifest.json';
       let model = await world.scene.load(MODEL),
         reloading = false;

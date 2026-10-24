@@ -82,14 +82,16 @@
       // The glow: one bloom pass in the world's effect chain. It works on the image's light before
       // tone mapping, and spreads it without adding any: the lamps give their neighbours some of
       // their own. Taking it out of the chain leaves the image exactly as it was without it.
+      // Its radius is a factor on the width of its blurs, `sizeScale`, from the engine's own.
       const glow = effect.bloom({ intensity: 0.08 });
+      const width = glow.sizeScale;
       controls(
         { glow: true, intensity: [0, 0.3, 0.08], radius: [0.5, 3, 1] },
         (values) => {
           if (values.glow && !world.effects.size) world.effects.add(glow);
           if (!values.glow) world.effects.remove(glow);
           glow.intensity = values.intensity;
-          glow.radius = values.radius;
+          glow.sizeScale = width * values.radius;
         },
       );
     </script>

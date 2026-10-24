@@ -23,14 +23,14 @@
     <canvas id="view"></canvas>
     <script type="module">
       import { buffer, createWorld, effect, geometry, light, material, math, object } from '../runtime/engine.js';
-      import { controls, language, pointerRay, readout, words } from '../runtime/kit.js';
+      import { controls, language, latestOnly, pointerRay, readout, words } from '../runtime/kit.js';
 
       const say = words();
       const world = createWorld('view', { controls: 'orbit' });
       world.exposure = 1;
       const night = math.color('#0b0d14');
       world.scene.background = night;
-      world.scene.fog = { color: night, near: 18, far: 40 };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: night.toArray(), near: 18, far: 40 } };
       world.camera.position.set(0.6, 8.6, 12.4);
       world.camera.lookAt(0, 0.8, 0);
       world.controls.target.set(0, 0.8, 0);
@@ -223,17 +223,21 @@
         light.directional({ intensity: 1.6, color: '#dfe8ff', position: [3, 10, 4], castShadow: true }),
         light.hemisphere({ intensity: 0.35, color: '#6f86c8', groundColor: '#120c08' }),
       );
-      world.effects.add(effect.bloom({ intensity: 0.1, radius: 0.8 }));
+      world.effects.add(effect.bloom({ intensity: 0.1 }));
 
-      // ---- Holding a handle. `world.raycast` among the handles finds the one under the pointer;
-      // it then follows the pointer on a plane through it — level, or upright and facing the
-      // camera while Shift is held — where the camera's ray meets the plane.
+      // ---- Holding a handle. `world.raycast` among the handles finds, a frame or so later, the one
+      // under the pointer; it then follows the pointer on a plane through it — level, or upright
+      // and facing the camera while Shift is held — where the camera's ray meets the plane.
       const plane = math.plane(), up = math.vector3(0, 1, 0), facing = math.vector3(), meet = math.vector3();
       let held = null, hovered = null, shift = false, travel = 0;
+      // The presses still down, by pointer.
+      const pressed = new Set();
       const meshes = () => handles.map((h) => h.mesh);
-      const handleAt = (event) => {
-        const hit = world.raycast({ x: event.offsetX, y: event.offsetY }, { objects: meshes() });
-        return hit ? handles.find((h) => h.mesh === hit.object) : null;
+      // The handle under a canvas point, read from the list as it stands when the ray lands: one
+      // taken away meanwhile is not found.
+      const handleAt = async ({ offsetX: x, offsetY: y }) => {
+        const hit = await world.raycast({ x, y }, { objects: meshes() });
+        return hit ? handles.find((h) => h.mesh === hit.object) ?? null : null;
       };
       function planeThrough(point) {
         if (shift) {
@@ -268,11 +272,13 @@
         world.canvas.style.cursor = handle ? 'grab' : '';
         world.invalidate();
       };
-      world.canvas.addEventListener('pointerdown', (event) => {
+      world.canvas.addEventListener('pointerdown', async (event) => {
         demo = null;
         if (event.button !== 0 || held) return;
-        const handle = handleAt(event);
-        if (!handle) return;
+        pressed.add(event.pointerId);
+        const handle = await handleAt(event);
+        // The ray lands a frame later: a press released meanwhile, or a hold begun, grabs nothing.
+        if (!handle || held || !pressed.has(event.pointerId)) return;
         held = { handle, pointerId: event.pointerId, event };
         hover(handle);
         planeThrough(handle.mesh.position);
@@ -280,9 +286,15 @@
         world.controls.enabled = false;
         world.canvas.setPointerCapture(event.pointerId);
       });
+      // One hover ray in flight; an answer that lands once the pointer left, pressed or grabbed
+      // lights nothing.
+      let over = false;
+      const aimHover = latestOnly(handleAt, (handle) => !held && over && hover(handle));
       world.canvas.addEventListener('pointermove', (event) => {
         if (!held) {
-          if (!event.buttons) hover(handleAt(event));
+          // No hover while a button orbits the view.
+          over = !event.buttons;
+          if (over) aimHover({ offsetX: event.offsetX, offsetY: event.offsetY });
           return;
         }
         if (event.pointerId !== held.pointerId) return;
@@ -291,6 +303,7 @@
         world.invalidate();
       });
       const release = (event) => {
+        pressed.delete(event.pointerId);
         if (!held || event.pointerId !== held.pointerId) return;
         const { pointerId } = held;
         held = null;
@@ -299,6 +312,10 @@
         if (world.canvas.hasPointerCapture(pointerId)) world.canvas.releasePointerCapture(pointerId);
         world.invalidate();
       };
+      world.canvas.addEventListener('pointerleave', () => {
+        over = false;
+        if (!held) hover(null);
+      });
       world.canvas.addEventListener('pointerup', release);
       world.canvas.addEventListener('pointercancel', release);
       world.canvas.addEventListener('lostpointercapture', release);
@@ -312,8 +329,8 @@
 
       // A double click on a handle takes it away (four stay at least); on the floor, it adds one
       // there, put into the span of the curve that passes nearest, at the height of that span.
-      world.canvas.addEventListener('dblclick', (event) => {
-        const handle = handleAt(event);
+      world.canvas.addEventListener('dblclick', async (event) => {
+        const handle = await handleAt(event);
         if (handle) {
           if (handles.length <= 4) return;
           handles.splice(handles.indexOf(handle), 1);
@@ -352,7 +369,7 @@
       }, (values, key) => {
         if (key) dirty = true;
         world.invalidate();
-      }, world);
+      });
       const shownHandles = readout('handles'), shownLength = readout('length'), shownTriangles = readout('triangles');
 
       // Until the viewer's first press, the page edits the curve itself: one handle rises and

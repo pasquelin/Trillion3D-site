@@ -37,7 +37,7 @@
       world.exposure = 1;
       const sky = math.color('#bfe0ee');
       world.scene.background = sky;
-      world.scene.fog = { color: sky, near: 25, far: 70 };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: sky.toArray(), near: 25, far: 70 } };
 
       // One body for the whole herd: a ball with two morph targets, squashed flat on landing and
       // stretched tall in the air. Each target moves a point by a formula, so any point of the

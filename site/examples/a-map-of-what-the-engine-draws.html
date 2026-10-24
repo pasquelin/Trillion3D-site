@@ -84,7 +84,6 @@
       <canvas id="marks"></canvas>
       <ul>
         <li><span data-words="fine"></span><i class="ramp"></i><span data-words="coarse"></span></li>
-        <li><i style="background: #9ca3af"></i><span data-words="occluded"></span></li>
         <li><i style="background: #000; border-color: #fff"></i><span data-words="missing"></span></li>
         <li><i style="background: #f97316"></i><span data-words="pageDrawn"></span></li>
         <li><i style="border-color: #fbbf24"></i><span data-words="pageCached"></span></li>
@@ -143,7 +142,7 @@
         const order = [...level.keys()].sort((a, b) => level[b] - level[a]);
         for (const k of order) {
           const [x0, z0] = at(bounds[6 * k], bounds[6 * k + 2]), [x1, z1] = at(bounds[6 * k + 3], bounds[6 * k + 5]);
-          const colour = state[k] === CLUSTER_STATE.occluded ? '#9ca3af' : state[k] === CLUSTER_STATE.missing ? '#000000' : LEVELS[Math.min(level[k], LEVELS.length - 1)];
+          const colour = state[k] === CLUSTER_STATE.missing ? '#000000' : LEVELS[Math.min(level[k], LEVELS.length - 1)];
           pen.fillStyle = fill(colour, state[k] === CLUSTER_STATE.missing ? 0.8 : 0.16);
           pen.strokeStyle = fill(colour, 0.7);
           pen.fillRect(x0, z0, Math.max(x1 - x0, 1), Math.max(z1 - z0, 1));
@@ -250,10 +249,11 @@
       }
 
       function report({ clusters, shadows, reflections }) {
-        const by = [0, 0, 0];
+        const by = [0, 0];
         for (const state of clusters.state) by[state]++;
         shown.count(String(clusters.count));
-        shown.occluded(String(by[CLUSTER_STATE.occluded]));
+        // What the previous image's depth hid is a count, not a list: no cluster carries it.
+        shown.occluded(String(clusters.occluded));
         shown.missing(String(by[CLUSTER_STATE.missing]));
         const drawn = shadows.reduce((sum, map) => sum + map.renderedCount, 0), mapped = shadows.reduce((sum, map) => sum + map.mappedCount, 0);
         shown.pages(`${drawn} / ${mapped}`);
@@ -280,7 +280,6 @@
           world.invalidate();
           draw();
         },
-        world,
       );
 
       // Below the panel, what the last inspection counted.

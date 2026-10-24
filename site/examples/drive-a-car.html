@@ -43,7 +43,7 @@
       // A light haze: the far side of the valley pales a little toward the sky. The fog is light, exposed
       // and tone-mapped like a surface, the background is not: this is the radiance the display
       // curve shows as #a4cbec.
-      world.scene.fog = { color: math.color([0.194, 0.557, 1.466]), near: 90, far: 400 };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: [0.194, 0.557, 1.466], near: 90, far: 400 } };
       world.camera.far = 400;
       await world.scene.load('../assets/examples/terrain/cache/native/full/manifest.json');
 

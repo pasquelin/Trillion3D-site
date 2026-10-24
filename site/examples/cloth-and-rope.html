@@ -106,7 +106,7 @@
       const sun = light.directional({ intensity: 3.4, color: '#ffe0b8', castShadow: true });
       sun.position.set(8, 9, 7);
       world.scene.add(sun, light.hemisphere({ intensity: 1.1, color: '#cfe2ff', groundColor: '#5f6b48' }));
-      world.scene.fog = { color: sky, near: 14, far: 30 };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: sky.toArray(), near: 14, far: 30 } };
       world.camera.position.set(2, 2.3, 9.6);
       world.controls.target.set(0.5, 2.9, 0);
 

@@ -37,7 +37,7 @@
       world.exposure = 1;
       const haze = math.color('#dcc9b4');
       world.scene.background = haze;
-      world.scene.fog = { color: haze, near: 18, far: 75 };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: haze.toArray(), near: 18, far: 75 } };
 
       // The horse faces +x. Its skeleton is named nodes the clip moves; each piece of it —
       // barrel, neck, head, thighs, cannons, tail — is a smooth shape lofted ring by ring and

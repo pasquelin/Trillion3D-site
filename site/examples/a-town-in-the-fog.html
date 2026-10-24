@@ -58,8 +58,8 @@
       world.camera.lookAt(0, 3, 0);
       world.controls.target.set(0, 3, 0);
 
-      // A linear display curve keeps the fog's colour the sky's, so the far houses melt into it.
-      world.toneMapping = 'linear';
+      // No display curve (`'none'`) keeps the fog's colour the sky's, so the far houses melt into it.
+      world.toneMapping = 'none';
       const colour = math.color();
       controls({
         fog: ['distance', 'thick', 'ground'],
@@ -72,10 +72,14 @@
         // Distance fog fades from 10 m to `reach`; thick fog absorbs the same share every metre;
         // ground fog is thick at the street and thins out with height, `height` per metre.
         const density = 3 / values.reach;
-        world.scene.fog =
-          values.fog === 'distance' ? { color: colour, near: 10, far: values.reach }
-          : values.fog === 'thick' ? { color: colour, density }
-          : { color: colour, density: density * 2, heightFalloff: values.height, baseHeight: 0 };
+        const tint = colour.toArray();
+        world.scene.sky = {
+          atmosphere: false, sun: false, skyLight: false, clouds: false,
+          heightFog:
+            values.fog === 'distance' ? { color: tint, near: 10, far: values.reach }
+            : values.fog === 'thick' ? { color: tint, density }
+            : { color: tint, density: density * 2, heightFalloff: values.height, baseHeight: 0 },
+        };
       });
     </script>
   </body>

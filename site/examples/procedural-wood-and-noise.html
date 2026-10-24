@@ -363,7 +363,7 @@
         if (key === undefined) bake(values);
         else if (key === 'wood' || key === 'rings' || key === 'figure') bake(values, onTable);
         world.invalidate();
-      }, world);
+      });
       const texels = readout('texels'), time = readout('bakeTime');
 
       world.onFrame(({ delta }) => {

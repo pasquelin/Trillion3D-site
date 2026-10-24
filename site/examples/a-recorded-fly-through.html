@@ -30,7 +30,7 @@
       // is light, exposed and tone-mapped like a surface, the background is not: this is the
       // radiance the display curve shows as #f0b27a.
       world.scene.background = math.color('#f0b27a');
-      world.scene.fog = { color: math.color([1.141, 0.331, 0.125]), near: 30, far: 140 };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: [1.141, 0.331, 0.125], near: 30, far: 140 } };
       const paint = (color, roughness = 0.8) => material.meshStandard({ color, roughness });
       const grass = paint('#5d8c3a', 0.95),
         stone = paint('#c4b89d', 0.9);

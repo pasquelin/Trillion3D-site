@@ -31,7 +31,7 @@
       // with distance and near the ground, so the far end of the site fades into it.
       const sky = math.color('#d8c8b0');
       world.scene.background = sky;
-      world.scene.fog = { color: sky, density: 0.02, heightFalloff: 0.25, baseHeight: 0 };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: sky.toArray(), density: 0.02, heightFalloff: 0.25, baseHeight: 0 } };
       const yellow = material.meshStandard({ color: '#e5a928', roughness: 0.55, metalness: 0.25 });
       const steel = material.meshStandard({ color: '#343b45', roughness: 0.4, metalness: 0.75 });
       const concrete = material.meshStandard({ color: '#9b958b', roughness: 0.9 });

@@ -35,9 +35,9 @@
       const world = createWorld('view', { controls: 'orbit' });
       world.exposure = 1;
       // The fog's colour is light, tone-mapped with the scene, while the sky behind is shown as
-      // set: a linear display curve leaves both as they are, so the far fog meets the sky
+      // set: no display curve (`'none'`) leaves both as they are, so the far fog meets the sky
       // without a seam.
-      world.toneMapping = 'linear';
+      world.toneMapping = 'none';
 
       // A valley at dawn: a U-shaped floor along z between ridges, and noise for the hills on it.
       const noise = valueNoise({ math });
@@ -207,11 +207,14 @@
         (values) => {
           colour.set(values.colour);
           world.scene.background = colour;
-          world.scene.fog = {
-            color: colour,
-            density: values.density,
-            heightFalloff: values.height,
-            baseHeight: values.base,
+          world.scene.sky = {
+            atmosphere: false, sun: false, skyLight: false, clouds: false,
+            heightFog: {
+              color: colour.toArray(),
+              density: values.density,
+              heightFalloff: values.height,
+              baseHeight: values.base,
+            },
           };
           world.invalidate();
         },

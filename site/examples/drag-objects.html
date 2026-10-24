@@ -23,14 +23,14 @@
     <canvas id="view"></canvas>
     <script type="module">
       import { buffer, createWorld, effect, geometry, light, material, math, object, texture, wrap } from '../runtime/engine.js';
-      import { controls, ease, language, pointerRay, readout, words } from '../runtime/kit.js';
+      import { controls, ease, language, latestOnly, pointerRay, readout, words } from '../runtime/kit.js';
 
       const say = words();
       const world = createWorld('view', { controls: 'orbit' });
       world.exposure = 1;
       const sky = math.color('#1a1e27');
       world.scene.background = sky;
-      world.scene.fog = { color: sky, near: 16, far: 34 };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: sky.toArray(), near: 16, far: 34 } };
       world.camera.position.set(0.8, 5.2, 7.6);
       world.camera.lookAt(0, 0.4, 0);
       world.controls.target.set(0, 0.4, 0);
@@ -114,10 +114,11 @@
       );
       world.effects.add(effect.bloom({ intensity: 0.05 }));
 
-      // ---- Holding a piece. `world.raycast` finds the piece under the pointer and the point
-      // where the pointer touched it; the piece then follows the pointer on a plane through that
-      // point — level (the floor's) or upright and facing the camera (a wall's) — so the point
-      // stays under the pointer: the camera's ray meets the plane (`Ray.distanceToPlane`).
+      // ---- Holding a piece. `world.raycast` finds, a frame or so later, the piece under the
+      // pointer and the point where the pointer touched it; the piece then follows the pointer on
+      // a plane through that point — level (the floor's) or upright and facing the camera (a
+      // wall's) — so the point stays under the pointer: the camera's ray meets the plane
+      // (`Ray.distanceToPlane`).
       const meshes = pieces.map((piece) => piece.mesh);
       const plane = math.plane();
       const up = math.vector3(0, 1, 0), facing = math.vector3(), meet = math.vector3();
@@ -132,9 +133,13 @@
           plane.setFromNormalAndCoplanarPoint(facing, point);
         } else plane.setFromNormalAndCoplanarPoint(up, point);
       }
-      function grab(event) {
-        const hit = world.raycast({ x: event.offsetX, y: event.offsetY }, { objects: meshes });
-        if (!hit) return false;
+      const cast = ({ offsetX: x, offsetY: y }) => world.raycast({ x, y }, { objects: meshes });
+      // The presses still down, by pointer.
+      const pressed = new Set();
+      async function grab(event) {
+        const hit = await cast(event);
+        // The ray lands a frame later: a press released meanwhile, or a hold begun, grabs nothing.
+        if (!hit || held || !pressed.has(event.pointerId)) return false;
         const piece = pieces.find((p) => p.mesh === hit.object);
         held = { piece, pointerId: event.pointerId, grip: hit.point.clone(), offset: piece.mesh.position.clone().sub(hit.point), target: piece.mesh.position.clone(), event };
         planeThrough(held.grip);
@@ -179,10 +184,17 @@
         piece?.look.emissive.set('#3a2a10');
         hovered = piece;
         world.canvas.style.cursor = piece ? 'grab' : '';
+        world.invalidate();
       };
-      world.canvas.addEventListener('pointerdown', (event) => {
+      // One hover ray in flight; an answer that lands once the pointer left, pressed or grabbed
+      // lights nothing.
+      let over = false;
+      const aimHover = latestOnly(cast, (hit) => !held && over && hover(pieces.find((p) => p.mesh === hit?.object) ?? null));
+      world.canvas.addEventListener('pointerdown', async (event) => {
         if (demo) endDemo();
-        if (event.button !== 0 || held || !grab(event)) return;
+        if (event.button !== 0 || held) return;
+        pressed.add(event.pointerId);
+        if (!(await grab(event))) return;
         hover(held.piece);
         world.canvas.style.cursor = 'grabbing';
         world.controls.enabled = false;
@@ -191,7 +203,9 @@
       });
       world.canvas.addEventListener('pointermove', (event) => {
         if (!held) {
-          if (!event.buttons) hover(pieces.find((p) => p.mesh === world.raycast({ x: event.offsetX, y: event.offsetY }, { objects: meshes })?.object) ?? null);
+          // No hover while a button orbits the view.
+          over = !event.buttons;
+          if (over) aimHover({ offsetX: event.offsetX, offsetY: event.offsetY });
           return;
         }
         if (event.pointerId !== held.pointerId) return;
@@ -200,6 +214,7 @@
         world.invalidate();
       });
       const release = (event) => {
+        pressed.delete(event.pointerId);
         if (!held || event.pointerId !== held.pointerId) return;
         const { pointerId } = held;
         held = null;
@@ -211,7 +226,10 @@
       world.canvas.addEventListener('pointerup', release);
       world.canvas.addEventListener('pointercancel', release);
       world.canvas.addEventListener('lostpointercapture', release);
-      world.canvas.addEventListener('pointerleave', () => held || hover(null));
+      world.canvas.addEventListener('pointerleave', () => {
+        over = false;
+        if (!held) hover(null);
+      });
       // Shift swaps the plane while held: the grip point stays, the plane turns about it.
       const swap = (event) => {
         if (event.key !== 'Shift' || shift === (event.type === 'keydown')) return;
@@ -233,7 +251,7 @@
           for (const piece of pieces) piece.mesh.position.set(piece.at[0], piece.h, piece.at[1]);
           world.invalidate();
         },
-      }, world);
+      });
       const shownHeld = readout('held'), shownPlane = readout('surface'), shownHeight = readout('height');
 
       // ---- Each frame: the held piece springs toward its target and leans with its speed, as a

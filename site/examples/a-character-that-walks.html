@@ -76,7 +76,7 @@
       stage.castShadow = false;
       world.scene.add(stage);
       const reach = columns * 2.7 + 3;
-      world.scene.fog = { color: sky, near: reach, far: reach + radius };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: sky.toArray(), near: reach, far: reach + radius } };
       world.effects.add(effect.bloom({ intensity: 0.06 }));
       const actions = [];
       for (let i = 0; i < count; i++) {

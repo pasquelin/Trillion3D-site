@@ -27,7 +27,7 @@
       world.exposure = 1;
       const sky = math.color('#1e2735');
       world.scene.background = sky;
-      world.scene.fog = { color: sky, near: 7, far: 16 };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: sky.toArray(), near: 7, far: 16 } };
       world.scene.add(
         light.directional({ intensity: 3, color: '#fff1dc', position: [3, 6, 4], castShadow: true }),
         light.hemisphere({ intensity: 1, color: '#cfe0ff', groundColor: '#4a3e34' }),
@@ -65,7 +65,6 @@
           gizmo.setSpace(axes);
           gizmo.snap = snap ? { translate: 0.5, rotate: Math.PI / 12, scale: 0.25 } : {};
         },
-        world,
       );
 
       const pose = readout('position'), turns = readout('drags');

@@ -90,7 +90,7 @@
       // screen towards the viewer. Built twice, once in each eye's world.
       function hall(world) {
         world.scene.background = math.color('#07080b');
-        world.scene.fog = { color: math.color('#07080b'), near: 22, far: 60 };
+        world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: math.color('#07080b').toArray(), near: 22, far: 60 } };
         const add = (shape, paint, x = 0, y = 0, z = 0, parent = world.scene) => {
           const mesh = object.mesh(shape, paint);
           mesh.position.set(x, y, z);
@@ -180,7 +180,7 @@
       }, (values) => {
         document.body.dataset.glasses = values.glasses;
         world.invalidate();
-      }, world);
+      });
       const parallax = readout('screenDistance');
 
       // The opening: the camera glides in down the middle of the hall and lands 13 m from the

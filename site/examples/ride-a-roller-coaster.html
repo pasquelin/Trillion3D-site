@@ -32,7 +32,7 @@
       // the plain beyond. The fog's colour is light, exposed and tone-mapped like a surface's,
       // while the background is shown as written: this radiance is the one the display curve
       // shows as the sky's #f3c28c, so the horizon has no seam.
-      world.scene.fog = { color: math.color([1.354, 0.435, 0.158]), near: 120, far: 900 };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: [1.354, 0.435, 0.158], near: 120, far: 900 } };
       world.camera.far = 1500;
       const random = seeded(23);
 

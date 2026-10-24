@@ -30,14 +30,14 @@
       world.camera.far = 2000;
 
       // A storm: one dark grey for the sky and the air, thick near the water where the spray
-      // hangs, thinner above it. A linear display curve keeps the fog's colour the sky's.
+      // hangs, thinner above it. No display curve (`'none'`) keeps the fog's colour the sky's.
       const STORM = math.color('#34414e'), FLASH = STORM.clone().lerp(math.color('#8d99ab'), 0.7);
       const air = (colour) => {
         world.scene.background = colour;
-        world.scene.fog = { color: colour, density: 0.007, heightFalloff: 0.04, baseHeight: 0 };
+        world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: colour.toArray(), density: 0.007, heightFalloff: 0.04, baseHeight: 0 } };
       };
       air(STORM);
-      world.toneMapping = 'linear';
+      world.toneMapping = 'none';
 
       // One grid laid flat at the water's rest level, its rows fine around the ship and wider
       // toward the horizon (each step a share of its distance), so the near waves keep their

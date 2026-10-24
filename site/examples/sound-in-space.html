@@ -34,7 +34,7 @@
       world.exposure = 1;
       const night = math.color('#070a14');
       world.scene.background = night;
-      world.scene.fog = { color: night, density: 0.035, heightFalloff: 0.25 };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: night.toArray(), density: 0.035, heightFalloff: 0.25 } };
       world.camera.far = 900;
 
       // The ground, the stone circle and the stars.
@@ -295,7 +295,6 @@
           moving: true,
         },
         applySettings,
-        world,
       );
       // The first press on the scene turns the sound on too.
       world.canvas.addEventListener('pointerdown', () => {

@@ -33,7 +33,7 @@
       world.exposure = 1;
       const sky = math.color('#bcd3e6');
       world.scene.background = sky;
-      world.scene.fog = { color: sky, near: 18, far: 45 };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: sky.toArray(), near: 18, far: 45 } };
       world.camera.far = 200;
       world.camera.position.set(0, world.controls.eyeHeight, 9);
       world.camera.lookAt(0, 1, 0);

@@ -30,11 +30,11 @@
       world.camera.far = 2000;
 
       // A low sun under a clear sky: one pale haze for the sky and the air, so the far sea melts into it at the
-      // horizon. A linear display curve keeps the fog's colour the sky's.
+      // horizon. No display curve (`'none'`) keeps the fog's colour the sky's.
       const haze = math.color('#a9c4dc');
       world.scene.background = haze;
-      world.scene.fog = { color: haze, density: 0.002 };
-      world.toneMapping = 'linear';
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: haze.toArray(), density: 0.002 } };
+      world.toneMapping = 'none';
 
       // One grid laid flat at the water's rest level, its rows fine around the boats and wider
       // toward the horizon (each step a share of its distance), so the near waves keep their

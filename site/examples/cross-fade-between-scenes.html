@@ -59,7 +59,7 @@
       function desert(world) {
         const scene = world.scene, random = seeded(3);
         scene.background = math.color('#f2b77e');
-        scene.fog = { color: math.color('#f2b77e'), near: 25, far: 95 };
+        scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: math.color('#f2b77e').toArray(), near: 25, far: 95 } };
         const sand = material.meshStandard({ color: '#e9b77a', roughness: 1, metalness: 0 });
         const rock = material.meshStandard({ color: '#b8583a', roughness: 0.85, flatShading: true });
         add(scene, geometry.cylinder(120, 120, 0.2, 64), sand, 0, -0.1, 0);
@@ -90,7 +90,7 @@
       function glacier(world) {
         const scene = world.scene, random = seeded(11);
         scene.background = math.color('#08101f');
-        scene.fog = { color: math.color('#08101f'), near: 30, far: 110 };
+        scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: math.color('#08101f').toArray(), near: 30, far: 110 } };
         const snow = material.meshStandard({ color: '#dfe9f5', roughness: 1, metalness: 0 });
         const ice = material.meshStandard({ color: '#9fd4f0', roughness: 0.08, metalness: 0.1, flatShading: true });
         const glowIce = material.meshStandard({ color: '#000000', emissive: '#58e0ff', emissiveIntensity: 2.5, flatShading: true });
@@ -182,7 +182,7 @@
         hold: [1, 8, 2.5, 0.5],
         autoplay: true,
         switchScene: go,
-      }, () => first.invalidate(), first);
+      }, () => first.invalidate());
       const shown = readout('showing'), drawing = readout('worldsDrawing');
       function mix() {
         const t = math.clamp((clock - state.began) / state.sweep, 0, 1);

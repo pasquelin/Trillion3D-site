@@ -22,7 +22,7 @@
     <canvas id="view"></canvas>
     <script type="module">
       import { createWorld, geometry, material, object, light, texture, effect, math } from '../runtime/engine.js';
-      import { controls, readout, seeded } from '../runtime/kit.js';
+      import { controls, latestOnly, readout, seeded } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
       world.exposure = 1;
@@ -99,17 +99,19 @@
       world.controls.maxDistance = 10;
 
       // From a hit to a pixel. The ray names the triangle it met (`face`, its rank in the index
-      // list) and the world point; carried back into the vase's own frame, the point's
-      // barycentric weights in that triangle blend its three corners' texture coordinates. The
-      // same corners give how many world units one unit of u and of v spans there, so a dab is
-      // drawn as an ellipse that lands round on the surface, narrow at the belly, wide at the foot.
+      // list) and the world point; carried back into the vase's own frame (`toLocal`, the vase's
+      // inverse world matrix when the ray was cast: the wheel turns on while the answer comes),
+      // the point's barycentric weights in that triangle blend its three corners' texture
+      // coordinates. The same corners give how many world units one unit of u and of v spans
+      // there, so a dab is drawn as an ellipse that lands round on the surface, narrow at the
+      // belly, wide at the foot.
       const corners = shape.index.array, position = shape.attributes.position.array, uvs = shape.attributes.uv.array;
       const at = (i) => [position[3 * i], position[3 * i + 1], position[3 * i + 2]];
       const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
       const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
       const len = (a) => Math.sqrt(dot(a, a));
-      function surfaceAt(hit) {
-        const p = vase.worldToLocal(hit.point.clone()).toArray();
+      function surfaceAt(hit, toLocal) {
+        const p = hit.point.clone().applyMatrix4(toLocal).toArray();
         const [i0, i1, i2] = [corners[3 * hit.face], corners[3 * hit.face + 1], corners[3 * hit.face + 2]];
         const [p0, p1, p2] = [at(i0), at(i1), at(i2)];
         const e1 = sub(p1, p0), e2 = sub(p2, p0), ep = sub(p, p0);
@@ -169,18 +171,28 @@
         clay.needsUpdate = true;
         world.invalidate();
       };
-      // The ray from a canvas point, cast at the vase alone, so the wheel never takes paint.
-      const castAt = (x, y) => world.raycast({ x, y }, { objects: [vase] });
-      // Paint with one brush at a canvas point: a ray, a triangle, a texel.
-      function paintAt(brush, x, y, colour, size) {
-        paintHit(brush, castAt(x, y), colour, size);
+      // The ray from a canvas point, cast at the vase alone, so the wheel never takes paint. It
+      // answers a frame or so later: the hit comes with the vase's frame as it stood when the ray
+      // was cast.
+      const castAt = (x, y) => {
+        vase.updateWorldMatrix(true, false);
+        const toLocal = vase.matrixWorld.clone().invert();
+        return world.raycast({ x, y }, { objects: [vase] }).then((hit) => hit && { hit, toLocal });
+      };
+      // Paint with one brush at canvas points: a ray, a triangle, a texel each. The rays are cast
+      // together and their paint laid in order, so a stroke joins its dabs as it was drawn.
+      function paintAt(brush, points, colour, size) {
+        return Promise.all(points.map(([x, y]) => castAt(x, y))).then((cast) => {
+          for (const found of cast) paintHit(brush, found, colour, size);
+        });
       }
-      function paintHit(brush, hit, colour, size) {
-        if (!hit) {
+      function paintHit(brush, found, colour, size) {
+        if (!found) {
           brush.last = null;
           return;
         }
-        const s = surfaceAt(hit);
+        const { hit } = found;
+        const s = surfaceAt(hit, found.toLocal);
         stroke(brush, s, colour, size);
         triangle(`${hit.face + 1}`);
         where(`${s.u.toFixed(3)}, ${s.v.toFixed(3)}`);
@@ -203,35 +215,41 @@
       // While held, the brush keeps painting each frame: on a turning wheel a still brush lays a
       // band all the way round, as a potter bands a pot.
       const hand = { down: false, x: 0, y: 0, last: null, id: -1 };
-      world.canvas.addEventListener('pointerdown', (event) => {
+      // The presses still down, by pointer.
+      const pressed = new Set();
+      world.canvas.addEventListener('pointerdown', async (event) => {
         if (event.button !== 0) return;
-        const hit = castAt(event.offsetX, event.offsetY);
-        if (!hit) return;
+        pressed.add(event.pointerId);
+        const found = await castAt(event.offsetX, event.offsetY);
+        // The ray lands a frame later: a press released meanwhile, or a brush already down, paints nothing.
+        if (!found || hand.down || !pressed.has(event.pointerId)) return;
         Object.assign(hand, { down: true, x: event.offsetX, y: event.offsetY, last: null, id: event.pointerId });
         opening.done = true;
         world.controls.enabled = false;
         world.canvas.setPointerCapture(event.pointerId);
-        paintHit(hand, hit, ui.colour, ui.brush);
+        world.canvas.style.cursor = 'crosshair';
+        paintHit(hand, found, ui.colour, ui.brush);
         dabs(String(++painted));
       });
-      // The cursor shows whether a press would paint: one ray per frame at most, however many
-      // pointer events arrive.
-      let hovered = null;
-      const aimCursor = () => {
-        world.canvas.style.cursor = hand.down || castAt(hovered.offsetX, hovered.offsetY) ? 'crosshair' : '';
-        hovered = null;
-      };
+      // The cursor shows whether a press would paint: one ray in flight, however many pointer
+      // events arrive; an answer that lands once a brush is down changes nothing.
+      const aimCursor = latestOnly(
+        ([x, y]) => castAt(x, y),
+        (found) => hand.down || (world.canvas.style.cursor = found ? 'crosshair' : ''),
+      );
       world.canvas.addEventListener('pointermove', (event) => {
-        if (!hovered) requestAnimationFrame(aimCursor);
-        hovered = event;
+        if (!hand.down) aimCursor([event.offsetX, event.offsetY]);
         if (!hand.down || event.pointerId !== hand.id) return;
         // Between two pointer events, a ray every few pixels: a quick flick stays one stroke.
         const steps = Math.max(1, Math.ceil(Math.hypot(event.offsetX - hand.x, event.offsetY - hand.y) / 4));
+        const points = [];
         for (let k = 1; k <= steps; k++)
-          paintAt(hand, hand.x + ((event.offsetX - hand.x) * k) / steps, hand.y + ((event.offsetY - hand.y) * k) / steps, ui.colour, ui.brush);
+          points.push([hand.x + ((event.offsetX - hand.x) * k) / steps, hand.y + ((event.offsetY - hand.y) * k) / steps]);
+        paintAt(hand, points, ui.colour, ui.brush);
         Object.assign(hand, { x: event.offsetX, y: event.offsetY });
       });
       const release = (event) => {
+        pressed.delete(event.pointerId);
         if (!hand.down || event.pointerId !== hand.id) return;
         hand.down = false;
         world.controls.enabled = true;
@@ -249,7 +267,7 @@
           dabs('0');
           dirty();
         },
-      }, () => world.invalidate(), world);
+      }, () => world.invalidate());
       const triangle = readout('triangle'), where = readout('uv'), dabs = readout('strokes');
       dabs('0');
 
@@ -262,14 +280,14 @@
           if (opening.turned > Math.PI * 2.1) opening.done = true;
           for (const brush of brushes) {
             const [fx, fy] = brush.at(opening.time);
-            paintAt(brush, fx * box.clientWidth, fy * box.clientHeight, brush.colour, brush.size);
+            paintAt(brush, [[fx * box.clientWidth, fy * box.clientHeight]], brush.colour, brush.size);
           }
         }
         // The wheel runs fast through the opening, then at the reader's speed.
         const speed = opening.done ? ui.wheel : 2.2;
         wheel.rotation.y += step * speed;
         if (!opening.done) opening.turned += step * speed;
-        if (hand.down) paintAt(hand, hand.x, hand.y, ui.colour, ui.brush);
+        if (hand.down) paintAt(hand, [[hand.x, hand.y]], ui.colour, ui.brush);
         if (speed || !opening.done || hand.down) world.invalidate();
       });
       world.invalidate();

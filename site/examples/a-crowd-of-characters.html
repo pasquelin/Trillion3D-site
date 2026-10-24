@@ -77,7 +77,7 @@
       stage.castShadow = false;
       world.scene.add(stage);
       const reach = columns * 2.5 + 3;
-      world.scene.fog = { color: sky, near: reach, far: reach + radius };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: sky.toArray(), near: reach, far: reach + radius } };
       world.effects.add(effect.bloom({ intensity: 0.05 }));
       // Every character is asked for at once rather than one after the other: their downloads and
       // reads overlap instead of queueing.

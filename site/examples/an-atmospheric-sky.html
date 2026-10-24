@@ -201,7 +201,7 @@
       const disc = object.mesh(geometry.sphere(5, 32, 16), material.meshStandard({ color: '#000000', roughness: 1, emissive: '#ffffff' }));
       disc.castShadow = disc.receiveShadow = false;
       world.scene.add(dome, disc);
-      world.effects.add(effect.bloom({ intensity: 0.05, radius: 1.2 }));
+      world.effects.add(effect.bloom({ intensity: 0.05 }));
 
       // The stars: points on a far sphere, a pixel or two wide, turning once a day about the
       // celestial pole, 45° up in the north. Their light is fixed, added to the sky's: they show
@@ -322,7 +322,6 @@
           moved = true;
           world.invalidate();
         },
-        world,
       );
       const clock = readout('clock'), sunUp = readout('sunHeight'), throughAir = readout('sunThroughAir');
 
