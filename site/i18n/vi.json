@@ -654,9 +654,6 @@
     "frustumExcludesBox": {
       "description": "Hộp đó so với khối nhìn: cái thứ nhất là đúng khi một mặt phẳng để cả tám góc lại phía sau. Cái thứ hai trả về ba trạng thái — 0 ở ngoài, 1 giao nhau, 2 hoàn toàn ở trong — qua hai bước, bước đầu chỉ loại bỏ, bước thứ hai đọc góc lùi xa nhất để phân biệt \"giao nhau\" với \"ở trong\". Một cây con hoàn toàn ở trong sẽ tiết kiệm được một phép kiểm tra cho mỗi hộp bên dưới nó."
     },
-    "boxConeRejects": {
-      "description": "Việc loại bỏ một hộp cục bộ bởi hình nón pháp tuyến của nó, nhìn từ một điểm trong thế giới: hộp đó được thay bằng hình cầu của nó, trục hình nón được mang bởi ma trận pháp tuyến và chuẩn hóa, kết quả được lấy trên tích vô hướng đã giới hạn, góc của hình nón và độ trải phối cảnh của hình cầu. Một phép biến đổi mang tính bảo giác khi các cột của nó dài bằng nhau trong khoảng `CONE_LENGTH_RATIO` và vuông góc trong khoảng `CONE_ORTHO_EPS`; một hình nón có góc ≥ `HALF_PI` không bao giờ loại bỏ, và một tham số mà phép kiểm tra từ chối cũng không loại bỏ gì cả."
-    },
     "createTransformTree": {
       "description": "Cây phân cấp biến đổi của bộ máy, theo hướng dữ liệu: một node là một chỉ số vào các mảng phẳng — cha, cờ trạng thái, vị trí, quaternion `(x, y, z, w)`, tỉ lệ, ma trận cục bộ, ma trận thế giới. `localViews[i]` và `worldViews[i]` là các view mười sáu con số được tạo ra khi cây phát triển và không bao giờ trong lúc cập nhật: GPU đọc toàn bộ bộ đệm, một nhân đọc view của một node. Một node mới chính là đối tượng mới của mốc tham chiếu: vị trí không, góc xoay đơn vị, tỉ lệ 1, ma trận đơn vị, cập nhật tự động. Một lần phát triển thay thế mọi mảng, nên người gọi hàm phải đọc lại `tree.world` hoặc `tree.worldViews` sau một lần thêm vào."
     },

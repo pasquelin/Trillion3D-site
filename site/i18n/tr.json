@@ -1077,9 +1077,6 @@
     "frustumExcludesBox": {
       "description": "Kutu frustum'a karşı: birincisi, bir düzlem sekiz köşenin tümünü arkasında bıraktığında doğrudur. İkincisi üç durum döndürür — 0 dışarıda, 1 üzerinde, 2 tamamen içeride — iki geçişte, birincisi yalnızca eler, ikincisi \"üzerinde\"yi \"içeride\"den ayırmak için en geride kalan köşeyi okur. Tamamen içeride olan bir alt ağaç, altındaki her kutu için bir testten tasarruf sağlar."
     },
-    "boxConeRejects": {
-      "description": "Bir dünya noktasından görüldüğünde, yerel bir kutunun normal konisi tarafından elenmesi: kutu küresiyle değiştirilir, koni ekseni normal matris tarafından taşınır ve normalize edilir, karar, sınırlanmış nokta çarpımından, koni açısından ve kürenin perspektif açılımından çıkarılır. Sütunları `CONE_LENGTH_RATIO` içinde aynı uzunlukta ve `CONE_ORTHO_EPS` içinde ortogonal olduğunda bir dönüşüm konformdur; `HALF_PI`'ye eşit ya da büyük açılı bir koni asla elemez, ve testin reddettiği bir parametre de elemez."
-    },
     "createTransformTree": {
       "description": "Motorun veri odaklı dönüşüm hiyerarşisi: bir düğüm, doğrusal dizilerdeki bir indekstir — ebeveyn, bayraklar, pozisyon, kuaterniyon `(x, y, z, w)`, ölçek, yerel matris, dünya matrisi. `localViews[i]` ve `worldViews[i]`, büyümede oluşturulan ve asla bir güncelleme sırasında oluşturulmayan on altı sayılık görünümlerdir: GPU tüm tamponu okur, bir çekirdek bir düğümün görünümünü okur. Yeni bir düğüm, referansın yeni nesnesidir: sıfır pozisyon, birim döndürme, ölçek 1, birim matrisler, otomatik güncelleme. Bir büyüme her diziyi değiştirir, bu yüzden bir çağıran, bir ekleme sonrasında `tree.world` ya da `tree.worldViews`'i yeniden okur."
     },

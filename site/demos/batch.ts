@@ -49,7 +49,7 @@ export const BATCH_DEMOS: Record<string, DemoDef> = {
         frame = createCameraFrame(),
         projection = new Float64Array(16)
       perspectiveProjection(projection, state.fov, 16 / 9, 0.1, 1)
-      updateCameraFrame(frame, projection, IDENTITY_MATRIX4, 100)
+      updateCameraFrame(frame, projection, IDENTITY_MATRIX4)
       const visible = frustumKeepsBoxBatch(kept, frame.planes, boxes, count)
       sphereFromBoundsBatch(spheres, boxes, count)
       let m = 0

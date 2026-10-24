@@ -1077,9 +1077,6 @@
     "frustumExcludesBox": {
       "description": "Il box contro il frustum: il primo è vero quando un piano lascia tutti e otto gli angoli dietro. Il secondo restituisce tre stati — 0 fuori, 1 a cavallo, 2 interamente dentro — in due passaggi, il primo che respinge soltanto, il secondo che legge l'angolo più arretrato per distinguere «a cavallo» da «dentro». Un sottoalbero interamente dentro fa risparmiare un test per ogni box sottostante."
     },
-    "boxConeRejects": {
-      "description": "Rifiuto di un box locale dal suo cono di normali, visto da un punto del mondo: il box viene sostituito dalla sua sfera, l'asse del cono viene portato dalla matrice delle normali e normalizzato, il verdetto viene preso sul prodotto scalare limitato, l'angolo del cono e la dispersione in prospettiva della sfera. Una trasformazione è conforme quando le sue colonne hanno la stessa lunghezza con un margine di `CONE_LENGTH_RATIO` e sono ortogonali con un margine di `CONE_ORTHO_EPS`; un cono di angolo ≥ `HALF_PI` non rifiuta mai, e un parametro che il test rifiuta non rifiuta nemmeno."
-    },
     "createTransformTree": {
       "description": "La gerarchia di trasformazioni del motore, orientata ai dati: un nodo è un indice in array piatti — genitore, flag, posizione, quaternione `(x, y, z, w)`, scala, matrice locale, matrice del mondo. `localViews[i]` e `worldViews[i]` sono viste di sedici numeri create alla crescita e mai durante un aggiornamento: la GPU legge l'intero buffer, un kernel legge la vista di un nodo. Un nuovo nodo è l'oggetto nuovo del riferimento: posizione nulla, rotazione identità, scala 1, matrici identità, aggiornamento automatico. Una crescita sostituisce ogni array, così un chiamante rilegge `tree.world` o `tree.worldViews` dopo un'aggiunta."
     },

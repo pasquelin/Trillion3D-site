@@ -654,9 +654,6 @@
     "frustumExcludesBox": {
       "description": "Kotak terhadap frustum: yang pertama benar saat sebuah bidang meninggalkan kedelapan sudutnya di belakang. Yang kedua mengembalikan tiga keadaan — 0 di luar, 1 mengangkang, 2 sepenuhnya di dalam — dalam dua tahap, yang pertama hanya menolak, yang kedua membaca sudut paling belakang untuk membedakan \"mengangkang\" dari \"di dalam\". Sebuah subtree yang sepenuhnya di dalam menghemat sebuah uji pada tiap kotak di bawahnya."
     },
-    "boxConeRejects": {
-      "description": "Penolakan sebuah kotak lokal oleh kerucut normalnya, dilihat dari sebuah titik dunia: kotaknya digantikan bolanya, sumbu kerucutnya dibawa matriks normal dan dinormalisasi, keputusannya diambil pada hasil kali titik yang dijepit, sudut kerucut dan sebaran perspektif bolanya. Sebuah transform bersifat conformal saat kolom-kolomnya sepanjang yang sama dalam `CONE_LENGTH_RATIO` dan tegak lurus dalam `CONE_ORTHO_EPS`; sebuah kerucut bersudut ≥ `HALF_PI` tidak pernah menolak, dan sebuah parameter yang ditolak ujinya juga tidak menolak."
-    },
     "createTransformTree": {
       "description": "Hierarki transform mesin, berbasis data: sebuah node adalah sebuah indeks ke dalam larik-larik datar — parent, flags, position, quaternion `(x, y, z, w)`, scale, matriks lokal, matriks dunia. `localViews[i]` dan `worldViews[i]` adalah view enam belas angka dibuat saat pertumbuhan dan tidak pernah saat pembaruan: GPU membaca seluruh buffernya, sebuah kernel membaca view sebuah node. Sebuah node baru adalah objek baru acuannya: posisi nol, rotasi identitas, skala 1, matriks identitas, pembaruan otomatis. Sebuah pertumbuhan menggantikan tiap larik, jadi seorang pemanggil membaca ulang `tree.world` atau `tree.worldViews` setelah sebuah penambahan."
     },

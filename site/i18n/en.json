@@ -1077,9 +1077,6 @@
     "frustumExcludesBox": {
       "description": "The box against the frustum: the first is true when a plane leaves all eight corners behind. The second returns three states — 0 outside, 1 straddling, 2 entirely inside — in two passes, the first only rejecting, the second reading the most trailing corner to tell \"straddling\" from \"inside\". A subtree entirely inside saves a test on every box underneath it."
     },
-    "boxConeRejects": {
-      "description": "Rejection of a local box by its normal cone, seen from a world point: the box is replaced by its sphere, the cone axis carried by the normal matrix and normalised, the verdict taken on the clamped dot product, the cone angle and the sphere's perspective spread. A transform is conformal when its columns have the same length within `CONE_LENGTH_RATIO` and are orthogonal within `CONE_ORTHO_EPS`; a cone of angle ≥ `HALF_PI` never rejects, and a parameter the test refuses does not reject either."
-    },
     "createTransformTree": {
       "description": "The engine transform hierarchy, data-oriented: a node is an index into flat arrays — parent, flags, position, quaternion `(x, y, z, w)`, scale, local matrix, world matrix. `localViews[i]` and `worldViews[i]` are sixteen-number views created at growth and never during an update: the GPU reads the whole buffer, a kernel reads a node's view. A fresh node is the reference's fresh object: zero position, identity rotation, scale 1, identity matrices, automatic update. A growth replaces every array, so a caller re-reads `tree.world` or `tree.worldViews` after an add."
     },

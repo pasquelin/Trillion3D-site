@@ -2,7 +2,7 @@ import { HALF_PI, QUARTER_PI, TAU } from '#engine/packages/math/src/constants.ts
 import { clamp } from '#engine/packages/math/src/scalar/reals.ts'
 import { length2, length3 } from '#engine/packages/math/src/vector/vector.ts'
 import { geometry } from '#engine/packages/sdk-core/src/world/geometry/index.ts'
-import type { HlodGroup, HlodOptions } from '#engine/packages/sdk-core/src/contracts/hlodOptions.ts'
+import type { HlodOptions } from '#engine/packages/sdk-core/src/contracts/hlodOptions.ts'
 import { SceneGltf, turn, yaw, type Channel } from './gltf-scene.ts'
 import { icosphere, box, sleeve } from './solids.ts'
 import { fromGeometry, lathe, merge, moved, solid, type Mesh } from './mesh.ts'
@@ -917,13 +917,10 @@ const spin = (axis: Vec3, phase: number, turns: number, step: number) =>
 
 /** The district's HLOD, through the compiler's `hlod` option (`resolveHlod`): four levels — HLOD 0
  *  the objects themselves, three merged levels above it, each baking the normal, roughness,
- *  metallic, specular and emissive images beside the base colour. Its objects are marked where
- *  `writeDistrict` makes them (`extras.hlod`): the street, the lake, the shore, the blocks, the
- *  towers and the large structures `buildings`; the trees, the street's and the card trees,
- *  `foliage`; the lamps, the cars, the shelter and the flagpoles `props`. The cables and the
- *  lakeside fence carry no mark, and the option names no `default`: they enter the default group,
- *  `buildings`, as the blocks do. What moves — the driving cars, the tram, the wheel, the rotors,
- *  the flags, the lift — is never placed in a cell, so it enters no HLOD. */
+ *  metallic, specular and emissive images beside the base colour. No object carries a mark: every
+ *  placed object enters the first layer, `hlod0`, the option naming no `default`. What moves — the
+ *  driving cars, the tram, the wheel, the rotors, the flags, the lift — is never placed in a cell,
+ *  so it enters no HLOD. */
 export const DISTRICT_HLOD: HlodOptions = { levels: 4 }
 
 /** Writes `district.gltf`, `district.bin` and the textures into `directory`. */
@@ -935,26 +932,18 @@ export async function writeDistrict(directory: string) {
     // its first stream gives.
     bench = randomStream(1527),
     motion: Channel[] = []
-  // Each mesh's HLOD group, marked where it is made: every node placing it carries the mark.
-  const groups = new Map<number, HlodGroup>()
-  const marked = (hlod: HlodGroup, mesh: number) => (groups.set(mesh, hlod), mesh)
   const place = (mesh: number, x: number, y: number, z: number, angle = 0, name?: string) => {
-    const hlod = groups.get(mesh)
     return gltf.node(
       {
         ...(name ? { name } : {}),
         mesh,
         translation: [x, y, z],
         ...(angle ? { rotation: yaw(angle) } : {}),
-        ...(hlod ? { extras: { hlod } } : {}),
       },
       true,
     )
   }
-  gltf.node(
-    { name: 'street', mesh: gltf.mesh('street', street(look)), extras: { hlod: 'buildings' } },
-    true,
-  )
+  gltf.node({ name: 'street', mesh: gltf.mesh('street', street(look)) }, true)
   // Eight blocks of flats, placed again and again: low near the camera, taller down the street.
   const blocks = Array.from({ length: 8 }, (_, k) => {
     const width = 18 + (k % 4) * 4,
@@ -966,18 +955,12 @@ export async function writeDistrict(directory: string) {
       depth,
       floors,
       facade,
-      mesh: marked(
-        'buildings',
-        gltf.mesh(`block ${k}`, block(look, random, width, depth, floors, facade)),
-      ),
+      mesh: gltf.mesh(`block ${k}`, block(look, random, width, depth, floors, facade)),
     }
   })
   const towers = [30, 36, 42].map((width, k) => ({
     width,
-    mesh: marked(
-      'buildings',
-      gltf.mesh(`tower ${k}`, tower(look, width, 40 + k * 15, { antenna: true })),
-    ),
+    mesh: gltf.mesh(`tower ${k}`, tower(look, width, 40 + k * 15, { antenna: true })),
   }))
   // The landmarks: a plot of the street, by side and rank, holds a block of its own in place of
   // the model the stream picked, of its size: a unique bake among the repeated ones.
@@ -998,12 +981,9 @@ export async function writeDistrict(directory: string) {
       const [x, at] = [side * (KERB + 3 + pick.depth / 2), z - pick.width / 2]
       const { width, depth, floors, facade } = pick
       const mesh = landmark
-        ? marked(
-            'buildings',
-            gltf.mesh(
-              landmark.name,
-              block(look, bench, width, depth, floors, facade, landmark.features),
-            ),
+        ? gltf.mesh(
+            landmark.name,
+            block(look, bench, width, depth, floors, facade, landmark.features),
           )
         : pick.mesh
       place(mesh, x, 0, at, HALF_PI)
@@ -1015,10 +995,7 @@ export async function writeDistrict(directory: string) {
       // The third tower on the right wears glossy fins: a unique tower among the repeated ones.
       const mesh =
         side > 0 && plot === 2
-          ? marked(
-              'buildings',
-              gltf.mesh('finned tower', tower(look, pick.width, 52, { antenna: true, fins: true })),
-            )
+          ? gltf.mesh('finned tower', tower(look, pick.width, 52, { antenna: true, fins: true }))
           : pick.mesh
       place(mesh, side * (KERB + 6 + pick.width / 2), 0, z - pick.width / 2)
       z -= pick.width + random.uniform(15, 40)
@@ -1034,10 +1011,7 @@ export async function writeDistrict(directory: string) {
     place(pick.mesh, x, -0.3, z)
     shore.push([x, z, pick.width / 2])
   }
-  const chart = marked(
-    'buildings',
-    gltf.mesh('test chart', tower(look, CHART_WIDTH, CHART_FLOORS, { chart: true })),
-  )
+  const chart = gltf.mesh('test chart', tower(look, CHART_WIDTH, CHART_FLOORS, { chart: true }))
   place(chart, 0, -0.3, CHART_Z, 0, 'test chart')
   // The skyline: rows of the same towers behind the street's, and two more beyond the far shore
   // up to the wind farm, so repeated models fill the far field.
@@ -1056,7 +1030,6 @@ export async function writeDistrict(directory: string) {
     {
       name: 'lake',
       mesh: gltf.mesh('lake', [[cuboid([0, -0.4, -2080], [900, 0.2, 560]), look.water]]),
-      extras: { hlod: 'buildings' },
     },
     true,
   )
@@ -1064,28 +1037,25 @@ export async function writeDistrict(directory: string) {
     {
       name: 'far shore',
       mesh: gltf.mesh('far shore', [[cuboid([0, -0.35, -2500], [900, 0.3, 280]), look.grass]]),
-      extras: { hlod: 'buildings' },
     },
     true,
   )
   // The street furniture: lamps every thirty metres, trees between, a shelter near the camera.
-  const lamps = marked('props', gltf.mesh('lamp', lamp(look))),
-    trees = [0, 1, 2].map((k) =>
-      marked('foliage', gltf.mesh(`tree ${k}`, tree(look, look.leaves[k % 2], 40 + k))),
-    )
+  const lamps = gltf.mesh('lamp', lamp(look)),
+    trees = [0, 1, 2].map((k) => gltf.mesh(`tree ${k}`, tree(look, look.leaves[k % 2], 40 + k)))
   for (const side of [-1, 1])
     for (let z = 0; z > END; z -= 30) {
       place(lamps, side * (ROAD + 0.8), 0.12, z, side > 0 ? 0 : Math.PI)
       place(trees[random.integer(3)], side * (ROAD + 3), 0.12, z - 15, random.uniform(0, TAU))
     }
-  place(marked('props', gltf.mesh('shelter', shelter(look))), ROAD + 3.2, 0.12, -22)
+  place(gltf.mesh('shelter', shelter(look)), ROAD + 3.2, 0.12, -22)
   // A cable across the street from lamp to lamp every sixty metres: thin, near and far.
   const span = gltf.mesh('cable span', [
     [cable([-ROAD + 0.1, 6.9, 0], [ROAD - 0.1, 6.9, 0], 0.6), look.cable],
   ])
   for (let z = -60; z > END; z -= 60) place(span, 0, 0, z)
   // Trees of leaf cards: in each courtyard, along the lakefront, on the far shore.
-  const cardTree = marked('foliage', gltf.mesh('card tree', tree(look, look.leafCards, 44, true)))
+  const cardTree = gltf.mesh('card tree', tree(look, look.leafCards, 44, true))
   for (const [x, z] of courtyards) place(cardTree, x, 0, z, bench.uniform(0, TAU))
   for (const side of [-1, 1])
     for (let x = 70; x < 390; x += 12) place(cardTree, side * x, 0, -1790, bench.uniform(0, TAU))
@@ -1102,7 +1072,7 @@ export async function writeDistrict(directory: string) {
   // Cars: parked along the kerbs, and in both lanes, nose down the street or back up it. A car
   // in an inner lane drives — down the street, or up it past the camera — at one speed, and
   // comes round again from the other end out of sight.
-  const cars = look.paints.map((paint, k) => marked('props', gltf.mesh(`car ${k}`, car(look, paint))))
+  const cars = look.paints.map((paint, k) => gltf.mesh(`car ${k}`, car(look, paint)))
   for (let z = 5, k = 0; z > END + 20; z -= random.uniform(8, 40), k++) {
     const lane = [-ROAD + 1.2, -ROAD / 2 + 0.5, ROAD / 2 - 0.5, ROAD - 1.2][random.integer(4)]
     const driving = Math.abs(lane) < ROAD / 2,
@@ -1125,7 +1095,7 @@ export async function writeDistrict(directory: string) {
     DECK = 9,
     TRAM_Z = -1830,
     SCHEDULE = [0, 10, 50, 70, 110, PERIOD]
-  place(marked('buildings', gltf.mesh('viaduct', viaduct(look, VIADUCT, DECK))), 0, 0, TRAM_Z)
+  place(gltf.mesh('viaduct', viaduct(look, VIADUCT, DECK)), 0, 0, TRAM_Z)
   const carriage = gltf.mesh(
     'tram carriage',
     car(look, look.paints[1], { length: 20, width: 2.6, cabin: 18.4, tall: 1.9 }),
@@ -1144,7 +1114,7 @@ export async function writeDistrict(directory: string) {
   // it hangs.
   const wheel = ferrisWheel(look, 28, 32, 12),
     [wheelX, wheelZ] = [-200, -1900]
-  place(marked('buildings', gltf.mesh('wheel stand', wheel.stand)), wheelX, 0, wheelZ)
+  place(gltf.mesh('wheel stand', wheel.stand), wheelX, 0, wheelZ)
   const cabinMesh = gltf.mesh('wheel cabin', wheel.cabin),
     cabins = Array.from({ length: 12 }, (_, k) =>
       gltf.node({ name: `wheel cabin ${k}`, mesh: cabinMesh, translation: wheel.pivot(k) }),
@@ -1162,7 +1132,7 @@ export async function writeDistrict(directory: string) {
   for (const node of cabins) motion.push({ node, path: 'rotation', ...spin(Z, 0, 1, 10) })
   // Wind turbines on the far shore, twenty turns a clip, each rotor from an angle of its own.
   const turbines = turbine(look, 90, 38),
-    mast = marked('buildings', gltf.mesh('turbine', turbines.mast)),
+    mast = gltf.mesh('turbine', turbines.mast),
     rotor = gltf.mesh('turbine rotor', turbines.rotor)
   for (const [k, [x, z]] of [
     [200, -2520],
@@ -1189,7 +1159,7 @@ export async function writeDistrict(directory: string) {
   // wave every two seconds — bent by morph weights, the one motion no bake may hold still.
   const { cloth, targets } = flag(),
     flagMesh = gltf.morph('flag', cloth, look.signs, targets),
-    pole = marked('props', gltf.mesh('flagpole', [[flagpole(), look.metal]])),
+    pole = gltf.mesh('flagpole', [[flagpole(), look.metal]]),
     roof = CHART_FLOORS * 3.6 - 0.3
   const flags = [
     ...[-4, -8, -12].map((z) => ({ at: [-ROAD - 4.5, 0.12, z], angle: HALF_PI })),

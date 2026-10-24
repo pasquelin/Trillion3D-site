@@ -5,10 +5,9 @@ import {
   boxTransform,
   boxUnion,
   composeMatrix4,
-  RAD2DEG,
   sphereFromBounds,
 } from './engine.ts'
-import { formatNumber, slider, valueView, verdictView } from './kit.ts'
+import { formatNumber, slider, valueView } from './kit.ts'
 import type { DemoDef } from './kit.ts'
 
 export const BOX_DEMOS: Record<string, DemoDef> = {

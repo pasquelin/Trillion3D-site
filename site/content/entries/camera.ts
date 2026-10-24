@@ -19,8 +19,8 @@ perspectiveProjection(projection, 50, canvas.width / canvas.height, 0.1, 1);`,
     id: 'updateCameraFrame',
     replaces: 'Frustum.setFromProjectionMatrix',
     proof: 'bench Frustum.setFromProjectionMatrix (×1.6 on the side planes)',
-    example: `updateCameraFrame(frame, projection, world, 2000);
-// frame.viewProjection feeds the GPU, frame.planes the culling`,
+    example: `updateCameraFrame(frame, projection, world);
+// frame.viewProjection feeds the GPU, frame.planes the culling: no far plane, distance alone never culls`,
   },
   {
     id: 'worldToRenderOrigin',

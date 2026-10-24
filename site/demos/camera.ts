@@ -72,7 +72,7 @@ export const CAMERA_DEMOS: Record<string, DemoDef> = {
   updateCameraFrame: {
     controls: [
       slider('turn', 'camera heading (rad)', -1.5, 1.5, 0.3, 0.01),
-      slider('far', 'declared far plane', 5, 500, 100, 1),
+      slider('ahead', 'distance of the far box (m)', 5, 5000, 1000, 5),
     ],
     run(state) {
       const projection = scratch(),
@@ -80,9 +80,9 @@ export const CAMERA_DEMOS: Record<string, DemoDef> = {
       perspectiveProjection(projection, 50, 1.6, 0.1, 1)
       composeMatrix4(world, [0, 0, 0], turnAboutY(state.turn), [1, 1, 1])
       const frame = createCameraFrame()
-      updateCameraFrame(frame, projection, world, state.far)
+      updateCameraFrame(frame, projection, world)
       const near: Box6 = [-0.5, -0.5, -3, 0.5, 0.5, -2]
-      const beyond: Box6 = [-0.5, -0.5, -state.far - 20, 0.5, 0.5, -state.far - 10]
+      const beyond: Box6 = [-0.5, -0.5, -state.ahead - 10, 0.5, 0.5, -state.ahead]
       return [
         matrixView('frame.view — the inverse of the camera world matrix', frame.view),
         valueView('the six planes it rewrote', [
@@ -90,11 +90,11 @@ export const CAMERA_DEMOS: Record<string, DemoDef> = {
           ['far', Array.from(frame.planes.subarray(20, 24), formatNumber).join(', ')],
         ]),
         verdictView(
-          'a box beyond the declared far plane',
+          'a box far ahead',
           !frustumExcludesBox(frame.planes, ...beyond),
           frustumExcludesBox(frame.planes, ...beyond)
-            ? 'rejected — the projection has no far plane, the frustum keeps the one the host declared'
-            : 'kept',
+            ? 'rejected'
+            : 'kept — the frustum has no far plane: distance alone never culls',
         ),
         verdictView(
           'a box three metres ahead',

@@ -28,8 +28,9 @@ export function bindInput(session: Session, actions: SceneActions, canvas: HTMLC
     const from = pressed
     pressed = null
     if (!from || length2(event.offsetX - from.x, event.offsetY - from.y) > CLICK_SLOP) return
-    const hit = session.world.raycast({ x: event.offsetX, y: event.offsetY })
-    session.select(hit?.object ?? null)
+    void session.world
+      .raycast({ x: event.offsetX, y: event.offsetY })
+      .then((hit) => session.select(hit?.object ?? null))
   }
   const key = (event: KeyboardEvent) => {
     // A shortcut mid-drag would edit under the drag, whose undo step began before it.

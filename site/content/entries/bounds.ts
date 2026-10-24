@@ -27,7 +27,4 @@ export const BOUNDS: EntryNote[] = [
     id: 'frustumExcludesBox',
     replaces: 'Frustum.intersectsBox',
   },
-  {
-    id: 'boxConeRejects',
-  },
 ]

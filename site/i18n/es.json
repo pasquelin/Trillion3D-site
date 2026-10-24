@@ -1077,9 +1077,6 @@
     "frustumExcludesBox": {
       "description": "La caja contra el frustum: la primera es verdadera cuando un plano deja las ocho esquinas detrás. La segunda devuelve tres estados — 0 fuera, 1 a caballo, 2 totalmente dentro — en dos pasadas, la primera solo rechazando, la segunda leyendo la esquina más trasera para distinguir «a caballo» de «dentro». Un subárbol totalmente dentro ahorra una prueba para cada caja debajo de él."
     },
-    "boxConeRejects": {
-      "description": "Rechazo de una caja local por su cono de normales, visto desde un punto del mundo: la caja se reemplaza por su esfera, el eje del cono lo lleva la matriz de normales y se normaliza, el veredicto se toma sobre el producto escalar acotado, el ángulo del cono y la dispersión en perspectiva de la esfera. Una transformación es conforme cuando sus columnas tienen la misma longitud con un margen de `CONE_LENGTH_RATIO` y son ortogonales con un margen de `CONE_ORTHO_EPS`; un cono de ángulo ≥ `HALF_PI` nunca rechaza, y un parámetro que la prueba rechaza tampoco rechaza."
-    },
     "createTransformTree": {
       "description": "La jerarquía de transformaciones del motor, orientada a datos: un nodo es un índice en arrays planos — padre, banderas, posición, cuaternión `(x, y, z, w)`, escala, matriz local, matriz del mundo. `localViews[i]` y `worldViews[i]` son vistas de dieciséis números creadas al crecer y nunca durante una actualización: la GPU lee todo el búfer, un núcleo lee la vista de un nodo. Un nodo nuevo es el objeto nuevo de la referencia: posición nula, rotación identidad, escala 1, matrices identidad, actualización automática. Un crecimiento reemplaza cada array, así que un llamador vuelve a leer `tree.world` o `tree.worldViews` tras una adición."
     },

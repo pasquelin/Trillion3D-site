@@ -42,7 +42,7 @@ function frustumOf(state: DemoState) {
   composeMatrix4(world, [0, 0, 0], turnAboutY(state.turn), [1, 1, 1])
   perspectiveProjection(projection, state.fov, ASPECT, 0.1, 1)
   const frame = createCameraFrame()
-  updateCameraFrame(frame, projection, world, 100)
+  updateCameraFrame(frame, projection, world)
   multiplyMatrix4(clip, projection, frame.view)
   return { clip, planes: frame.planes }
 }

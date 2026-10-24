@@ -1077,9 +1077,6 @@
     "frustumExcludesBox": {
       "description": "Die Box gegen den Sichtkegel: die erste ist wahr, wenn eine Ebene alle acht Ecken hinter sich lässt. Die zweite gibt drei Zustände zurück — 0 außerhalb, 1 überlappend, 2 vollständig innen — in zwei Durchgängen, der erste verwirft nur, der zweite liest die am weitesten hinten liegende Ecke, um „überlappend“ von „innen“ zu unterscheiden. Ein Teilbaum, der vollständig innen liegt, spart einen Test für jede Box darunter."
     },
-    "boxConeRejects": {
-      "description": "Ablehnung einer lokalen Box durch ihren Normalenkegel, gesehen von einem Weltpunkt: die Box wird durch ihre Kugel ersetzt, die Kegelachse von der Normalenmatrix getragen und normalisiert, das Urteil auf dem geklemmten Skalarprodukt, dem Kegelwinkel und der perspektivischen Streuung der Kugel gefällt. Eine Transformation ist konform, wenn ihre Spalten innerhalb von `CONE_LENGTH_RATIO` dieselbe Länge haben und innerhalb von `CONE_ORTHO_EPS` orthogonal sind; ein Kegel mit Winkel ≥ `HALF_PI` lehnt nie ab, und ein Parameter, den der Test ablehnt, lehnt auch nicht ab."
-    },
     "createTransformTree": {
       "description": "Die Transformationshierarchie der Engine, datenorientiert: ein Knoten ist ein Index in flache Arrays — Elternteil, Flags, Position, Quaternion `(x, y, z, w)`, Skalierung, lokale Matrix, Weltmatrix. `localViews[i]` und `worldViews[i]` sind Sichten aus sechzehn Zahlen, erstellt beim Wachstum und nie während eines Updates: die GPU liest den ganzen Puffer, ein Kernel liest die Sicht eines Knotens. Ein frischer Knoten ist das frische Objekt der Referenz: Position null, Identitätsrotation, Skalierung 1, Identitätsmatrizen, automatisches Update. Ein Wachstum ersetzt jedes Array, sodass ein Aufrufer `tree.world` oder `tree.worldViews` nach einem Hinzufügen erneut liest."
     },

@@ -8,20 +8,19 @@ import { randomStream, snap } from './random.ts'
 import { box } from './solids.ts'
 
 /**
- * `particles-responsive`: four swarms of small glowing sparks whirling over a dark floor, side by
+ * `particles-responsive`: three swarms of small glowing sparks whirling over a dark floor, side by
  * side, the same motion in each, so the trail each leaves behind it can be compared. The sparks are
- * blended (`SPARK_OPACITY`), as sparks are drawn: each keeps a share of its temporal anti-aliasing
- * history of its own (the material's `temporalAntialiasing`) over the floor it crosses, left to
- * right 1, 0.75, 0.5 and 0, each in three colours that name it three ways:
- * - 1, `still …`: `still pattern` no option names; `still listed` set `responsive: false` by
+ * blended (`SPARK_OPACITY`), as sparks are drawn: each material's temporal responsiveness (its
+ * `responsive` level) says how far the temporal anti-aliasing trusts the history on its pixels,
+ * left to right `'off'`, `'medium'` and `'full'`, each in three colours that name it three ways:
+ * - `'off'`, `still …`: `still pattern` no option names; `still listed` set `responsive: false` by
  *   `materials`; `still extras` asking `responsive` in its extras, which `materials` sets false;
- * - 0.75, a responsive history, `spark …`: `spark pattern` the compile option `responsive` matches
+ * - `'medium'`, `soft …`: `soft named` `materials` sets `responsive: 'medium'`; `soft extras` its
+ *   own glTF `extras` ask for (`"responsive": "medium"`); `soft over extras` asking `true` in its
+ *   extras, which `materials` sets `'medium'`;
+ * - `'full'`, `spark …`: `spark pattern` the compile option `responsive` matches
  *   (`SPARKS_RESPONSIVE`); `spark listed` `materials` sets `responsive: true`; `spark extras` its
- *   own glTF `extras` ask for (`"responsive": true`);
- * - 0.5, `soft …`: `materials` names `'soft'` for `soft named` and `0.5` for `soft number`;
- *   `soft extras` names `0.5` in its own extras;
- * - 0, the current image alone, `off …`: `materials` names `'off'` for `off named` and `0` for
- *   `off number`; `off extras` names `'off'` in its own extras.
+ *   own glTF `extras` ask for (`"responsive": true`).
  */
 const PER_COLOUR = 30,
   /** Seconds of one turn, the clip's length: fast, so the sparks cross many pixels an image. */
@@ -29,7 +28,7 @@ const PER_COLOUR = 30,
   /** Keys over one turn. */
   KEYS = 24,
   /** Where each swarm turns, left to right. */
-  CENTRES = [-12, -4, 4, 12] as const,
+  CENTRES = [-8, 0, 8] as const,
   /** The side of a spark, metres. */
   SPARK = 0.08,
   /** A spark's coverage: blended over what lies behind it, not opaque. */
@@ -39,24 +38,28 @@ const PER_COLOUR = 30,
  *  wears them. */
 export const SPARKS_RESPONSIVE: ResponsiveOption = { material: /^spark pattern$/ }
 
-/** The settings by name: the history share by name or by number, `responsive` on or off — off
- *  against a material's own extras. */
+/** The settings by name: `responsive` a level or on and off — a level or off against a
+ *  material's own extras. */
 export const SPARKS_MATERIALS: MaterialsOption = {
   'still listed': { responsive: false },
   'still extras': { responsive: false },
   'spark listed': { responsive: true },
-  'soft named': { temporalAntialiasing: 'soft' },
-  'soft number': { temporalAntialiasing: 0.5 },
-  'off named': { temporalAntialiasing: 'off' },
-  'off number': { temporalAntialiasing: 0 },
+  'soft named': { responsive: 'medium' },
+  'soft over extras': { responsive: 'medium' },
 }
 
 /** Each swarm's name, left to right, and its three materials: its name, and its extras if any. */
 const SWARMS: readonly (readonly [string, readonly (readonly [string, object?])[]])[] = [
   ['still', [['still pattern'], ['still listed'], ['still extras', { responsive: true }]]],
+  [
+    'soft',
+    [
+      ['soft named'],
+      ['soft extras', { responsive: 'medium' }],
+      ['soft over extras', { responsive: true }],
+    ],
+  ],
   ['spark', [['spark pattern'], ['spark listed'], ['spark extras', { responsive: true }]]],
-  ['soft', [['soft named'], ['soft number'], ['soft extras', { temporalAntialiasing: 0.5 }]]],
-  ['off', [['off named'], ['off number'], ['off extras', { temporalAntialiasing: 'off' }]]],
 ]
 
 /** The three colours, linear, and how bright each glows. */

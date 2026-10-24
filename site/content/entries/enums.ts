@@ -50,7 +50,7 @@ console.log(DIAGNOSTICS['overdraw']); // { available: false, reason: 'No fragmen
   },
   {
     id: 'LodQualityId',
-    valueNames: ["'source'", "'high'", "'balanced'", "'adaptive'"],
+    valueNames: ["'source'", "'high'", "'balanced'"],
     example: `import { LOD_QUALITY, lodQuality } from 'trillion3d';
 
 const { pixelError } = lodQuality('balanced'); // 4; an unknown id throws
