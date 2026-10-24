@@ -46,6 +46,9 @@
       // The sky module: the air, the sun, the sky light, the height fog and the clouds of a new
       // world's level, in place of a flat background and two lights.
       world.scene.sky = true;
+      // The surface cache keeps its colour layers in blocks (BC), a quarter of their memory:
+      // WebGPU has no lossless compression of a render target to stand in for it.
+      world.surfaceCache = { surfaceCacheCompress: 2 };
       const district = await world.scene.load('../assets/examples/long-district/cache/native/full/manifest.json');
       const [clip] = district.animations;
       const motion = clip ? animation.createMixer(district).clipAction(clip).play() : null;

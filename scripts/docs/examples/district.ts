@@ -2,7 +2,10 @@ import { HALF_PI, QUARTER_PI, TAU } from '#engine/packages/math/src/constants.ts
 import { clamp } from '#engine/packages/math/src/scalar/reals.ts'
 import { length2, length3 } from '#engine/packages/math/src/vector/vector.ts'
 import { geometry } from '#engine/packages/sdk-core/src/world/geometry/index.ts'
-import type { HlodOptions } from '#engine/packages/sdk-core/src/contracts/hlodOptions.ts'
+import {
+  resolveHlod,
+  type HlodOptions,
+} from '#engine/packages/sdk-core/src/contracts/hlodOptions.ts'
 import { SceneGltf, turn, yaw, type Channel } from './gltf-scene.ts'
 import { icosphere, box, sleeve } from './solids.ts'
 import { fromGeometry, lathe, merge, moved, solid, type Mesh } from './mesh.ts'
@@ -915,13 +918,21 @@ function keyed(step: number, value: (t: number) => readonly number[]) {
 const spin = (axis: Vec3, phase: number, turns: number, step: number) =>
   keyed(step, (t) => turn(axis, phase + (TAU * turns * t) / PERIOD))
 
-/** The district's HLOD, through the compiler's `hlod` option (`resolveHlod`): four levels — HLOD 0
- *  the objects themselves, three merged levels above it, each baking the normal, roughness,
- *  metallic, specular and emissive images beside the base colour. No object carries a mark: every
- *  placed object enters the first layer, `hlod0`, the option naming no `default`. What moves — the
- *  driving cars, the tram, the wheel, the rotors, the flags, the lift — is never placed in a cell,
- *  so it enters no HLOD. */
-export const DISTRICT_HLOD: HlodOptions = { levels: 4 }
+/** The district's HLOD, through the compiler's `hlod` option (`resolveHlod`): the four levels of
+ *  the simple form — HLOD 0 the objects themselves, three merged levels above it, each baking the
+ *  normal, roughness, metallic, specular and emissive images beside the base colour — in the expert
+ *  form, so that each merged level also gets a distance field (`allowDistanceField`, off by default
+ *  on a merged layer, as the reference's builder has it): the sun's distance-field shadow then
+ *  reaches the merged levels past the last shadow map. No object carries a mark: every placed
+ *  object enters the first layer, `hlod0`. What moves — the driving cars, the tram, the wheel, the
+ *  rotors, the flags, the lift — is never placed in a cell, so it enters no HLOD. */
+const { layers, default: fallback } = resolveHlod({ levels: 4 })!
+export const DISTRICT_HLOD: HlodOptions = {
+  layers: layers.map((layer) =>
+    layer.builder === 'merge' ? { ...layer, allowDistanceField: true } : layer,
+  ),
+  ...(fallback === undefined ? {} : { default: fallback }),
+}
 
 /** Writes `district.gltf`, `district.bin` and the textures into `directory`. */
 export async function writeDistrict(directory: string) {
