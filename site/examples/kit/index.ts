@@ -3,8 +3,9 @@
  * around its render and nothing of the engine — a settings panel it declares in a few lines,
  * a corner of the frame's measured counters on the page's first world, a game's menu and pause
  * while the mouse is free,
- * the point the pointer shows on the ground and a click told from a drag, a video file the viewer
- * picks, and a seeded sequence that places the same scene on every run, noise to make sounds
+ * the point the pointer shows on the ground, a click told from a drag, a press and a hover whose
+ * answer comes a frame later, a video file the viewer picks, and a seeded sequence that places
+ * the same scene on every run, noise to make sounds
  * from, and a card that names the error an example stops on, and a banner at the top of the
  * frame for the line of what to do and the news the example gives (`banner.ts`). Its words, and the page's own, are read in
  * the reader's language before the example runs (`words.ts`). And the pieces several examples
@@ -37,7 +38,15 @@ export { leafTexture, matcapBall } from './painted.ts'
 export { circling, ease, flights, mix, opening } from './opening.ts'
 export { physicsReadouts } from './physicsReadouts.ts'
 export { perFrame } from './perFrame.ts'
-export { canvasRay, latestOnly, onClick, pointerOnPlane, pointerRay } from './pointer.ts'
+export {
+  canvasRay,
+  hover,
+  latestOnly,
+  onClick,
+  onPress,
+  pointerOnPlane,
+  pointerRay,
+} from './pointer.ts'
 export { seeded, sineHash, valueNoise } from './random.ts'
 export { readout } from './readout.ts'
 export { walkingRobot } from './robot.ts'

@@ -22,7 +22,7 @@
     <canvas id="view"></canvas>
     <script type="module">
       import { createWorld, effect, geometry, light, material, math, object, texture, buffer } from '../runtime/engine.js';
-      import { controls, readout, opening, ease, mix, valueNoise } from '../runtime/kit.js';
+      import { controls, latestOnly, readout, opening, ease, mix, valueNoise } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
       world.exposure = 1;
@@ -145,7 +145,7 @@
 
       // The glow: a bloom pass spreads the sun's disc. The flare itself is no image pass — it is
       // sprites, laid along the line from the sun through the middle of the picture.
-      world.effects.add(effect.bloom({ intensity: 0.1 }));
+      world.effects.add(effect.bloom({ intensity: 0.1, sizeScale: 5.6 }));
 
       // The flare's pictures, drawn once in white on canvases: a starburst with its halo, the
       // hexagon the aperture's six blades leave in each ghost, a soft disc, a rainbow ring and a
@@ -294,27 +294,35 @@
       };
       const UP = math.vector3(0, 1, 0), side = math.vector3(), lift = math.vector3();
       const hillsEye = math.vector3(Infinity, 0, 0), hillsSun = math.vector3();
-      let share = 1, asking = false;
-      const sunShows = (eye) => {
-        if (!eye.equals(hillsEye) || !sunDir.equals(hillsSun)) {
-          hillsEye.copy(eye);
-          hillsSun.copy(sunDir);
-          side.crossVectors(sunDir, UP).normalize();
-          lift.crossVectors(side, sunDir).normalize();
-          for (const sample of SAMPLES) {
-            sample.direction.copy(sunDir).addScaledVector(side, sample.a).addScaledVector(lift, sample.b).normalize();
-            sample.behindHill = hillsBlock(eye, sample.direction);
+      const ray = math.ray(math.vector3(), math.vector3(0, 0, -1));
+      let share = 1;
+      // One batch of rays in flight, asked again with the newest eye as soon as it lands: the
+      // blades have turned on by the time it does, which the smoothing of the flare below hides.
+      // The engine copies a ray as it is cast, so one ray serves the sixteen.
+      const askShare = latestOnly(
+        (eye) => {
+          if (!eye.equals(hillsEye) || !sunDir.equals(hillsSun)) {
+            hillsEye.copy(eye);
+            hillsSun.copy(sunDir);
+            side.crossVectors(sunDir, UP).normalize();
+            lift.crossVectors(side, sunDir).normalize();
+            for (const sample of SAMPLES) {
+              sample.direction.copy(sunDir).addScaledVector(side, sample.a).addScaledVector(lift, sample.b).normalize();
+              sample.behindHill = hillsBlock(eye, sample.direction);
+            }
           }
-        }
-        // One batch of rays in flight: the blades have turned on by the time it lands, which the
-        // smoothing of the flare below hides.
-        if (!asking) {
-          asking = true;
-          const rays = SAMPLES.filter((sample) => !sample.behindHill).map((sample) => math.ray(eye.clone(), sample.direction.clone()));
-          Promise.all(rays.map((ray) => world.raycast(ray, { objects: occluders })))
-            .then((hits) => (share = hits.filter((hit) => !hit).length / SAMPLES.length))
-            .finally(() => (asking = false));
-        }
+          ray.origin.copy(eye);
+          return Promise.all(
+            SAMPLES.filter((sample) => !sample.behindHill).map((sample) => {
+              ray.direction.copy(sample.direction);
+              return world.raycast(ray, { objects: occluders });
+            }),
+          );
+        },
+        (hits) => (share = hits.filter((hit) => !hit).length / SAMPLES.length),
+      );
+      const sunShows = (eye) => {
+        askShare(eye);
         return share;
       };
 

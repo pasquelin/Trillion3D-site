@@ -29,7 +29,8 @@
       // The sea runs past the far plane, so its edge is never seen: it meets the night sky at the
       // horizon.
       world.camera.far = 1500;
-      world.scene.background = math.color('#0c1424');
+      const haze = math.color('#0c1424');
+      world.scene.background = haze;
       const sea = object.mesh(geometry.box(4000, 0.2, 4000), material.meshStandard({ color: '#1f4a6b', roughness: 0.35 }));
       sea.position.y = -0.5;
       const island = object.mesh(geometry.cylinder(6, 7.5, 0.8, 64), material.meshStandard({ color: '#9c8b6c', roughness: 0.8 }));
@@ -85,7 +86,7 @@
       world.scene.add(object.points(stars, material.points({ color: '#dfe6ff', size: 1.8 })));
       // A night haze over the water: thick at the sea, thinning with height, so the sea fades into
       // the night sky at the horizon while the stars overhead stay clear.
-      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: math.color('#0c1424').toArray(), density: 0.02, heightFalloff: 0.08 } };
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: haze.toArray(), density: 0.02, heightFalloff: 0.08 } };
       // Night: a faint moon that casts the shadows, and the sky's dim light on what it misses.
       world.scene.add(
         light.directional({ intensity: 2, color: '#8099d9', position: [-8, 12, 10], castShadow: true }),

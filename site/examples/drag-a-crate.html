@@ -31,7 +31,7 @@
         light,
         math,
       } from '../runtime/engine.js';
-      import { controls, latestOnly, pointerOnPlane } from '../runtime/kit.js';
+      import { controls, hover, onPress, pointerOnPlane } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
       world.exposure = 1;
@@ -116,9 +116,9 @@
         const edge = ui.snap ? Math.floor(limit * 2) / 2 : limit;
         return math.clamp(place(value), -edge, edge);
       };
-      const hitAt = ({ offsetX: x, offsetY: y }) => world.raycast({ x, y }, { objects: props });
+      const hitAt = (at) => world.raycast(at, { objects: props });
       // The prop under the pointer glows a little, and the cursor offers to grab it.
-      const hover = (prop) => {
+      const glow = (prop) => {
         if (prop === hovered) return;
         hovered?.material.emissive.set('#000000');
         prop?.material.emissive.set('#3a2c14');
@@ -130,12 +130,11 @@
         marker.position.set(prop.position.x, 0.01, prop.position.z);
         marker.scale.setScalar(prop.userData.half / 0.5);
       };
-      world.canvas.addEventListener('pointerdown', async (event) => {
+      onPress(world.canvas, async (event, stillDown) => {
         if (event.button !== 0 || drag) return;
-        held.add(event.pointerId);
-        const hit = await hitAt(event);
+        const hit = await hitAt({ x: event.offsetX, y: event.offsetY });
         // The ray lands a frame later: a press released meanwhile, or a drag begun, grabs nothing.
-        if (!hit || drag || !held.has(event.pointerId)) return;
+        if (!hit || drag || !stillDown()) return;
         const prop = hit.object;
         drag = {
           prop,
@@ -145,7 +144,7 @@
           height: hit.point.y,
           controlsEnabled: world.controls.enabled,
         };
-        hover(prop);
+        glow(prop);
         world.canvas.style.cursor = 'grabbing';
         mark(prop);
         marker.visible = true;
@@ -153,18 +152,11 @@
         world.canvas.setPointerCapture(event.pointerId);
         world.invalidate();
       });
-      // One hover ray in flight; an answer that lands once the pointer left, pressed or grabbed
-      // lights nothing.
-      let over = false;
-      const aimHover = latestOnly(hitAt, (hit) => !drag && over && hover(hit?.object ?? null));
+      // One hover ray in flight; an answer that lands once the pointer left or a prop was
+      // grabbed lights nothing.
+      hover(world.canvas, hitAt, (hit) => !drag && glow(hit?.object ?? null));
       world.canvas.addEventListener('pointermove', (event) => {
-        if (!drag) {
-          // No hover while a button orbits the view.
-          over = !event.buttons;
-          if (over) aimHover({ offsetX: event.offsetX, offsetY: event.offsetY });
-          return;
-        }
-        if (event.pointerId !== drag.pointerId) return;
+        if (!drag || event.pointerId !== drag.pointerId) return;
         const point = pointerOnPlane(world, event, drag.height);
         if (!point) return;
         const { prop } = drag,
@@ -177,10 +169,7 @@
         mark(prop);
         world.invalidate();
       });
-      // The presses still down, by pointer.
-      const held = new Set();
       const finish = (event) => {
-        held.delete(event.pointerId);
         if (!drag || event.pointerId !== drag.pointerId) return;
         const { pointerId, controlsEnabled } = drag;
         drag = null;
@@ -191,10 +180,6 @@
           world.canvas.releasePointerCapture(pointerId);
         world.invalidate();
       };
-      world.canvas.addEventListener('pointerleave', () => {
-        over = false;
-        if (!drag) hover(null);
-      });
       world.canvas.addEventListener('pointerup', finish);
       world.canvas.addEventListener('pointercancel', finish);
       world.canvas.addEventListener('lostpointercapture', finish);

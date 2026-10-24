@@ -66,9 +66,10 @@
       ].map(([at, colour, haze]) => ({ at, colour: math.color(colour), haze: math.color(haze) }));
       const backdrop = math.color(), haze = math.color();
       world.scene.background = backdrop;
-      // At dusk a mist settles on the lawn, thick at the grass and gone a few metres up. Its
-      // colour and its density are read when the sky word is set, each frame.
-      const mist = { density: 0, heightFalloff: 1.2 };
+      // At dusk a mist settles on the lawn, thick at the grass and gone a few metres up. The
+      // sky word is written again only when the mist's colour or its density changed.
+      const mistColour = math.color();
+      let mistDensity = 0;
       world.camera.position.set(7, 4.4, 7.8);
       world.camera.lookAt(0, 0.6, 0);
       world.controls.target.set(0, 0.6, 0);
@@ -96,9 +97,13 @@
         backdrop.copy(low.colour).lerp(high.colour, share);
         sky.color.copy(backdrop);
         haze.copy(low.haze).lerp(high.haze, share).multiplyScalar(1 / world.exposure);
-        mist.density = 0.15 * (1 - height) ** 2;
         // No mist at all, not one of no density, costs nothing.
-        world.scene.sky = mist.density > 1e-4 ? { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: haze.toArray(), ...mist } } : null;
+        const thick = 0.15 * (1 - height) ** 2, density = thick > 1e-4 ? thick : 0;
+        if (density !== mistDensity || (density && !haze.equals(mistColour))) {
+          mistDensity = density;
+          mistColour.copy(haze);
+          world.scene.sky = density ? { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: haze.toArray(), density, heightFalloff: 1.2 } } : null;
+        }
         world.invalidate();
       });
       world.invalidate();

@@ -249,12 +249,12 @@
       }
 
       function report({ clusters, shadows, reflections }) {
-        const by = [0, 0];
-        for (const state of clusters.state) by[state]++;
+        let missing = 0;
+        for (const state of clusters.state) if (state === CLUSTER_STATE.missing) missing++;
         shown.count(String(clusters.count));
         // What the previous image's depth hid is a count, not a list: no cluster carries it.
         shown.occluded(String(clusters.occluded));
-        shown.missing(String(by[CLUSTER_STATE.missing]));
+        shown.missing(String(missing));
         const drawn = shadows.reduce((sum, map) => sum + map.renderedCount, 0), mapped = shadows.reduce((sum, map) => sum + map.mappedCount, 0);
         shown.pages(`${drawn} / ${mapped}`);
         shown.rays(reflections ? `${reflections.missed} / ${reflections.count}` : '—');

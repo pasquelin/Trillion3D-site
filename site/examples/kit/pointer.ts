@@ -98,6 +98,33 @@ export function onClick(
 }
 
 /**
+ * Calls `press(event, stillDown)` on each press on `canvas`. A press that asks the engine
+ * something (`world.raycast`) acts on the answer a frame later, if `stillDown()` still says so:
+ * its pointer has not been released or cancelled, and pressed again, since. A count of the
+ * presses tells them apart where the pointer's id cannot (a mouse's is always the same).
+ */
+export function onPress(
+  canvas: {
+    addEventListener(
+      type: 'pointerdown' | 'pointerup' | 'pointercancel',
+      listener: (event: PointerEvent) => void,
+    ): void
+  },
+  press: (event: PointerEvent, stillDown: () => boolean) => void,
+) {
+  let presses = 0
+  const current = new Map<number, number>()
+  canvas.addEventListener('pointerdown', (event) => {
+    const mine = ++presses
+    current.set(event.pointerId, mine)
+    press(event, () => current.get(event.pointerId) === mine)
+  })
+  const lift = (event: PointerEvent) => void current.delete(event.pointerId)
+  canvas.addEventListener('pointerup', lift)
+  canvas.addEventListener('pointercancel', lift)
+}
+
+/**
  * `ask` — a query answered later, such as `world.raycast` — asked one at a time, the latest
  * only: a call while one is in flight takes the place of any still waiting and is asked once
  * that one lands, and `found` gets each answer with what it was asked about. A hover asks at
@@ -122,4 +149,32 @@ export function latestOnly<At, Answer>(
       })
   }
   return run
+}
+
+/**
+ * What lies under the pointer, asked at every move over `canvas` with no button down — a button
+ * turns the view, which is left alone — through `latestOnly`: one `ask` at a canvas point
+ * (`world.raycast`) in flight, the latest only. `found(answer)` hears each answer while the
+ * pointer is still over the canvas, and `found(null)` as it leaves.
+ */
+export function hover<Answer>(
+  canvas: {
+    addEventListener(
+      type: 'pointermove' | 'pointerleave',
+      listener: (event: PointerEvent) => void,
+    ): void
+  },
+  ask: (at: { x: number; y: number }) => Promise<Answer>,
+  found: (answer: Answer | null) => void,
+) {
+  let inside = false
+  const aim = latestOnly(ask, (answer) => inside && found(answer))
+  canvas.addEventListener('pointermove', (event) => {
+    inside = !event.buttons
+    if (inside) aim({ x: event.offsetX, y: event.offsetY })
+  })
+  canvas.addEventListener('pointerleave', () => {
+    inside = false
+    found(null)
+  })
 }

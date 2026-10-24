@@ -89,8 +89,9 @@
       // turning at the meeting point of the eyes, and a ring of glass beads swinging out of the
       // screen towards the viewer. Built twice, once in each eye's world.
       function hall(world) {
-        world.scene.background = math.color('#07080b');
-        world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: math.color('#07080b').toArray(), near: 22, far: 60 } };
+        const haze = math.color('#07080b');
+        world.scene.background = haze;
+        world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: haze.toArray(), near: 22, far: 60 } };
         const add = (shape, paint, x = 0, y = 0, z = 0, parent = world.scene) => {
           const mesh = object.mesh(shape, paint);
           mesh.position.set(x, y, z);

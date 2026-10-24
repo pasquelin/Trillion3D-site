@@ -22,7 +22,7 @@
     <canvas id="view"></canvas>
     <script type="module">
       import { createWorld, geometry, material, object, light, math, buffer } from '../runtime/engine.js';
-      import { controls, latestOnly } from '../runtime/kit.js';
+      import { controls, latestOnly, onPress } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
       world.exposure = 1;
@@ -163,8 +163,6 @@
       // Pressing on the clay sculpts and holds the camera still; pressing beside it turns the
       // camera as usual.
       let pointer = null, moved = false, sculpting = null, hit = null;
-      // The presses still down, by pointer.
-      const down = new Set();
       // The ring under the pointer, on the surface as it is now: one ray in flight, its answer a
       // frame later, the latest pointer asked once it lands.
       const ringAt = (answer) => {
@@ -185,20 +183,18 @@
         world.invalidate();
       };
       for (const name of ['pointermove', 'pointerleave']) world.canvas.addEventListener(name, follow);
-      world.canvas.addEventListener('pointerdown', async (event) => {
+      onPress(world.canvas, async (event, stillDown) => {
         follow(event);
         if (event.button !== 0 || sculpting) return;
         moved = false;
-        down.add(event.pointerId);
         ringAt(await aim(pointer));
         // A press released while its ray flew sculpts nothing.
-        if (!hit || sculpting || !down.has(event.pointerId)) return;
+        if (!hit || sculpting || !stillDown()) return;
         sculpting = { id: event.pointerId, controls: world.controls.enabled };
         world.controls.enabled = false;
         world.canvas.setPointerCapture(event.pointerId);
       });
       const lift = (event) => {
-        down.delete(event.pointerId);
         if (!sculpting || event.pointerId !== sculpting.id) return;
         world.controls.enabled = sculpting.controls;
         sculpting = null;

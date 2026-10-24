@@ -58,8 +58,9 @@
       // The desert at dawn: sand dunes, wind-cut arches of red rock, a low sun in a warm haze.
       function desert(world) {
         const scene = world.scene, random = seeded(3);
-        scene.background = math.color('#f2b77e');
-        scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: math.color('#f2b77e').toArray(), near: 25, far: 95 } };
+        const haze = math.color('#f2b77e');
+        scene.background = haze;
+        scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: haze.toArray(), near: 25, far: 95 } };
         const sand = material.meshStandard({ color: '#e9b77a', roughness: 1, metalness: 0 });
         const rock = material.meshStandard({ color: '#b8583a', roughness: 0.85, flatShading: true });
         add(scene, geometry.cylinder(120, 120, 0.2, 64), sand, 0, -0.1, 0);
@@ -89,8 +90,9 @@
       // The glacier at night: snow, shards of blue ice, a cold moon, stars and a gate that glows.
       function glacier(world) {
         const scene = world.scene, random = seeded(11);
-        scene.background = math.color('#08101f');
-        scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: math.color('#08101f').toArray(), near: 30, far: 110 } };
+        const haze = math.color('#08101f');
+        scene.background = haze;
+        scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: haze.toArray(), near: 30, far: 110 } };
         const snow = material.meshStandard({ color: '#dfe9f5', roughness: 1, metalness: 0 });
         const ice = material.meshStandard({ color: '#9fd4f0', roughness: 0.08, metalness: 0.1, flatShading: true });
         const glowIce = material.meshStandard({ color: '#000000', emissive: '#58e0ff', emissiveIntensity: 2.5, flatShading: true });

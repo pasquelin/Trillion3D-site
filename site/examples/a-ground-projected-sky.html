@@ -265,9 +265,8 @@
       const world = createWorld('view', { controls: 'orbit' });
       world.exposure = 1;
       world.scene.background = math.color('#d9c7a8');
-      // The engine's film curve (its default), named so that the page states the display curve it
-      // is seen through; `'none'` would show the light as it is.
-      world.toneMapping = 'filmic';
+      // A curve that keeps the painted colours as they are.
+      world.toneMapping = 'none';
       // The sky keeps the picture as it is: unlit.
       const skyMaterial = material.meshBasic({ map: paint('plaza'), side: side.double });
       const skyMesh = object.mesh(geometry.box(1, 1, 1), skyMaterial);

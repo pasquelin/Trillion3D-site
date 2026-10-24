@@ -23,7 +23,7 @@
     <canvas id="view"></canvas>
     <script type="module">
       import { buffer, createWorld, effect, geometry, light, material, math, object, texture, wrap } from '../runtime/engine.js';
-      import { controls, ease, language, latestOnly, pointerRay, readout, words } from '../runtime/kit.js';
+      import { controls, ease, hover, language, onPress, pointerRay, readout, words } from '../runtime/kit.js';
 
       const say = words();
       const world = createWorld('view', { controls: 'orbit' });
@@ -133,14 +133,12 @@
           plane.setFromNormalAndCoplanarPoint(facing, point);
         } else plane.setFromNormalAndCoplanarPoint(up, point);
       }
-      const cast = ({ offsetX: x, offsetY: y }) => world.raycast({ x, y }, { objects: meshes });
-      // The presses still down, by pointer.
-      const pressed = new Set();
-      async function grab(event) {
-        const hit = await cast(event);
+      const cast = (at) => world.raycast(at, { objects: meshes });
+      const pieceOf = (hit) => pieces.find((p) => p.mesh === hit?.object) ?? null;
+      async function grab(event, stillDown) {
+        const hit = await cast({ x: event.offsetX, y: event.offsetY }), piece = pieceOf(hit);
         // The ray lands a frame later: a press released meanwhile, or a hold begun, grabs nothing.
-        if (!hit || held || !pressed.has(event.pointerId)) return false;
-        const piece = pieces.find((p) => p.mesh === hit.object);
+        if (!piece || held || !stillDown()) return false;
         held = { piece, pointerId: event.pointerId, grip: hit.point.clone(), offset: piece.mesh.position.clone().sub(hit.point), target: piece.mesh.position.clone(), event };
         planeThrough(held.grip);
         piece.fall = 0;
@@ -178,7 +176,7 @@
         return rest;
       }
 
-      const hover = (piece) => {
+      const glow = (piece) => {
         if (piece === hovered) return;
         hovered?.look.emissive.set('#000000');
         piece?.look.emissive.set('#3a2a10');
@@ -186,35 +184,26 @@
         world.canvas.style.cursor = piece ? 'grab' : '';
         world.invalidate();
       };
-      // One hover ray in flight; an answer that lands once the pointer left, pressed or grabbed
+      // One hover ray in flight; an answer that lands once the pointer left or a piece was held
       // lights nothing.
-      let over = false;
-      const aimHover = latestOnly(cast, (hit) => !held && over && hover(pieces.find((p) => p.mesh === hit?.object) ?? null));
-      world.canvas.addEventListener('pointerdown', async (event) => {
+      hover(world.canvas, cast, (hit) => !held && glow(pieceOf(hit)));
+      onPress(world.canvas, async (event, stillDown) => {
         if (demo) endDemo();
         if (event.button !== 0 || held) return;
-        pressed.add(event.pointerId);
-        if (!(await grab(event))) return;
-        hover(held.piece);
+        if (!(await grab(event, stillDown))) return;
+        glow(held.piece);
         world.canvas.style.cursor = 'grabbing';
         world.controls.enabled = false;
         world.canvas.setPointerCapture(event.pointerId);
         world.invalidate();
       });
       world.canvas.addEventListener('pointermove', (event) => {
-        if (!held) {
-          // No hover while a button orbits the view.
-          over = !event.buttons;
-          if (over) aimHover({ offsetX: event.offsetX, offsetY: event.offsetY });
-          return;
-        }
-        if (event.pointerId !== held.pointerId) return;
+        if (!held || event.pointerId !== held.pointerId) return;
         held.event = event;
         follow(event);
         world.invalidate();
       });
       const release = (event) => {
-        pressed.delete(event.pointerId);
         if (!held || event.pointerId !== held.pointerId) return;
         const { pointerId } = held;
         held = null;
@@ -226,10 +215,6 @@
       world.canvas.addEventListener('pointerup', release);
       world.canvas.addEventListener('pointercancel', release);
       world.canvas.addEventListener('lostpointercapture', release);
-      world.canvas.addEventListener('pointerleave', () => {
-        over = false;
-        if (!held) hover(null);
-      });
       // Shift swaps the plane while held: the grip point stays, the plane turns about it.
       const swap = (event) => {
         if (event.key !== 'Shift' || shift === (event.type === 'keydown')) return;

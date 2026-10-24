@@ -69,21 +69,23 @@
         { colour: '#ffc48a', size: 0.045, count: 260 },
         { colour: '#7f97d6', size: 0.03, count: 2400 },
       ];
-      const stars = [];
+      const stars = [], clouds = [];
       for (const [rank, { colour, size, count }] of CLASSES.entries()) {
-        const at = new Float32Array(count * 3);
+        const at = new Float32Array(count * 3), ofClass = [];
         for (let k = 0; k < count; k++) {
-          const p = onShell();
+          const p = onShell(), star = { p, rank, index: stars.length };
           at.set(p, k * 3);
-          stars.push({ p, rank, index: stars.length });
+          stars.push(star);
+          ofClass.push(star);
         }
         const cloud = object.points(geometry.createBuffer({ position: buffer.float32(at, 3) }), material.points({ color: colour, size }));
         spin.add(cloud);
+        clouds.push({ cloud, stars: ofClass });
       }
       const angle = (a, b) => Math.acos(math.clamp((a[0] * b[0] + a[1] * b[1] + a[2] * b[2]) / (R * R), -1, 1));
 
-      // A lane is what the picking tests: a line object drawn in its own ink from `segments`, the
-      // pairs of ends of its segments, with the name `label` gives it and its ink at rest.
+      // A lane is a line object drawn in its own ink from `segments`, the pairs of ends of its
+      // segments, with the name `label` gives it and its ink at rest.
       function lane(segments, label, rest, width) {
         const ink = material.line({ color: rest, linewidth: width });
         const line = object.lineSegments(geometry.createBuffer({ position: buffer.float32(new Float32Array(segments.flat()), 3) }), ink);
@@ -140,7 +142,7 @@
         light.directional({ intensity: 2.4, color: '#fff0d8', position: [6, 8, 7] }),
         light.hemisphere({ intensity: 0.5, color: '#7d95d8', groundColor: '#1a1206' }),
       );
-      world.effects.add(effect.bloom({ intensity: 0.12 }));
+      world.effects.add(effect.bloom({ intensity: 0.12, sizeScale: 3.6 }));
 
       // What the pointer marks: a ring that keeps its size on screen, on the star picked or on
       // the nearest point of the line picked, and the segment picked drawn wide in gold.
@@ -162,83 +164,45 @@
       const goldInk = material.line({ color: '#ffd166', linewidth: 5 });
       let picked = null;
 
-      // ---- The picking. `world.raycast` meets lines and points too, within a reach in world
-      // units; here they are tested instead against the camera's ray through the pointer, in the
-      // sky's own frame, with a reach in pixels. A point is hit when the ray passes within `reach`
-      // pixels of it; a segment when the closest point between the ray and the segment does. A
-      // pixel is measured where the candidate stands: the angle one pixel makes at the eye, times
-      // its distance. Whatever lies behind the ball is not seen, so not picked: the ball is
-      // raycast first, and it bounds the distance.
-      const inverse = math.matrix4();
-      const o = math.vector3(), d = math.vector3(), d2 = math.vector3();
+      // ---- The picking. One `world.raycast` among the ball, the stars and the lines answers the
+      // nearest of them under the pointer: a star is met on its dot, as wide as its size, a line
+      // where the ray passes within `reach` world units of it, and the ball hides what lies behind
+      // it. The answer names the object and the point met on the ray; which star of a cloud, or
+      // which segment of a line, is read from that point in the sky's own frame.
+      const starObjects = clouds.map((c) => c.cloud), lineObjects = lanes.map((lane) => lane.line);
       const box = () => world.canvas.getBoundingClientRect();
-      // The ray through the canvas point (x, y), and the angle of one pixel there: the gap to the
-      // ray through the pixel below.
-      function rayAt(x, y) {
-        const size = box();
+      // The angle one pixel makes at the eye in the middle of the picture: the gap between the
+      // rays through two neighbouring pixels.
+      function pixelAngle() {
+        const size = box(), x = size.width / 2, y = size.height / 2;
         const ray = canvasRay(world, x, y, size), below = canvasRay(world, x, y + 1, size);
-        if (!ray) return { ray: null, pixel: 0 };
-        const pixel = Math.hypot(ray.direction.x - below.direction.x, ray.direction.y - below.direction.y, ray.direction.z - below.direction.z);
-        return { ray, pixel };
+        return ray ? Math.hypot(ray.direction.x - below.direction.x, ray.direction.y - below.direction.y, ray.direction.z - below.direction.z) : 0;
       }
-      // The pointer's ray in the sky's frame as the sky stands now, and the pixel's angle there.
-      function aimAt(x, y) {
-        const { ray, pixel } = rayAt(x, y);
-        if (!ray) return null;
-        spin.updateWorldMatrix(true, false);
-        inverse.copy(spin.matrixWorld).invert();
-        return { pixel, o: ray.origin.clone().applyMatrix4(inverse), d: ray.direction.clone().transformDirection(inverse), ray, wall: Infinity };
-      }
-      // The ball's distance comes a frame or so later, while the sky turns on: the ray keeps the
-      // frame it was cast in, and the tests below run against it.
-      async function castBall(x, y) {
-        const aim = aimAt(x, y);
-        if (aim) aim.wall = (await world.raycast(aim.ray, { objects: [ball] }))?.distance ?? Infinity;
-        return aim;
-      }
-      function pick({ pixel, wall, o: from, d: along }) {
-        const started = performance.now();
-        o.copy(from);
-        d.copy(along);
-        const reach = ui.reach;
-        let best = null, tests = 0;
-        if (ui.stars) for (const star of stars) {
-          tests++;
-          const [px, py, pz] = star.p, vx = px - o.x, vy = py - o.y, vz = pz - o.z;
-          const t = vx * d.x + vy * d.y + vz * d.z;
-          if (t <= 0 || t > wall) continue;
-          const off = Math.hypot(vx - t * d.x, vy - t * d.y, vz - t * d.z) / (t * pixel);
-          if (off < reach && (!best || off < best.off)) best = { kind: 'star', star, off, at: star.p };
+      const gap = (a, b) => Math.hypot(a[0] - b[0], a[1] - b[1], a[2] - b[2]);
+      // The segment of a line nearest the point `p`, and the point of it that is.
+      function nearestSegment({ segments }, p) {
+        let best = null;
+        for (let k = 0; k < segments.length; k += 2) {
+          const [a, b] = [segments[k], segments[k + 1]];
+          const run = [b[0] - a[0], b[1] - a[1], b[2] - a[2]];
+          const t = math.clamp(((p[0] - a[0]) * run[0] + (p[1] - a[1]) * run[1] + (p[2] - a[2]) * run[2]) / (run[0] ** 2 + run[1] ** 2 + run[2] ** 2), 0, 1);
+          const at = [a[0] + run[0] * t, a[1] + run[1] * t, a[2] + run[2] * t], off = gap(at, p);
+          if (!best || off < best.off) best = { off, at, segment: [a, b], index: k / 2 };
         }
-        let line = null;
-        if (ui.lines) for (const owner of lanes) {
-          const s = owner.segments;
-          for (let k = 0; k < s.length; k += 2) {
-            tests++;
-            const hit = rayToSegment(s[k], s[k + 1]);
-            if (!hit || hit.t > wall) continue;
-            const off = hit.distance / (hit.t * pixel);
-            if (off < reach && (!line || off < line.off)) line = { kind: 'line', owner, off, at: hit.point, segment: [s[k], s[k + 1]], index: k / 2 };
-          }
-        }
-        // The nearer on screen wins; a star by a pixel's grace, as a star sits on its own lines.
-        const hit = best && (!line || best.off <= line.off + 1) ? best : line;
-        return { hit, tests, time: performance.now() - started };
+        return best;
       }
-      // The closest points of the ray (o, d) and the segment a–b: the ray's `t`, the point on the
-      // segment and the gap between them — the classic two-line solve, clamped to the segment.
-      function rayToSegment(a, b) {
-        const ux = b[0] - a[0], uy = b[1] - a[1], uz = b[2] - a[2];
-        const wx = a[0] - o.x, wy = a[1] - o.y, wz = a[2] - o.z;
-        const uu = ux * ux + uy * uy + uz * uz, ud = ux * d.x + uy * d.y + uz * d.z;
-        const wu = wx * ux + wy * uy + wz * uz, wd = wx * d.x + wy * d.y + wz * d.z;
-        const den = uu - ud * ud;
-        let s = den > 1e-9 ? math.clamp((ud * wd - wu) / den, 0, 1) : 0;
-        let t = wd + s * ud;
-        if (t <= 0) return null;
-        const px = a[0] + ux * s, py = a[1] + uy * s, pz = a[2] + uz * s;
-        const distance = Math.hypot(px - (o.x + d.x * t), py - (o.y + d.y * t), pz - (o.z + d.z * t));
-        return { t, distance, point: [px, py, pz] };
+      // What the engine's hit is, the point met taken into the sky's frame (`toLocal`): the star
+      // of the cloud nearest to it, or the segment of the line nearest to it. The ball is nothing.
+      function read(hit, toLocal) {
+        if (!hit) return null;
+        const p = hit.point.clone().applyMatrix4(toLocal).toArray();
+        const cloud = clouds.find((c) => c.cloud === hit.object);
+        if (cloud) {
+          const star = cloud.stars.reduce((best, s) => (gap(s.p, p) < gap(best.p, p) ? s : best));
+          return { kind: 'star', star, off: gap(star.p, p), at: star.p };
+        }
+        const owner = lanes.find((lane) => lane.line === hit.object);
+        return owner ? { kind: 'line', owner, ...nearestSegment(owner, p) } : null;
       }
 
       // ---- What a pick changes: the line it names brightens, its segment glows, the ring moves.
@@ -284,19 +248,19 @@
           const [x, y, z] = hit.star.p;
           shownHit(say('star', { n: n(hit.star.index + 1), total: n(stars.length) }));
           shownPlace(say('place', { lon: n(((Math.atan2(z, x) * 180) / Math.PI + 360) % 360, 1), lat: n((Math.asin(y / R) * 180) / Math.PI, 1) }));
-          shownOff(say('pixels', { px: n(hit.off, 1) }));
+          shownOff(n(hit.off, 3));
         } else {
           shownHit(hit.owner.label());
           shownPlace(say('segment', { k: n(hit.index + 1), total: n(hit.owner.segments.length / 2) }));
-          shownOff(say('pixels', { px: n(hit.off, 1) }));
+          shownOff(n(hit.off, 3));
         }
-        shownCost(say('cost', { n: n(result.tests), us: n(result.time * 1000) }));
+        shownCost(say('cost', { ms: n(result.time, 1) }));
         world.invalidate();
       }
 
       // `aimed`: the pointer moved since the last frame, which picks again, once.
       let aimed = false;
-      const ui = controls({ reach: [2, 30, 12, 1], stars: true, lines: true, turning: true }, (values, key) => {
+      const ui = controls({ reach: [0.02, 0.6, 0.15, 0.01], stars: true, lines: true, turning: true }, (values, key) => {
         if (key) aimed = true;
         world.invalidate();
       });
@@ -316,7 +280,7 @@
       world.canvas.addEventListener('pointerleave', () => {
         if (!own) return;
         pointer = null;
-        show({ hit: null, tests: 0, time: 0 });
+        show({ hit: null, time: 0 });
       });
 
       // The ghost goes from target to target on the side of the globe facing the eye — a star,
@@ -356,10 +320,16 @@
       }
 
       // One pick in flight at the last pointer position; an answer that lands once the pointer
-      // left shows nothing.
+      // left shows nothing. The sky's frame is the one the ray is cast in, as the sky turns on
+      // while the answer comes; the time is the answer's, a frame or so after the ask.
       const aimPick = latestOnly(
-        ([x, y]) => castBall(x, y),
-        (aim) => pointer && show(aim ? pick(aim) : { hit: null, tests: 0, time: 0 }),
+        async ([x, y]) => {
+          const toLocal = spin.matrixWorld.clone().invert(), asked = performance.now();
+          const objects = [ball, ...(ui.stars ? starObjects : []), ...(ui.lines ? lineObjects : [])];
+          const hit = await world.raycast({ x, y }, { objects, lineThreshold: ui.reach });
+          return { hit: read(hit, toLocal), time: performance.now() - asked };
+        },
+        (result) => pointer && show(result),
       );
 
       // The ring keeps 34 pixels across wherever it stands: its world size is the distance times
@@ -379,8 +349,7 @@
         if (picked) {
           reticle.updateWorldMatrix(true, false);
           where.setFromMatrixPosition(reticle.matrixWorld);
-          const { width, height } = box(), { pixel } = rayAt(width / 2, height / 2);
-          reticle.scale.setScalar(world.camera.position.distanceTo(where) * pixel * 34);
+          reticle.scale.setScalar(world.camera.position.distanceTo(where) * pixelAngle() * 34);
         }
         // A still sky under a still pointer draws nothing new: the page then waits for the viewer.
         if (ui.turning || !own) world.invalidate();

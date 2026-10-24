@@ -83,8 +83,9 @@
       const canvas = document.getElementById('view');
       const world = createWorld('view', { pixelRatio: 1, temporalAntialiasing: false, renderScale: 1 });
       world.exposure = 1;
-      world.scene.background = math.color('#1d1838');
-      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: math.color('#1d1838').toArray(), near: 40, far: 70 } };
+      const haze = math.color('#1d1838');
+      world.scene.background = haze;
+      world.scene.sky = { atmosphere: false, sun: false, skyLight: false, clouds: false, heightFog: { color: haze.toArray(), near: 40, far: 70 } };
 
       // An orthographic lens on the classic diagonal: no perspective, so parallel edges stay
       // parallel and step across the pixel grid in the same regular stairs.
