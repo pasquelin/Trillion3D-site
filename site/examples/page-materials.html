@@ -26,6 +26,10 @@
       const say = words();
 
       const world = createWorld('view', { controls: 'orbit' });
+      // The hall's own lamps, 9000 candela, light the floor four metres below with some 560 lux: an
+      // incident meter reading E asks for EV100 = log2(E × 100 / 250), the exposure fixed for it.
+      const ev100 = Math.log2((560 * 100) / 250);
+      world.exposure = 1 / (1.2 * 2 ** ev100);
       const model = await world.scene.load(
         '../assets/examples/hall/cache/native/full/manifest.json',
       );

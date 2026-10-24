@@ -25,6 +25,10 @@
       import { controls } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
+      // The hall's own lamps, 9000 candela, light the floor four metres below with some 560 lux: an
+      // incident meter reading E asks for EV100 = log2(E × 100 / 250), the exposure fixed for it.
+      const ev100 = Math.log2((560 * 100) / 250);
+      world.exposure = 1 / (1.2 * 2 ** ev100);
       // No lamp is placed here. The scene file declares its lamps (`KHR_lights_punctual`); the
       // compiler read them, converted candela to the engine's radiometric unit, and the loaded
       // model carries them on `lights`, live lights like any other.

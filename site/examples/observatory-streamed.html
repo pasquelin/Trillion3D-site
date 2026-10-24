@@ -25,6 +25,10 @@
       import { controls } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
+      // The scene's own sun lights it with 2400 lux: an incident meter reading E asks for
+      // EV100 = log2(E × 100 / 250), the exposure fixed for it, as `light-in-real-units` reads its sun.
+      const ev100 = Math.log2((2400 * 100) / 250);
+      world.exposure = 1 / (1.2 * 2 ** ev100);
       // A scene file carries only its sun: what the sun misses would be black. The court is
       // outdoors, and its scene declares its sky beside its source, as a share of the sun; it is
       // read while the model loads.

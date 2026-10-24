@@ -29,6 +29,10 @@
       // the physics' own, stands on the cooked floor and pushes the balls it meets. A click locks
       // the mouse to look; W A S D walk (Z Q S D on AZERTY), Shift sprints, Space jumps.
       const world = createWorld('view', { controls: 'character', physics: true });
+      // The hall's own lamps, 9000 candela, light the floor four metres below with some 560 lux: an
+      // incident meter reading E asks for EV100 = log2(E × 100 / 250), the exposure fixed for it.
+      const ev100 = Math.log2((560 * 100) / 250);
+      world.exposure = 1 / (1.2 * 2 ** ev100);
       world.scene.background = math.color('#20252e');
       await world.scene.load('../assets/examples/hall/cache/native/full/manifest.json');
       const sun = light.directional({ intensity: 2.5, castShadow: true });

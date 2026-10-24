@@ -40,6 +40,10 @@
       // sun, a car to drive, a walking robot, a tree of alpha-cut leaves, see-through panes, balls
       // in each material, a point light with its shadows, and crates and balls that fall and roll.
       const world = createWorld('view', { controls: 'orbit', physics: true });
+      // The scene's own sun lights it with 2400 lux: an incident meter reading E asks for
+      // EV100 = log2(E × 100 / 250), the exposure fixed for it, as `light-in-real-units` reads its sun.
+      const ev100 = Math.log2((2400 * 100) / 250);
+      world.exposure = 1 / (1.2 * 2 ** ev100);
       const say = words();
       // Every frame the camera's tour draws counts toward the verdict of the part it is in; what
       // a backend refuses is said with its reason: a red line, but a limit the backend documents.
