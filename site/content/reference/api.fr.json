@@ -619,14 +619,16 @@
   },
   "CharacterCameraControls": {
     "summary": "UN PERSONNAGE, vu par ses yeux : un corps avec une masse qui marche, court, saute et tombe, et heurte les corps de la physique du monde comme une capsule debout.",
-    "description": "Le pointeur tourne la tête comme en première personne (`look.ts`). Les touches, par `KeyboardEvent.code` pour que chaque disposition de clavier joue les mêmes touches : W/S ou les flèches haut et bas pour avancer et reculer, A/D ou les flèches de côté pour se décaler, Maj pour sprinter, Espace pour sauter, C pour s’accroupir (`canCrouch`) ; dans l’eau le corps nage là où la tête regarde, Espace pour monter et la touche d’accroupissement pour couler, et avec `flying` il vole ainsi. Le corps ne démarre ni ne s’arrête d’un coup : il prend de la vitesse en `responseTime` et freine en `stopTime`, jamais plus vite que le frottement de son sol ne laisse pousser une semelle, si bien qu’un arrêt glisse un peu sur la pierre et loin sur la glace ; il garde son élan en l’air, monte et retombe sous la gravité du monde fois `gravityScale`, monte les rebords jusqu’à `stepHeight`, glisse le long des murs et tient sur les pentes jusqu’à `maxSlope` (`sdk-browser/src/physics/character/characterDriver.ts`, `sdk-core/src/collision/characterDrive.ts`). La caméra est l’œil, à `eyeHeight` au-dessus des pieds, qui oscille avec la foulée de `headBob` et s’affaisse à l’atterrissage selon `landingDip` (`sdk-core/src/collision/characterEye.ts`) ; les deux s’appliquent à l’œil après le pas du corps et ne déplacent jamais le corps. Un hôte qui déplace lui-même la caméra y téléporte le corps, au repos. Un personnage immobile — au sol, sans vitesse, sans touche, sans affaissement restant — n’émet rien, donc la scène reste immobile.",
+    "description": "Le pointeur tourne la tête comme en première personne (`look.ts`). Les touches, par `KeyboardEvent.code` pour que chaque disposition de clavier joue les mêmes touches : W/S ou les flèches haut et bas pour avancer et reculer, A/D ou les flèches de côté pour se décaler, Maj pour sprinter, Espace pour sauter, C pour s’accroupir (`canCrouch`) ; dans l’eau le corps nage là où la tête regarde, Espace pour monter et la touche d’accroupissement pour couler, et avec `flying` il vole ainsi. Le corps ne démarre ni ne s’arrête d’un coup : au sol il prend de la vitesse selon `maxAcceleration` et freine selon `groundFriction` et `brakingDecelerationWalking` ; il garde son élan en l’air, monte et retombe sous la gravité du monde fois `gravityScale`, monte les rebords jusqu’à `stepHeight`, glisse le long des murs et tient sur les pentes jusqu’à `maxSlope` (`sdk-browser/src/physics/character/characterDriver.ts`, `sdk-core/src/collision/characterDrive.ts`). La caméra est l’œil, à `eyeHeight` au-dessus des pieds, qui oscille avec la foulée de `headBob` et s’affaisse à l’atterrissage selon `landingDip` (`sdk-core/src/collision/characterEye.ts`) ; les deux s’appliquent à l’œil après le pas du corps et ne déplacent jamais le corps. Un hôte qui déplace lui-même la caméra y téléporte le corps, au repos. Un personnage immobile — au sol, sans vitesse, sans touche, sans affaissement restant — n’émet rien, donc la scène reste immobile.",
     "members": {
       "velocity": "La vitesse du corps en mètres par seconde, en direct : `[x, y, z]`, y vers le haut.",
       "onGround": "Si les pieds sont sur un sol.",
       "stride": "La phase de la foulée en radians, dans [0, 2π) : un pied frappe le sol à 0, l’autre à π.",
       "onLand": "Appelée à l’atterrissage avec la vitesse de descente, en mètres par seconde : un son, une secousse.",
       "onJump": "Appelée quand le corps quitte le sol sur un saut.",
-      "update": "Vit `delta` secondes ; renvoie si la caméra a bougé, et émet `change` quand c’est le cas."
+      "update": "Vit `delta` secondes ; renvoie si la caméra a bougé, et émet `change` quand c’est le cas.",
+      "mode": "Comment le corps se déplace maintenant : `walking`, `falling`, `swimming` ou `flying`.",
+      "crouched": "Si le corps est accroupi."
     }
   },
   "CharacterSettings": {
@@ -1957,7 +1959,7 @@
       "emptyTexels": "Ce que contient l’atlas d’une couche `approximate` ou `simplify` là où il ne contient la valeur d’aucun chart (`HLOD_EMPTY_TEXELS`) : `nearestChart`, les valeurs du chart le plus proche sur chaque carte, ou `black` ; `true` le défaut, `false` `black`.",
       "clusterDag": "Si le maillage de chaque acteur que construit une couche `approximate`, `merge` ou `simplify` reçoit un DAG de clusters, ses niveaux plus grossiers dessinés dans l’erreur de pixel ; `false`, le défaut, un niveau dessiné entier à toute distance, comme la référence construit par défaut un maillage fusionné, approximé ou simplifié.",
       "allowDistanceField": "Si le maillage de chaque acteur que construit une couche `approximate`, `merge` ou `simplify` reçoit un champ de distance (un réglage de chacun des constructeurs de la référence) : le compilateur le construit à partir des triangles propres de l’acteur dans l’espace du monde, aux réglages des maillages de la scène (les `distanceField…` de `meshBuild`), dans `distanceFields.bin`, et l’ombre par champ de distance du soleil le dessine là où l’acteur est dessiné — l’ombre des niveaux fusionnés au-delà de la dernière carte d’ombre. `true` par défaut pour une couche `approximate`, `false` pour une couche `merge` ou `simplify`, comme les constructeurs de la référence le fixent par défaut. Les objets d’une couche `instanced` dessinent leurs propres maillages, qui ont leurs propres champs ; une couche `voxel` ne construit aucun triangle.",
-      "disallowClusterDag": "Si une couche `instanced` dessine les objets qu’elle prend sans leur DAG de clusters : `false`, le défaut, chacun garde son propre DAG, son maillage source placé, et la couche ne construit aucun maillage ; `true`, chacun est dessiné au dernier LOD de son maillage, son maillage de repli (`lodSelection: 'lowest'`), comme la référence dessine un maillage instancié dont le DAG de clusters est interdit. La couche construit alors ces replis comme le fait une couche `merge` qui garde ses matériaux — un maillage par cellule et par matériau, dessiné entier, portant le matériau de la source, jamais une copie du DAG propre d’un objet — et toutes les règles `merge` s’y appliquent (`parent`, `spatiallyLoaded`, la grille de ses cellules) ; un objet marqué `hlodInstance` reste lui-même.",
+      "disallowClusterDag": "Si une couche `instanced` dessine les objets qu’elle prend sans leur DAG de clusters : `false`, le défaut, chacun garde son propre DAG, son maillage source placé, et la couche ne construit aucun maillage ; `true`, chacun est dessiné au dernier LOD de son maillage, son maillage de repli (`lodSelection: 'lowest'`), comme la référence dessine un maillage instancié dont le DAG de clusters est interdit. La couche reste instanciée : le compilateur fait une seule fois le repli de chaque maillage source, et les objets de la couche en sont des lignes à leurs matrices — rien n’est copié par objet ni par cellule — dessinées entières à toute distance. Un objet skinné, à morphing ou simulé, et celui d’un assemblage, garde son propre maillage.",
       "meshBuild": "Comment une couche `merge` ou `simplify` construit le maillage de chaque acteur qu’elle fait (`HLOD_MESH_BUILD_SETTINGS`), tel que la référence le lit de ces seules couches : ce que garde son niveau le plus fin (`keptTriangles`, `trimmedError`), si ses triangles presque effondrés sont abandonnés (`dropNearCollapsed`), quelle part reste résidente tant que son acteur est chargé (`alwaysResidentKib`, les pages racines de sa cellule), et comment il garde sa forme (`shapePreservation`, `edgeLengthBound`, `holdTextureCoordinates`). Celui d’une couche `voxel` nomme à la place comment les voxels de ses cellules sont échantillonnés — `voxelRays`, `voxelLevel`, `voxelBackUp`, `voxelSeparable`, `voxelNdf`, `voxelOpacity`, comme le `meshBuild` d’un maillage les nomme.",
       "sizeFilter": "Quels objets une couche `instanced` prend selon la taille de leur boîte monde : `none` ; `extent`, sa plus grande demi-étendue d’au moins `minExtent` mètres ; `area`, sa surface d’au moins `minArea` mètres carrés ; `volume`, son volume d’au moins `minVolume` mètres cubes. Un objet écarté n’entre dans aucun HLOD.",
       "minExtent": "La plus petite demi-étendue, en mètres, d’un filtre `extent`.",
@@ -2392,7 +2394,7 @@
     "description": "Ce sont des choix produit nommés, pas des constantes enterrées : chaque limite à l’exécution les relit, et le diagnostic les publie tels quels.",
     "members": {
       "sunAngularRadius": "Rayon angulaire du disque solaire en radians ; zéro demande explicitement des ombres dures. C’est la valeur par défaut propre à la lumière directionnelle (un disque de 0,5357 degré) ; la partie soleil du module de ciel pose celle du niveau (0,7357 degré, `modules/sky/sunPart.ts`) sur la lumière qu’elle crée, si bien qu’une lumière posée seule et le soleil du ciel diffèrent ici comme le composant et le niveau dont ils viennent.",
-      "tileLights": "La plus longue liste d’une cellule de la grille de lumières où une image EN MOUVEMENT tire au sort (X2) : au-delà, les lumières de la cellule sont sommées en entier. Une scène d’au plus autant de lumières s’éclaire avec un tableau de lumières de cette longueur. La liste d’une cellule tient chaque lumière qui l’atteint, quel qu’en soit le nombre, dans une réserve à la taille de la vue ; une cellule pour laquelle la réserve n’a plus de place parcourt toutes les lumières de la scène — celles qui la manquent ajoutent un zéro exact —, si bien qu’aucune lumière n’est jamais perdue.",
+      "tileLights": "La plus longue liste d’une cellule de la grille de lumières où une image EN MOUVEMENT tire au sort (X2) : au-delà, les lumières de la cellule sont sommées en entier. Une scène d’au plus autant de lumières s’éclaire avec un tableau de lumières de cette longueur. La liste d’une cellule tient les lumières qui l’atteignent dans une réserve de taille fixe, ses cellules fois `lightGridMaxCulledLightsPerCell` (`hizOptions.ts`, 32) : une colonne qui la dépasse garde les lumières qu’elle a reçues, dans l’ordre, et abandonne le reste, comme le fait la référence.",
       "tileSize": "Côté en pixels d’une cellule de la grille de lumières.",
       "gridSlices": "Tranches de profondeur de la grille de lumière : la dernière commence à la portée de la lumière la plus lointaine et une de ses cellules s’étend jusqu’à l’infini.",
       "gridDepthDistribution": "La répartition des tranches de la grille, `slice = log2(depth · B + O) · S` (`lighting/tiles/gridMap.ts`) : `S`, combien de tranches couvrent un doublement de la profondeur dont le début de la première tranche est décalé.",
@@ -2501,7 +2503,8 @@
       "p.cloudShadowExtentKm": "Le rayon autour de la caméra que couvre la carte, en kilomètres, à partir de 1 ; 150 par défaut.",
       "p.cloudShadowResolutionScale": "Le facteur sur les 512 texels de côté de la carte, à partir de 0,25 ; 1 par défaut.",
       "p.cloudShadowRaySamplesScale": "Le facteur sur les 16 échantillons que prend un rayon de la carte, à partir de 0,25 ; 1 par défaut.",
-      "p.cloudScatteredLuminanceScale": "Le facteur sur la lumière à l’intérieur des nuages, linéaire ; blanc par défaut."
+      "p.cloudScatteredLuminanceScale": "Le facteur sur la lumière à l’intérieur des nuages, linéaire ; blanc par défaut.",
+      "p.mobility": "Comment la lumière est censée bouger et être éclairée : `'static'`, `'stationary'` ou `'movable'` ; `'stationary'` par défaut."
     },
     "members": {
       "isLight": "Toujours `true` : distingue une lumière de tout autre objet.",
@@ -2574,7 +2577,8 @@
       "cloudShadowExtentKm": "Le rayon autour de la caméra que couvre la carte, en kilomètres, à partir de 1 ; 150.",
       "cloudShadowResolutionScale": "Le facteur sur les 512 texels de côté de la carte, à partir de 0,25 ; 1.",
       "cloudShadowRaySamplesScale": "Le facteur sur les 16 échantillons que prend un rayon de la carte, à partir de 0,25 ; 1.",
-      "cloudScatteredLuminanceScale": "Le facteur sur la lumière à l’intérieur des nuages, linéaire ; blanc. Changez-le sur place avec `set`."
+      "cloudScatteredLuminanceScale": "Le facteur sur la lumière à l’intérieur des nuages, linéaire ; blanc. Changez-le sur place avec `set`.",
+      "mobility": "Comment la lumière est censée bouger et être éclairée : `'static'` (précalculée, elle ne projette aucune ombre dynamique), `'stationary'` (elle ne bouge pas ; sa couleur et son intensité peuvent changer) ou `'movable'` (entièrement dynamique) ; `'stationary'` par défaut, pour tous les types. Toute autre valeur est refusée (`INVALID_SCENE_LIGHT`). Une écriture atteint tout de suite le monde."
     }
   },
   "LightCloudShadowParameters": {
@@ -2630,7 +2634,8 @@
       "shadowsAir": "Directionnelle seulement : indique si l’ombre de la lumière ombre aussi l’air (la brume et la marche du ciel la lisent le long de leurs rayons) ; désactivé par défaut.",
       "transmittancePerPixel": "Directionnelle seulement : indique si la transmittance de l’air vers la lumière est lue pour chaque point de surface et non une fois au sol ; désactivé par défaut.",
       "sunDiskTint": "Directionnelle seulement : la couleur par laquelle est multiplié le disque du soleil dans le ciel, linéaire ; blanc par défaut.",
-      "sh": "L’irradiance d’une sonde : 27 nombres, neuf coefficients RVB d’harmoniques sphériques de la radiance dans l’ordre des bandes constante, `y`, `z`, `x`, `xy`, `yz`, `3z² − 1`, `xz`, `x² − y²`, multipliés par `intensity` ; construite par `emptyIrradiance` et les aides `add…Irradiance`. Absente, la sonde est uniforme."
+      "sh": "L’irradiance d’une sonde : 27 nombres, neuf coefficients RVB d’harmoniques sphériques de la radiance dans l’ordre des bandes constante, `y`, `z`, `x`, `xy`, `yz`, `3z² − 1`, `xz`, `x² − y²`, multipliés par `intensity` ; construite par `emptyIrradiance` et les aides `add…Irradiance`. Absente, la sonde est uniforme.",
+      "mobility": "Comment la lumière est censée bouger et être éclairée : `'static'`, `'stationary'` ou `'movable'` ; `'stationary'` par défaut."
     }
   },
   "LightShadowOptions": {
@@ -2811,7 +2816,13 @@
       "parameters.physics": "La matière d’un corps qui le porte : densité, frottement, rebond.",
       "parameters.density": "kg/m³, fois le volume pour la masse.",
       "parameters.friction": "À quel point un corps accroche, de 0 à plus.",
-      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1."
+      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1.",
+      "parameters.specularIntensity": "L’entrée spéculaire du diélectrique de la surface, de 0 à 1 : sa réflectance à incidence normale en est 0,08 fois la valeur, si bien que 0,5 (la valeur d’une surface qui n’en déclare aucune) donne les 4 % habituels, 1 donne 8 % et 0 aucun reflet. Le facteur `KHR_materials_specular` d’un matériau glTF s’écrit tel qu’il est déclaré. Le métal l’ignore.",
+      "parameters.specularIntensityMap": "Multiplie `specularIntensity` par le canal alpha d’une image.",
+      "parameters.displacementMagnitude": "De combien, en mètres, la sortie `displacement` du graphe du matériau déplace une surface le long de sa normale là où elle vaut 1 de plus que `displacementCenter` : la hauteur déplacée est `(sortie - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "La valeur de la sortie `displacement` qui laisse la surface où elle est, de 0 à 1.",
+      "parameters.displacementFadeStart": "Où le déplacement s’estompe avec la distance, en taille à l’écran en pixels de son plus grand déplacement : entier au-dessus de `displacementFadeStart`, disparu en dessous de `displacementFadeEnd`, qui doit être le plus petit ; tous deux omis, il ne s’estompe jamais.",
+      "parameters.displacementFadeEnd": "Voir `displacementFadeStart`."
     },
     "members": {
       "isMaterial": "Toujours `true` : distingue un matériau de tout le reste.",
@@ -2852,7 +2863,11 @@
       "volumeOutputs": "Les sorties d’un matériau du domaine volume, tenues à leurs plages : son albédo, son extinction et sa lumière émissive (`emissive` fois `emissiveIntensity`).",
       "surface": "L’enregistrement physique de surface du moteur pour ce matériau (`contracts/material.ts`). Un genre hors de la famille physique est dessiné par la famille de l’hôte qui porte son nom, que le moteur ramène à son unique modèle d’éclairage (`surfaceModel.ts`).",
       "clone": "Un nouveau matériau du même genre, avec les mêmes valeurs.",
-      "dispose": "Oublie ceux qui le portent : un matériau libéré ne repeint plus personne."
+      "dispose": "Oublie ceux qui le portent : un matériau libéré ne repeint plus personne.",
+      "displacementMagnitude": "De combien, en mètres, la sortie `displacement` du graphe du matériau déplace une surface le long de sa normale là où elle vaut 1 de plus que `displacementCenter` : la hauteur déplacée est `(sortie - displacementCenter) * displacementMagnitude`.",
+      "displacementCenter": "La valeur de la sortie `displacement` qui laisse la surface où elle est, de 0 à 1.",
+      "displacementFadeStart": "Où le déplacement de la surface s’estompe avec la distance, en taille à l’écran en pixels de son plus grand déplacement : entier au-dessus de `displacementFadeStart`, disparu en dessous de `displacementFadeEnd` (qui est le plus petit). Tous deux non fixés, il ne s’estompe jamais.",
+      "displacementFadeEnd": "Voir `displacementFadeStart`."
     }
   },
   "MaterialGraph": {
@@ -2923,7 +2938,13 @@
       "physics": "La matière d’un corps qui le porte : densité, frottement, rebond.",
       "density": "kg/m³, fois le volume pour la masse.",
       "friction": "À quel point un corps accroche, de 0 à plus.",
-      "restitution": "À quel point un corps rebondit, de 0 à 1."
+      "restitution": "À quel point un corps rebondit, de 0 à 1.",
+      "specularIntensity": "L’entrée spéculaire du diélectrique de la surface, de 0 à 1 : sa réflectance à incidence normale en est 0,08 fois la valeur, si bien que 0,5 (la valeur d’une surface qui n’en déclare aucune) donne les 4 % habituels, 1 donne 8 % et 0 aucun reflet. Le facteur `KHR_materials_specular` d’un matériau glTF s’écrit tel qu’il est déclaré. Le métal l’ignore.",
+      "specularIntensityMap": "Multiplie `specularIntensity` par le canal alpha d’une image.",
+      "displacementMagnitude": "De combien, en mètres, la sortie `displacement` du graphe du matériau déplace une surface le long de sa normale là où elle vaut 1 de plus que `displacementCenter` : la hauteur déplacée est `(sortie - displacementCenter) * displacementMagnitude`.",
+      "displacementCenter": "La valeur de la sortie `displacement` qui laisse la surface où elle est, de 0 à 1.",
+      "displacementFadeStart": "Où le déplacement s’estompe avec la distance, en taille à l’écran en pixels de son plus grand déplacement : entier au-dessus de `displacementFadeStart`, disparu en dessous de `displacementFadeEnd`, qui doit être le plus petit ; tous deux omis, il ne s’estompe jamais.",
+      "displacementFadeEnd": "Voir `displacementFadeStart`."
     }
   },
   "MaterialSettings": {
@@ -3376,7 +3397,10 @@
       "rotateZ": "Tourne le nœud autour de son propre axe z.",
       "translateOnAxis": "Déplace le nœud le long de son propre `axis`.",
       "getWorldDirection": "Le sens dans lequel le nœud regarde dans le monde.",
-      "localBounds": "La boîte du contenu propre à ce nœud, dans son repère local ; un simple nœud n’en a pas."
+      "localBounds": "La boîte du contenu propre à ce nœud, dans son repère local ; un simple nœud n’en a pas.",
+      "firstPerson": "Si l’objet est dessiné comme un objet à la première personne (les mains et l’arme d’un joueur) : il ne projette aucune ombre dynamique propre, et ses pixels portent la marque de première personne que les ombres traitent à part ; `false` par défaut, et jamais avec `firstPersonWorldSpaceRepresentation`.",
+      "firstPersonWorldSpaceRepresentation": "Si l’objet tient lieu, dans le monde, d’un objet à la première personne (le corps du joueur) : la vue de son propriétaire ne le voit pas, et il projette son ombre dans le clipmap de première personne des soleils (`shadowFirstPersonClipmap`), à part des cartes ordinaires, et la vue qui le possède (celle de la caméra principale) ne le dessine pas ; `false` par défaut, et jamais avec `firstPerson`.",
+      "castHiddenShadow": "Si l’objet continue de projeter ses ombres tant qu’il est caché (`visible = false`, ou sous un nœud caché) : aucune vue ne le dessine, les cartes d’ombre si ; `false` par défaut, et lu seulement pour un objet qui projette des ombres et n’est pas un `firstPersonWorldSpaceRepresentation`."
     }
   },
   "ObjectPhysics": {
@@ -3772,7 +3796,9 @@
       "forVertexTangents": "Si ses facteurs de normale ont été écrits pour des tangentes de sommet ; non dit, inconnu.",
       "shininess": "L’exposant et la couleur de reflet d’une surface Phong, tels que déclarés.",
       "released": "Appelé quand la ressource est rendue : ce qu’écoute la copie du moteur.",
-      "dispose": "Rend la ressource."
+      "dispose": "Rend la ressource.",
+      "subsurfaceOpacity": "L’opacité de sa sous-surface, de 0 à 1, un là où rien n’est dit (`SUBSURFACE_OPACITY_MODEL_SHIFT`).",
+      "specularIntensity": "L’entrée spéculaire d’un diélectrique (`KHR_materials_specular`) : sa réflectance à incidence normale en est 0,08 fois la valeur (`surfaceF0`), 0,5 là où une surface n’en déclare aucune. L’alpha de sa carte la met à l’échelle. Déclarée, elle est lue dans l’enregistrement quoi que la surface porte d’autre."
     }
   },
   "PageUnit": {
@@ -4693,7 +4719,8 @@
       "shaftBloomScale": "Avec le bloom : le facteur sur la couleur ajoutée ; absent, 0,2.",
       "shaftBloomThreshold": "Avec le bloom : la luminosité que l’image doit dépasser, après exposition, pour rayonner ; absent, 0.",
       "shaftBloomMaxBrightness": "Avec le bloom : une luminosité au-dessus est ramenée à celle-ci, après exposition ; absent, 100.",
-      "shaftBloomTint": "Avec le bloom : le facteur sur la couleur du bloom, linéaire, trois nombres d’au moins 0 ; absent, blanc."
+      "shaftBloomTint": "Avec le bloom : le facteur sur la couleur du bloom, linéaire, trois nombres d’au moins 0 ; absent, blanc.",
+      "mobility": "Comment la lumière est censée bouger et être éclairée : `static` (cuite dans les lightmaps, elle ne bouge ni ne change et ne projette aucune ombre dynamique), `stationary` (elle ne bouge pas, sa couleur et son intensité peuvent changer : sa lumière directe sur les surfaces statiques est cuite, ses ombres dynamiques sont projetées) ou `movable` (entièrement dynamique) ; absente, `stationary`, le défaut de la référence pour tous les types de lumière. La lightmap volumétrique la lit (`mobilityOf`)."
     }
   },
   "SceneLightStore": {
@@ -4931,7 +4958,7 @@
   },
   "ShadowCacheInvalidation": {
     "summary": "COMMENT UN NŒUD DE SCÈNE TIENT SON DÉCALAGE DE POSITION MONDE : les quatre interrupteurs de l’objet dont les matériaux des surfaces déplacent des sommets par une sortie `worldPositionOffset` (`Material.graph`), lus par les rastérisations du moteur.",
-    "description": "`evaluateWorldPositionOffset` (true) active le décalage pour l’objet, `worldPositionOffsetDisableDistance` (0, jamais) l’arrête au-delà de ce nombre de mètres entre la caméra et le centre des bornes de l’objet, `worldPositionOffsetWritesVelocity` (true) fait du mouvement un mouvement pour l’anti-crénelage temporel et le flou de mouvement, et `shadowCacheInvalidation` dit comment ses ombres sont gardées : `auto` (le défaut) les redessine tant que son décalage est évalué ou que l’objet bouge, `always` à chaque image, `rigid` pas pour son décalage, `static` ni pour son décalage ni pour ses déplacements. Le `alwaysEvaluateWorldPositionOffset` propre à un matériau remplace les deux premiers, son `maxWorldPositionOffset` limite jusqu’où vont les sommets. Tenus dans une table à part, de sorte qu’un nœud qui n’en fixe aucun ne coûte rien : un interrupteur s’écrit par la propriété du nœud (`defineOffsetSwitches`), et est noté comme tout champ de nœud qu’aucun hook de pose n’entend (`noteNodeWrite`)."
+    "description": "`evaluateWorldPositionOffset` (true) active le décalage pour l’objet, `worldPositionOffsetDisableDistance` (0, jamais) l’arrête au-delà de ce nombre de mètres entre la caméra et le centre des bornes de l’objet, `worldPositionOffsetWritesVelocity` (true) fait du mouvement un mouvement pour l’anti-crénelage temporel et le flou de mouvement, et `shadowCacheInvalidation` dit comment ses ombres sont gardées : `auto` (le défaut) les redessine tant que son décalage est évalué ou que l’objet bouge, `always` à chaque image, `rigid` pas pour son décalage, `static` ni pour son décalage ni pour ses déplacements. Le `alwaysEvaluateWorldPositionOffset` propre à un matériau remplace les deux premiers, son `maxWorldPositionOffset` limite jusqu’où vont les sommets. Deux autres interrupteurs de l’objet sont tenus à côté, tant ils sont rarement fixés : `firstPerson` (false), un objet dessiné comme un objet à la première personne — dans l’espace de la vue, près de la caméra, comme les mains et l’arme d’un joueur —, qui ne projette aucune ombre dynamique propre, et `firstPersonWorldSpaceRepresentation` (false), l’objet qui tient lieu d’un objet à la première personne dans le monde — le corps du joueur —, que la vue de son propriétaire ne voit pas et qui projette son ombre à part des cartes ordinaires (`shadowFirstPersonClipmap`). Un nœud est l’un ou l’autre, jamais les deux. Le dernier, `castHiddenShadow` (false), laisse un objet caché (`visible = false`, ou sous un nœud caché) continuer de projeter son ombre ; aucune vue ne le dessine. La représentation dans l’espace du monde est cachée à la vue qui la possède et projette, quoi que dise ceci. Tenus dans une table à part, de sorte qu’un nœud qui n’en fixe aucun ne coûte rien : un interrupteur s’écrit par la propriété du nœud (`defineOffsetSwitches`), et est noté comme tout champ de nœud qu’aucun hook de pose n’entend (`noteNodeWrite`)."
   },
   "ShadowDistanceOption": {
     "summary": "Une distance d’ombre telle qu’un hôte l’écrit : mètres, `true` le défaut, `false` aucune."
@@ -4948,7 +4975,7 @@
       "shadowVsmPagesRendered": "Pages effacées puis rendues dans cette image ; relues quelques images plus tard.",
       "shadowVsmFreePages": "Pages physiques libres dans le dernier message d’état du pool.",
       "shadowVsmLodBias": "Le biais de LOD de résolution global que fixe la charge du pool.",
-      "shadowVsmProjectionPasses": "Passes de projection de cette image, quatre lumières chacune.",
+      "shadowVsmProjectionPasses": "Passes de projection de cette image : celles des soleils et celles des lumières locales.",
       "shadowVsmInvalidationMs": "Temps GPU de l’invalidation des pages, en ms, d’après les temps des passes.",
       "shadowVsmMarkingMs": "Temps GPU du marquage des pages, en ms, d’après les temps des passes.",
       "shadowVsmPageManagementMs": "Temps GPU de la gestion des pages, en ms, d’après les temps des passes.",
@@ -4960,15 +4987,15 @@
       "gpuLightListsMs": "Temps GPU des listes de lumières.",
       "tileLightPoolReserved": "Mots que les tuiles au-delà de leur liste ont réservés dans la réserve d’indices de lumières, sur la dernière image échantillonnée d’une scène de plus de lumières qu’une liste ; `null` sinon.",
       "tileLightPoolCapacity": "Mots que la réserve d’indices de lumières tenait sur cette image échantillonnée ; `null` de même.",
-      "tileLightPoolOverflowed": "Si une tuile n’a pas trouvé de place dans la réserve sur cette image échantillonnée et a parcouru toutes les lumières.",
-      "tileLightPoolGrowths": "Nombre de fois où la réserve a grandi jusqu’à ce qu’une image débordante demandait, depuis l’ouverture de l’explorateur.",
+      "tileLightPoolOverflowed": "Si une colonne n’a trouvé aucune place dans la réserve sur cette image échantillonnée et a abandonné les lumières au-delà (`lightGridMaxCulledLightsPerCell`).",
       "gpuShadowsMs": "Temps GPU de l’étape Ombres : chaque passe des shadow maps virtuelles, et aucune autre passe.",
       "gpuLightingMs": "Temps GPU de l’éclairage.",
       "bounce": "Les sondes de la lumière qui rebondit : si elles existent, ce qu’elles tiennent, ce qu’ont fait leurs mises à jour.",
       "reflections": "Les rayons des réflexions de la dernière image comptés : où chacun s’est arrêté, comment ont fini leurs marches dans le champ de distance global et les pas qu’ils ont faits. `null` tant que la vue ne fait pas de réflexions.",
       "surfaceCache": "Le cache de surface de la dernière image : le remplissage de son atlas, les pages qu’il a capturées, pourquoi il est désactivé. `null` tant qu’il n’est pas fait.",
       "ambientOcclusion": "L’occlusion ambiante en espace écran de la dernière image. `null` tant que la vue n’en tient aucune.",
-      "toneTable": "Le cube dans lequel l’étalonnage des couleurs cuit les couleurs de l’affichage. `null` tant que la vue n’en tient aucun."
+      "toneTable": "Le cube dans lequel l’étalonnage des couleurs cuit les couleurs de l’affichage. `null` tant que la vue n’en tient aucun.",
+      "shadowVsmOverflowFlags": "Les débordements que les ombres ont vus ces 10 dernières secondes, un bit par sorte : 1 la file de travaux du marquage hors clusters, 2 les lumières de la projection en une passe au-delà de son masque, 4 la réserve de pages, 8 la liste des projecteurs au-delà de sa place. 0 si aucun, ou si `shadowAllowScreenOverflowMessages` est false."
     }
   },
   "ShadowOptions": {
@@ -5333,7 +5360,9 @@
       "translucencyLighting": "Comment les lumières éclairent une surface mélangée (`VisMaterial.translucencyLighting`).",
       "translucencyPass": "La passe de l’image dans laquelle une surface mélangée est dessinée (`VisMaterial.translucencyPass`).",
       "responsive": "À quel point l’anti-crénelage temporel fait confiance à l’historique là où la surface est dessinée (`RESPONSIVE_SHIFT`) : `'medium'` lit ses pixels comme une animation de pixels, `'full'` redémarre leur historique à chaque image.",
-      "graph": "Le graphe qui calcule les sorties à la place des paramètres et des cartes ; lu par les familles qui dessinent la couleur du matériau (`GRAPH_FAMILIES`, `surfaceRecord.ts`)."
+      "graph": "Le graphe qui calcule les sorties à la place des paramètres et des cartes ; lu par les familles qui dessinent la couleur du matériau (`GRAPH_FAMILIES`, `surfaceRecord.ts`).",
+      "subsurfaceOpacity": "À quel point sa sous-surface est opaque, de 0 à 1.",
+      "specularIntensity": "L’entrée spéculaire du diélectrique d’une surface physique, que déclare un facteur glTF `KHR_materials_specular`, et la carte dont l’alpha la met à l’échelle ; non dite, la surface garde 0,5."
     }
   },
   "SurfaceDisplacement": {
@@ -5591,7 +5620,7 @@
   },
   "TextureCompression": {
     "summary": "Quelle famille de blocs prennent les réservoirs d’une session, et tout ce qui en découle.",
-    "description": "Le cache stocke chaque chaîne en BC (`PREVIEW_STORED_FORMAT`) et la cuit dans les autres familles que la cuisson a demandées — toutes par défaut — seulement là où une porte de qualité l’a gardée ; l’appareil dit quelle famille il échantillonne — les cartes de bureau BC, les mobiles ASTC ou ETC2, certains plusieurs, un adaptateur logiciel aucune. Un atlas a alors un réservoir par LANE, les dispositions que nomme le fichier annexe : `lossless` (RGBA8, quatre octets par texel — ce que lit une chaîne que la famille de la session ne tient pas, ses fichiers BC décodés (`blockDecode.ts`), et ce que lit une image de l’hôte), `rgba` (BC7, ASTC ou ETC2 RGBA8, un octet par texel) et `two-channel` (BC5, ASTC luminance-alpha ou EAC RG11, un octet par texel, le X et le Y de la carte de normales avec Z reconstruit par le shader). Rien n’est perdu par le moteur : une texture prend le lane dans lequel sa chaîne a été gardée, et le choix est publié (`texturePoolFormat`)."
+    "description": "Le cache stocke chaque chaîne en BC (`PREVIEW_STORED_FORMAT`) et la cuit dans les autres familles que la cuisson a demandées — toutes par défaut — seulement là où une porte de qualité l’a gardée ; l’appareil dit quelle famille il échantillonne — les cartes de bureau BC, les mobiles ASTC ou ETC2, certains plusieurs, un adaptateur logiciel aucune. Un atlas a alors une réserve par LANE, les dispositions que nomme le fichier annexe : `lossless` (RGBA8, quatre octets par texel — ce que lit une chaîne que la famille de la session ne tient pas, ses fichiers BC décodés (`blockDecode.ts`), et ce que lit une image de l’hôte), `rgba` (BC7, ASTC ou ETC2 RGBA8, un octet par texel), `two-channel` (BC5, ASTC luminance-alpha ou EAC RG11, un octet par texel, le X et le Y de la carte de normales avec Z reconstruit par le shader). La troisième réserve de l’atlas de données est la réserve de CANAL : BC5 pour les cartes de normales, ou — là où l’atlas n’en tient aucune — celle des cartes à un canal (`alpha`, `grayscale`, `displacementmap`) : BC4, un demi-octet par texel, quand chaque chaîne de la réserve est BC4 et que l’appareil échantillonne BC ; sinon R8, un octet par texel, les blocs BC4 décodés (`channelPoolOf`). Rien n’est perdu par le moteur : une texture prend le lane dans lequel sa chaîne a été gardée, et le choix est publié (`texturePoolFormat`)."
   },
   "TextureFilter": {
     "summary": "Règle d’échantillonnage d’une texture : le filtre de base, et la règle des mips quand l’échantillonneur réduit."
@@ -5637,7 +5666,8 @@
       "level": "Quel niveau.",
       "format": "Quel format.",
       "rgba": "Décodé en RGBA8 — la lecture par le lane sans perte des blocs de la famille stockée.",
-      "half": "Des texels demi-flottants, non des blocs : le fichier du lane demi-flottant (`tileRecord`)."
+      "half": "Le lane demi-flottant lit ceci : des texels, qu’ils viennent d’un fichier demi-flottant ou de blocs BC6H décodés (`tileLevelBytes`).",
+      "single": "La réserve à un canal de texels de huit bits lit ceci : un octet par texel, les blocs d’une chaîne BC4, `gray` ou `displacement` décodés (`tileLevelBytes`)."
     }
   },
   "TextureLevelFormat": {
@@ -5654,7 +5684,8 @@
       "level": "Quel niveau.",
       "format": "Quel format.",
       "rgba": "Décodé en RGBA8 — la lecture par le lane sans perte des blocs de la famille stockée.",
-      "half": "Des texels demi-flottants, non des blocs : le fichier du lane demi-flottant (`tileRecord`)."
+      "half": "Le lane demi-flottant lit ceci : des texels, qu’ils viennent d’un fichier demi-flottant ou de blocs BC6H décodés (`tileLevelBytes`).",
+      "single": "La réserve à un canal de texels de huit bits lit ceci : un octet par texel, les blocs d’une chaîne BC4, `gray` ou `displacement` décodés (`tileLevelBytes`)."
     }
   },
   "TextureLevelStore": {
@@ -6172,7 +6203,9 @@
       "model": "Le modèle de surface sur lequel une famille non physique se projette (`../materials/surface/surfaceModel.ts`) ; physique si absent.",
       "lineWidth": "Largeur en pixels CSS à laquelle les rastérisations élargissent un quad de ligne (`shader/lineWgsl.ts`) ; absente ou nulle sur une surface qui dessine des triangles.",
       "dashSize": "Le tiret et l’intervalle d’une ligne en tirets le long de la ligne, en unités du monde (`shader/lineWgsl.ts`, `lineDash`) ; absent sur toute autre surface.",
-      "sprite": "Le quad d’un sprite, que chaque rastérisation tourne face à la caméra (`shader/spriteWgsl.ts`) : sa rotation dans l’image en radians, et s’il rétrécit avec la distance ; absent sur toute autre surface."
+      "sprite": "Le quad d’un sprite, que chaque rastérisation tourne face à la caméra (`shader/spriteWgsl.ts`) : sa rotation dans l’image en radians, et s’il rétrécit avec la distance ; absent sur toute autre surface.",
+      "subsurfaceOpacity": "L’opacité de sa sous-surface, de 0 à 1, un là où rien n’est dit (`SUBSURFACE_OPACITY_MODEL_SHIFT`).",
+      "specularIntensity": "L’entrée spéculaire d’un diélectrique (`KHR_materials_specular`) : sa réflectance à incidence normale en est 0,08 fois la valeur (`surfaceF0`), 0,5 là où une surface n’en déclare aucune. L’alpha de sa carte la met à l’échelle. Déclarée, elle est lue dans l’enregistrement quoi que la surface porte d’autre."
     }
   },
   "VolumeMaterial": {
@@ -6298,13 +6331,11 @@
       "autoForward": "Vol seulement : avance à `movementSpeed` sans touche, W plus vite, S jusqu’à l’arrêt.",
       "onLand": "Personnage seulement : appelée à l’atterrissage avec la vitesse de descente en m/s ; `null` par défaut.",
       "onJump": "Personnage seulement : appelée quand le corps quitte le sol sur un saut ; `null` par défaut.",
-      "walkSpeed": "Personnage seulement : mètres par seconde à pied ; 3,5 par défaut, un footing.",
+      "walkSpeed": "Personnage seulement : mètres par seconde à pied ; 6 par défaut.",
       "sprintSpeed": "Personnage seulement : mètres par seconde avec Maj enfoncée ; 6,5 par défaut, la vitesse de pointe d’un adulte non entraîné.",
-      "jumpSpeed": "Personnage seulement : vitesse vers le haut au départ d’un saut, en m/s ; `sqrt(2 g h)` atteint `h`, 0,5 m par défaut, un saut sans élan.",
-      "gravityScale": "Personnage seulement : la part de la gravité du monde (`world.physics.gravity`) que ressent le corps, en montant, en tombant et dans l’emprise de sa semelle ; 1 par défaut, 0 est en apesanteur.",
-      "airControl": "Personnage seulement : à quelle vitesse les touches dirigent en l’air, en fraction du démarrage au sol ; 0,05 par défaut, 0 est balistique.",
-      "responseTime": "Personnage seulement : secondes que mettent les jambes pour atteindre 95 % de la vitesse voulue, au sol ; 0,12 par défaut. Le frottement du sol borne d’abord le départ : une semelle pousse au plus `μ g`, `μ` l’adhérence d’une semelle de caoutchouc sur le `material.physics` du sol (pierre tant que la physique n’en nomme aucun), si bien qu’un footing est atteint en 0,45 s sur la pierre et 2,2 s sur la glace.",
-      "stopTime": "Personnage seulement : secondes que mettent les jambes pour perdre 95 % de la vitesse une fois aucune touche enfoncée, au sol ; 0,12 par défaut. Le frottement du sol borne d’abord l’arrêt : un footing glisse `v² / (2 μ g)`, 0,8 m sur la pierre et 3,8 m sur la glace ; un temps plus long freine plus doucement.",
+      "jumpSpeed": "Personnage seulement : vitesse vers le haut au départ d’un saut, en m/s ; 4,2 par défaut (un apex de 0,9 m sur Terre).",
+      "gravityScale": "Personnage seulement : la part de la gravité du monde (`world.physics.gravity`) que ressent le corps ; 1 par défaut, 0 est en apesanteur.",
+      "airControl": "Personnage seulement : la part de la poussée des touches qu’a un corps en l’air ; 0,05 par défaut, 0 est balistique.",
       "capsuleRadius": "Personnage seulement : rayon du corps, en mètres ; une demi-largeur d’épaules (0,23 m) par défaut.",
       "capsuleHeight": "Personnage seulement : hauteur du corps, en mètres ; 1,75 par défaut.",
       "eyeHeight": "Personnage seulement : hauteur de la caméra au-dessus des pieds, en mètres ; 1,64 par défaut.",
@@ -6326,10 +6357,23 @@
       "flying": "Personnage seulement : indique si le corps vole, libre de la gravité ; false par défaut. Le remettre à false laisse le corps tomber.",
       "buoyancy": "Personnage seulement : la part de son poids dont l’eau soulève un corps entièrement immergé ; 1 par défaut, un corps qui flotte sur place.",
       "fluidFriction": "Personnage seulement : le frottement du fluide dans lequel un corps nage ou vole, par seconde ; 0,3 par défaut.",
-      "maxAcceleration": "Personnage seulement : mètres par seconde carrée dont le corps prend de la vitesse en nageant et en volant ; 20,48 par défaut.",
+      "maxAcceleration": "Personnage seulement : mètres par seconde carrée dont le corps prend de la vitesse au sol, en l’air, en nageant et en volant ; 20,48 par défaut.",
       "swimBraking": "Personnage seulement : mètres par seconde carrée dont le corps freine en nageant sans touche enfoncée, en plus du frottement de l’eau ; 0 par défaut.",
       "flyBraking": "Personnage seulement : la même chose en volant ; 0 par défaut.",
-      "vehicle": "Véhicule seulement : ce que conduisent les contrôles `'vehicle'` — tout objet doté de `drive(input)`, qui reçoit l’accélérateur, le frein, la direction et le frein à main à chaque changement des touches. `null` par défaut ; les contrôles `'vehicle'` ne tournent jamais sans lui : `kind = 'vehicle'` et `createWorld(…, { controls: 'vehicle' })` lèvent `NO_VEHICLE` tant qu’il est `null`, de même que le mettre à `null` pendant qu’ils conduisent."
+      "vehicle": "Véhicule seulement : ce que conduisent les contrôles `'vehicle'` — tout objet doté de `drive(input)`, qui reçoit l’accélérateur, le frein, la direction et le frein à main à chaque changement des touches. `null` par défaut ; les contrôles `'vehicle'` ne tournent jamais sans lui : `kind = 'vehicle'` et `createWorld(…, { controls: 'vehicle' })` lèvent `NO_VEHICLE` tant qu’il est `null`, de même que le mettre à `null` pendant qu’ils conduisent.",
+      "groundFriction": "Personnage seulement : par seconde, la vitesse à laquelle la vélocité tourne vers le souhait au sol, et la part de la vitesse que le freinage prend sans touche tenue ; 8 par défaut.",
+      "brakingDecelerationWalking": "Personnage seulement : mètres par seconde carrée dont un corps au sol freine sans touche tenue, en plus du frottement du sol ; 20,48 par défaut (tout `maxAcceleration`).",
+      "brakingDecelerationFalling": "Personnage seulement : la même en l’air ; 0 par défaut.",
+      "fallingLateralFriction": "Personnage seulement : le frottement qui tourne et freine la vélocité latérale d’un corps en l’air, par seconde ; 0 par défaut, un corps garde son élan.",
+      "brakingFrictionFactor": "Personnage seulement : le facteur sur un frottement pendant le freinage ; 2 par défaut.",
+      "brakingSubStepTime": "Personnage seulement : secondes en lesquelles le freinage est découpé au plus, si bien qu’une image lente freine comme une rapide ; un trente-troisième de seconde par défaut, gardé entre 1/75 et 1/20.",
+      "airControlBoostMultiplier": "Personnage seulement : le facteur sur `airControl` tant que la vitesse latérale est sous `airControlBoostVelocityThreshold`, le contrôle jamais au-dessus de 1 ; 2 par défaut, 0 le désactive.",
+      "airControlBoostVelocityThreshold": "Personnage seulement : mètres par seconde de vitesse latérale sous lesquels `airControl` est renforcé ; 0,25 par défaut.",
+      "terminalVelocity": "Personnage seulement : la chute la plus rapide d’un corps, en mètres par seconde ; 40 par défaut.",
+      "maxSimulationTimeStep": "Personnage seulement : secondes en lesquelles un pas est découpé au plus ; 0,05 par défaut.",
+      "maxSimulationIterations": "Personnage seulement : les sous-pas en lesquels un tick est découpé au plus ; 8 par défaut.",
+      "maxJumpApexAttemptsPerSimulation": "Personnage seulement : le nombre de fois qu’un tick est écourté pour finir exactement à l’apex d’un saut ; 2 par défaut.",
+      "minAnalogWalkSpeed": "Personnage seulement : la vitesse à pied qu’atteint la plus faible poussée de touche, en mètres par seconde ; 0 par défaut."
     }
   },
   "world.camera": {
@@ -6431,7 +6475,7 @@
     "description": "Écrits, les réglages nommés s’appliquent dès l’image suivante par-dessus le preset — un `null` le lui rend, un omis reste — ; un réglage que celui-ci ne prend pas est refusé."
   },
   "world.hiz": {
-    "summary": "Les réglages de la pyramide de profondeur, chacun par son champ (`WorldOptions`), résolus par-dessus la page et le preset de qualité : `hizTrace`, comment le tracé des reflets lit la pyramide ; `hizFoldTransparents`, si ses couches de tracé contiennent les surfaces transparentes ; `hizTransparentTest`, comment les clusters transparents sont testés contre elle ; `hizFullResDepth`, si la marche des sondes d’écran descend jusqu’à la profondeur en pleine résolution ; `lightGridHizCull`, si la grille de lumière laisse vides les cellules derrière la plus grande profondeur de leur colonne ; `hizPrime` (`'off'`, `'whenMissing'`, `'always'`) avec `hizPrimeSizeBias`, `hizPrimeDepthBias`, `hizPrimeErrorScale` et `hizPrimeFarFieldOnly`, la pyramide construite à partir d’un petit dessin grossier des objets qui fixent `farField`.",
+    "summary": "Les réglages de la pyramide de profondeur, chacun par son champ (`WorldOptions`), résolus par-dessus la page et le preset de qualité : `hizTrace`, comment le tracé des reflets lit la pyramide ; `hizFoldTransparents`, si ses couches de tracé contiennent les surfaces transparentes ; `hizTransparentTest`, comment les clusters transparents sont testés contre elle ; `hizFullResDepth`, si la marche des sondes d’écran descend jusqu’à la profondeur en pleine résolution ; `lightGridHizCull`, si la grille de lumière laisse vides les cellules derrière la plus grande profondeur de leur colonne ; `lightGridMaxCulledLightsPerCell`, les entrées de lumière que la grille de lumière de la vue tient par cellule ; `hizPrime` (`'off'`, `'whenMissing'`, `'always'`) avec `hizPrimeSizeBias`, `hizPrimeDepthBias`, `hizPrimeErrorScale` et `hizPrimeFarFieldOnly`, la pyramide construite à partir d’un petit dessin grossier des objets qui fixent `farField`.",
     "description": "Écrits, les réglages nommés s’appliquent dès l’image suivante par-dessus le preset — un `null` le lui rend, un omis reste — ; un réglage que celui-ci ne prend pas est refusé."
   },
   "world.lightFunction": {
@@ -6700,7 +6744,7 @@
       "shading": "Comment les casiers d’ombrage tiennent les pixels de chaque classe de matériau, chaque réglage par son champ (`WorldOptions`), résolu par-dessus la page et le preset de qualité. Écrits, les réglages nommés s’appliquent dès l’image suivante par-dessus le preset — un `null` le lui rend, un omis reste — ; un réglage que celui-ci ne prend pas est refusé.",
       "exposureSettings": "Les réglages de l’exposition automatique, utilisés là où `world.exposure` est `'auto'`, chacun par son champ (`WorldOptions`), résolus par-dessus la page et le preset de qualité : le biais, l’intervalle auquel la moyenne est tenue en EV100, l’étendue de l’histogramme, les parts de pixels laissées de côté, les vitesses en diaphragmes par seconde, la distance de transition, le poids du seau noir et la façon dont la luminance d’un pixel est lue. Écrits, les réglages nommés s’appliquent dès l’image suivante par-dessus le preset — un `null` le lui rend, un omis reste — ; un réglage que celui-ci ne prend pas est refusé.",
       "temporal": "Les réglages de l’anti-crénelage temporel à côté de son niveau, chacun par son champ (`WorldOptions`), résolus par-dessus la page et le preset de qualité : `temporalThinGeometry`, si la passe cherche de la géométrie plus fine qu’un pixel et y relâche son historique ; `temporalWaveOps`, `temporalWaveSize` et `temporalHalfPrecision`, comment ses programmes s’exécutent (sous-groupes, leur taille, flottants 16 bits, là où le périphérique les accorde), l’image restant la même ; les échantillons de l’historique, ceux de la mesure du scintillement, les seuils de la détection de géométrie fine, l’exposition à laquelle le rejet mesure et `temporalDownsampleQuality`, la qualité de l’image en demi-taille que lisent l’exposition et le bloom. Écrits, les réglages nommés s’appliquent dès l’image suivante par-dessus le preset — un `null` le lui rend, un omis reste — ; un réglage que celui-ci ne prend pas est refusé.",
-      "hiz": "Les réglages de la pyramide de profondeur, chacun par son champ (`WorldOptions`), résolus par-dessus la page et le preset de qualité : `hizTrace`, comment le tracé des reflets lit la pyramide ; `hizFoldTransparents`, si ses couches de tracé contiennent les surfaces transparentes ; `hizTransparentTest`, comment les clusters transparents sont testés contre elle ; `hizFullResDepth`, si la marche des sondes d’écran descend jusqu’à la profondeur en pleine résolution ; `lightGridHizCull`, si la grille de lumière laisse vides les cellules derrière la plus grande profondeur de leur colonne ; `hizPrime` (`'off'`, `'whenMissing'`, `'always'`) avec `hizPrimeSizeBias`, `hizPrimeDepthBias`, `hizPrimeErrorScale` et `hizPrimeFarFieldOnly`, la pyramide construite à partir d’un petit dessin grossier des objets qui fixent `farField`. Écrits, les réglages nommés s’appliquent dès l’image suivante par-dessus le preset — un `null` le lui rend, un omis reste — ; un réglage que celui-ci ne prend pas est refusé.",
+      "hiz": "Les réglages de la pyramide de profondeur, chacun par son champ (`WorldOptions`), résolus par-dessus la page et le preset de qualité : `hizTrace`, comment le tracé des reflets lit la pyramide ; `hizFoldTransparents`, si ses couches de tracé contiennent les surfaces transparentes ; `hizTransparentTest`, comment les clusters transparents sont testés contre elle ; `hizFullResDepth`, si la marche des sondes d’écran descend jusqu’à la profondeur en pleine résolution ; `lightGridHizCull`, si la grille de lumière laisse vides les cellules derrière la plus grande profondeur de leur colonne ; `lightGridMaxCulledLightsPerCell`, les entrées de lumière que la grille de lumière de la vue tient par cellule ; `hizPrime` (`'off'`, `'whenMissing'`, `'always'`) avec `hizPrimeSizeBias`, `hizPrimeDepthBias`, `hizPrimeErrorScale` et `hizPrimeFarFieldOnly`, la pyramide construite à partir d’un petit dessin grossier des objets qui fixent `farField`. Écrits, les réglages nommés s’appliquent dès l’image suivante par-dessus le preset — un `null` le lui rend, un omis reste — ; un réglage que celui-ci ne prend pas est refusé.",
       "lightFunction": "Les réglages des fonctions de lumière, chacun par son champ (`WorldOptions`), résolus par-dessus la page et le preset de qualité : `lightFunctionAtlas` (true) — si l’atlas est fait —, `lightFunctionSlotResolution` (128) et `lightFunctionAtlasSize` (4) — les texels par côté de l’emplacement et les emplacements par côté —, `lightFunctionMaxLights` (-1, sans limite), `lightFunctionFormat` (`'grey'` ou `'colour'`), et les consommateurs : `lightFunctionDeferred` (true), `lightFunctionFog` (true), `lightFunctionBounce` (true), `lightFunctionTranslucent` (false). Écrits, les réglages nommés s’appliquent dès l’image suivante par-dessus le preset — un `null` le lui rend, un omis reste — ; un réglage que celui-ci ne prend pas est refusé.",
       "volumetricLightmap": "Le réglage de la lightmap volumétrique, par son champ (`WorldOptions`), résolu par-dessus la page et le preset de qualité : `volumetricLightmap`, si la lumière précalculée est lue, activé par défaut. Écrit, le réglage nommé s’applique dès l’image suivante par-dessus le preset — `null` le lui rend, un champ omis reste — ; un réglage que celui-ci ne prend pas est refusé.",
       "globalDistanceField": "Les réglages du champ de distance global, chacun par son champ (`WorldOptions`), résolus par-dessus la page et le preset de qualité : `globalDistanceField` (true) — si les clipmaps sont faites —, `globalDistanceFieldClipmaps` (4), `globalDistanceFieldViewDistance` (20000 cm), leur résolution (128), le rythme de mise à jour (deux clipmaps par image, les plus grandes moins souvent), les caches (les maillages statiques composés à part), et les budgets de l’atlas où sont diffusés les champs de distance des maillages (`meshDistanceField…`). Écrits, les réglages nommés s’appliquent dès l’image suivante par-dessus le preset — un `null` le lui rend, un omis reste — ; un réglage que celui-ci ne prend pas est refusé.",
@@ -6724,7 +6768,7 @@
   },
   "WorldOptions": {
     "summary": "Ce qu’une page peut régler en créant un monde ; ne rien dire est le cas normal.",
-    "description": "À côté des options ci-dessous, la façon dont la vue streame les cellules d’une scène partitionnée et l’échauffement qu’attend un changement de HLOD, chaque réglage par son champ avec la valeur par défaut de la référence (`../../../../sdk-core/src/contracts/worldStreamingOptions.ts`) : `worldStreamingMaxLoadingCells` (4), `worldStreamingAngleWeight` (0.4), `worldStreamingSortByExtent` (true), `worldStreamingSortByPriority` (true), `worldStreamingUseGridRange` (true), `worldStreamingRangeScale` (1), `worldStreamingRadius` (100 m), `worldStreamingSector` (false), `worldStreamingSectorAngle` (360°), `worldStreamingZCulling` (false), `worldStreamingBlockOnSlowStreaming` (true), `worldStreamingBlockOnSlowStreamingRatio` (0.25), `worldStreamingUpdateOptimization` (true), `worldStreamingLocationQuantization` (4 m), `worldStreamingRotationQuantization` (10°), `worldStreamingForceUpdateFrameCount` (0), `worldStreamingForce2D` (false), `worldStreamingExtraRadius` (0 m), `worldStreamingExtraAngle` (0°), `worldStreamingTargetState` (`'activated'`), `worldStreamingPriority` (128), `worldStreamingUseVelocity` (false), `hlodEnabled` (true), `hlodWarmup` (true), `hlodWarmupFrames` (5), `hlodWarmupGeometry` (true), `hlodWarmupTextures` (true), `hlodWarmupTextureScale` (2), `hlodWarmupTextureClamp` (2048). Nommés ici, chacun l’emporte sur le preset de qualité ; changés ensuite par `world.worldStreaming`, dès l’image suivante. Les réglages de la coupe de même, chacun par son champ avec la valeur par défaut de la référence (`../../../../sdk-core/src/contracts/cutOptions.ts`) : `cutTwoPassOcclusion` (true), `cutOcclusionCulling` (true), `cutFrustumCulling` (true), `cutMinLodCulling` (true), `cutDrawDistanceCulling` (true : les distances de dessin d’une instance d’un maillage instancié écartent ; un objet à part entière est toujours écarté par elles), `cutDistanceCullToSphereEdge` (true : la distance de dessin d’un objet est mesurée jusqu’au bord de la sphère de ses bornes, sinon jusqu’à son centre), `cutViewDistanceScale` (1 ; les niveaux de qualité de la distance de vue l’écrivent), `cutViewDistanceApplySecondaryScale` (false) et `cutViewDistanceSecondaryScale` (1), une seconde échelle des distances de dessin qui les multiplie seulement une fois la première active, `cutViewDistanceFovMinAngle` (45) et `cutViewDistanceFovMaxAngle` (90), en degrés, avec `cutViewDistanceFovMinAngleScale` et `cutViewDistanceFovMaxAngleScale` (1 les deux) : l’échelle que prennent les distances de dessin d’un objet à part entière au premier angle et en dessous, au second et au-dessus, et entre les deux, `cutClipPlane` (false : le `clipPlane` d’une caméra ne s’applique que dans un monde créé avec lui activé, l’unique réglage lu une fois, à l’ouverture de la session), `cutClipPlaneCulling` (true), `cutViewFiltering` (true : les listes `hidden` et `showOnly` d’une caméra s’appliquent), `cutLodBiasFollowsUpscale` (true), `cutLodBiasOffset` (0), `cutLodBiasMin` (-2), `cutEdgeScaleBudgetMs` (0 : aucun, le temps GPU en ms accordé à la coupe et à son raster, au-delà duquel l’erreur écran est grossie là où l’échelle de rendu est `'auto'`) et `cutEdgeScaleMinPercent` (30, de 1 à 100 : l’échelle la plus basse à laquelle elle le fait descendre), `cutMaxNodes` (2097152), `cutMaxCandidateClusters` (16777216), `cutMaxVisibleClusters` (4194304) ; changés ensuite par `world.cut`. L’heuristique de la résolution dynamique de même (`../../../../sdk-core/src/contracts/dynamicResolutionOptions.ts`, ajustant l’échelle de rendu et l’échelle de bord de la coupe à leur budget de temps GPU) : `dynamicResolutionFrameTimeBudgetMs` (0 : l’intervalle du plafond d’images), `dynamicResolutionThrottlingMaxPercent` (0 : aucun), `dynamicResolutionHeadroomPercent` (10), `dynamicResolutionOverBudgetHeadroomPercent` (0), `dynamicResolutionHistorySize` (16), `dynamicResolutionFrameWeightExponent` (0.9), `dynamicResolutionChangePeriod` (8), `dynamicResolutionIncreaseAmortization` (0.9), `dynamicResolutionChangePercentThreshold` (2), `dynamicResolutionMaxOverBudgetFrames` (2, lu au moins 2) et `dynamicResolutionUseCpuTimeLogic` (false) ; changés ensuite par `world.dynamicResolution`. Les réglages de l’animation de même (`../../../../sdk-core/src/contracts/animationOptions.ts`) : `animationMinScreenSize` (0.1), `animationBankInterpolation` (true), `animationBankTimeScale` (1) ; changés ensuite par `world.animation`. Ceux de l’ombrage de même (`../../../../sdk-core/src/contracts/shadingOptions.ts`) : `shadeBinningMode` (`'auto'`, ou `'pixel'`, `'quad'`) et `materialClosures` (`'single'` : chaque surface ombrée comme une seule dalle par pixel, un vernis fusionné dans sa base ; ou `'layered'` : le vernis une couche à part) ; changés ensuite par `world.shading`. Ceux de l’exposition automatique de même (`../../../../sdk-core/src/contracts/exposureOptions.ts`), utilisés là où `world.exposure` est `'auto'`, la valeur par défaut : `exposureBias` (+1 stop), `exposureMinBrightness` (−10) et `exposureMaxBrightness` (+20) en EV100, `exposureHistogramLogMin` (−10) et `exposureHistogramLogMax` (+20) en stops de luminance, `exposureLowPercent` (10) et `exposureHighPercent` (90), `exposureSpeedUp` (3) et `exposureSpeedDown` (1) en stops par seconde, `exposureTransitionDistance` (1.5 stop), `exposureBlackBucketWeight` (0) et `exposureLuminanceMethod` (`'uniform'`, ou `'ntsc'`, `'workingSpace'`), `exposureMethod` (`'histogram'`, ou `'basic'`, `'manual'` : l’exposition de la caméra, lue d’après `exposureApplyPhysicalCamera` (true), `exposureCameraShutterSpeed` (60) et `exposureCameraIso` (100) et le biais), `exposureLensAttenuation` (0.78), les `preExposure` (true), `preExposureOverride` (0) et `cachedLightingPreExposure` (4 stops, celle de la capture temps réel de la lumière du ciel) de la pré-exposition, qui s’appliquent à une vue éclairée quelle que soit son exposition, et les `localExposureHighlightContrast` et `localExposureShadowContrast` (0.8, l’exposition locale étant active), `localExposureDetailStrength` (1), `localExposureBlurBlend` (0.6), `localExposureBlurSize` (50 %), `localExposureMiddleGreyBias` (0) de l’exposition locale et les deux seuils et leurs forces, qui s’appliquent à une vue éclairée quelle que soit son exposition ; changés ensuite par `world.exposureSettings`. La courbe de compensation de l’exposition, `exposureCurve` (aucune), et son masque de mesure, `exposureMeterMask` (aucun), ne sont lus qu’à l’ouverture. Ceux de la passe temporelle de même (`../../../../sdk-core/src/contracts/temporalOptions.ts`) : `temporalThinGeometry` (false) — si elle cherche la géométrie plus fine qu’un pixel et y relâche son historique, à tout niveau sauf `'off'` —, `temporalWaveOps` (true), `temporalWaveSize` (0) et `temporalHalfPrecision` (true) — comment ses programmes tournent : par sous-groupes, à quelle taille, en flottants 16 bits, là où l’appareil les accorde, l’image identique —, les échantillons de l’historique (`temporalHistorySampleCount`, `temporalShadingRejectionSampleCount`, `temporalVelocityWeightClampingSampleCount`, `temporalVelocityWeightClampingPixelSpeed`), ceux de la mesure de scintillement (`temporalFlickering…`), l’exposition à laquelle le rejet mesure (`temporalShadingExposureOffset`), les seuils de la détection de géométrie fine (`temporalThinGeometry…`) et la qualité de l’image de demi-taille que lisent l’exposition et le bloom (`temporalDownsampleQuality`), chacun à la valeur par défaut de la référence ; changés ensuite par `world.temporal`. Les ombres du soleil de même (`../../../../sdk-core/src/contracts/shadowOptions.ts`) : `shadowDistanceScale` (1, de 0 à 2) — le facteur sur le `shadowDistance` de chaque lumière directionnelle —, `farShadowCulling` (true) — si les shadow maps d’un soleil écartent les projeteurs dont la profondeur, moins leur rayon, dépasse le bord de cette distance (un peu plus loin : 427 mètres à 400), sauf si leur objet pose `castFarShadow` —, `farShadowCullsAllMeshes` (false) — si ce test atteint chaque projeteur, ou seulement les coques fusionnées du monde de ses niveaux plus grossiers —, `shadowNearLevels` (10, de 0 à 10, au plus les `shadowCascades` de la lumière), `shadowOverlapScale` (1, de 0 à 2) et `shadowFarField` (true : si la cascade de champs de distance suit les niveaux proches, là où la scène a des champs de distance) — les trois qui façonnent le bord —, ceux des niveaux lointains et de cette cascade (`../../../../sdk-core/src/contracts/sunShadowOptions.ts` : `shadowMaxFarCascades`, `shadowFarDistanceOverride` (aucun niveau lointain n’est dessiné : aucun effet visible), `distanceFieldDistanceScale`, `distanceFieldFarTransitionScale`, `distanceFieldShadowQuality`, `distanceFieldShadowFullResolution`, `distanceFieldShadowTileSize` et `distanceFieldShadowTwoSidedBias`), et ceux des shadow maps elles-mêmes (`../../../../sdk-core/src/contracts/shadowMapOptions.ts` : les niveaux et la plage de profondeur du clipmap, les pages grossières, les biais de résolution, le seuil de rayon, les rayons et pas d’un tracé et le réservoir de pages) ; changés ensuite par `world.shadows`. Le dessin du flou de mouvement de même (`../../../../sdk-core/src/contracts/motionBlurOptions.ts`) : `motionBlurQuality` (`'veryHigh'`, ou `'off'`, `'low'`, `'medium'`, `'high'` : 16 échantillons par pixel au plus, moins aux niveaux plus bas), `motionBlurHalfResGather` (false), `motionBlurHalfResInput` (true), `motionBlurSeparable` (false), `motionBlurScatter` (false) et `motionBlurDirections` (1, ou 2) ; changés ensuite par `world.motionBlur`. Le dessin de la profondeur de champ de même (`../../../../sdk-core/src/contracts/depthOfFieldRules.ts`) : `depthOfFieldQuality` (`'on'`, ou `'off'`), `depthOfFieldGatherDivisor` (2), `depthOfFieldAccumulator` (`'high'`), `depthOfFieldRingCount` (4), `depthOfFieldPostfilter` (`'median'`), les réglages du scatter et du recombine et les autres que liste le fichier, chacun à la valeur par défaut de la référence ; changés ensuite par `world.depthOfField`. Le dessin du bloom de même (`../../../../sdk-core/src/contracts/bloomRules.ts`) : `bloomQuality` (`'highest'`, ou `'off'`, `'lowest'`, `'low'`, `'medium'`, `'high'` : combien des six niveaux gaussiens sont dessinés), `bloomCross` (0), `bloomScreenPercentage` (50 : la résolution de la convolution), `bloomApplyLocalExposure` (true) et `bloomCacheKernel` (true) ; changés ensuite par `world.bloom`. Ceux du flou gaussien de même (`../../../../sdk-core/src/contracts/gaussianBlurRules.ts`) : `gaussianFastBlurThreshold` (100 : le rayon à partir duquel la première passe d’un flou est réduite de moitié), `gaussianSampleScale` (1 : la portée du noyau) et `gaussianLoopMode` (0 : le plus de lectures d’une passe) ; changés ensuite par `world.gaussianBlur`. Ceux des effets de film de même (`../../../../sdk-core/src/contracts/filmOptions.ts`) : le grain (`filmGrain…`, désactivé par défaut), la frange de couleur (`chromaticAberration…`, désactivée), l’aspect de la vignette (`vignette…`, à côté de la force de la scène), `tonemapperQuality` (5), `tonemapperSharpen` (−1 : celui de la scène), la teinte (`sceneColorTint…`, 1) et `quantizationDitheringBits` (0 : le pas propre de l’affichage) ; changés ensuite par `world.film`. Ceux du brouillard volumétrique (`../../../../sdk-core/src/contracts/volumetricFogOptions.ts`) : `volumetricFogQuality` (`'high'` ; `'off'` n’en dessine aucun, `'low'`, `'high'` et `'ultra'` règlent la taille de cellule et la profondeur de la grille et les échantillons de l’historique) et onze réglages avec lesquels il est lu, changés ensuite par `world.volumetricFog` ; le brouillard n’existe que dans une scène dont le brouillard pose `volumetric`. Ceux du volume d’éclairage de translucidité de même (`../../../../sdk-core/src/contracts/translucencyVolumeOptions.ts`) : `translucencyVolume` (true), `translucencyVolumeDim` (64 cellules de côté de chacune de ses deux cascades), `translucencyVolumeInnerDistance` (15 m), `translucencyVolumeOuterDistance` (50 m), `translucencyVolumeBlur` (true), `translucencyVolumeTemporal` (false) et les autres, changés ensuite par `world.translucencyVolume` ; il éclaire les surfaces translucides dont le matériau pose `translucencyLighting` sur un mode de volume. Le tracé des réflexions de même (`../../../../sdk-core/src/contracts/reflectionOptions.ts`) : `reflectionScreenSteps` (50, les itérations de la marche d’un rayon réfléchi dans l’écran ; sa marche dans la scène est celle du champ de distance global, 256 pas par clipmap), et `reflectionDistantScreenTraces` (true), `reflectionDistantScreenSteps` (16) et `reflectionDistantScreenDistance` (2000 m), le tracé d’écran lointain, et `reflectionFrontLayer` (false), si la couche avant des transparents est tracée, `reflectionSkylightLeaking` (0, avec sa teinte et son albédo moyen), la lumière diffuse du ciel qui fuit sur un impact, changés ensuite par `world.reflections` ; `reflectionStatistics` (false), les compteurs des rayons, est lu à l’ouverture de la session. Ceux du cache de surface de même (`../../../../sdk-core/src/contracts/surfaceCacheOptions.ts`) : `surfaceCacheAtlasSize` (4096, le côté en texels de l’atlas dans lequel sont capturées les cartes de chaque maillage), `surfaceCacheCardCapturesPerFrame` (300), `surfaceCacheCardMaxResolution` (512), `surfaceCacheAllowCardSharing` (true), `surfaceCacheDilationMode` (0) et les autres, changés ensuite par `world.surfaceCache`. Ceux de l’occlusion ambiante en espace écran de même (`../../../../sdk-core/src/contracts/ambientOcclusionOptions.ts`) : `ambientOcclusion` (true : l’interrupteur général), `ambientOcclusionIntensity` (0.5 ; 0 est désactivé), `ambientOcclusionRadius` (2 m) et son `ambientOcclusionRadiusInWorldSpace` (false), `ambientOcclusionFadeDistance` (80 m) et `ambientOcclusionFadeRadius` (50 m), `ambientOcclusionPower` (2), `ambientOcclusionBias` (3), la qualité (`ambientOcclusionQuality`, 50) avec `ambientOcclusionLevels` (-1) et `ambientOcclusionMaxQuality` (100), et `ambientOcclusionWithScreenProbes` (false) ; changés ensuite par `world.ambientOcclusion`. Ceux de la pyramide de profondeur de même (`../../../../sdk-core/src/contracts/hizOptions.ts`) : `hizTrace` (`'reference'`, ou `'planes'`) — comment le tracé des réflexions la lit —, `hizFoldTransparents` (false) — si ses couches de tracé tiennent les surfaces transparentes —, `hizTransparentTest` (`'finer'`, ou `'reference'`) — comment les clusters transparents sont testés contre elle —, `hizFullResDepth` (true) — si la marche des sondes d’écran descend jusqu’à la profondeur en pleine résolution — et `lightGridHizCull` (true) — si la grille de lumière laisse vides les cellules derrière la profondeur la plus lointaine de leur colonne —, puis `hizPrime` (`'off'`, `'whenMissing'` ou `'always'`) — quand une vue construit une pyramide à partir d’un petit dessin grossier des objets qui posent `farField`, pour que la passe principale de sa coupe la teste quand l’image d’avant n’en a laissé aucune — avec `hizPrimeSizeBias` (2), `hizPrimeDepthBias` (1.5 m), `hizPrimeErrorScale` (32) et `hizPrimeFarFieldOnly` (true) ; changés ensuite par `world.hiz`. Ceux des fonctions de lumière de même (`../../../../sdk-core/src/contracts/lightFunctionOptions.ts`) : `lightFunctionAtlas` (true), `lightFunctionSlotResolution` (128), `lightFunctionAtlasSize` (4), `lightFunctionMaxLights` (-1, sans limite), `lightFunctionFormat` (`'grey'`), `lightFunctionDeferred` (true), `lightFunctionFog` (true), `lightFunctionBounce` (true) et `lightFunctionTranslucent` (false) ; changés ensuite par `world.lightFunction`. La répartition du raster de clusters de même (`../../../../sdk-core/src/contracts/rasterOptions.ts`) : `softwareRaster` (true) — un cluster dont la plus longue arête se projette sous `hardwareRasterEdgePixels` et dont la boîte ne croise aucun plan de clip est rastérisé en compute, tout autre par le rastériseur matériel ; `false` donne chaque cluster au matériel — et `hardwareRasterEdgePixels` (32, en pixels : un nombre fini supérieur à zéro), l’arête à partir de laquelle un cluster, vu au point le plus proche de sa sphère de niveau de détail, va au rastériseur matériel ; `depthBucketing` (true) ordonne les clusters découpés du raster logiciel du plus proche au plus lointain, par la profondeur de vue de leur boîte répartie sur 256 seaux par son logarithme de `depthBucketsMinZ` (10 m) à `depthBucketsMaxZ` (1000 m), des nombres finis supérieurs à zéro — comme dans la référence, seulement là où la scène tient des voxels ; changés ensuite par `world.softwareRaster`, `world.hardwareRasterEdgePixels`, `world.depthBucketing`, `world.depthBucketsMinZ` et `world.depthBucketsMaxZ`. Ceux du streaming de géométrie de même (`../../../../sdk-core/src/contracts/streamingOptions.ts`) : `streamingMaxPendingPages` (128, les pages de géométrie gardées démarrées à la fois, un entier à partir de 1), `streamingMaxInstallsPerFrame` (128, les pages qu’une image installe au plus, jamais plus que ce qui peut être en attente), `streamingQualityMinPoolPercent` (70) et `streamingQualityMaxPoolPercent` (85, lu au moins égal au repère bas) — la charge du réservoir, en pourcentage de ses pages, sous laquelle la qualité remonte et au-dessus de laquelle elle baisse, de 10 à 100 —, `streamingQualityMinScale` (0.3, de 0.1 à 1, 1 ne met jamais à l’échelle), `streamingNumRetries` (3, le nombre de fois qu’une lecture échouée d’une page est retentée avant que sa page soit abandonnée, aussitôt et sans autre attente que celle qu’un serveur demande, une valeur négative sans fin ; un niveau de texture cuit n’est pas compté : il est redemandé à l’infini), `streamingMinRequests` (65 536) et `streamingMaxRequests` (1 048 576), le moins et le plus de requêtes que tient la lecture de la coupe de la caméra, de 4 096 à 1 048 576 — elle part du moins et suit ce que la coupe lui demande, le plus lu au moins égal au moins — et `streamingBandwidthLimit` (-1 : aucune, les mégaoctets par seconde que les lectures de géométrie sont simulées avoir : chaque page prend une part de la bande passante de l’image à elle). Une valeur qu’un réglage n’accepte pas est refusée.",
+    "description": "À côté des options ci-dessous, la façon dont la vue streame les cellules d’une scène partitionnée et l’échauffement qu’attend un changement de HLOD, chaque réglage par son champ avec la valeur par défaut de la référence (`../../../../sdk-core/src/contracts/worldStreamingOptions.ts`) : `worldStreamingMaxLoadingCells` (4), `worldStreamingAngleWeight` (0.4), `worldStreamingSortByExtent` (true), `worldStreamingSortByPriority` (true), `worldStreamingUseGridRange` (true), `worldStreamingRangeScale` (1), `worldStreamingRadius` (100 m), `worldStreamingSector` (false), `worldStreamingSectorAngle` (360°), `worldStreamingZCulling` (false), `worldStreamingBlockOnSlowStreaming` (true), `worldStreamingBlockOnSlowStreamingRatio` (0.25), `worldStreamingUpdateOptimization` (true), `worldStreamingLocationQuantization` (4 m), `worldStreamingRotationQuantization` (10°), `worldStreamingForceUpdateFrameCount` (0), `worldStreamingForce2D` (false), `worldStreamingExtraRadius` (0 m), `worldStreamingExtraAngle` (0°), `worldStreamingTargetState` (`'activated'`), `worldStreamingPriority` (128), `worldStreamingUseVelocity` (false), `hlodEnabled` (true), `hlodWarmup` (true), `hlodWarmupFrames` (5), `hlodWarmupGeometry` (true), `hlodWarmupTextures` (true), `hlodWarmupTextureScale` (2), `hlodWarmupTextureClamp` (2048). Nommés ici, chacun l’emporte sur le preset de qualité ; changés ensuite par `world.worldStreaming`, dès l’image suivante. Les réglages de la coupe de même, chacun par son champ avec la valeur par défaut de la référence (`../../../../sdk-core/src/contracts/cutOptions.ts`) : `cutTwoPassOcclusion` (true), `cutOcclusionCulling` (true), `cutFrustumCulling` (true), `cutMinLodCulling` (true), `cutDrawDistanceCulling` (true : les distances de dessin d’une instance d’un maillage instancié écartent ; un objet à part entière est toujours écarté par elles), `cutDistanceCullToSphereEdge` (true : la distance de dessin d’un objet est mesurée jusqu’au bord de la sphère de ses bornes, sinon jusqu’à son centre), `cutViewDistanceScale` (1 ; les niveaux de qualité de la distance de vue l’écrivent), `cutViewDistanceApplySecondaryScale` (false) et `cutViewDistanceSecondaryScale` (1), une seconde échelle des distances de dessin qui les multiplie seulement une fois la première active, `cutViewDistanceFovMinAngle` (45) et `cutViewDistanceFovMaxAngle` (90), en degrés, avec `cutViewDistanceFovMinAngleScale` et `cutViewDistanceFovMaxAngleScale` (1 les deux) : l’échelle que prennent les distances de dessin d’un objet à part entière au premier angle et en dessous, au second et au-dessus, et entre les deux, `cutClipPlane` (false : le `clipPlane` d’une caméra ne s’applique que dans un monde créé avec lui activé, l’unique réglage lu une fois, à l’ouverture de la session), `cutClipPlaneCulling` (true), `cutViewFiltering` (true : les listes `hidden` et `showOnly` d’une caméra s’appliquent), `cutLodBiasFollowsUpscale` (true), `cutLodBiasOffset` (0), `cutLodBiasMin` (-2), `cutEdgeScaleBudgetMs` (0 : aucun, le temps GPU en ms accordé à la coupe et à son raster, au-delà duquel l’erreur écran est grossie là où l’échelle de rendu est `'auto'`) et `cutEdgeScaleMinPercent` (30, de 1 à 100 : l’échelle la plus basse à laquelle elle le fait descendre), `cutMaxNodes` (2097152), `cutMaxCandidateClusters` (16777216), `cutMaxVisibleClusters` (4194304) ; changés ensuite par `world.cut`. L’heuristique de la résolution dynamique de même (`../../../../sdk-core/src/contracts/dynamicResolutionOptions.ts`, ajustant l’échelle de rendu et l’échelle de bord de la coupe à leur budget de temps GPU) : `dynamicResolutionFrameTimeBudgetMs` (0 : l’intervalle du plafond d’images), `dynamicResolutionThrottlingMaxPercent` (0 : aucun), `dynamicResolutionHeadroomPercent` (10), `dynamicResolutionOverBudgetHeadroomPercent` (0), `dynamicResolutionHistorySize` (16), `dynamicResolutionFrameWeightExponent` (0.9), `dynamicResolutionChangePeriod` (8), `dynamicResolutionIncreaseAmortization` (0.9), `dynamicResolutionChangePercentThreshold` (2), `dynamicResolutionMaxOverBudgetFrames` (2, lu au moins 2) et `dynamicResolutionUseCpuTimeLogic` (false) ; changés ensuite par `world.dynamicResolution`. Les réglages de l’animation de même (`../../../../sdk-core/src/contracts/animationOptions.ts`) : `animationMinScreenSize` (0.1), `animationBankInterpolation` (true), `animationBankTimeScale` (1) ; changés ensuite par `world.animation`. Ceux de l’ombrage de même (`../../../../sdk-core/src/contracts/shadingOptions.ts`) : `shadeBinningMode` (`'auto'`, ou `'pixel'`, `'quad'`) et `materialClosures` (`'single'` : chaque surface ombrée comme une seule dalle par pixel, un vernis fusionné dans sa base ; ou `'layered'` : le vernis une couche à part) ; changés ensuite par `world.shading`. Ceux de l’exposition automatique de même (`../../../../sdk-core/src/contracts/exposureOptions.ts`), utilisés là où `world.exposure` est `'auto'`, la valeur par défaut : `exposureBias` (+1 stop), `exposureMinBrightness` (−10) et `exposureMaxBrightness` (+20) en EV100, `exposureHistogramLogMin` (−10) et `exposureHistogramLogMax` (+20) en stops de luminance, `exposureLowPercent` (10) et `exposureHighPercent` (90), `exposureSpeedUp` (3) et `exposureSpeedDown` (1) en stops par seconde, `exposureTransitionDistance` (1.5 stop), `exposureBlackBucketWeight` (0) et `exposureLuminanceMethod` (`'uniform'`, ou `'ntsc'`, `'workingSpace'`), `exposureMethod` (`'histogram'`, ou `'basic'`, `'manual'` : l’exposition de la caméra, lue d’après `exposureApplyPhysicalCamera` (true), `exposureCameraShutterSpeed` (60) et `exposureCameraIso` (100) et le biais), `exposureLensAttenuation` (0.78), les `preExposure` (true), `preExposureOverride` (0) et `cachedLightingPreExposure` (4 stops, celle de la capture temps réel de la lumière du ciel) de la pré-exposition, qui s’appliquent à une vue éclairée quelle que soit son exposition, et les `localExposureHighlightContrast` et `localExposureShadowContrast` (0.8, l’exposition locale étant active), `localExposureDetailStrength` (1), `localExposureBlurBlend` (0.6), `localExposureBlurSize` (50 %), `localExposureMiddleGreyBias` (0) de l’exposition locale et les deux seuils et leurs forces, qui s’appliquent à une vue éclairée quelle que soit son exposition ; changés ensuite par `world.exposureSettings`. La courbe de compensation de l’exposition, `exposureCurve` (aucune), et son masque de mesure, `exposureMeterMask` (aucun), ne sont lus qu’à l’ouverture. Ceux de la passe temporelle de même (`../../../../sdk-core/src/contracts/temporalOptions.ts`) : `temporalThinGeometry` (false) — si elle cherche la géométrie plus fine qu’un pixel et y relâche son historique, à tout niveau sauf `'off'` —, `temporalWaveOps` (true), `temporalWaveSize` (0) et `temporalHalfPrecision` (true) — comment ses programmes tournent : par sous-groupes, à quelle taille, en flottants 16 bits, là où l’appareil les accorde, l’image identique —, les échantillons de l’historique (`temporalHistorySampleCount`, `temporalShadingRejectionSampleCount`, `temporalVelocityWeightClampingSampleCount`, `temporalVelocityWeightClampingPixelSpeed`), ceux de la mesure de scintillement (`temporalFlickering…`), l’exposition à laquelle le rejet mesure (`temporalShadingExposureOffset`), les seuils de la détection de géométrie fine (`temporalThinGeometry…`) et la qualité de l’image de demi-taille que lisent l’exposition et le bloom (`temporalDownsampleQuality`), chacun à la valeur par défaut de la référence ; changés ensuite par `world.temporal`. Les ombres du soleil de même (`../../../../sdk-core/src/contracts/shadowOptions.ts`) : `shadowDistanceScale` (1, de 0 à 2) — le facteur sur le `shadowDistance` de chaque lumière directionnelle —, `farShadowCulling` (true) — si les shadow maps d’un soleil écartent les projeteurs dont la profondeur, moins leur rayon, dépasse le bord de cette distance (un peu plus loin : 427 mètres à 400), sauf si leur objet pose `castFarShadow` —, `farShadowCullsAllMeshes` (false) — si ce test atteint chaque projeteur, ou seulement les coques fusionnées du monde de ses niveaux plus grossiers —, `shadowNearLevels` (10, de 0 à 10, au plus les `shadowCascades` de la lumière), `shadowOverlapScale` (1, de 0 à 2) et `shadowFarField` (true : si la cascade de champs de distance suit les niveaux proches, là où la scène a des champs de distance) — les trois qui façonnent le bord —, ceux des niveaux lointains et de cette cascade (`../../../../sdk-core/src/contracts/sunShadowOptions.ts` : `shadowMaxFarCascades`, `shadowFarDistanceOverride` (aucun niveau lointain n’est dessiné : aucun effet visible), `distanceFieldDistanceScale`, `distanceFieldFarTransitionScale`, `distanceFieldShadowQuality`, `distanceFieldShadowFullResolution`, `distanceFieldShadowTileSize` et `distanceFieldShadowTwoSidedBias`), et ceux des shadow maps elles-mêmes (`../../../../sdk-core/src/contracts/shadowMapOptions.ts` : les niveaux et la plage de profondeur du clipmap, les pages grossières, les biais de résolution, le seuil de rayon, les rayons et pas d’un tracé et le réservoir de pages) ; changés ensuite par `world.shadows`. Le dessin du flou de mouvement de même (`../../../../sdk-core/src/contracts/motionBlurOptions.ts`) : `motionBlurQuality` (`'veryHigh'`, ou `'off'`, `'low'`, `'medium'`, `'high'` : 16 échantillons par pixel au plus, moins aux niveaux plus bas), `motionBlurHalfResGather` (false), `motionBlurHalfResInput` (true), `motionBlurSeparable` (false), `motionBlurScatter` (false) et `motionBlurDirections` (1, ou 2) ; changés ensuite par `world.motionBlur`. Le dessin de la profondeur de champ de même (`../../../../sdk-core/src/contracts/depthOfFieldRules.ts`) : `depthOfFieldQuality` (`'on'`, ou `'off'`), `depthOfFieldGatherDivisor` (2), `depthOfFieldAccumulator` (`'high'`), `depthOfFieldRingCount` (4), `depthOfFieldPostfilter` (`'median'`), les réglages du scatter et du recombine et les autres que liste le fichier, chacun à la valeur par défaut de la référence ; changés ensuite par `world.depthOfField`. Le dessin du bloom de même (`../../../../sdk-core/src/contracts/bloomRules.ts`) : `bloomQuality` (`'highest'`, ou `'off'`, `'lowest'`, `'low'`, `'medium'`, `'high'` : combien des six niveaux gaussiens sont dessinés), `bloomCross` (0), `bloomScreenPercentage` (50 : la résolution de la convolution), `bloomApplyLocalExposure` (true) et `bloomCacheKernel` (true) ; changés ensuite par `world.bloom`. Ceux du flou gaussien de même (`../../../../sdk-core/src/contracts/gaussianBlurRules.ts`) : `gaussianFastBlurThreshold` (100 : le rayon à partir duquel la première passe d’un flou est réduite de moitié), `gaussianSampleScale` (1 : la portée du noyau) et `gaussianLoopMode` (0 : le plus de lectures d’une passe) ; changés ensuite par `world.gaussianBlur`. Ceux des effets de film de même (`../../../../sdk-core/src/contracts/filmOptions.ts`) : le grain (`filmGrain…`, désactivé par défaut), la frange de couleur (`chromaticAberration…`, désactivée), l’aspect de la vignette (`vignette…`, à côté de la force de la scène), `tonemapperQuality` (5), `tonemapperSharpen` (−1 : celui de la scène), la teinte (`sceneColorTint…`, 1) et `quantizationDitheringBits` (0 : le pas propre de l’affichage) ; changés ensuite par `world.film`. Ceux du brouillard volumétrique (`../../../../sdk-core/src/contracts/volumetricFogOptions.ts`) : `volumetricFogQuality` (`'high'` ; `'off'` n’en dessine aucun, `'low'`, `'high'` et `'ultra'` règlent la taille de cellule et la profondeur de la grille et les échantillons de l’historique) et onze réglages avec lesquels il est lu, changés ensuite par `world.volumetricFog` ; le brouillard n’existe que dans une scène dont le brouillard pose `volumetric`. Ceux du volume d’éclairage de translucidité de même (`../../../../sdk-core/src/contracts/translucencyVolumeOptions.ts`) : `translucencyVolume` (true), `translucencyVolumeDim` (64 cellules de côté de chacune de ses deux cascades), `translucencyVolumeInnerDistance` (15 m), `translucencyVolumeOuterDistance` (50 m), `translucencyVolumeBlur` (true), `translucencyVolumeTemporal` (false) et les autres, changés ensuite par `world.translucencyVolume` ; il éclaire les surfaces translucides dont le matériau pose `translucencyLighting` sur un mode de volume. Le tracé des réflexions de même (`../../../../sdk-core/src/contracts/reflectionOptions.ts`) : `reflectionScreenSteps` (50, les itérations de la marche d’un rayon réfléchi dans l’écran ; sa marche dans la scène est celle du champ de distance global, 256 pas par clipmap), et `reflectionDistantScreenTraces` (true), `reflectionDistantScreenSteps` (16) et `reflectionDistantScreenDistance` (2000 m), le tracé d’écran lointain, et `reflectionFrontLayer` (false), si la couche avant des transparents est tracée, `reflectionSkylightLeaking` (0, avec sa teinte et son albédo moyen), la lumière diffuse du ciel qui fuit sur un impact, changés ensuite par `world.reflections` ; `reflectionStatistics` (false), les compteurs des rayons, est lu à l’ouverture de la session. Ceux du cache de surface de même (`../../../../sdk-core/src/contracts/surfaceCacheOptions.ts`) : `surfaceCacheAtlasSize` (4096, le côté en texels de l’atlas dans lequel sont capturées les cartes de chaque maillage), `surfaceCacheCardCapturesPerFrame` (300), `surfaceCacheCardMaxResolution` (512), `surfaceCacheAllowCardSharing` (true), `surfaceCacheDilationMode` (0) et les autres, changés ensuite par `world.surfaceCache`. Ceux de l’occlusion ambiante en espace écran de même (`../../../../sdk-core/src/contracts/ambientOcclusionOptions.ts`) : `ambientOcclusion` (true : l’interrupteur général), `ambientOcclusionIntensity` (0.5 ; 0 est désactivé), `ambientOcclusionRadius` (2 m) et son `ambientOcclusionRadiusInWorldSpace` (false), `ambientOcclusionFadeDistance` (80 m) et `ambientOcclusionFadeRadius` (50 m), `ambientOcclusionPower` (2), `ambientOcclusionBias` (3), la qualité (`ambientOcclusionQuality`, 50) avec `ambientOcclusionLevels` (-1) et `ambientOcclusionMaxQuality` (100), et `ambientOcclusionWithScreenProbes` (false) ; changés ensuite par `world.ambientOcclusion`. Ceux de la pyramide de profondeur de même (`../../../../sdk-core/src/contracts/hizOptions.ts`) : `hizTrace` (`'reference'`, ou `'planes'`) — comment le tracé des réflexions la lit —, `hizFoldTransparents` (false) — si ses couches de tracé tiennent les surfaces transparentes —, `hizTransparentTest` (`'finer'`, ou `'reference'`) — comment les clusters transparents sont testés contre elle —, `hizFullResDepth` (true) — si la marche des sondes d’écran descend jusqu’à la profondeur en pleine résolution —, `lightGridHizCull` (true) — si la grille de lumière laisse vides les cellules derrière la profondeur la plus lointaine de leur colonne — et `lightGridMaxCulledLightsPerCell` (32) — les entrées de lumière que la grille de lumière de la vue tient par cellule —, puis `hizPrime` (`'off'`, `'whenMissing'` ou `'always'`) — quand une vue construit une pyramide à partir d’un petit dessin grossier des objets qui posent `farField`, pour que la passe principale de sa coupe la teste quand l’image d’avant n’en a laissé aucune — avec `hizPrimeSizeBias` (2), `hizPrimeDepthBias` (1.5 m), `hizPrimeErrorScale` (32) et `hizPrimeFarFieldOnly` (true) ; changés ensuite par `world.hiz`. Ceux des fonctions de lumière de même (`../../../../sdk-core/src/contracts/lightFunctionOptions.ts`) : `lightFunctionAtlas` (true), `lightFunctionSlotResolution` (128), `lightFunctionAtlasSize` (4), `lightFunctionMaxLights` (-1, sans limite), `lightFunctionFormat` (`'grey'`), `lightFunctionDeferred` (true), `lightFunctionFog` (true), `lightFunctionBounce` (true) et `lightFunctionTranslucent` (false) ; changés ensuite par `world.lightFunction`. La répartition du raster de clusters de même (`../../../../sdk-core/src/contracts/rasterOptions.ts`) : `softwareRaster` (true) — un cluster dont la plus longue arête se projette sous `hardwareRasterEdgePixels` et dont la boîte ne croise aucun plan de clip est rastérisé en compute, tout autre par le rastériseur matériel ; `false` donne chaque cluster au matériel — et `hardwareRasterEdgePixels` (32, en pixels : un nombre fini supérieur à zéro), l’arête à partir de laquelle un cluster, vu au point le plus proche de sa sphère de niveau de détail, va au rastériseur matériel ; `depthBucketing` (true) ordonne les clusters découpés du raster logiciel du plus proche au plus lointain, par la profondeur de vue de leur boîte répartie sur 256 seaux par son logarithme de `depthBucketsMinZ` (10 m) à `depthBucketsMaxZ` (1000 m), des nombres finis supérieurs à zéro — comme dans la référence, seulement là où la scène tient des voxels ; changés ensuite par `world.softwareRaster`, `world.hardwareRasterEdgePixels`, `world.depthBucketing`, `world.depthBucketsMinZ` et `world.depthBucketsMaxZ`. Ceux du streaming de géométrie de même (`../../../../sdk-core/src/contracts/streamingOptions.ts`) : `streamingMaxPendingPages` (128, les pages de géométrie gardées démarrées à la fois, un entier à partir de 1), `streamingMaxInstallsPerFrame` (128, les pages qu’une image installe au plus, jamais plus que ce qui peut être en attente), `streamingQualityMinPoolPercent` (70) et `streamingQualityMaxPoolPercent` (85, lu au moins égal au repère bas) — la charge du réservoir, en pourcentage de ses pages, sous laquelle la qualité remonte et au-dessus de laquelle elle baisse, de 10 à 100 —, `streamingQualityMinScale` (0.3, de 0.1 à 1, 1 ne met jamais à l’échelle), `streamingNumRetries` (3, le nombre de fois qu’une lecture échouée d’une page est retentée avant que sa page soit abandonnée, aussitôt et sans autre attente que celle qu’un serveur demande, une valeur négative sans fin ; un niveau de texture cuit n’est pas compté : il est redemandé à l’infini), `streamingMinRequests` (65 536) et `streamingMaxRequests` (1 048 576), le moins et le plus de requêtes que tient la lecture de la coupe de la caméra, de 4 096 à 1 048 576 — elle part du moins et suit ce que la coupe lui demande, le plus lu au moins égal au moins — et `streamingBandwidthLimit` (-1 : aucune, les mégaoctets par seconde que les lectures de géométrie sont simulées avoir : chaque page prend une part de la bande passante de l’image à elle). Une valeur qu’un réglage n’accepte pas est refusée.",
     "members": {
       "interactive": "Si le monde fait tourner sa propre boucle : il dessine quand quelque chose change et se repose après 120 images sans rien de nouveau. `false` laisse la page appeler `world.render()` elle-même.",
       "pixelRatio": "Combien de pixels d’image par pixel d’écran.",
@@ -7881,7 +7925,8 @@
       "p.cloudShadowExtentKm": "Le rayon autour de la caméra que couvre la carte, en kilomètres, à partir de 1 ; 150 par défaut.",
       "p.cloudShadowResolutionScale": "Le facteur sur les 512 texels de côté de la carte, à partir de 0,25 ; 1 par défaut.",
       "p.cloudShadowRaySamplesScale": "Le facteur sur les 16 échantillons que prend un rayon de la carte, à partir de 0,25 ; 1 par défaut.",
-      "p.cloudScatteredLuminanceScale": "Le facteur sur la lumière à l’intérieur des nuages, linéaire ; blanc par défaut."
+      "p.cloudScatteredLuminanceScale": "Le facteur sur la lumière à l’intérieur des nuages, linéaire ; blanc par défaut.",
+      "p.mobility": "Comment la lumière est censée bouger et être éclairée : `'static'`, `'stationary'` ou `'movable'` ; `'stationary'` par défaut."
     }
   },
   "light.directional": {
@@ -7944,7 +7989,8 @@
       "p.cloudShadowExtentKm": "Le rayon autour de la caméra que couvre la carte, en kilomètres, à partir de 1 ; 150 par défaut.",
       "p.cloudShadowResolutionScale": "Le facteur sur les 512 texels de côté de la carte, à partir de 0,25 ; 1 par défaut.",
       "p.cloudShadowRaySamplesScale": "Le facteur sur les 16 échantillons que prend un rayon de la carte, à partir de 0,25 ; 1 par défaut.",
-      "p.cloudScatteredLuminanceScale": "Le facteur sur la lumière à l’intérieur des nuages, linéaire ; blanc par défaut."
+      "p.cloudScatteredLuminanceScale": "Le facteur sur la lumière à l’intérieur des nuages, linéaire ; blanc par défaut.",
+      "p.mobility": "Comment la lumière est censée bouger et être éclairée : `'static'`, `'stationary'` ou `'movable'` ; `'stationary'` par défaut."
     }
   },
   "light.point": {
@@ -8007,7 +8053,8 @@
       "p.cloudShadowExtentKm": "Le rayon autour de la caméra que couvre la carte, en kilomètres, à partir de 1 ; 150 par défaut.",
       "p.cloudShadowResolutionScale": "Le facteur sur les 512 texels de côté de la carte, à partir de 0,25 ; 1 par défaut.",
       "p.cloudShadowRaySamplesScale": "Le facteur sur les 16 échantillons que prend un rayon de la carte, à partir de 0,25 ; 1 par défaut.",
-      "p.cloudScatteredLuminanceScale": "Le facteur sur la lumière à l’intérieur des nuages, linéaire ; blanc par défaut."
+      "p.cloudScatteredLuminanceScale": "Le facteur sur la lumière à l’intérieur des nuages, linéaire ; blanc par défaut.",
+      "p.mobility": "Comment la lumière est censée bouger et être éclairée : `'static'`, `'stationary'` ou `'movable'` ; `'stationary'` par défaut."
     }
   },
   "light.spot": {
@@ -8070,7 +8117,8 @@
       "p.cloudShadowExtentKm": "Le rayon autour de la caméra que couvre la carte, en kilomètres, à partir de 1 ; 150 par défaut.",
       "p.cloudShadowResolutionScale": "Le facteur sur les 512 texels de côté de la carte, à partir de 0,25 ; 1 par défaut.",
       "p.cloudShadowRaySamplesScale": "Le facteur sur les 16 échantillons que prend un rayon de la carte, à partir de 0,25 ; 1 par défaut.",
-      "p.cloudScatteredLuminanceScale": "Le facteur sur la lumière à l’intérieur des nuages, linéaire ; blanc par défaut."
+      "p.cloudScatteredLuminanceScale": "Le facteur sur la lumière à l’intérieur des nuages, linéaire ; blanc par défaut.",
+      "p.mobility": "Comment la lumière est censée bouger et être éclairée : `'static'`, `'stationary'` ou `'movable'` ; `'stationary'` par défaut."
     }
   },
   "light.hemisphere": {
@@ -8133,7 +8181,8 @@
       "p.cloudShadowExtentKm": "Le rayon autour de la caméra que couvre la carte, en kilomètres, à partir de 1 ; 150 par défaut.",
       "p.cloudShadowResolutionScale": "Le facteur sur les 512 texels de côté de la carte, à partir de 0,25 ; 1 par défaut.",
       "p.cloudShadowRaySamplesScale": "Le facteur sur les 16 échantillons que prend un rayon de la carte, à partir de 0,25 ; 1 par défaut.",
-      "p.cloudScatteredLuminanceScale": "Le facteur sur la lumière à l’intérieur des nuages, linéaire ; blanc par défaut."
+      "p.cloudScatteredLuminanceScale": "Le facteur sur la lumière à l’intérieur des nuages, linéaire ; blanc par défaut.",
+      "p.mobility": "Comment la lumière est censée bouger et être éclairée : `'static'`, `'stationary'` ou `'movable'` ; `'stationary'` par défaut."
     }
   },
   "light.rectArea": {
@@ -8196,7 +8245,8 @@
       "p.cloudShadowExtentKm": "Le rayon autour de la caméra que couvre la carte, en kilomètres, à partir de 1 ; 150 par défaut.",
       "p.cloudShadowResolutionScale": "Le facteur sur les 512 texels de côté de la carte, à partir de 0,25 ; 1 par défaut.",
       "p.cloudShadowRaySamplesScale": "Le facteur sur les 16 échantillons que prend un rayon de la carte, à partir de 0,25 ; 1 par défaut.",
-      "p.cloudScatteredLuminanceScale": "Le facteur sur la lumière à l’intérieur des nuages, linéaire ; blanc par défaut."
+      "p.cloudScatteredLuminanceScale": "Le facteur sur la lumière à l’intérieur des nuages, linéaire ; blanc par défaut.",
+      "p.mobility": "Comment la lumière est censée bouger et être éclairée : `'static'`, `'stationary'` ou `'movable'` ; `'stationary'` par défaut."
     }
   },
   "light.probe": {
@@ -8259,7 +8309,8 @@
       "p.cloudShadowExtentKm": "Le rayon autour de la caméra que couvre la carte, en kilomètres, à partir de 1 ; 150 par défaut.",
       "p.cloudShadowResolutionScale": "Le facteur sur les 512 texels de côté de la carte, à partir de 0,25 ; 1 par défaut.",
       "p.cloudShadowRaySamplesScale": "Le facteur sur les 16 échantillons que prend un rayon de la carte, à partir de 0,25 ; 1 par défaut.",
-      "p.cloudScatteredLuminanceScale": "Le facteur sur la lumière à l’intérieur des nuages, linéaire ; blanc par défaut."
+      "p.cloudScatteredLuminanceScale": "Le facteur sur la lumière à l’intérieur des nuages, linéaire ; blanc par défaut.",
+      "p.mobility": "Comment la lumière est censée bouger et être éclairée : `'static'`, `'stationary'` ou `'movable'` ; `'stationary'` par défaut."
     }
   },
   "lightLattice": {
@@ -8361,7 +8412,13 @@
       "parameters.physics": "La matière d’un corps qui le porte : densité, frottement, rebond.",
       "parameters.density": "kg/m³, fois le volume pour la masse.",
       "parameters.friction": "À quel point un corps accroche, de 0 à plus.",
-      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1."
+      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1.",
+      "parameters.specularIntensity": "L’entrée spéculaire du diélectrique de la surface, de 0 à 1 : sa réflectance à incidence normale en est 0,08 fois la valeur, si bien que 0,5 (la valeur d’une surface qui n’en déclare aucune) donne les 4 % habituels, 1 donne 8 % et 0 aucun reflet. Le facteur `KHR_materials_specular` d’un matériau glTF s’écrit tel qu’il est déclaré. Le métal l’ignore.",
+      "parameters.specularIntensityMap": "Multiplie `specularIntensity` par le canal alpha d’une image.",
+      "parameters.displacementMagnitude": "De combien, en mètres, la sortie `displacement` du graphe du matériau déplace une surface le long de sa normale là où elle vaut 1 de plus que `displacementCenter` : la hauteur déplacée est `(sortie - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "La valeur de la sortie `displacement` qui laisse la surface où elle est, de 0 à 1.",
+      "parameters.displacementFadeStart": "Où le déplacement s’estompe avec la distance, en taille à l’écran en pixels de son plus grand déplacement : entier au-dessus de `displacementFadeStart`, disparu en dessous de `displacementFadeEnd`, qui doit être le plus petit ; tous deux omis, il ne s’estompe jamais.",
+      "parameters.displacementFadeEnd": "Voir `displacementFadeStart`."
     }
   },
   "material.meshPhysical": {
@@ -8424,7 +8481,13 @@
       "parameters.physics": "La matière d’un corps qui le porte : densité, frottement, rebond.",
       "parameters.density": "kg/m³, fois le volume pour la masse.",
       "parameters.friction": "À quel point un corps accroche, de 0 à plus.",
-      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1."
+      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1.",
+      "parameters.specularIntensity": "L’entrée spéculaire du diélectrique de la surface, de 0 à 1 : sa réflectance à incidence normale en est 0,08 fois la valeur, si bien que 0,5 (la valeur d’une surface qui n’en déclare aucune) donne les 4 % habituels, 1 donne 8 % et 0 aucun reflet. Le facteur `KHR_materials_specular` d’un matériau glTF s’écrit tel qu’il est déclaré. Le métal l’ignore.",
+      "parameters.specularIntensityMap": "Multiplie `specularIntensity` par le canal alpha d’une image.",
+      "parameters.displacementMagnitude": "De combien, en mètres, la sortie `displacement` du graphe du matériau déplace une surface le long de sa normale là où elle vaut 1 de plus que `displacementCenter` : la hauteur déplacée est `(sortie - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "La valeur de la sortie `displacement` qui laisse la surface où elle est, de 0 à 1.",
+      "parameters.displacementFadeStart": "Où le déplacement s’estompe avec la distance, en taille à l’écran en pixels de son plus grand déplacement : entier au-dessus de `displacementFadeStart`, disparu en dessous de `displacementFadeEnd`, qui doit être le plus petit ; tous deux omis, il ne s’estompe jamais.",
+      "parameters.displacementFadeEnd": "Voir `displacementFadeStart`."
     }
   },
   "material.meshBasic": {
@@ -8487,7 +8550,13 @@
       "parameters.physics": "La matière d’un corps qui le porte : densité, frottement, rebond.",
       "parameters.density": "kg/m³, fois le volume pour la masse.",
       "parameters.friction": "À quel point un corps accroche, de 0 à plus.",
-      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1."
+      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1.",
+      "parameters.specularIntensity": "L’entrée spéculaire du diélectrique de la surface, de 0 à 1 : sa réflectance à incidence normale en est 0,08 fois la valeur, si bien que 0,5 (la valeur d’une surface qui n’en déclare aucune) donne les 4 % habituels, 1 donne 8 % et 0 aucun reflet. Le facteur `KHR_materials_specular` d’un matériau glTF s’écrit tel qu’il est déclaré. Le métal l’ignore.",
+      "parameters.specularIntensityMap": "Multiplie `specularIntensity` par le canal alpha d’une image.",
+      "parameters.displacementMagnitude": "De combien, en mètres, la sortie `displacement` du graphe du matériau déplace une surface le long de sa normale là où elle vaut 1 de plus que `displacementCenter` : la hauteur déplacée est `(sortie - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "La valeur de la sortie `displacement` qui laisse la surface où elle est, de 0 à 1.",
+      "parameters.displacementFadeStart": "Où le déplacement s’estompe avec la distance, en taille à l’écran en pixels de son plus grand déplacement : entier au-dessus de `displacementFadeStart`, disparu en dessous de `displacementFadeEnd`, qui doit être le plus petit ; tous deux omis, il ne s’estompe jamais.",
+      "parameters.displacementFadeEnd": "Voir `displacementFadeStart`."
     }
   },
   "material.meshPhong": {
@@ -8550,7 +8619,13 @@
       "parameters.physics": "La matière d’un corps qui le porte : densité, frottement, rebond.",
       "parameters.density": "kg/m³, fois le volume pour la masse.",
       "parameters.friction": "À quel point un corps accroche, de 0 à plus.",
-      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1."
+      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1.",
+      "parameters.specularIntensity": "L’entrée spéculaire du diélectrique de la surface, de 0 à 1 : sa réflectance à incidence normale en est 0,08 fois la valeur, si bien que 0,5 (la valeur d’une surface qui n’en déclare aucune) donne les 4 % habituels, 1 donne 8 % et 0 aucun reflet. Le facteur `KHR_materials_specular` d’un matériau glTF s’écrit tel qu’il est déclaré. Le métal l’ignore.",
+      "parameters.specularIntensityMap": "Multiplie `specularIntensity` par le canal alpha d’une image.",
+      "parameters.displacementMagnitude": "De combien, en mètres, la sortie `displacement` du graphe du matériau déplace une surface le long de sa normale là où elle vaut 1 de plus que `displacementCenter` : la hauteur déplacée est `(sortie - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "La valeur de la sortie `displacement` qui laisse la surface où elle est, de 0 à 1.",
+      "parameters.displacementFadeStart": "Où le déplacement s’estompe avec la distance, en taille à l’écran en pixels de son plus grand déplacement : entier au-dessus de `displacementFadeStart`, disparu en dessous de `displacementFadeEnd`, qui doit être le plus petit ; tous deux omis, il ne s’estompe jamais.",
+      "parameters.displacementFadeEnd": "Voir `displacementFadeStart`."
     }
   },
   "material.meshLambert": {
@@ -8613,7 +8688,13 @@
       "parameters.physics": "La matière d’un corps qui le porte : densité, frottement, rebond.",
       "parameters.density": "kg/m³, fois le volume pour la masse.",
       "parameters.friction": "À quel point un corps accroche, de 0 à plus.",
-      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1."
+      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1.",
+      "parameters.specularIntensity": "L’entrée spéculaire du diélectrique de la surface, de 0 à 1 : sa réflectance à incidence normale en est 0,08 fois la valeur, si bien que 0,5 (la valeur d’une surface qui n’en déclare aucune) donne les 4 % habituels, 1 donne 8 % et 0 aucun reflet. Le facteur `KHR_materials_specular` d’un matériau glTF s’écrit tel qu’il est déclaré. Le métal l’ignore.",
+      "parameters.specularIntensityMap": "Multiplie `specularIntensity` par le canal alpha d’une image.",
+      "parameters.displacementMagnitude": "De combien, en mètres, la sortie `displacement` du graphe du matériau déplace une surface le long de sa normale là où elle vaut 1 de plus que `displacementCenter` : la hauteur déplacée est `(sortie - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "La valeur de la sortie `displacement` qui laisse la surface où elle est, de 0 à 1.",
+      "parameters.displacementFadeStart": "Où le déplacement s’estompe avec la distance, en taille à l’écran en pixels de son plus grand déplacement : entier au-dessus de `displacementFadeStart`, disparu en dessous de `displacementFadeEnd`, qui doit être le plus petit ; tous deux omis, il ne s’estompe jamais.",
+      "parameters.displacementFadeEnd": "Voir `displacementFadeStart`."
     }
   },
   "material.meshToon": {
@@ -8676,7 +8757,13 @@
       "parameters.physics": "La matière d’un corps qui le porte : densité, frottement, rebond.",
       "parameters.density": "kg/m³, fois le volume pour la masse.",
       "parameters.friction": "À quel point un corps accroche, de 0 à plus.",
-      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1."
+      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1.",
+      "parameters.specularIntensity": "L’entrée spéculaire du diélectrique de la surface, de 0 à 1 : sa réflectance à incidence normale en est 0,08 fois la valeur, si bien que 0,5 (la valeur d’une surface qui n’en déclare aucune) donne les 4 % habituels, 1 donne 8 % et 0 aucun reflet. Le facteur `KHR_materials_specular` d’un matériau glTF s’écrit tel qu’il est déclaré. Le métal l’ignore.",
+      "parameters.specularIntensityMap": "Multiplie `specularIntensity` par le canal alpha d’une image.",
+      "parameters.displacementMagnitude": "De combien, en mètres, la sortie `displacement` du graphe du matériau déplace une surface le long de sa normale là où elle vaut 1 de plus que `displacementCenter` : la hauteur déplacée est `(sortie - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "La valeur de la sortie `displacement` qui laisse la surface où elle est, de 0 à 1.",
+      "parameters.displacementFadeStart": "Où le déplacement s’estompe avec la distance, en taille à l’écran en pixels de son plus grand déplacement : entier au-dessus de `displacementFadeStart`, disparu en dessous de `displacementFadeEnd`, qui doit être le plus petit ; tous deux omis, il ne s’estompe jamais.",
+      "parameters.displacementFadeEnd": "Voir `displacementFadeStart`."
     }
   },
   "material.meshNormal": {
@@ -8739,7 +8826,13 @@
       "parameters.physics": "La matière d’un corps qui le porte : densité, frottement, rebond.",
       "parameters.density": "kg/m³, fois le volume pour la masse.",
       "parameters.friction": "À quel point un corps accroche, de 0 à plus.",
-      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1."
+      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1.",
+      "parameters.specularIntensity": "L’entrée spéculaire du diélectrique de la surface, de 0 à 1 : sa réflectance à incidence normale en est 0,08 fois la valeur, si bien que 0,5 (la valeur d’une surface qui n’en déclare aucune) donne les 4 % habituels, 1 donne 8 % et 0 aucun reflet. Le facteur `KHR_materials_specular` d’un matériau glTF s’écrit tel qu’il est déclaré. Le métal l’ignore.",
+      "parameters.specularIntensityMap": "Multiplie `specularIntensity` par le canal alpha d’une image.",
+      "parameters.displacementMagnitude": "De combien, en mètres, la sortie `displacement` du graphe du matériau déplace une surface le long de sa normale là où elle vaut 1 de plus que `displacementCenter` : la hauteur déplacée est `(sortie - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "La valeur de la sortie `displacement` qui laisse la surface où elle est, de 0 à 1.",
+      "parameters.displacementFadeStart": "Où le déplacement s’estompe avec la distance, en taille à l’écran en pixels de son plus grand déplacement : entier au-dessus de `displacementFadeStart`, disparu en dessous de `displacementFadeEnd`, qui doit être le plus petit ; tous deux omis, il ne s’estompe jamais.",
+      "parameters.displacementFadeEnd": "Voir `displacementFadeStart`."
     }
   },
   "material.meshMatcap": {
@@ -8802,7 +8895,13 @@
       "parameters.physics": "La matière d’un corps qui le porte : densité, frottement, rebond.",
       "parameters.density": "kg/m³, fois le volume pour la masse.",
       "parameters.friction": "À quel point un corps accroche, de 0 à plus.",
-      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1."
+      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1.",
+      "parameters.specularIntensity": "L’entrée spéculaire du diélectrique de la surface, de 0 à 1 : sa réflectance à incidence normale en est 0,08 fois la valeur, si bien que 0,5 (la valeur d’une surface qui n’en déclare aucune) donne les 4 % habituels, 1 donne 8 % et 0 aucun reflet. Le facteur `KHR_materials_specular` d’un matériau glTF s’écrit tel qu’il est déclaré. Le métal l’ignore.",
+      "parameters.specularIntensityMap": "Multiplie `specularIntensity` par le canal alpha d’une image.",
+      "parameters.displacementMagnitude": "De combien, en mètres, la sortie `displacement` du graphe du matériau déplace une surface le long de sa normale là où elle vaut 1 de plus que `displacementCenter` : la hauteur déplacée est `(sortie - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "La valeur de la sortie `displacement` qui laisse la surface où elle est, de 0 à 1.",
+      "parameters.displacementFadeStart": "Où le déplacement s’estompe avec la distance, en taille à l’écran en pixels de son plus grand déplacement : entier au-dessus de `displacementFadeStart`, disparu en dessous de `displacementFadeEnd`, qui doit être le plus petit ; tous deux omis, il ne s’estompe jamais.",
+      "parameters.displacementFadeEnd": "Voir `displacementFadeStart`."
     }
   },
   "material.meshDepth": {
@@ -8865,7 +8964,13 @@
       "parameters.physics": "La matière d’un corps qui le porte : densité, frottement, rebond.",
       "parameters.density": "kg/m³, fois le volume pour la masse.",
       "parameters.friction": "À quel point un corps accroche, de 0 à plus.",
-      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1."
+      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1.",
+      "parameters.specularIntensity": "L’entrée spéculaire du diélectrique de la surface, de 0 à 1 : sa réflectance à incidence normale en est 0,08 fois la valeur, si bien que 0,5 (la valeur d’une surface qui n’en déclare aucune) donne les 4 % habituels, 1 donne 8 % et 0 aucun reflet. Le facteur `KHR_materials_specular` d’un matériau glTF s’écrit tel qu’il est déclaré. Le métal l’ignore.",
+      "parameters.specularIntensityMap": "Multiplie `specularIntensity` par le canal alpha d’une image.",
+      "parameters.displacementMagnitude": "De combien, en mètres, la sortie `displacement` du graphe du matériau déplace une surface le long de sa normale là où elle vaut 1 de plus que `displacementCenter` : la hauteur déplacée est `(sortie - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "La valeur de la sortie `displacement` qui laisse la surface où elle est, de 0 à 1.",
+      "parameters.displacementFadeStart": "Où le déplacement s’estompe avec la distance, en taille à l’écran en pixels de son plus grand déplacement : entier au-dessus de `displacementFadeStart`, disparu en dessous de `displacementFadeEnd`, qui doit être le plus petit ; tous deux omis, il ne s’estompe jamais.",
+      "parameters.displacementFadeEnd": "Voir `displacementFadeStart`."
     }
   },
   "material.points": {
@@ -8928,7 +9033,13 @@
       "parameters.physics": "La matière d’un corps qui le porte : densité, frottement, rebond.",
       "parameters.density": "kg/m³, fois le volume pour la masse.",
       "parameters.friction": "À quel point un corps accroche, de 0 à plus.",
-      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1."
+      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1.",
+      "parameters.specularIntensity": "L’entrée spéculaire du diélectrique de la surface, de 0 à 1 : sa réflectance à incidence normale en est 0,08 fois la valeur, si bien que 0,5 (la valeur d’une surface qui n’en déclare aucune) donne les 4 % habituels, 1 donne 8 % et 0 aucun reflet. Le facteur `KHR_materials_specular` d’un matériau glTF s’écrit tel qu’il est déclaré. Le métal l’ignore.",
+      "parameters.specularIntensityMap": "Multiplie `specularIntensity` par le canal alpha d’une image.",
+      "parameters.displacementMagnitude": "De combien, en mètres, la sortie `displacement` du graphe du matériau déplace une surface le long de sa normale là où elle vaut 1 de plus que `displacementCenter` : la hauteur déplacée est `(sortie - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "La valeur de la sortie `displacement` qui laisse la surface où elle est, de 0 à 1.",
+      "parameters.displacementFadeStart": "Où le déplacement s’estompe avec la distance, en taille à l’écran en pixels de son plus grand déplacement : entier au-dessus de `displacementFadeStart`, disparu en dessous de `displacementFadeEnd`, qui doit être le plus petit ; tous deux omis, il ne s’estompe jamais.",
+      "parameters.displacementFadeEnd": "Voir `displacementFadeStart`."
     }
   },
   "material.line": {
@@ -8991,7 +9102,13 @@
       "parameters.physics": "La matière d’un corps qui le porte : densité, frottement, rebond.",
       "parameters.density": "kg/m³, fois le volume pour la masse.",
       "parameters.friction": "À quel point un corps accroche, de 0 à plus.",
-      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1."
+      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1.",
+      "parameters.specularIntensity": "L’entrée spéculaire du diélectrique de la surface, de 0 à 1 : sa réflectance à incidence normale en est 0,08 fois la valeur, si bien que 0,5 (la valeur d’une surface qui n’en déclare aucune) donne les 4 % habituels, 1 donne 8 % et 0 aucun reflet. Le facteur `KHR_materials_specular` d’un matériau glTF s’écrit tel qu’il est déclaré. Le métal l’ignore.",
+      "parameters.specularIntensityMap": "Multiplie `specularIntensity` par le canal alpha d’une image.",
+      "parameters.displacementMagnitude": "De combien, en mètres, la sortie `displacement` du graphe du matériau déplace une surface le long de sa normale là où elle vaut 1 de plus que `displacementCenter` : la hauteur déplacée est `(sortie - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "La valeur de la sortie `displacement` qui laisse la surface où elle est, de 0 à 1.",
+      "parameters.displacementFadeStart": "Où le déplacement s’estompe avec la distance, en taille à l’écran en pixels de son plus grand déplacement : entier au-dessus de `displacementFadeStart`, disparu en dessous de `displacementFadeEnd`, qui doit être le plus petit ; tous deux omis, il ne s’estompe jamais.",
+      "parameters.displacementFadeEnd": "Voir `displacementFadeStart`."
     }
   },
   "material.lineDashed": {
@@ -9054,7 +9171,13 @@
       "parameters.physics": "La matière d’un corps qui le porte : densité, frottement, rebond.",
       "parameters.density": "kg/m³, fois le volume pour la masse.",
       "parameters.friction": "À quel point un corps accroche, de 0 à plus.",
-      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1."
+      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1.",
+      "parameters.specularIntensity": "L’entrée spéculaire du diélectrique de la surface, de 0 à 1 : sa réflectance à incidence normale en est 0,08 fois la valeur, si bien que 0,5 (la valeur d’une surface qui n’en déclare aucune) donne les 4 % habituels, 1 donne 8 % et 0 aucun reflet. Le facteur `KHR_materials_specular` d’un matériau glTF s’écrit tel qu’il est déclaré. Le métal l’ignore.",
+      "parameters.specularIntensityMap": "Multiplie `specularIntensity` par le canal alpha d’une image.",
+      "parameters.displacementMagnitude": "De combien, en mètres, la sortie `displacement` du graphe du matériau déplace une surface le long de sa normale là où elle vaut 1 de plus que `displacementCenter` : la hauteur déplacée est `(sortie - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "La valeur de la sortie `displacement` qui laisse la surface où elle est, de 0 à 1.",
+      "parameters.displacementFadeStart": "Où le déplacement s’estompe avec la distance, en taille à l’écran en pixels de son plus grand déplacement : entier au-dessus de `displacementFadeStart`, disparu en dessous de `displacementFadeEnd`, qui doit être le plus petit ; tous deux omis, il ne s’estompe jamais.",
+      "parameters.displacementFadeEnd": "Voir `displacementFadeStart`."
     }
   },
   "material.sprite": {
@@ -9117,7 +9240,13 @@
       "parameters.physics": "La matière d’un corps qui le porte : densité, frottement, rebond.",
       "parameters.density": "kg/m³, fois le volume pour la masse.",
       "parameters.friction": "À quel point un corps accroche, de 0 à plus.",
-      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1."
+      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1.",
+      "parameters.specularIntensity": "L’entrée spéculaire du diélectrique de la surface, de 0 à 1 : sa réflectance à incidence normale en est 0,08 fois la valeur, si bien que 0,5 (la valeur d’une surface qui n’en déclare aucune) donne les 4 % habituels, 1 donne 8 % et 0 aucun reflet. Le facteur `KHR_materials_specular` d’un matériau glTF s’écrit tel qu’il est déclaré. Le métal l’ignore.",
+      "parameters.specularIntensityMap": "Multiplie `specularIntensity` par le canal alpha d’une image.",
+      "parameters.displacementMagnitude": "De combien, en mètres, la sortie `displacement` du graphe du matériau déplace une surface le long de sa normale là où elle vaut 1 de plus que `displacementCenter` : la hauteur déplacée est `(sortie - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "La valeur de la sortie `displacement` qui laisse la surface où elle est, de 0 à 1.",
+      "parameters.displacementFadeStart": "Où le déplacement s’estompe avec la distance, en taille à l’écran en pixels de son plus grand déplacement : entier au-dessus de `displacementFadeStart`, disparu en dessous de `displacementFadeEnd`, qui doit être le plus petit ; tous deux omis, il ne s’estompe jamais.",
+      "parameters.displacementFadeEnd": "Voir `displacementFadeStart`."
     }
   },
   "material.volume": {
@@ -9181,7 +9310,13 @@
       "parameters.physics": "La matière d’un corps qui la porte : densité, frottement, restitution.",
       "parameters.density": "kg/m³, multiplié par le volume pour la masse.",
       "parameters.friction": "À quel point un corps adhère, 0 et plus.",
-      "parameters.restitution": "À quel point un corps rebondit, 0 à 1."
+      "parameters.restitution": "À quel point un corps rebondit, 0 à 1.",
+      "parameters.specularIntensity": "L’entrée spéculaire du diélectrique de la surface, de 0 à 1 : sa réflectance à incidence normale en est 0,08 fois la valeur, si bien que 0,5 (la valeur d’une surface qui n’en déclare aucune) donne les 4 % habituels, 1 donne 8 % et 0 aucun reflet. Le facteur `KHR_materials_specular` d’un matériau glTF s’écrit tel qu’il est déclaré. Le métal l’ignore.",
+      "parameters.specularIntensityMap": "Multiplie `specularIntensity` par le canal alpha d’une image.",
+      "parameters.displacementMagnitude": "De combien, en mètres, la sortie `displacement` du graphe du matériau déplace une surface le long de sa normale là où elle vaut 1 de plus que `displacementCenter` : la hauteur déplacée est `(sortie - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "La valeur de la sortie `displacement` qui laisse la surface où elle est, de 0 à 1.",
+      "parameters.displacementFadeStart": "Où le déplacement s’estompe avec la distance, en taille à l’écran en pixels de son plus grand déplacement : entier au-dessus de `displacementFadeStart`, disparu en dessous de `displacementFadeEnd`, qui doit être le plus petit ; tous deux omis, il ne s’estompe jamais.",
+      "parameters.displacementFadeEnd": "Voir `displacementFadeStart`."
     }
   },
   "material.lightFunction": {
@@ -9245,7 +9380,13 @@
       "parameters.physics": "La matière d’un corps qui la porte : densité, frottement, restitution.",
       "parameters.density": "kg/m³, multiplié par le volume pour la masse.",
       "parameters.friction": "À quel point un corps adhère, 0 et plus.",
-      "parameters.restitution": "À quel point un corps rebondit, 0 à 1."
+      "parameters.restitution": "À quel point un corps rebondit, 0 à 1.",
+      "parameters.specularIntensity": "L’entrée spéculaire du diélectrique de la surface, de 0 à 1 : sa réflectance à incidence normale en est 0,08 fois la valeur, si bien que 0,5 (la valeur d’une surface qui n’en déclare aucune) donne les 4 % habituels, 1 donne 8 % et 0 aucun reflet. Le facteur `KHR_materials_specular` d’un matériau glTF s’écrit tel qu’il est déclaré. Le métal l’ignore.",
+      "parameters.specularIntensityMap": "Multiplie `specularIntensity` par le canal alpha d’une image.",
+      "parameters.displacementMagnitude": "De combien, en mètres, la sortie `displacement` du graphe du matériau déplace une surface le long de sa normale là où elle vaut 1 de plus que `displacementCenter` : la hauteur déplacée est `(sortie - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "La valeur de la sortie `displacement` qui laisse la surface où elle est, de 0 à 1.",
+      "parameters.displacementFadeStart": "Où le déplacement s’estompe avec la distance, en taille à l’écran en pixels de son plus grand déplacement : entier au-dessus de `displacementFadeStart`, disparu en dessous de `displacementFadeEnd`, qui doit être le plus petit ; tous deux omis, il ne s’estompe jamais.",
+      "parameters.displacementFadeEnd": "Voir `displacementFadeStart`."
     }
   },
   "material.graph": {
@@ -9315,7 +9456,13 @@
       "parameters.physics": "La matière d’un corps qui le porte : densité, frottement, rebond.",
       "parameters.density": "kg/m³, fois le volume pour la masse.",
       "parameters.friction": "À quel point un corps accroche, de 0 à plus.",
-      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1."
+      "parameters.restitution": "À quel point un corps rebondit, de 0 à 1.",
+      "parameters.specularIntensity": "L’entrée spéculaire du diélectrique de la surface, de 0 à 1 : sa réflectance à incidence normale en est 0,08 fois la valeur, si bien que 0,5 (la valeur d’une surface qui n’en déclare aucune) donne les 4 % habituels, 1 donne 8 % et 0 aucun reflet. Le facteur `KHR_materials_specular` d’un matériau glTF s’écrit tel qu’il est déclaré. Le métal l’ignore.",
+      "parameters.specularIntensityMap": "Multiplie `specularIntensity` par le canal alpha d’une image.",
+      "parameters.displacementMagnitude": "De combien, en mètres, la sortie `displacement` du graphe du matériau déplace une surface le long de sa normale là où elle vaut 1 de plus que `displacementCenter` : la hauteur déplacée est `(sortie - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "La valeur de la sortie `displacement` qui laisse la surface où elle est, de 0 à 1.",
+      "parameters.displacementFadeStart": "Où le déplacement s’estompe avec la distance, en taille à l’écran en pixels de son plus grand déplacement : entier au-dessus de `displacementFadeStart`, disparu en dessous de `displacementFadeEnd`, qui doit être le plus petit ; tous deux omis, il ne s’estompe jamais.",
+      "parameters.displacementFadeEnd": "Voir `displacementFadeStart`."
     }
   },
   "material.createShader": {
@@ -9980,5 +10127,80 @@
   },
   "writeEngineCamera": {
     "summary": "Déduit tout ce que lit une image à partir de `into.world`, déjà réglée, et de l’optique déclarée : la projection dans la convention de profondeur du moteur, puis la vue, la vue-projection et les six plans du frustum (`updateCameraFrame`), le repère de rendu (`renderOrigin.ts`) et l’œil."
+  },
+  "COLLISION_CHANNELS": {
+    "summary": "CANAUX ET RÉPONSES DE COLLISION.",
+    "description": "Un corps a un type d’objet, l’un des 64 canaux, et une réponse à chaque canal — `ignore`, `overlap` ou `block`. Deux corps se rencontrent selon ce que chacun répond au canal de l’autre, la moindre des deux réponses décidant : tous deux `block` et ils entrent en collision ; la moindre est un `overlap` et ils se traversent en signalant qu’ils se chevauchent ; l’un des deux `ignore` et ils ne se connaissent pas. Une requête de scène a un canal et des réponses à elle et rencontre les corps par la même règle (`channelsMeet`). Les huit premiers canaux sont ceux du moteur ; six autres sont réservés, et cinquante sont ceux du jeu, à nommer à sa guise. Un PROFIL nommé fixe d’un mot un type d’objet, ce que les corps déplacent ou perçoivent, et une réponse à chaque canal ; les profils ci-dessous sont les défauts du moteur."
+  },
+  "COLLISION_PROFILES": {
+    "summary": "Les profils de collision du moteur.",
+    "description": "Tout canal non nommé répond `block`."
+  },
+  "CharacterMode": {
+    "summary": "Comment le corps se déplace : au sol, en l’air, dans l’eau, ou en vol libre de la gravité."
+  },
+  "CollisionChannel": {
+    "summary": "Un canal par son nom."
+  },
+  "CollisionProfileName": {
+    "summary": "Un profil par son nom."
+  },
+  "CollisionResponse": {
+    "summary": "Une réponse par son nom."
+  },
+  "OverlapHit": {
+    "summary": "Un corps qu’une forme a rencontré : son objet, s’il bloque la requête (sinon il la chevauche), et le matériau glTF du triangle cuit rencontré (`-1` pour la forme propre d’un corps)."
+  },
+  "OverlapOptions": {
+    "summary": "Ce que demande `world.physics.overlap`, en plus de la forme.",
+    "members": {
+      "at": "Le centre de la forme, repère du monde.",
+      "rotation": "Un quaternion unitaire `[x, y, z, w]`.",
+      "channel": "Le canal dans lequel est la requête et les réponses qu’elle donne aux canaux, comme un corps les a (`CollisionOptions`) : la requête rencontre un corps par la moindre de ce que chacun répond au canal de l’autre — tous deux `block`, le corps bloque la requête ; l’un des deux `overlap`, il la chevauche ; l’un des deux `ignore`, il n’est pas rencontré. Un corps qui ne prend part à aucune requête n’est jamais rencontré.",
+      "objectTypes": "Cherche les corps de ces types d’objet, quoi qu’ils répondent : tous ceux rencontrés bloquent. Prend la place de `channel`.",
+      "mode": "`multi` liste chaque corps rencontré ; `any` s’arrête au premier rencontré ; `blocking` au premier qui bloque.",
+      "ignore": "Un corps que la requête traverse : celui de l’appelant."
+    }
+  },
+  "OverlapResult": {
+    "summary": "Ce qu’une forme a rencontré : les corps dans l’ordre de leurs ids de moteur, et si l’un d’eux bloque.",
+    "members": {
+      "blocking": "Si un corps rencontré bloque la requête."
+    }
+  },
+  "OverlapShape": {
+    "summary": "Une forme à tester en un lieu : une sphère, une boîte ou une capsule (droite, tournée par `rotation`)."
+  },
+  "RESPONSE": {
+    "summary": "Ce qu’un corps répond à un canal, du moins au plus : il ne le connaît pas, il le traverse et le signale, il s’arrête contre lui."
+  },
+  "ResolvedCollision": {
+    "summary": "La collision d’un corps réglée : son canal, et les canaux qu’il bloque et chevauche en masques de bits (le bit `i` est le canal `i`).",
+    "members": {
+      "objectType": "Le canal, à partir de 0.",
+      "block": "Bit `i` à 1 : le corps bloque le canal `i`.",
+      "overlap": "Bit `i` à 1 : le corps chevauche le canal `i`.",
+      "query": "Prend part aux requêtes de scène et aux chevauchements.",
+      "physics": "Prend part à la simulation."
+    }
+  },
+  "channelIndex": {
+    "summary": "Le numéro d’un canal donné par nom ou par numéro ; refuse tout le reste."
+  },
+  "channelsMeet": {
+    "summary": "La réponse avec laquelle `a` et `b` se rencontrent : chacun répond au canal de l’autre, la moindre décidant."
+  },
+  "defaultProfile": {
+    "summary": "Le profil dont un corps est fait quand il n’en nomme aucun (`CollisionOptions.profile`)."
+  },
+  "resolveCollision": {
+    "summary": "La collision d’un corps réglée à partir de `options` et du profil `fallback` dont il part quand il n’en nomme aucun : les réponses du profil (tout canal non nommé `block`), puis `responses` par-dessus, le canal `objectType` et l’interrupteur `enabled` par-dessus ceux du profil.",
+    "parameters": {
+      "options": "La collision d’un corps, telle que la prend `obj.physics` : un profil, puis ce qui en diffère.",
+      "options.profile": "Un profil dont partir.",
+      "options.objectType": "Le canal qu’est le corps : ce à quoi répondent les autres.",
+      "options.responses": "Ce que le corps répond aux canaux, par-dessus le profil ; un canal est un nom ou son numéro.",
+      "options.enabled": "Si le corps prend part à la simulation, aux requêtes, aux deux ou à aucune."
+    }
   }
 }

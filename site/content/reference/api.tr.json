@@ -619,14 +619,16 @@
   },
   "CharacterCameraControls": {
     "summary": "Gözlerinden görülen bir KARAKTER: yürüyen, koşan, zıplayan ve düşen, dünyanın fiziğinin gövdeleriyle dik bir kapsül olarak çarpışan kütleli bir gövde.",
-    "description": "İşaretçi başı birinci kişideki gibi döndürür (`look.ts`). Tuşlar, her klavye düzeninin aynı tuşları oynaması için `KeyboardEvent.code` ile: W/S ya da yukarı ve aşağı oklar ileri ve geri yürür, A/D ya da yan oklar yan adım atar, Shift koşar, Boşluk zıplar, C çömelir (`canCrouch`); suda gövde başın baktığı yöne yüzer, Boşluk yükselir ve çömelme tuşu batar, ve `flying` ayarlıysa böyle uçar. Gövde bir anda başlamaz ya da durmaz: `responseTime` boyunca hız kazanır ve `stopTime` boyunca frenler, zemininin sürtünmesinin bir tabanın itmesine izin verdiğinden asla daha hızlı değil, bu yüzden bir duruş taşta biraz, buzda çok kayar; havada ivmesini korur, dünyanın yerçekimi çarpı `gravityScale` altında yükselir ve düşer, `stepHeight`'a kadar çıkıntılara tırmanır, duvarlar boyunca kayar ve `maxSlope`'a kadar eğimlerde durur (`sdk-browser/src/physics/character/characterDriver.ts`, `sdk-core/src/collision/characterDrive.ts`). Kamera gözdür, ayakların `eyeHeight` kadar üstünde, adımla birlikte `headBob` kadar sallanır ve inişte `landingDip` kadar çöker (`sdk-core/src/collision/characterEye.ts`); ikisi de gövdenin adımından sonra göze biner ve gövdeyi asla hareket ettirmez. Kamerayı kendisi hareket ettiren bir ana bilgisayar gövdeyi oraya, hareketsiz olarak ışınlar. Durağan bir karakter — yerde, hızsız, tuşsuz, kalan çökme olmadan — hiçbir şey yaymaz, böylece sahne durağan kalır.",
+    "description": "İşaretçi başı birinci şahıstaki gibi döndürür (`look.ts`). Tuşlar, her klavye düzeni aynı tuşları çalsın diye `KeyboardEvent.code` ile: W/S veya yukarı ve aşağı oklar ileri ve geri yürür, A/D veya yan oklar yana kayar, Shift koşar, Boşluk zıplar, C çömelir (`canCrouch`); suda gövde başın baktığı yöne yüzer, Boşluk yükselir ve çömelme tuşu batar, `flying` ayarlıysa böyle uçar. Gövde bir anda başlamaz veya durmaz: zeminde `maxAcceleration` ile hız kazanır, `groundFriction` ve `brakingDecelerationWalking` ile frenler; havada ivmesini korur, dünyanın yerçekimi çarpı `gravityScale` altında çıkar ve düşer, `stepHeight` yüksekliğine kadar çıkıntıları tırmanır, duvarlar boyunca kayar ve `maxSlope` eğimine kadar yamaçlarda durur (`sdk-browser/src/physics/character/characterDriver.ts`, `sdk-core/src/collision/characterDrive.ts`). Kamera, ayakların `eyeHeight` kadar üstündeki gözdür; adımla `headBob` kadar sallanır ve inişte `landingDip` kadar çöker (`sdk-core/src/collision/characterEye.ts`); ikisi de gövdenin adımından sonra göze işler ve gövdeyi asla oynatmaz. Kamerayı kendisi hareket ettiren bir ana makine gövdeyi oraya, hareketsiz olarak ışınlar. Durağan bir karakter — zeminde, hızsız, tuşsuz, kalan çökme olmadan — hiçbir şey yaymaz, böylece sahne durağan kalır.",
     "members": {
       "velocity": "Gövdenin saniyede metre cinsinden hızı, canlı: `[x, y, z]`, y yukarı.",
       "onGround": "Ayakların bir zeminde olup olmadığı.",
       "stride": "Radyan cinsinden adım fazı, [0, 2π)'de: bir ayak 0'da vurur, diğeri π'de.",
       "onLand": "Saniyede metre cinsinden aşağı hızla, inişte çağrılır: bir ses, bir sarsıntı.",
       "onJump": "Gövde bir zıplamada yerden ayrıldığında çağrılır.",
-      "update": "`delta` saniye yaşar; kameranın hareket edip etmediğini döndürür, ve ettiğinde `change` yayar."
+      "update": "`delta` saniye yaşar; kameranın hareket edip etmediğini döndürür, ve ettiğinde `change` yayar.",
+      "mode": "Gövdenin şu an nasıl hareket ettiği: `walking`, `falling`, `swimming` veya `flying`.",
+      "crouched": "Gövdenin çömelmiş olup olmadığı."
     }
   },
   "CharacterSettings": {
@@ -1957,7 +1959,7 @@
       "emptyTexels": "Bir `approximate` ya da `simplify` katmanının atlasının hiçbir chart'ın değerinin olmadığı yerde tuttuğu (`HLOD_EMPTY_TEXELS`): `nearestChart`, her haritada en yakın chart'ın değerleri, ya da `black`; `true` varsayılan, `false` `black`.",
       "clusterDag": "Bir `approximate`, `merge` ya da `simplify` katmanının kurduğu her aktörün mesh'inin bir cluster DAG'ı alıp almadığı, daha kaba seviyeleri piksel hatası içinde çizilir; `false`, varsayılan, tek seviye her mesafede bütün olarak çizilir, referansın birleştirilmiş, yaklaşıklanmış ya da sadeleştirilmiş bir mesh'i varsayılan olarak kurduğu gibi.",
       "allowDistanceField": "Bir `approximate`, `merge` ya da `simplify` katmanının kurduğu her aktörün mesh'inin bir mesafe alanı alıp almadığı (referansın her kurucusunun bir ayarı): derleyici onu aktörün kendi üçgenlerinden, dünyanın uzayında, sahnenin mesh'lerinin ayarlarıyla (`meshBuild`'in `distanceField…`'i) `distanceFields.bin`'e kurar ve güneşin mesafe alanı gölgesi onu aktörün çizildiği yerde çizer — son gölge haritasının ötesindeki birleştirilmiş seviyelerin gölgesi. Bir `approximate` katmanı için varsayılan olarak `true`, bir `merge` ya da `simplify` katmanı için referansın kurucularının varsayılanladığı gibi `false`. Bir `instanced` katmanının nesneleri kendi alanları olan kendi mesh'lerini çizer; bir `voxel` katmanı üçgen kurmaz.",
-      "disallowClusterDag": "Bir `instanced` katmanının aldığı nesneleri cluster DAG'ları olmadan çizip çizmediği: `false`, varsayılan, her biri kendi DAG'ını tutar, kaynak mesh'i yerleştirilir ve katman mesh kurmaz; `true`, her biri mesh'inin son LOD'unda, yedek mesh'inde (`lodSelection: 'lowest'`) çizilir, referansın cluster DAG'ına izin verilmeyen bir örneklenmiş mesh'i çizdiği gibi. Katman bu yedekleri o zaman malzemelerini tutan bir `merge` katmanının yaptığı gibi kurar — hücre ve malzeme başına bir mesh, bütün çizilir, kaynağın malzemesini giyer, asla bir nesnenin kendi DAG'ının kopyası olmaz — ve her `merge` kuralı ona uygulanır (`parent`, `spatiallyLoaded`, hücrelerinin ızgarası); `hlodInstance` işaretli bir nesne yine kendisi olarak durur.",
+      "disallowClusterDag": "Bir `instanced` katmanın aldığı nesneleri küme DAG'ları olmadan çizip çizmediği: `false`, varsayılan, her biri kendi DAG'ını, yerleştirilmiş kaynak meshini korur ve katman mesh oluşturmaz; `true`, her biri meshinin son LOD'unda, yedek meshinde (`lodSelection: 'lowest'`) çizilir; referansın küme DAG'ı yasaklanmış bir örneklenmiş meshi çizmesi gibi. Katman örneklenmiş kalır: derleyici her kaynak meshin yedeğini bir kez yapar ve katmanın nesneleri onun matrislerindeki satırlarıdır — nesne veya hücre başına hiçbir şey kopyalanmaz —, her mesafede bütün olarak çizilir. Skinned, morph yapan veya simüle edilen bir nesne ve bir montajınki kendi meshini korur.",
       "meshBuild": "Bir `merge` ya da `simplify` katmanının yaptığı her aktörün mesh'ini nasıl kurduğu (`HLOD_MESH_BUILD_SETTINGS`), referansın yalnızca bu katmanlardan okuduğu gibi: en ince seviyesinin neyi tuttuğu (`keptTriangles`, `trimmedError`), neredeyse çökmüş üçgenlerinin atılıp atılmadığı (`dropNearCollapsed`), aktörü yüklüyken ne kadarının yerleşik kaldığı (`alwaysResidentKib`, hücresinin kök sayfaları) ve şeklini nasıl koruduğu (`shapePreservation`, `edgeLengthBound`, `holdTextureCoordinates`). Bir `voxel` katmanınki bunun yerine hücrelerinin voksellerinin nasıl örneklendiğini adlandırır — `voxelRays`, `voxelLevel`, `voxelBackUp`, `voxelSeparable`, `voxelNdf`, `voxelOpacity`, bir mesh'in `meshBuild`'inin adlandırdığı gibi.",
       "sizeFilter": "Bir `instanced` katmanının dünya kutusunun boyutuna göre hangi nesneleri aldığı: `none`; `extent`, en büyük yarı boyutu en az `minExtent` metre; `area`, yüzeyi en az `minArea` metrekare; `volume`, hacmi en az `minVolume` metreküp. Geri çevrilen bir nesne hiçbir HLOD'a girmez.",
       "minExtent": "Bir `extent` filtresinin en küçük yarı boyutu, metre.",
@@ -2392,7 +2394,7 @@
     "description": "Bunlar adlandırılmış ürün kararlarıdır, gömülü sabitler değil: her çalışma zamanı sınırı onları yeniden okur, ve tanı onları oldukları gibi yayımlar.",
     "members": {
       "sunAngularRadius": "Güneş diskinin radyan cinsinden açısal yarıçapı; sıfır açıkça sert gölge ister. Bu, yönlü ışığın kendi varsayılanıdır (0,5357 derecelik bir disk); gökyüzü modülünün güneş bölümü seviyeninkini (0,7357 derece, `modules/sky/sunPart.ts`) yaptığı ışığa ayarlar, bu yüzden tek başına yerleştirilmiş bir ışık ile gökyüzünün güneşi, geldikleri bileşen ve seviye farklı olduğu gibi burada da farklıdır.",
-      "tileLights": "HAREKETLİ bir görüntünün örnekleme yaptığı ışık ızgarası hücresinin en uzun listesi (X2): bunun ötesinde hücrenin ışıkları tamamen toplanır. En fazla bu kadar ışık içeren bir sahne bu uzunlukta bir ışık dizisiyle aydınlatılır. Bir hücrenin listesi, sayısı ne olursa olsun ona ulaşan her ışığı görünüm boyutunda bir havuzda tutar; havuzda yer kalmayan bir hücre sahnenin bütün ışıklarını dolaşır — ona ulaşmayanlar tam bir sıfır ekler —, böylece hiçbir ışık kaybolmaz.",
+      "tileLights": "HAREKETLİ bir görüntünün örnekleme yaptığı ışık ızgarası hücresinin en uzun listesi (X2): bunun ötesinde hücrenin ışıkları tamamen toplanır. En fazla bu kadar ışık içeren bir sahne bu uzunlukta bir ışık dizisiyle aydınlatılır. Bir hücrenin listesi ona ulaşan ışıkları sabit boyutlu bir havuzda tutar, hücreleri çarpı `lightGridMaxCulledLightsPerCell` (`hizOptions.ts`, 32): bunu aşan bir sütun aldığı ışıkları sırayla korur ve gerisini bırakır, referansın yaptığı gibi.",
       "tileSize": "Işık ızgarası hücresinin piksel cinsinden kenarı.",
       "gridSlices": "Işık ızgarasının derinlik dilimleri: sonuncusu en uzak ışığın erişiminde başlar ve bir hücresi sonsuza kadar uzanır.",
       "gridDepthDistribution": "Izgaranın dilimlerinin dağılımı, `slice = log2(depth · B + O) · S` (`lighting/tiles/gridMap.ts`): `S`, derinliğin iki katına çıkması başına kaç dilim olduğu, ilk dilimin başlangıcının kaydırıldığı derinlik.",
@@ -2501,7 +2503,8 @@
       "p.cloudShadowExtentKm": "Haritanın kapsadığı kameranın çevresindeki yarıçap, kilometre cinsinden, 1'den; varsayılan 150.",
       "p.cloudShadowResolutionScale": "Haritanın kenar başına 512 texel'i üzerindeki çarpan, 0,25'ten; varsayılan 1.",
       "p.cloudShadowRaySamplesScale": "Haritanın bir ışınının aldığı 16 örnek üzerindeki çarpan, 0,25'ten; varsayılan 1.",
-      "p.cloudScatteredLuminanceScale": "Bulutların içindeki ışık üzerindeki çarpan, doğrusal; varsayılan beyaz."
+      "p.cloudScatteredLuminanceScale": "Bulutların içindeki ışık üzerindeki çarpan, doğrusal; varsayılan beyaz.",
+      "p.mobility": "Işığın nasıl hareket etmesinin ve aydınlatılmasının amaçlandığı: `'static'`, `'stationary'` veya `'movable'`; varsayılan olarak `'stationary'`."
     },
     "members": {
       "isLight": "Her zaman `true`: bir ışığı başka herhangi bir nesneden ayırır.",
@@ -2574,7 +2577,8 @@
       "cloudShadowExtentKm": "Haritanın kapsadığı kameranın çevresindeki yarıçap, kilometre cinsinden, 1'den; 150.",
       "cloudShadowResolutionScale": "Haritanın kenar başına 512 texel'i üzerindeki çarpan, 0,25'ten; 1.",
       "cloudShadowRaySamplesScale": "Haritanın bir ışınının aldığı 16 örnek üzerindeki çarpan, 0,25'ten; 1.",
-      "cloudScatteredLuminanceScale": "Bulutların içindeki ışık üzerindeki çarpan, doğrusal; beyaz. `set` ile yerinde değiştirin."
+      "cloudScatteredLuminanceScale": "Bulutların içindeki ışık üzerindeki çarpan, doğrusal; beyaz. `set` ile yerinde değiştirin.",
+      "mobility": "Işığın nasıl hareket etmesinin ve aydınlatılmasının amaçlandığı: `'static'` (pişirilmiş, dinamik gölge düşürmez), `'stationary'` (hareket etmez; rengi ve yoğunluğu değişebilir) veya `'movable'` (tamamen dinamik); varsayılan olarak `'stationary'`, her tür için. Başka her değer reddedilir (`INVALID_SCENE_LIGHT`). Bir yazma dünyaya hemen ulaşır."
     }
   },
   "LightCloudShadowParameters": {
@@ -2630,7 +2634,8 @@
       "shadowsAir": "Yalnızca yönlü: ışığın gölgesinin havayı da gölgeleyip gölgelemediği (pus ve gökyüzü yürüyüşü onu ışınları boyunca okur); varsayılan kapalı.",
       "transmittancePerPixel": "Yalnızca yönlü: havanın ışığa doğru geçirgenliğinin yerde bir kez değil, her yüzey noktası için okunup okunmadığı; varsayılan kapalı.",
       "sunDiskTint": "Yalnızca yönlü: gökyüzündeki güneş diskinin çarpıldığı renk, doğrusal; varsayılan beyaz.",
-      "sh": "Bir probun ışınımı: 27 sayı, ışıldamanın dokuz RGB küresel harmonik katsayısı, bant sırasıyla sabit, `y`, `z`, `x`, `xy`, `yz`, `3z² − 1`, `xz`, `x² − y²`, `intensity` ile ölçeklenmiş; `emptyIrradiance` ve `add…Irradiance` yardımcılarıyla kurulur. Yoksa prob tekdüzedir."
+      "sh": "Bir probun ışınımı: 27 sayı, ışıldamanın dokuz RGB küresel harmonik katsayısı, bant sırasıyla sabit, `y`, `z`, `x`, `xy`, `yz`, `3z² − 1`, `xz`, `x² − y²`, `intensity` ile ölçeklenmiş; `emptyIrradiance` ve `add…Irradiance` yardımcılarıyla kurulur. Yoksa prob tekdüzedir.",
+      "mobility": "Işığın nasıl hareket etmesinin ve aydınlatılmasının amaçlandığı: `'static'`, `'stationary'` veya `'movable'`; varsayılan olarak `'stationary'`."
     }
   },
   "LightShadowOptions": {
@@ -2811,7 +2816,13 @@
       "parameters.physics": "Onu giyen cismin maddesi: yoğunluk, sürtünme, sekme.",
       "parameters.density": "kg/m³; hacimle çarpılınca kütleyi verir.",
       "parameters.friction": "Cismin ne kadar tuttuğu, 0 ve üstü.",
-      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası."
+      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası.",
+      "parameters.specularIntensity": "Yüzeyin dielektriğinin speküler girdisi, 0 ile 1: dik gelişteki yansıtıcılığı bunun 0,08'idir; böylece 0,5 (hiçbirini bildirmeyen bir yüzeyin değeri) olağan %4'ü, 1 %8'i ve 0 hiç parlama vermez. Bir glTF malzemesinin `KHR_materials_specular` çarpanı bildirildiği gibi yazılır. Metal bunu yok sayar.",
+      "parameters.specularIntensityMap": "`specularIntensity` değerini bir görüntünün alfa kanalıyla çarpar.",
+      "parameters.displacementMagnitude": "Malzeme grafiğinin `displacement` çıktısının, `displacementCenter` değerinin 1 üstünde olduğu yerde bir yüzeyi normali boyunca metre cinsinden ne kadar kaydırdığı: kaydırılmış yükseklik `(çıktı - displacementCenter) * displacementMagnitude` değeridir.",
+      "parameters.displacementCenter": "Yüzeyi olduğu yerde bırakan `displacement` çıktısının değeri, 0 ile 1.",
+      "parameters.displacementFadeStart": "Kaymanın mesafeyle nerede sönümlendiği, en büyük kaymasının ekrandaki piksel boyutu olarak: `displacementFadeStart` üstünde tam, `displacementFadeEnd` altında yok; ikincisi daha küçük olmalıdır; ikisi de verilmezse hiç sönümlenmez.",
+      "parameters.displacementFadeEnd": "Bkz. `displacementFadeStart`."
     },
     "members": {
       "isMaterial": "Her zaman `true`: bir malzemeyi başka her şeyden ayırır.",
@@ -2852,7 +2863,11 @@
       "volumeOutputs": "Hacim alanındaki bir malzemenin çıktıları, aralıklarında tutulur: albedosu, sönümlemesi ve yayılan ışığı (`emissive` çarpı `emissiveIntensity`).",
       "surface": "Bu malzemenin motordaki kendi fiziksel yüzey kaydı (`contracts/material.ts`). Fiziksel aile dışındaki bir tür, motorun tek aydınlatma modeline (`surfaceModel.ts`) eşlediği, adının host ailesi üzerinden çizilir.",
       "clone": "Aynı değerlere sahip, aynı türde yeni bir malzeme.",
-      "dispose": "Giyenleri unutur: silinen bir malzeme kimseyi yeniden boyamaz."
+      "dispose": "Giyenleri unutur: silinen bir malzeme kimseyi yeniden boyamaz.",
+      "displacementMagnitude": "Malzeme grafiğinin `displacement` çıktısının, `displacementCenter` değerinin 1 üstünde olduğu yerde bir yüzeyi normali boyunca metre cinsinden ne kadar kaydırdığı: kaydırılmış yükseklik `(çıktı - displacementCenter) * displacementMagnitude` değeridir.",
+      "displacementCenter": "Yüzeyi olduğu yerde bırakan `displacement` çıktısının değeri, 0 ile 1.",
+      "displacementFadeStart": "Yüzeyin kaymasının mesafeyle nerede sönümlendiği, en büyük kaymasının ekrandaki piksel boyutu olarak: `displacementFadeStart` üstünde tam, `displacementFadeEnd` altında yok (ki o daha küçüktür). İkisi de ayarsızsa hiç sönümlenmez.",
+      "displacementFadeEnd": "Bkz. `displacementFadeStart`."
     }
   },
   "MaterialGraph": {
@@ -2923,7 +2938,13 @@
       "physics": "Onu giyen cismin maddesi: yoğunluk, sürtünme, sekme.",
       "density": "kg/m³; hacimle çarpılınca kütleyi verir.",
       "friction": "Cismin ne kadar tuttuğu, 0 ve üstü.",
-      "restitution": "Cismin ne kadar sektiği, 0 ile 1 arası."
+      "restitution": "Cismin ne kadar sektiği, 0 ile 1 arası.",
+      "specularIntensity": "Yüzeyin dielektriğinin speküler girdisi, 0 ile 1: dik gelişteki yansıtıcılığı bunun 0,08'idir; böylece 0,5 (hiçbirini bildirmeyen bir yüzeyin değeri) olağan %4'ü, 1 %8'i ve 0 hiç parlama vermez. Bir glTF malzemesinin `KHR_materials_specular` çarpanı bildirildiği gibi yazılır. Metal bunu yok sayar.",
+      "specularIntensityMap": "`specularIntensity` değerini bir görüntünün alfa kanalıyla çarpar.",
+      "displacementMagnitude": "Malzeme grafiğinin `displacement` çıktısının, `displacementCenter` değerinin 1 üstünde olduğu yerde bir yüzeyi normali boyunca metre cinsinden ne kadar kaydırdığı: kaydırılmış yükseklik `(çıktı - displacementCenter) * displacementMagnitude` değeridir.",
+      "displacementCenter": "Yüzeyi olduğu yerde bırakan `displacement` çıktısının değeri, 0 ile 1.",
+      "displacementFadeStart": "Kaymanın mesafeyle nerede sönümlendiği, en büyük kaymasının ekrandaki piksel boyutu olarak: `displacementFadeStart` üstünde tam, `displacementFadeEnd` altında yok; ikincisi daha küçük olmalıdır; ikisi de verilmezse hiç sönümlenmez.",
+      "displacementFadeEnd": "Bkz. `displacementFadeStart`."
     }
   },
   "MaterialSettings": {
@@ -3376,7 +3397,10 @@
       "rotateZ": "Düğümü kendi z ekseni etrafında döndürür.",
       "translateOnAxis": "Düğümü kendi `axis`i boyunca hareket ettirir.",
       "getWorldDirection": "Düğümün dünyada baktığı yön.",
-      "localBounds": "Bu düğümün kendi içeriğinin kutusu, yerel çerçevede; düz bir düğümde yoktur."
+      "localBounds": "Bu düğümün kendi içeriğinin kutusu, yerel çerçevede; düz bir düğümde yoktur.",
+      "firstPerson": "Nesnenin birinci şahıs bir nesne olarak çizilip çizilmediği (bir oyuncunun elleri ve silahı): kendine ait dinamik gölge düşürmez ve pikselleri gölgelerin ayrı ele aldığı birinci şahıs işaretini taşır; varsayılan olarak `false`, ve asla `firstPersonWorldSpaceRepresentation` ile birlikte değil.",
+      "firstPersonWorldSpaceRepresentation": "Nesnenin dünyada bir birinci şahıs nesneyi (oyuncunun gövdesi) temsil edip etmediği: sahibinin görünümü onu görmez ve gölgesini güneşlerin birinci şahıs clipmap'ine (`shadowFirstPersonClipmap`), olağan haritalardan ayrı olarak düşürür, ve ona sahip olan görünüm (ana kameranınki) onu çizmez; varsayılan olarak `false`, ve asla `firstPerson` ile birlikte değil.",
+      "castHiddenShadow": "Nesnenin gizliyken gölgelerini düşürmeyi sürdürüp sürdürmediği (`visible = false` veya gizli bir düğümün altında): hiçbir görünüm onu çizmez, gölge haritaları çizer; varsayılan olarak `false`, ve yalnızca gölge düşüren ve bir `firstPersonWorldSpaceRepresentation` olmayan bir nesne için okunur."
     }
   },
   "ObjectPhysics": {
@@ -3772,7 +3796,9 @@
       "forVertexTangents": "Normal çarpanlarının köşe teğetleri için yazılıp yazılmadığı; söylenmemişse bilinmiyor.",
       "shininess": "Bildirildiği haliyle bir Phong yüzeyinin üssü ve parlama rengi.",
       "released": "Kaynak geri verildiğinde çağrılır: motorun kendi kopyasının dinlediği.",
-      "dispose": "Kaynağı geri verir."
+      "dispose": "Kaynağı geri verir.",
+      "subsurfaceOpacity": "Alt yüzeyinin opaklığı, 0 ile 1, söylenmediğinde bir (`SUBSURFACE_OPACITY_MODEL_SHIFT`).",
+      "specularIntensity": "Bir dielektriğin speküler girdisi (`KHR_materials_specular`): dik gelişteki yansıtıcılığı bunun 0,08'idir (`surfaceF0`), bir yüzeyin hiçbirini bildirmediği yerde 0,5. Haritasının alfası onu ölçekler. Bildirildiğinde, yüzeyin başka ne taşıdığına bakılmaksızın kayıttan okunur."
     }
   },
   "PageUnit": {
@@ -4693,7 +4719,8 @@
       "shaftBloomScale": "Parıltıyla: eklenen renk üzerindeki çarpan; yoksa 0,2.",
       "shaftBloomThreshold": "Parıltıyla: görüntünün parlaması için pozlamadan sonra geçmesi gereken parlaklık; yoksa 0.",
       "shaftBloomMaxBrightness": "Parıltıyla: pozlamadan sonra bunun üzerindeki bir parlaklık ona indirilir; yoksa 100.",
-      "shaftBloomTint": "Parıltıyla: parıltının rengi üzerindeki çarpan, doğrusal, en az 0 olan üç sayı; yoksa beyaz."
+      "shaftBloomTint": "Parıltıyla: parıltının rengi üzerindeki çarpan, doğrusal, en az 0 olan üç sayı; yoksa beyaz.",
+      "mobility": "Işığın nasıl hareket etmesinin ve aydınlatılmasının amaçlandığı: `static` (ışık haritalarına pişirilmiş, ne hareket eder ne değişir ve dinamik gölge düşürmez), `stationary` (hareket etmez, rengi ve yoğunluğu değişebilir: statik yüzeylerdeki doğrudan ışığı pişirilmiştir, dinamik gölgeleri düşürülür) veya `movable` (tamamen dinamik); yoksa `stationary`, referansın her ışık türü için varsayılanı. Hacimsel ışık haritası bunu okur (`mobilityOf`)."
     }
   },
   "SceneLightStore": {
@@ -4931,7 +4958,7 @@
   },
   "ShadowCacheInvalidation": {
     "summary": "BİR SAHNE DÜĞÜMÜ DÜNYA KONUMU OFSETİNİ NASIL TUTAR: yüzeylerinin malzemeleri köşeleri bir `worldPositionOffset` çıktısıyla (`Material.graph`) kaydıran nesnenin dört anahtarı, motorun rasterları tarafından okunur.",
-    "description": "`evaluateWorldPositionOffset` (true) ofseti nesne için açar, `worldPositionOffsetDisableDistance` (0, asla) kameradan nesnenin sınırlarının merkezine bu kadar metreden sonra onu durdurur, `worldPositionOffsetWritesVelocity` (true) hareketi zamansal kenar yumuşatma ve hareket bulanıklığı için bir hareket yapar ve `shadowCacheInvalidation` gölgelerinin nasıl tutulduğunu söyler: `auto` (varsayılan) ofseti değerlendirilirken ya da nesne hareket ederken onları yeniden çizer, `always` her görüntüde, `rigid` ofseti için değil, `static` ofseti için de hareketleri için de değil. Bir malzemenin kendi `alwaysEvaluateWorldPositionOffset`'i ilk ikisini geçersiz kılar, `maxWorldPositionOffset`'i köşelerin ne kadar gidebileceğini sınırlar. Kendi tablolarında tutulur, böylece hiçbirini ayarlamayan bir düğüm hiçbir şeye mal olmaz: bir anahtar düğümün özelliği (`defineOffsetSwitches`) üzerinden yazılır ve hiçbir poz hook'unun duymadığı herhangi bir düğüm alanı gibi not edilir (`noteNodeWrite`)."
+    "description": "`evaluateWorldPositionOffset` (true) nesne için ofseti açar, `worldPositionOffsetDisableDistance` (0, asla) kameradan nesnenin sınırlarının merkezine bu kadar metreden ötede onu durdurur, `worldPositionOffsetWritesVelocity` (true) hareketi zamansal kenar yumuşatma ve hareket bulanıklığı için bir hareket yapar, ve `shadowCacheInvalidation` gölgelerinin nasıl tutulduğunu söyler: `auto` (varsayılan) ofseti değerlendirildiği veya nesne hareket ettiği sürece onları yeniden çizer, `always` her görüntü, `rigid` ofseti için değil, `static` ofseti için de hareketleri için de değil. Bir malzemenin kendi `alwaysEvaluateWorldPositionOffset` değeri ilk ikisini geçersiz kılar, `maxWorldPositionOffset` değeri köşelerin ne kadar uzağa gideceğini sınırlar. Nesnenin iki anahtarı daha, çok seyrek ayarlandıkları için yanlarında tutulur: `firstPerson` (false), birinci şahıs bir nesne olarak çizilen nesne — görünümün uzayında, kameraya yakın, bir oyuncunun elleri ve silahı gibi —, kendine ait dinamik gölge düşürmez, ve `firstPersonWorldSpaceRepresentation` (false), dünyada bir birinci şahıs nesneyi temsil eden nesne — oyuncunun gövdesi —, sahibinin görünümünün görmediği ve gölgesini olağan haritalardan ayrı düşüren (`shadowFirstPersonClipmap`). Bir düğüm ya birisidir ya diğeri, asla ikisi birden. Sonuncusu, `castHiddenShadow` (false), gizli bir nesnenin (`visible = false` veya gizli bir düğümün altında) gölgesini düşürmeyi sürdürmesine izin verir; hiçbir görünüm onu çizmez. Dünya uzayı temsili, ona sahip olan görünümden gizlidir ve bu ne derse desin gölge düşürür. Kendi tablolarında tutulur, böylece hiçbirini ayarlamayan bir düğüm hiçbir şeye mal olmaz: bir anahtar düğümün özelliğiyle yazılır (`defineOffsetSwitches`) ve hiçbir poz kancasının duymadığı her düğüm alanı gibi not edilir (`noteNodeWrite`)."
   },
   "ShadowDistanceOption": {
     "summary": "Bir host'un yazdığı haliyle gölge mesafesi: metre, `true` varsayılan, `false` hiç."
@@ -4948,7 +4975,7 @@
       "shadowVsmPagesRendered": "Bu karede temizlenip ardından render edilen sayfalar; birkaç kare geç geri okunur.",
       "shadowVsmFreePages": "Havuzun son durum iletisindeki boş fiziksel sayfalar.",
       "shadowVsmLodBias": "Havuzun yükünün belirlediği genel çözünürlük LOD sapması.",
-      "shadowVsmProjectionPasses": "Bu karedeki izdüşüm geçişleri, her biri dört ışık.",
+      "shadowVsmProjectionPasses": "Bu karedeki izdüşüm geçişleri: güneşlerinki ve yerel ışıklarınki.",
       "shadowVsmInvalidationMs": "Sayfa geçersiz kılmanın GPU süresi, ms cinsinden, geçiş sürelerinden.",
       "shadowVsmMarkingMs": "Sayfa işaretlemenin GPU süresi, ms cinsinden, geçiş sürelerinden.",
       "shadowVsmPageManagementMs": "Sayfa yönetiminin GPU süresi, ms cinsinden, geçiş sürelerinden.",
@@ -4960,15 +4987,15 @@
       "gpuLightListsMs": "Işık listelerinin GPU süresi.",
       "tileLightPoolReserved": "Bir listeden fazla ışığı olan bir sahnenin son örneklenen karesinde, listelerinin ötesindeki karoların ışık dizini havuzunda ayırdığı sözcükler; aksi halde `null`.",
       "tileLightPoolCapacity": "Işık dizini havuzunun o örneklenen karede tuttuğu sözcükler; aynı şekilde `null`.",
-      "tileLightPoolOverflowed": "O örneklenen karede bir karonun havuzda yer bulamayıp her ışığı dolaşıp dolaşmadığı.",
-      "tileLightPoolGrowths": "Gezgin açıldığından beri havuzun taşan bir karenin istediği kadar büyüdüğü sayı.",
+      "tileLightPoolOverflowed": "Bir sütunun, örneklenen o karede havuzda yer bulamayıp ötesindeki ışıkları bırakıp bırakmadığı (`lightGridMaxCulledLightsPerCell`).",
       "gpuShadowsMs": "Gölgeler aşamasının GPU süresi: sanal gölge haritalarının her geçişi ve başka hiçbir geçiş değil.",
       "gpuLightingMs": "Aydınlatmanın GPU süresi.",
       "bounce": "Sekme ışığının probları: var olup olmadıkları, ne tuttukları, güncellemelerinin ne yaptığı.",
       "reflections": "Son görüntünün yansıma ışınları sayıldı: her birinin nerede bittiği, küresel mesafe alanı boyunca yürüyüşlerinin nasıl bittiği ve attıkları adımlar. Görünüm yansıma yapmadığı sürece `null`.",
       "surfaceCache": "Son görüntünün yüzey önbelleği: atlasının doluluğu, yakaladığı sayfalar, neden kapalı olduğu. Yapılmadığı sürece `null`.",
       "ambientOcclusion": "Son görüntünün ekran uzayı çevresel kapanması. Görünüm hiçbirini tutmadığı sürece `null`.",
-      "toneTable": "Renk derecelendirmesinin ekranın renklerini pişirdiği küp. Görünüm hiçbirini tutmadığı sürece `null`."
+      "toneTable": "Renk derecelendirmesinin ekranın renklerini pişirdiği küp. Görünüm hiçbirini tutmadığı sürece `null`.",
+      "shadowVsmOverflowFlags": "Gölgelerin son 10 saniyede gördüğü taşmalar, tür başına bir bit: 1 küme dışı işaretlemenin iş kuyruğu, 2 tek geçişli izdüşümün maskesini aşan ışıkları, 4 sayfa havuzu, 8 gölge düşürenlerin yerini aşan listesi. Hiçbiri yoksa veya `shadowAllowScreenOverflowMessages` false ise 0."
     }
   },
   "ShadowOptions": {
@@ -5333,7 +5360,9 @@
       "translucencyLighting": "Işıkların karışık bir yüzeyi nasıl aydınlattığı (`VisMaterial.translucencyLighting`).",
       "translucencyPass": "Karışık bir yüzeyin çizildiği görüntünün pass'i (`VisMaterial.translucencyPass`).",
       "responsive": "Yüzeyin çizildiği yerde zamansal kenar yumuşatmanın geçmişe ne kadar güvendiği (`RESPONSIVE_SHIFT`): `'medium'` piksellerini bir piksel animasyonu olarak okur, `'full'` geçmişlerini her görüntüde yeniden başlatır.",
-      "graph": "Parametreler ve haritalar yerine çıktıları hesaplayan graf; malzemenin rengini çizen aileler tarafından okunur (`GRAPH_FAMILIES`, `surfaceRecord.ts`)."
+      "graph": "Parametreler ve haritalar yerine çıktıları hesaplayan graf; malzemenin rengini çizen aileler tarafından okunur (`GRAPH_FAMILIES`, `surfaceRecord.ts`).",
+      "subsurfaceOpacity": "Alt yüzeyinin ne kadar opak olduğu, 0 ile 1.",
+      "specularIntensity": "Fiziksel bir yüzeyin dielektriğinin speküler girdisi, bir glTF `KHR_materials_specular` çarpanının bildirdiği, ve alfası onu ölçekleyen harita; söylenmezse yüzey 0,5'i korur."
     }
   },
   "SurfaceDisplacement": {
@@ -5591,7 +5620,7 @@
   },
   "TextureCompression": {
     "summary": "Bir oturumun havuzlarının hangi blok ailesini aldığı, ve bundan çıkan her şey.",
-    "description": "Önbellek her zinciri BC içinde saklar (`PREVIEW_STORED_FORMAT`) ve pişirmenin istediği diğer ailelerde — varsayılan olarak hepsinde — yalnızca bir kalite kapısının tuttuğu yerde pişirir; aygıt hangi aileyi örneklediğini söyler — masaüstü kartlar BC, mobil olanlar ASTC veya ETC2, bazıları birkaçını, bir yazılım bağdaştırıcısı hiçbirini. Bir atlasın o zaman LANE başına bir havuzu vardır, yardımcı dosyanın adlandırdığı düzenler: `lossless` (RGBA8, texel başına dört bayt — oturumun ailesinin tutmadığı bir zincirin, BC dosyaları çözülerek (`blockDecode.ts`), ve bir ana bilgisayar görüntüsünün okuduğu), `rgba` (BC7, ASTC veya ETC2 RGBA8, texel başına bir bayt) ve `two-channel` (BC5, ASTC parlaklık-alfa veya EAC RG11, texel başına bir bayt, normal haritasının X ve Y'si, Z gölgelendirici tarafından yeniden kurulur). Motor hiçbir şey kaybetmez: bir doku, zincirinin tutulduğu lane'i alır ve seçim yayımlanır (`texturePoolFormat`)."
+    "description": "Önbellek her zinciri BC olarak (`PREVIEW_STORED_FORMAT`) saklar ve pişirme işleminin istediği diğer ailelerde — varsayılan olarak hepsi — yalnızca bir kalite kapısının tuttuğu yerde pişirir; cihaz hangi aileyi örneklediğini söyler — masaüstü kartlar BC, mobil olanlar ASTC veya ETC2, bazıları birkaçını, bir yazılım bağdaştırıcısı hiçbirini. O zaman bir atlasın LANE başına bir havuzu olur, yan dosyanın adlandırdığı düzenler: `lossless` (RGBA8, texel başına dört bayt — oturumun ailesinin tutmadığı bir zincirin okuduğu, çözülmüş BC dosyaları (`blockDecode.ts`) ve bir ana makine görüntüsünün okuduğu), `rgba` (BC7, ASTC veya ETC2 RGBA8, texel başına bir bayt), `two-channel` (BC5, ASTC parlaklık-alfa veya EAC RG11, texel başına bir bayt, normal haritasının X ve Y'si, Z'si gölgelendirici tarafından yeniden kurulur). Veri atlasının üçüncü havuzu KANAL havuzudur: normal haritaları için BC5, veya — atlasın hiçbirini tutmadığı yerde — tek kanallı haritalarınki (`alpha`, `grayscale`, `displacementmap`): havuzun her zinciri BC4 ise ve cihaz BC örnekliyorsa BC4, texel başına yarım bayt; değilse R8, texel başına bir bayt, çözülmüş BC4 blokları (`channelPoolOf`). Motor hiçbir şey kaybetmez: bir doku zincirinin tutulduğu lane'i alır ve seçim yayımlanır (`texturePoolFormat`)."
   },
   "TextureFilter": {
     "summary": "Bir dokunun örnekleme kuralı: temel filtre, ve örnekleyici küçültürken mip kuralı."
@@ -5637,7 +5666,8 @@
       "level": "Hangi seviye.",
       "format": "Hangi biçim.",
       "rgba": "RGBA8'e çözülmüş — kayıpsız lane'in saklanan ailenin bloklarını okuması.",
-      "half": "Yarı kayan nokta texel'leri, bloklar değil: yarı kayan nokta lane'inin dosyası (`tileRecord`)."
+      "half": "Yarım kayan noktalı lane bunu okur: texel'ler, ister yarım kayan noktalı bir dosyadan ister çözülmüş BC6H bloklarından (`tileLevelBytes`).",
+      "single": "Sekiz bitlik texel'lerin tek kanallı havuzu bunu okur: texel başına bir bayt, bir BC4, `gray` veya `displacement` zincirinin çözülmüş blokları (`tileLevelBytes`)."
     }
   },
   "TextureLevelFormat": {
@@ -5654,7 +5684,8 @@
       "level": "Hangi seviye.",
       "format": "Hangi format.",
       "rgba": "RGBA8'e çözülmüş — kayıpsız lane'in saklanan ailenin bloklarını okuması.",
-      "half": "Yarı kayan nokta texel'leri, bloklar değil: yarı kayan nokta lane'inin dosyası (`tileRecord`)."
+      "half": "Yarım kayan noktalı lane bunu okur: texel'ler, ister yarım kayan noktalı bir dosyadan ister çözülmüş BC6H bloklarından (`tileLevelBytes`).",
+      "single": "Sekiz bitlik texel'lerin tek kanallı havuzu bunu okur: texel başına bir bayt, bir BC4, `gray` veya `displacement` zincirinin çözülmüş blokları (`tileLevelBytes`)."
     }
   },
   "TextureLevelStore": {
@@ -6172,7 +6203,9 @@
       "model": "Fiziksel olmayan bir ailenin eşlendiği yüzey modeli (`../materials/surface/surfaceModel.ts`); yoksa fiziksel.",
       "lineWidth": "Rasterların bir çizgi quad'ını genişlettiği CSS piksel genişliği (`shader/lineWgsl.ts`); üçgen çizen bir yüzeyde yok ya da sıfır.",
       "dashSize": "Kesikli bir çizginin çizgi boyunca çizgisi ve boşluğu, dünya birimi cinsinden (`shader/lineWgsl.ts`, `lineDash`); başka herhangi bir yüzeyde yok.",
-      "sprite": "Her rasterin kameraya çevirdiği bir sprite'ın quad'ı (`shader/spriteWgsl.ts`): görüntüdeki dönüşü radyan cinsinden ve mesafeyle küçülüp küçülmediği; başka herhangi bir yüzeyde yok."
+      "sprite": "Her rasterin kameraya çevirdiği bir sprite'ın quad'ı (`shader/spriteWgsl.ts`): görüntüdeki dönüşü radyan cinsinden ve mesafeyle küçülüp küçülmediği; başka herhangi bir yüzeyde yok.",
+      "subsurfaceOpacity": "Alt yüzeyinin opaklığı, 0 ile 1, söylenmediğinde bir (`SUBSURFACE_OPACITY_MODEL_SHIFT`).",
+      "specularIntensity": "Bir dielektriğin speküler girdisi (`KHR_materials_specular`): dik gelişteki yansıtıcılığı bunun 0,08'idir (`surfaceF0`), bir yüzeyin hiçbirini bildirmediği yerde 0,5. Haritasının alfası onu ölçekler. Bildirildiğinde, yüzeyin başka ne taşıdığına bakılmaksızın kayıttan okunur."
     }
   },
   "VolumeMaterial": {
@@ -6298,13 +6331,11 @@
       "autoForward": "Yalnızca uçuş: tuşsuz `movementSpeed`'de ileri uçar, W daha hızlı, S durana kadar.",
       "onLand": "Yalnızca karakter: m/s cinsinden aşağı hızla, inişte çağrılır; varsayılan olarak `null`.",
       "onJump": "Yalnızca karakter: gövde bir zıplamada yerden ayrıldığında çağrılır; varsayılan olarak `null`.",
-      "walkSpeed": "Yalnızca karakter: yürürken saniyede metre; varsayılan olarak 3,5, bir tempolu koşu.",
+      "walkSpeed": "Yalnızca karakter: yürürken saniyede metre; varsayılan olarak 6.",
       "sprintSpeed": "Yalnızca karakter: Shift basılıyken saniyede metre; varsayılan olarak 6,5, eğitimsiz bir yetişkinin en yüksek hızı.",
-      "jumpSpeed": "Yalnızca karakter: bir zıplamanın başladığı yukarı hız, m/s; `sqrt(2 g h)`, `h`'ye ulaşır, varsayılan olarak 0,5 m, yerinde bir zıplama.",
-      "gravityScale": "Yalnızca karakter: gövdenin hissettiği dünyanın yerçekiminin (`world.physics.gravity`) payı, yükselirken, düşerken ve tabanının kavrayışında; varsayılan 1, 0 ağırlıksız.",
-      "airControl": "Yalnızca karakter: tuşların havada ne kadar hızlı yönettiği, zemin başlangıcının bir payı olarak; varsayılan olarak 0,05, 0 balistiktir.",
-      "responseTime": "Yalnızca karakter: bacakların zeminde istenen hızın %95'ine ulaşması için geçen saniye; varsayılan 0,12. Zeminin sürtünmesi kalkışı önce sınırlar: bir taban en fazla `μ g` iter, `μ` bir kauçuk tabanın zeminin `material.physics` değeri üzerindeki tutuşudur (fizik yokken taş), bu yüzden hafif koşuya taşta 0,45 s'de, buzda 2,2 s'de ulaşılır.",
-      "stopTime": "Yalnızca karakter: zeminde hiçbir tuş basılı tutulmadığında bacakların hızın %95'ini kaybetmesi için geçen saniye; varsayılan 0,12. Zeminin sürtünmesi duruşu önce sınırlar: hafif koşu `v² / (2 μ g)` kayar, taşta 0,8 m ve buzda 3,8 m; daha uzun bir süre daha yumuşak frenler.",
+      "jumpSpeed": "Yalnızca karakter: bir zıplamanın başladığı yukarı hız, m/s; varsayılan olarak 4,2 (Dünya'da 0,9 m'lik bir tepe).",
+      "gravityScale": "Yalnızca karakter: gövdenin hissettiği dünya yerçekiminin (`world.physics.gravity`) payı; varsayılan olarak 1, 0 ağırlıksızdır.",
+      "airControl": "Yalnızca karakter: havadaki bir gövdenin sahip olduğu tuş itmesinin payı; varsayılan olarak 0,05, 0 balistiktir.",
       "capsuleRadius": "Yalnızca karakter: gövdenin yarıçapı, metre cinsinden; varsayılan olarak bir omuz genişliğinin yarısı (0,23 m).",
       "capsuleHeight": "Yalnızca karakter: gövdenin yüksekliği, metre cinsinden; varsayılan olarak 1,75.",
       "eyeHeight": "Yalnızca karakter: kameranın ayakların üzerindeki yüksekliği, metre cinsinden; varsayılan olarak 1,64.",
@@ -6326,10 +6357,23 @@
       "flying": "Yalnızca karakter: gövdenin yerçekiminden bağımsız uçup uçmadığı; varsayılan false. Yeniden false yapmak gövdenin düşmesine izin verir.",
       "buoyancy": "Yalnızca karakter: suyun tamamen batmış bir gövdeyi ağırlığının ne kadarıyla kaldırdığı; varsayılan 1, yerinde yüzen bir gövde.",
       "fluidFriction": "Yalnızca karakter: bir gövdenin içinden yüzdüğü ya da uçtuğu akışkanın sürtünmesi, saniyede; varsayılan 0,3.",
-      "maxAcceleration": "Yalnızca karakter: gövdenin yüzerek ve uçarak hız kazandığı saniye kare başına metre; varsayılan 20,48.",
+      "maxAcceleration": "Yalnızca karakter: gövdenin zeminde, havada, yüzerken ve uçarken hız kazandığı saniye karede metre; varsayılan olarak 20,48.",
       "swimBraking": "Yalnızca karakter: gövdenin hiçbir tuşa basılmadan yüzerken, suyun sürtünmesine ek olarak frenlediği saniye kare başına metre; varsayılan 0.",
       "flyBraking": "Yalnızca karakter: uçarken aynısı; varsayılan 0.",
-      "vehicle": "Yalnızca araç: `'vehicle'` kontrollerinin sürdüğü şey — `drive(input)` sahibi her şey; tuşlar her değiştiğinde gaz, fren, direksiyon ve el frenini alır. Varsayılan `null`; `'vehicle'` kontrolleri onsuz asla çalışmaz: `kind = 'vehicle'` ve `createWorld(…, { controls: 'vehicle' })` o `null` iken `NO_VEHICLE` fırlatır, sürerlerken onu `null` yapmak da."
+      "vehicle": "Yalnızca araç: `'vehicle'` kontrollerinin sürdüğü şey — `drive(input)` sahibi her şey; tuşlar her değiştiğinde gaz, fren, direksiyon ve el frenini alır. Varsayılan `null`; `'vehicle'` kontrolleri onsuz asla çalışmaz: `kind = 'vehicle'` ve `createWorld(…, { controls: 'vehicle' })` o `null` iken `NO_VEHICLE` fırlatır, sürerlerken onu `null` yapmak da.",
+      "groundFriction": "Yalnızca karakter: saniye başına, hızın zeminde istenene ne kadar çabuk döndüğü ve tuş basılı değilken frenlemenin hızdan ne kadarını aldığı; varsayılan olarak 8.",
+      "brakingDecelerationWalking": "Yalnızca karakter: zemindeki bir gövdenin tuş basılı değilken zemin sürtünmesine ek olarak frenlediği saniye karede metre; varsayılan olarak 20,48 (`maxAcceleration`'ın tamamı).",
+      "brakingDecelerationFalling": "Yalnızca karakter: havada aynısı; varsayılan olarak 0.",
+      "fallingLateralFriction": "Yalnızca karakter: havadaki bir gövdenin yanal hızını döndüren ve frenleyen sürtünme, saniye başına; varsayılan olarak 0, gövde ivmesini korur.",
+      "brakingFrictionFactor": "Yalnızca karakter: frenleme sırasında bir sürtünmenin çarpanı; varsayılan olarak 2.",
+      "brakingSubStepTime": "Yalnızca karakter: frenlemenin en çok kaç saniyeye bölündüğü, böylece yavaş bir kare hızlı bir kare gibi frenler; varsayılan olarak saniyenin otuz üçte biri, 1/75 ile 1/20 arasında tutulur.",
+      "airControlBoostMultiplier": "Yalnızca karakter: yanal hız `airControlBoostVelocityThreshold` altındayken `airControl` üzerindeki çarpan, denetim asla 1'i aşmaz; varsayılan olarak 2, 0 onu kapatır.",
+      "airControlBoostVelocityThreshold": "Yalnızca karakter: altında `airControl` değerinin artırıldığı yanal hızın saniyede metresi; varsayılan olarak 0,25.",
+      "terminalVelocity": "Yalnızca karakter: bir gövdenin düşebileceği en hızlı hız, saniyede metre; varsayılan olarak 40.",
+      "maxSimulationTimeStep": "Yalnızca karakter: bir adımın en çok bölündüğü saniye; varsayılan olarak 0,05.",
+      "maxSimulationIterations": "Yalnızca karakter: bir tick'in en çok bölündüğü alt adımlar; varsayılan olarak 8.",
+      "maxJumpApexAttemptsPerSimulation": "Yalnızca karakter: bir tick'in bir zıplamanın tepesinde tam olarak bitmesi için kısaltıldığı sayı; varsayılan olarak 2.",
+      "minAnalogWalkSpeed": "Yalnızca karakter: en zayıf tuş itmesinin ulaştığı yürüyüş hızı, saniyede metre; varsayılan olarak 0."
     }
   },
   "world.camera": {
@@ -6431,7 +6475,7 @@
     "description": "Yazıldığında, adlandırılan ayarlar sonraki kareden itibaren preset'in üzerine uygulanır — bir `null` onu preset'e geri verir, atlanan kalır —; bir ayarın kabul etmediği bir değer reddedilir."
   },
   "world.hiz": {
-    "summary": "Derinlik piramidinin ayarları, her biri alanına göre (`WorldOptions`), sayfa ve kalite preset'i üzerinde çözülür: `hizTrace`, yansımaların izlemesinin piramidi nasıl okuduğu; `hizFoldTransparents`, izleme katmanlarının saydam yüzeyleri tutup tutmadığı; `hizTransparentTest`, saydam cluster'ların ona karşı nasıl test edildiği; `hizFullResDepth`, ekran problarının yürüyüşünün tam çözünürlüklü derinliğe inip inmediği; `lightGridHizCull`, ışık ızgarasının sütunlarının en uzak derinliğinin arkasındaki hücreleri boş bırakıp bırakmadığı; `hizPrime` (`'off'`, `'whenMissing'`, `'always'`) ile `hizPrimeSizeBias`, `hizPrimeDepthBias`, `hizPrimeErrorScale` ve `hizPrimeFarFieldOnly`, `farField` ayarlayan nesnelerin küçük, kaba bir çiziminden kurulan piramit.",
+    "summary": "Derinlik piramidinin ayarları, her biri alanına göre (`WorldOptions`), sayfa ve kalite preset'i üzerinde çözülür: `hizTrace`, yansımaların izlemesinin piramidi nasıl okuduğu; `hizFoldTransparents`, izleme katmanlarının saydam yüzeyleri tutup tutmadığı; `hizTransparentTest`, saydam cluster'ların ona karşı nasıl test edildiği; `hizFullResDepth`, ekran problarının yürüyüşünün tam çözünürlüklü derinliğe inip inmediği; `lightGridHizCull`, ışık ızgarasının sütunlarının en uzak derinliğinin arkasındaki hücreleri boş bırakıp bırakmadığı; `lightGridMaxCulledLightsPerCell`, görünümün ışık ızgarasının hücre başına tuttuğu ışık girdileri; `hizPrime` (`'off'`, `'whenMissing'`, `'always'`) ile `hizPrimeSizeBias`, `hizPrimeDepthBias`, `hizPrimeErrorScale` ve `hizPrimeFarFieldOnly`, `farField` ayarlayan nesnelerin küçük, kaba bir çiziminden kurulan piramit.",
     "description": "Yazıldığında, adlandırılan ayarlar sonraki kareden itibaren preset'in üzerine uygulanır — bir `null` onu preset'e geri verir, atlanan kalır —; bir ayarın kabul etmediği bir değer reddedilir."
   },
   "world.lightFunction": {
@@ -6700,7 +6744,7 @@
       "shading": "Gölgelendirme kovalarının her malzeme sınıfının piksellerini nasıl tuttuğu, her ayar alanına göre (`WorldOptions`), sayfa ve kalite preset'i üzerinde çözülür. Yazıldığında, adlandırılan ayarlar sonraki kareden itibaren preset'in üzerine uygulanır — bir `null` onu preset'e geri verir, atlanan kalır —; bir ayarın kabul etmediği bir değer reddedilir.",
       "exposureSettings": "Otomatik pozlamanın ayarları, `world.exposure`'ın `'auto'` olduğu yerde kullanılır, her biri alanına göre (`WorldOptions`), sayfa ve kalite preset'i üzerinde çözülür: yanlılık, ortalamanın tutulduğu EV100 aralığı, histogramın aralığı, dışarıda bırakılan piksellerin payları, saniyede stop cinsinden hızlar, geçiş mesafesi, siyah kovanın ağırlığı ve bir pikselin parlaklığının nasıl okunduğu. Yazıldığında, adlandırılan ayarlar sonraki kareden itibaren preset'in üzerine uygulanır — bir `null` onu preset'e geri verir, atlanan kalır —; bir ayarın kabul etmediği bir değer reddedilir.",
       "temporal": "Seviyesinin yanındaki zamansal kenar yumuşatmanın ayarları, her biri alanına göre (`WorldOptions`), sayfa ve kalite preset'i üzerinde çözülür: `temporalThinGeometry`, pass'in pikselden ince geometri arayıp orada geçmişini gevşetip gevşetmediği; `temporalWaveOps`, `temporalWaveSize` ve `temporalHalfPrecision`, programlarının nasıl çalıştığı (alt gruplar, boyutları, cihazın izin verdiği yerde 16 bitlik float'lar), görüntü aynı; geçmişin örnekleri, titreme ölçüsünün örnekleri, ince geometri tespitinin eşikleri, reddin ölçtüğü pozlama ve `temporalDownsampleQuality`, pozlama ve bloom'un okuduğu yarı boyutlu görüntünün kalitesi. Yazıldığında, adlandırılan ayarlar sonraki kareden itibaren preset'in üzerine uygulanır — bir `null` onu preset'e geri verir, atlanan kalır —; bir ayarın kabul etmediği bir değer reddedilir.",
-      "hiz": "Derinlik piramidinin ayarları, her biri alanına göre (`WorldOptions`), sayfa ve kalite preset'i üzerinde çözülür: `hizTrace`, yansımaların izlemesinin piramidi nasıl okuduğu; `hizFoldTransparents`, izleme katmanlarının saydam yüzeyleri tutup tutmadığı; `hizTransparentTest`, saydam cluster'ların ona karşı nasıl test edildiği; `hizFullResDepth`, ekran problarının yürüyüşünün tam çözünürlüklü derinliğe inip inmediği; `lightGridHizCull`, ışık ızgarasının sütunlarının en uzak derinliğinin arkasındaki hücreleri boş bırakıp bırakmadığı; `hizPrime` (`'off'`, `'whenMissing'`, `'always'`) ile `hizPrimeSizeBias`, `hizPrimeDepthBias`, `hizPrimeErrorScale` ve `hizPrimeFarFieldOnly`, `farField` ayarlayan nesnelerin küçük, kaba bir çiziminden kurulan piramit. Yazıldığında, adlandırılan ayarlar sonraki kareden itibaren preset'in üzerine uygulanır — bir `null` onu preset'e geri verir, atlanan kalır —; bir ayarın kabul etmediği bir değer reddedilir.",
+      "hiz": "Derinlik piramidinin ayarları, her biri alanına göre (`WorldOptions`), sayfa ve kalite preset'i üzerinde çözülür: `hizTrace`, yansımaların izlemesinin piramidi nasıl okuduğu; `hizFoldTransparents`, izleme katmanlarının saydam yüzeyleri tutup tutmadığı; `hizTransparentTest`, saydam cluster'ların ona karşı nasıl test edildiği; `hizFullResDepth`, ekran problarının yürüyüşünün tam çözünürlüklü derinliğe inip inmediği; `lightGridHizCull`, ışık ızgarasının sütunlarının en uzak derinliğinin arkasındaki hücreleri boş bırakıp bırakmadığı; `lightGridMaxCulledLightsPerCell`, görünümün ışık ızgarasının hücre başına tuttuğu ışık girdileri; `hizPrime` (`'off'`, `'whenMissing'`, `'always'`) ile `hizPrimeSizeBias`, `hizPrimeDepthBias`, `hizPrimeErrorScale` ve `hizPrimeFarFieldOnly`, `farField` ayarlayan nesnelerin küçük, kaba bir çiziminden kurulan piramit. Yazıldığında, adlandırılan ayarlar sonraki kareden itibaren preset'in üzerine uygulanır — bir `null` onu preset'e geri verir, atlanan kalır —; bir ayarın kabul etmediği bir değer reddedilir.",
       "lightFunction": "Işık fonksiyonlarının ayarları, her biri alanına göre (`WorldOptions`), sayfa ve kalite preset'i üzerinde çözülür: `lightFunctionAtlas` (true) — atlasın yapılıp yapılmadığı —, `lightFunctionSlotResolution` (128) ve `lightFunctionAtlasSize` (4) — yuvanın kenar başına texel'i ve kenar başına yuva —, `lightFunctionMaxLights` (-1, sınır yok), `lightFunctionFormat` (`'grey'` ya da `'colour'`) ve tüketiciler: `lightFunctionDeferred` (true), `lightFunctionFog` (true), `lightFunctionBounce` (true), `lightFunctionTranslucent` (false). Yazıldığında, adlandırılan ayarlar sonraki kareden itibaren preset'in üzerine uygulanır — bir `null` onu preset'e geri verir, atlanan kalır —; bir ayarın kabul etmediği bir değer reddedilir.",
       "volumetricLightmap": "Hacimsel lightmap'in ayarı, alanına göre (`WorldOptions`), sayfa ve kalite preset'i üzerinde çözülür: `volumetricLightmap`, önceden hesaplanmış ışığın okunup okunmadığı, varsayılan olarak açık. Yazıldığında, adlandırılan ayar sonraki kareden itibaren preset'in üzerine uygulanır — `null` onu preset'e geri verir, atlanan alan kalır —; ayarın kabul etmediği bir değer reddedilir.",
       "globalDistanceField": "Küresel mesafe alanının ayarları, her biri alanına göre (`WorldOptions`), sayfa ve kalite preset'i üzerinde çözülür: `globalDistanceField` (true) — clipmap'lerin yapılıp yapılmadığı —, `globalDistanceFieldClipmaps` (4), `globalDistanceFieldViewDistance` (20000 cm), çözünürlükleri (128), güncelleme ritmi (karede iki clipmap, büyükler daha seyrek), önbellekleri (statik mesh'ler ayrı bileşilir) ve mesh'lerin mesafe alanlarının akıtıldığı atlasın bütçeleri (`meshDistanceField…`). Yazıldığında, adlandırılan ayarlar sonraki kareden itibaren preset'in üzerine uygulanır — bir `null` onu preset'e geri verir, atlanan kalır —; bir ayarın kabul etmediği bir değer reddedilir.",
@@ -6724,7 +6768,7 @@
   },
   "WorldOptions": {
     "summary": "Bir sayfanın bir dünya oluştururken ayarlayabileceği şey; hiçbir şey söylememek normal durumdur.",
-    "description": "Aşağıdaki seçeneklerin yanında, görünümün bölümlenmiş bir sahnenin hücrelerini nasıl aktardığı ve bir HLOD geçişinin beklediği ısınma, her ayar kendi alanıyla ve referansın varsayılanıyla (`../../../../sdk-core/src/contracts/worldStreamingOptions.ts`): `worldStreamingMaxLoadingCells` (4), `worldStreamingAngleWeight` (0,4), `worldStreamingSortByExtent` (true), `worldStreamingSortByPriority` (true), `worldStreamingUseGridRange` (true), `worldStreamingRangeScale` (1), `worldStreamingRadius` (100 m), `worldStreamingSector` (false), `worldStreamingSectorAngle` (360°), `worldStreamingZCulling` (false), `worldStreamingBlockOnSlowStreaming` (true), `worldStreamingBlockOnSlowStreamingRatio` (0,25), `worldStreamingUpdateOptimization` (true), `worldStreamingLocationQuantization` (4 m), `worldStreamingRotationQuantization` (10°), `worldStreamingForceUpdateFrameCount` (0), `worldStreamingForce2D` (false), `worldStreamingExtraRadius` (0 m), `worldStreamingExtraAngle` (0°), `worldStreamingTargetState` (`'activated'`), `worldStreamingPriority` (128), `worldStreamingUseVelocity` (false), `hlodEnabled` (true), `hlodWarmup` (true), `hlodWarmupFrames` (5), `hlodWarmupGeometry` (true), `hlodWarmupTextures` (true), `hlodWarmupTextureScale` (2), `hlodWarmupTextureClamp` (2048). Burada adlandırıldığında her biri kalite ön ayarının üzerindedir; sonradan `world.worldStreaming` ile değiştirilir, bir sonraki kareden itibaren. Kesitin ayarları da aynı şekilde, her biri kendi alanıyla ve referansın varsayılanıyla (`../../../../sdk-core/src/contracts/cutOptions.ts`): `cutTwoPassOcclusion` (true), `cutOcclusionCulling` (true), `cutFrustumCulling` (true), `cutMinLodCulling` (true), `cutDrawDistanceCulling` (true: örneklenmiş bir meshin bir örneğinin çizim mesafeleri ayıklar; kendi başına bir nesne her zaman onlarla ayıklanır), `cutDistanceCullToSphereEdge` (true: bir nesnenin çizim mesafesi sınırlarının küresinin kenarına ölçülür, aksi halde merkezine), `cutViewDistanceScale` (1; görüş mesafesinin kalite seviyeleri onu yazar), `cutViewDistanceApplySecondaryScale` (false) ve `cutViewDistanceSecondaryScale` (1), çizim mesafelerini yalnızca birincisi açıldığında çarpan ikinci bir ölçek, `cutViewDistanceFovMinAngle` (45) ve `cutViewDistanceFovMaxAngle` (90), derece cinsinden, `cutViewDistanceFovMinAngleScale` ve `cutViewDistanceFovMaxAngleScale` ile (ikisi de 1): kendi başına bir nesnenin çizim mesafelerinin ilk açıda ve altında, ikincide ve üstünde ve arasında aldığı ölçek, `cutClipPlane` (false: bir kameranın `clipPlane`'i yalnızca onunla açık yapılmış bir dünyada geçerlidir, oturum açıldığında bir kez okunan tek ayar), `cutClipPlaneCulling` (true), `cutViewFiltering` (true: bir kameranın `hidden` ve `showOnly` listeleri geçerlidir), `cutLodBiasFollowsUpscale` (true), `cutLodBiasOffset` (0), `cutLodBiasMin` (-2), `cutEdgeScaleBudgetMs` (0: yok, kesite ve rasterine verilen ms cinsinden GPU zamanı, aşıldığında render ölçeği `'auto'` olan yerde ekran hatası kabalaştırılır) ve `cutEdgeScaleMinPercent` (30, 1'den 100'e: indiği en düşük ölçek), `cutMaxNodes` (2097152), `cutMaxCandidateClusters` (16777216), `cutMaxVisibleClusters` (4194304); sonradan `world.cut` ile değiştirilir. Dinamik çözünürlüğün buluşsalı da aynı şekilde (`../../../../sdk-core/src/contracts/dynamicResolutionOptions.ts`, render ölçeğini ve kesitin kenar ölçeğini GPU zaman bütçelerine uydurur): `dynamicResolutionFrameTimeBudgetMs` (0: kare sınırının aralığı), `dynamicResolutionThrottlingMaxPercent` (0: yok), `dynamicResolutionHeadroomPercent` (10), `dynamicResolutionOverBudgetHeadroomPercent` (0), `dynamicResolutionHistorySize` (16), `dynamicResolutionFrameWeightExponent` (0,9), `dynamicResolutionChangePeriod` (8), `dynamicResolutionIncreaseAmortization` (0,9), `dynamicResolutionChangePercentThreshold` (2), `dynamicResolutionMaxOverBudgetFrames` (2, 2'den düşük olmayacak şekilde okunur) ve `dynamicResolutionUseCpuTimeLogic` (false); sonradan `world.dynamicResolution` ile değiştirilir. Animasyonun ayarları da aynı şekilde (`../../../../sdk-core/src/contracts/animationOptions.ts`): `animationMinScreenSize` (0,1), `animationBankInterpolation` (true), `animationBankTimeScale` (1); sonradan `world.animation` ile değiştirilir. Gölgelemenin ayarları da aynı şekilde (`../../../../sdk-core/src/contracts/shadingOptions.ts`): `shadeBinningMode` (`'auto'`, ya da `'pixel'`, `'quad'`) ve `materialClosures` (`'single'`: her yüzey piksel başına tek bir levha olarak gölgelenir, şeffaf bir kaplama tabanıyla birleştirilir; ya da `'layered'`: kaplama kendi katmanı); sonradan `world.shading` ile değiştirilir. Otomatik pozlamanın ayarları da aynı şekilde (`../../../../sdk-core/src/contracts/exposureOptions.ts`), `world.exposure` `'auto'` olduğunda, varsayılan, kullanılır: `exposureBias` (+1 stop), EV100 cinsinden `exposureMinBrightness` (−10) ve `exposureMaxBrightness` (+20), parlaklık stopları cinsinden `exposureHistogramLogMin` (−10) ve `exposureHistogramLogMax` (+20), `exposureLowPercent` (10) ve `exposureHighPercent` (90), saniyede stop cinsinden `exposureSpeedUp` (3) ve `exposureSpeedDown` (1), `exposureTransitionDistance` (1,5 stop), `exposureBlackBucketWeight` (0) ve `exposureLuminanceMethod` (`'uniform'`, ya da `'ntsc'`, `'workingSpace'`), `exposureMethod` (`'histogram'`, ya da `'basic'`, `'manual'`: kameranın pozlaması, `exposureApplyPhysicalCamera` (true), `exposureCameraShutterSpeed` (60) ve `exposureCameraIso` (100) ve sapmadan okunur), `exposureLensAttenuation` (0,78), ön pozlamanın `preExposure` (true), `preExposureOverride` (0) ve `cachedLightingPreExposure` (4 stop, gökyüzü ışığının gerçek zamanlı yakalamasının), pozlaması ne olursa olsun aydınlatılmış bir görünüme uygulanır, ve yerel pozlamanın `localExposureHighlightContrast` ve `localExposureShadowContrast` (0,8, yerel pozlama çalışırken), `localExposureDetailStrength` (1), `localExposureBlurBlend` (0,6), `localExposureBlurSize` (%50), `localExposureMiddleGreyBias` (0) ve iki eşik ile güçleri, pozlaması ne olursa olsun aydınlatılmış bir görünüme uygulanır; sonradan `world.exposureSettings` ile değiştirilir. Pozlamanın telafi eğrisi `exposureCurve` (yok) ve ölçüm maskesi `exposureMeterMask` (yok) yalnızca açılışta okunur. Zamansal geçişin ayarları da aynı şekilde (`../../../../sdk-core/src/contracts/temporalOptions.ts`): `temporalThinGeometry` (false) — pikselden ince geometri arayıp geçmişini orada gevşetip gevşetmediği, `'off'` dışındaki her seviyede —, `temporalWaveOps` (true), `temporalWaveSize` (0) ve `temporalHalfPrecision` (true) — programlarının nasıl çalıştığı: alt gruplar aracılığıyla, hangi boyutta, aygıtın izin verdiği yerde 16 bitlik floatlarla, görüntü aynı —, geçmişin örnekleri (`temporalHistorySampleCount`, `temporalShadingRejectionSampleCount`, `temporalVelocityWeightClampingSampleCount`, `temporalVelocityWeightClampingPixelSpeed`), titreme ölçüsünün (`temporalFlickering…`), reddin ölçüldüğü pozlama (`temporalShadingExposureOffset`), ince geometri tespitinin eşikleri (`temporalThinGeometry…`) ve pozlamanın ve parıltının okuduğu yarım boyutlu görüntünün kalitesi (`temporalDownsampleQuality`), her biri referansın varsayılanında; sonradan `world.temporal` ile değiştirilir. Güneşin gölgeleri de aynı şekilde (`../../../../sdk-core/src/contracts/shadowOptions.ts`): `shadowDistanceScale` (1, 0'dan 2'ye) — her yönlü ışığın `shadowDistance` değeri üzerindeki çarpan —, `farShadowCulling` (true) — bir güneşin gölge haritalarının, derinliği yarıçapı çıkarılmış olarak bu mesafenin kenarının (biraz daha uzak: 400'de 427 metre) ötesinde olan ve nesneleri `castFarShadow` ayarlamayan gölge düşürücüleri dışarıda bırakıp bırakmadığı —, `farShadowCullsAllMeshes` (false) — o testin her gölge düşürücüye mi yoksa yalnızca dünyanın daha kaba seviyelerinin birleştirilmiş kabuklarına mı ulaştığı —, `shadowNearLevels` (10, 0'dan 10'a, en çok ışığın `shadowCascades` değeri), `shadowOverlapScale` (1, 0'dan 2'ye) ve `shadowFarField` (true: sahnenin mesafe alanları olduğu yerde mesafe alanı kademesinin yakın seviyeleri izleyip izlemediği) — kenarı biçimlendiren üçü —, uzak seviyelerin ve o kademenin kendi ayarları (`../../../../sdk-core/src/contracts/sunShadowOptions.ts`: `shadowMaxFarCascades`, `shadowFarDistanceOverride` (hiçbir uzak seviye çizilmez: görünür etki yok), `distanceFieldDistanceScale`, `distanceFieldFarTransitionScale`, `distanceFieldShadowQuality`, `distanceFieldShadowFullResolution`, `distanceFieldShadowTileSize` ve `distanceFieldShadowTwoSidedBias`), ve gölge haritalarının kendi ayarları (`../../../../sdk-core/src/contracts/shadowMapOptions.ts`: clipmap'in seviyeleri ve derinlik aralığı, kaba sayfalar, çözünürlük sapmaları, yarıçap eşiği, bir izlemenin ışınları ve adımları ve sayfa havuzu); sonradan `world.shadows` ile değiştirilir. Hareket bulanıklığının çizimi de aynı şekilde (`../../../../sdk-core/src/contracts/motionBlurOptions.ts`): `motionBlurQuality` (`'veryHigh'`, ya da `'off'`, `'low'`, `'medium'`, `'high'`: piksel başına en çok 16 örnek, alt seviyelerde daha az), `motionBlurHalfResGather` (false), `motionBlurHalfResInput` (true), `motionBlurSeparable` (false), `motionBlurScatter` (false) ve `motionBlurDirections` (1, ya da 2); sonradan `world.motionBlur` ile değiştirilir. Alan derinliğinin çizimi de aynı şekilde (`../../../../sdk-core/src/contracts/depthOfFieldRules.ts`): `depthOfFieldQuality` (`'on'`, ya da `'off'`), `depthOfFieldGatherDivisor` (2), `depthOfFieldAccumulator` (`'high'`), `depthOfFieldRingCount` (4), `depthOfFieldPostfilter` (`'median'`), saçılımın ve yeniden birleştirmenin ayarları ve dosyanın listelediği diğerleri, her biri referansın varsayılanında; sonradan `world.depthOfField` ile değiştirilir. Parıltının çizimi de aynı şekilde (`../../../../sdk-core/src/contracts/bloomRules.ts`): `bloomQuality` (`'highest'`, ya da `'off'`, `'lowest'`, `'low'`, `'medium'`, `'high'`: altı Gauss seviyesinden kaçının çizildiği), `bloomCross` (0), `bloomScreenPercentage` (50: evrişimin çözünürlüğü), `bloomApplyLocalExposure` (true) ve `bloomCacheKernel` (true); sonradan `world.bloom` ile değiştirilir. Gauss bulanıklığı da aynı şekilde (`../../../../sdk-core/src/contracts/gaussianBlurRules.ts`): `gaussianFastBlurThreshold` (100: bir bulanıklığın ilk geçişinin yarıya indirildiği yarıçap), `gaussianSampleScale` (1: çekirdeğin erişimi) ve `gaussianLoopMode` (0: bir geçişin en çok okuması); sonradan `world.gaussianBlur` ile değiştirilir. Film efektleri de aynı şekilde (`../../../../sdk-core/src/contracts/filmOptions.ts`): tane (`filmGrain…`, varsayılan olarak kapalı), renk saçağı (`chromaticAberration…`, kapalı), vinyetin görünümü (`vignette…`, sahnenin gücünün yanında), `tonemapperQuality` (5), `tonemapperSharpen` (−1: sahnenin), renk tonu (`sceneColorTint…`, 1) ve `quantizationDitheringBits` (0: ekranın kendi adımı); sonradan `world.film` ile değiştirilir. Hacimsel sis (`../../../../sdk-core/src/contracts/volumetricFogOptions.ts`): `volumetricFogQuality` (`'high'`; `'off'` hiç çizmez, `'low'`, `'high'` ve `'ultra'` ızgaranın hücre boyutunu ve derinliğini ve geçmişin örneklerini ayarlar) ve onunla okunan on bir ayar, sonradan `world.volumetricFog` ile değiştirilir; sis yalnızca sisi `volumetric` ayarlayan bir sahnede vardır. Yarı saydamlık aydınlatma hacmi de aynı şekilde (`../../../../sdk-core/src/contracts/translucencyVolumeOptions.ts`): `translucencyVolume` (true), `translucencyVolumeDim` (iki kademesinin her birinin kenarında 64 hücre), `translucencyVolumeInnerDistance` (15 m), `translucencyVolumeOuterDistance` (50 m), `translucencyVolumeBlur` (true), `translucencyVolumeTemporal` (false) ve diğerleri, sonradan `world.translucencyVolume` ile değiştirilir; malzemesi `translucencyLighting` değerini bir hacim moduna ayarlayan yarı saydam yüzeyleri aydınlatır. Yansımaların izlemesi de aynı şekilde (`../../../../sdk-core/src/contracts/reflectionOptions.ts`): `reflectionScreenSteps` (50, yansıyan bir ışının ekran yürüyüşünün yinelemeleri; sahne yürüyüşü küresel mesafe alanınındır, clipmap başına 256 adım), ve `reflectionDistantScreenTraces` (true), `reflectionDistantScreenSteps` (16) ve `reflectionDistantScreenDistance` (2000 m), uzak ekran izlemesi, ve `reflectionFrontLayer` (false), şeffafların ön katmanının izlenip izlenmediği, `reflectionSkylightLeaking` (0, tonu ve ortalama albedosuyla), bir vuruşa sızan gökyüzü ışığının yaygın ışığı, sonradan `world.reflections` ile değiştirilir; `reflectionStatistics` (false), ışınların sayaçları, oturum açıldığında okunur. Yüzey önbelleği de aynı şekilde (`../../../../sdk-core/src/contracts/surfaceCacheOptions.ts`): `surfaceCacheAtlasSize` (4096, her meshin kartlarının yakalandığı atlasın texel cinsinden kenarı), `surfaceCacheCardCapturesPerFrame` (300), `surfaceCacheCardMaxResolution` (512), `surfaceCacheAllowCardSharing` (true), `surfaceCacheDilationMode` (0) ve diğerleri, sonradan `world.surfaceCache` ile değiştirilir. Ekran uzayı çevresel kapanma da aynı şekilde (`../../../../sdk-core/src/contracts/ambientOcclusionOptions.ts`): `ambientOcclusion` (true: ana anahtar), `ambientOcclusionIntensity` (0,5; 0 kapalı), `ambientOcclusionRadius` (2 m) ve onun `ambientOcclusionRadiusInWorldSpace` (false), `ambientOcclusionFadeDistance` (80 m) ve `ambientOcclusionFadeRadius` (50 m), `ambientOcclusionPower` (2), `ambientOcclusionBias` (3), kalite (`ambientOcclusionQuality`, 50) ile `ambientOcclusionLevels` (-1) ve `ambientOcclusionMaxQuality` (100), ve `ambientOcclusionWithScreenProbes` (false); sonradan `world.ambientOcclusion` ile değiştirilir. Derinlik piramidi de aynı şekilde (`../../../../sdk-core/src/contracts/hizOptions.ts`): `hizTrace` (`'reference'`, ya da `'planes'`) — yansımaların izlemesinin onu nasıl okuduğu —, `hizFoldTransparents` (false) — izleme katmanlarının şeffaf yüzeyleri tutup tutmadığı —, `hizTransparentTest` (`'finer'`, ya da `'reference'`) — şeffaf kümelerin ona karşı nasıl test edildiği —, `hizFullResDepth` (true) — ekran problarının yürüyüşünün tam çözünürlüklü derinliğe inip inmediği — ve `lightGridHizCull` (true) — ışık ızgarasının sütununun en uzak derinliğinin arkasındaki hücreleri boş bırakıp bırakmadığı —, sonra `hizPrime` (`'off'`, `'whenMissing'` ya da `'always'`) — bir görünümün, önceki görüntü hiç bırakmadığında kesitinin ana geçişinin karşı test etmesi için `farField` ayarlayan nesnelerin küçük, kaba bir çiziminden bir piramit kurduğu zaman — `hizPrimeSizeBias` (2), `hizPrimeDepthBias` (1,5 m), `hizPrimeErrorScale` (32) ve `hizPrimeFarFieldOnly` (true) ile; sonradan `world.hiz` ile değiştirilir. Işık işlevleri de aynı şekilde (`../../../../sdk-core/src/contracts/lightFunctionOptions.ts`): `lightFunctionAtlas` (true), `lightFunctionSlotResolution` (128), `lightFunctionAtlasSize` (4), `lightFunctionMaxLights` (-1, sınır yok), `lightFunctionFormat` (`'grey'`), `lightFunctionDeferred` (true), `lightFunctionFog` (true), `lightFunctionBounce` (true) ve `lightFunctionTranslucent` (false); sonradan `world.lightFunction` ile değiştirilir. Küme rasterinin bölünmesi de aynı şekilde (`../../../../sdk-core/src/contracts/rasterOptions.ts`): `softwareRaster` (true) — en uzun kenarı `hardwareRasterEdgePixels` altında izdüşen ve kutusu iki kırpma düzlemini de kesmeyen bir küme compute içinde rasterlenir, diğer her biri donanım rasterleyicisi tarafından; `false` her kümeyi donanıma verir — ve `hardwareRasterEdgePixels` (32, piksel cinsinden: sıfırın üzerinde sonlu bir sayı), ayrıntı seviyesi küresinin en yakın noktasında görülen bir kümenin donanım rasterleyicisine gittiği kenar; `depthBucketing` (true) yazılım rasterinin kesik kümelerini, kutularının görünüm derinliğine göre, logaritmasıyla `depthBucketsMinZ` (10 m) ile `depthBucketsMaxZ` (1000 m) arasında 256 kovaya yayılmış, sıfırın üzerinde sonlu sayılar, en yakından başlayarak sıralar — referanstaki gibi, yalnızca sahnenin vokselleri olduğu yerde; sonradan `world.softwareRaster`, `world.hardwareRasterEdgePixels`, `world.depthBucketing`, `world.depthBucketsMinZ` ve `world.depthBucketsMaxZ` ile değiştirilir. Geometri akışının ayarları da aynı şekilde (`../../../../sdk-core/src/contracts/streamingOptions.ts`): `streamingMaxPendingPages` (128, aynı anda başlatılmış tutulan geometri sayfaları, 1'den bir tam sayı), `streamingMaxInstallsPerFrame` (128, bir karenin en çok kurduğu sayfalar, asla beklemede olabilenden fazla değil), `streamingQualityMinPoolPercent` (70) ve `streamingQualityMaxPoolPercent` (85, düşük işaretin altında olmayacak şekilde okunur) — havuzun sayfalarının yüzdesi olarak yükü, altında kalite yeniden yükselir ve üstünde düşer, 10'dan 100'e —, `streamingQualityMinScale` (0,3, 0,1'den 1'e, 1 asla ölçeklemez), `streamingNumRetries` (3, başarısız bir sayfa okumasının sayfası bırakılmadan önce yeniden denendiği sayı, hemen ve bir sunucunun istediği dışında beklemeden, negatif bir değer sonsuz; pişirilmiş bir doku seviyesi sayılmaz: sonsuza dek yeniden istenir), `streamingMinRequests` (65 536) ve `streamingMaxRequests` (1 048 576), kamera kesitinin geri okumasının tuttuğu en az ve en çok istek, 4 096'dan 1 048 576'ya — en azdan başlar ve kesitin ondan istediğini izler, en çok en azın altında olmayacak şekilde okunur — ve `streamingBandwidthLimit` (-1: yok, geometri okumalarının sahip olduğu simüle edilen saniyede megabayt: her sayfa karenin bant genişliğinden kendi payını alır). Bir ayarın kabul etmediği değer reddedilir.",
+    "description": "Aşağıdaki seçeneklerin yanında, görünümün bölümlenmiş bir sahnenin hücrelerini nasıl aktardığı ve bir HLOD geçişinin beklediği ısınma, her ayar kendi alanıyla ve referansın varsayılanıyla (`../../../../sdk-core/src/contracts/worldStreamingOptions.ts`): `worldStreamingMaxLoadingCells` (4), `worldStreamingAngleWeight` (0,4), `worldStreamingSortByExtent` (true), `worldStreamingSortByPriority` (true), `worldStreamingUseGridRange` (true), `worldStreamingRangeScale` (1), `worldStreamingRadius` (100 m), `worldStreamingSector` (false), `worldStreamingSectorAngle` (360°), `worldStreamingZCulling` (false), `worldStreamingBlockOnSlowStreaming` (true), `worldStreamingBlockOnSlowStreamingRatio` (0,25), `worldStreamingUpdateOptimization` (true), `worldStreamingLocationQuantization` (4 m), `worldStreamingRotationQuantization` (10°), `worldStreamingForceUpdateFrameCount` (0), `worldStreamingForce2D` (false), `worldStreamingExtraRadius` (0 m), `worldStreamingExtraAngle` (0°), `worldStreamingTargetState` (`'activated'`), `worldStreamingPriority` (128), `worldStreamingUseVelocity` (false), `hlodEnabled` (true), `hlodWarmup` (true), `hlodWarmupFrames` (5), `hlodWarmupGeometry` (true), `hlodWarmupTextures` (true), `hlodWarmupTextureScale` (2), `hlodWarmupTextureClamp` (2048). Burada adlandırıldığında her biri kalite ön ayarının üzerindedir; sonradan `world.worldStreaming` ile değiştirilir, bir sonraki kareden itibaren. Kesitin ayarları da aynı şekilde, her biri kendi alanıyla ve referansın varsayılanıyla (`../../../../sdk-core/src/contracts/cutOptions.ts`): `cutTwoPassOcclusion` (true), `cutOcclusionCulling` (true), `cutFrustumCulling` (true), `cutMinLodCulling` (true), `cutDrawDistanceCulling` (true: örneklenmiş bir meshin bir örneğinin çizim mesafeleri ayıklar; kendi başına bir nesne her zaman onlarla ayıklanır), `cutDistanceCullToSphereEdge` (true: bir nesnenin çizim mesafesi sınırlarının küresinin kenarına ölçülür, aksi halde merkezine), `cutViewDistanceScale` (1; görüş mesafesinin kalite seviyeleri onu yazar), `cutViewDistanceApplySecondaryScale` (false) ve `cutViewDistanceSecondaryScale` (1), çizim mesafelerini yalnızca birincisi açıldığında çarpan ikinci bir ölçek, `cutViewDistanceFovMinAngle` (45) ve `cutViewDistanceFovMaxAngle` (90), derece cinsinden, `cutViewDistanceFovMinAngleScale` ve `cutViewDistanceFovMaxAngleScale` ile (ikisi de 1): kendi başına bir nesnenin çizim mesafelerinin ilk açıda ve altında, ikincide ve üstünde ve arasında aldığı ölçek, `cutClipPlane` (false: bir kameranın `clipPlane`'i yalnızca onunla açık yapılmış bir dünyada geçerlidir, oturum açıldığında bir kez okunan tek ayar), `cutClipPlaneCulling` (true), `cutViewFiltering` (true: bir kameranın `hidden` ve `showOnly` listeleri geçerlidir), `cutLodBiasFollowsUpscale` (true), `cutLodBiasOffset` (0), `cutLodBiasMin` (-2), `cutEdgeScaleBudgetMs` (0: yok, kesite ve rasterine verilen ms cinsinden GPU zamanı, aşıldığında render ölçeği `'auto'` olan yerde ekran hatası kabalaştırılır) ve `cutEdgeScaleMinPercent` (30, 1'den 100'e: indiği en düşük ölçek), `cutMaxNodes` (2097152), `cutMaxCandidateClusters` (16777216), `cutMaxVisibleClusters` (4194304); sonradan `world.cut` ile değiştirilir. Dinamik çözünürlüğün buluşsalı da aynı şekilde (`../../../../sdk-core/src/contracts/dynamicResolutionOptions.ts`, render ölçeğini ve kesitin kenar ölçeğini GPU zaman bütçelerine uydurur): `dynamicResolutionFrameTimeBudgetMs` (0: kare sınırının aralığı), `dynamicResolutionThrottlingMaxPercent` (0: yok), `dynamicResolutionHeadroomPercent` (10), `dynamicResolutionOverBudgetHeadroomPercent` (0), `dynamicResolutionHistorySize` (16), `dynamicResolutionFrameWeightExponent` (0,9), `dynamicResolutionChangePeriod` (8), `dynamicResolutionIncreaseAmortization` (0,9), `dynamicResolutionChangePercentThreshold` (2), `dynamicResolutionMaxOverBudgetFrames` (2, 2'den düşük olmayacak şekilde okunur) ve `dynamicResolutionUseCpuTimeLogic` (false); sonradan `world.dynamicResolution` ile değiştirilir. Animasyonun ayarları da aynı şekilde (`../../../../sdk-core/src/contracts/animationOptions.ts`): `animationMinScreenSize` (0,1), `animationBankInterpolation` (true), `animationBankTimeScale` (1); sonradan `world.animation` ile değiştirilir. Gölgelemenin ayarları da aynı şekilde (`../../../../sdk-core/src/contracts/shadingOptions.ts`): `shadeBinningMode` (`'auto'`, ya da `'pixel'`, `'quad'`) ve `materialClosures` (`'single'`: her yüzey piksel başına tek bir levha olarak gölgelenir, şeffaf bir kaplama tabanıyla birleştirilir; ya da `'layered'`: kaplama kendi katmanı); sonradan `world.shading` ile değiştirilir. Otomatik pozlamanın ayarları da aynı şekilde (`../../../../sdk-core/src/contracts/exposureOptions.ts`), `world.exposure` `'auto'` olduğunda, varsayılan, kullanılır: `exposureBias` (+1 stop), EV100 cinsinden `exposureMinBrightness` (−10) ve `exposureMaxBrightness` (+20), parlaklık stopları cinsinden `exposureHistogramLogMin` (−10) ve `exposureHistogramLogMax` (+20), `exposureLowPercent` (10) ve `exposureHighPercent` (90), saniyede stop cinsinden `exposureSpeedUp` (3) ve `exposureSpeedDown` (1), `exposureTransitionDistance` (1,5 stop), `exposureBlackBucketWeight` (0) ve `exposureLuminanceMethod` (`'uniform'`, ya da `'ntsc'`, `'workingSpace'`), `exposureMethod` (`'histogram'`, ya da `'basic'`, `'manual'`: kameranın pozlaması, `exposureApplyPhysicalCamera` (true), `exposureCameraShutterSpeed` (60) ve `exposureCameraIso` (100) ve sapmadan okunur), `exposureLensAttenuation` (0,78), ön pozlamanın `preExposure` (true), `preExposureOverride` (0) ve `cachedLightingPreExposure` (4 stop, gökyüzü ışığının gerçek zamanlı yakalamasının), pozlaması ne olursa olsun aydınlatılmış bir görünüme uygulanır, ve yerel pozlamanın `localExposureHighlightContrast` ve `localExposureShadowContrast` (0,8, yerel pozlama çalışırken), `localExposureDetailStrength` (1), `localExposureBlurBlend` (0,6), `localExposureBlurSize` (%50), `localExposureMiddleGreyBias` (0) ve iki eşik ile güçleri, pozlaması ne olursa olsun aydınlatılmış bir görünüme uygulanır; sonradan `world.exposureSettings` ile değiştirilir. Pozlamanın telafi eğrisi `exposureCurve` (yok) ve ölçüm maskesi `exposureMeterMask` (yok) yalnızca açılışta okunur. Zamansal geçişin ayarları da aynı şekilde (`../../../../sdk-core/src/contracts/temporalOptions.ts`): `temporalThinGeometry` (false) — pikselden ince geometri arayıp geçmişini orada gevşetip gevşetmediği, `'off'` dışındaki her seviyede —, `temporalWaveOps` (true), `temporalWaveSize` (0) ve `temporalHalfPrecision` (true) — programlarının nasıl çalıştığı: alt gruplar aracılığıyla, hangi boyutta, aygıtın izin verdiği yerde 16 bitlik floatlarla, görüntü aynı —, geçmişin örnekleri (`temporalHistorySampleCount`, `temporalShadingRejectionSampleCount`, `temporalVelocityWeightClampingSampleCount`, `temporalVelocityWeightClampingPixelSpeed`), titreme ölçüsünün (`temporalFlickering…`), reddin ölçüldüğü pozlama (`temporalShadingExposureOffset`), ince geometri tespitinin eşikleri (`temporalThinGeometry…`) ve pozlamanın ve parıltının okuduğu yarım boyutlu görüntünün kalitesi (`temporalDownsampleQuality`), her biri referansın varsayılanında; sonradan `world.temporal` ile değiştirilir. Güneşin gölgeleri de aynı şekilde (`../../../../sdk-core/src/contracts/shadowOptions.ts`): `shadowDistanceScale` (1, 0'dan 2'ye) — her yönlü ışığın `shadowDistance` değeri üzerindeki çarpan —, `farShadowCulling` (true) — bir güneşin gölge haritalarının, derinliği yarıçapı çıkarılmış olarak bu mesafenin kenarının (biraz daha uzak: 400'de 427 metre) ötesinde olan ve nesneleri `castFarShadow` ayarlamayan gölge düşürücüleri dışarıda bırakıp bırakmadığı —, `farShadowCullsAllMeshes` (false) — o testin her gölge düşürücüye mi yoksa yalnızca dünyanın daha kaba seviyelerinin birleştirilmiş kabuklarına mı ulaştığı —, `shadowNearLevels` (10, 0'dan 10'a, en çok ışığın `shadowCascades` değeri), `shadowOverlapScale` (1, 0'dan 2'ye) ve `shadowFarField` (true: sahnenin mesafe alanları olduğu yerde mesafe alanı kademesinin yakın seviyeleri izleyip izlemediği) — kenarı biçimlendiren üçü —, uzak seviyelerin ve o kademenin kendi ayarları (`../../../../sdk-core/src/contracts/sunShadowOptions.ts`: `shadowMaxFarCascades`, `shadowFarDistanceOverride` (hiçbir uzak seviye çizilmez: görünür etki yok), `distanceFieldDistanceScale`, `distanceFieldFarTransitionScale`, `distanceFieldShadowQuality`, `distanceFieldShadowFullResolution`, `distanceFieldShadowTileSize` ve `distanceFieldShadowTwoSidedBias`), ve gölge haritalarının kendi ayarları (`../../../../sdk-core/src/contracts/shadowMapOptions.ts`: clipmap'in seviyeleri ve derinlik aralığı, kaba sayfalar, çözünürlük sapmaları, yarıçap eşiği, bir izlemenin ışınları ve adımları ve sayfa havuzu); sonradan `world.shadows` ile değiştirilir. Hareket bulanıklığının çizimi de aynı şekilde (`../../../../sdk-core/src/contracts/motionBlurOptions.ts`): `motionBlurQuality` (`'veryHigh'`, ya da `'off'`, `'low'`, `'medium'`, `'high'`: piksel başına en çok 16 örnek, alt seviyelerde daha az), `motionBlurHalfResGather` (false), `motionBlurHalfResInput` (true), `motionBlurSeparable` (false), `motionBlurScatter` (false) ve `motionBlurDirections` (1, ya da 2); sonradan `world.motionBlur` ile değiştirilir. Alan derinliğinin çizimi de aynı şekilde (`../../../../sdk-core/src/contracts/depthOfFieldRules.ts`): `depthOfFieldQuality` (`'on'`, ya da `'off'`), `depthOfFieldGatherDivisor` (2), `depthOfFieldAccumulator` (`'high'`), `depthOfFieldRingCount` (4), `depthOfFieldPostfilter` (`'median'`), saçılımın ve yeniden birleştirmenin ayarları ve dosyanın listelediği diğerleri, her biri referansın varsayılanında; sonradan `world.depthOfField` ile değiştirilir. Parıltının çizimi de aynı şekilde (`../../../../sdk-core/src/contracts/bloomRules.ts`): `bloomQuality` (`'highest'`, ya da `'off'`, `'lowest'`, `'low'`, `'medium'`, `'high'`: altı Gauss seviyesinden kaçının çizildiği), `bloomCross` (0), `bloomScreenPercentage` (50: evrişimin çözünürlüğü), `bloomApplyLocalExposure` (true) ve `bloomCacheKernel` (true); sonradan `world.bloom` ile değiştirilir. Gauss bulanıklığı da aynı şekilde (`../../../../sdk-core/src/contracts/gaussianBlurRules.ts`): `gaussianFastBlurThreshold` (100: bir bulanıklığın ilk geçişinin yarıya indirildiği yarıçap), `gaussianSampleScale` (1: çekirdeğin erişimi) ve `gaussianLoopMode` (0: bir geçişin en çok okuması); sonradan `world.gaussianBlur` ile değiştirilir. Film efektleri de aynı şekilde (`../../../../sdk-core/src/contracts/filmOptions.ts`): tane (`filmGrain…`, varsayılan olarak kapalı), renk saçağı (`chromaticAberration…`, kapalı), vinyetin görünümü (`vignette…`, sahnenin gücünün yanında), `tonemapperQuality` (5), `tonemapperSharpen` (−1: sahnenin), renk tonu (`sceneColorTint…`, 1) ve `quantizationDitheringBits` (0: ekranın kendi adımı); sonradan `world.film` ile değiştirilir. Hacimsel sis (`../../../../sdk-core/src/contracts/volumetricFogOptions.ts`): `volumetricFogQuality` (`'high'`; `'off'` hiç çizmez, `'low'`, `'high'` ve `'ultra'` ızgaranın hücre boyutunu ve derinliğini ve geçmişin örneklerini ayarlar) ve onunla okunan on bir ayar, sonradan `world.volumetricFog` ile değiştirilir; sis yalnızca sisi `volumetric` ayarlayan bir sahnede vardır. Yarı saydamlık aydınlatma hacmi de aynı şekilde (`../../../../sdk-core/src/contracts/translucencyVolumeOptions.ts`): `translucencyVolume` (true), `translucencyVolumeDim` (iki kademesinin her birinin kenarında 64 hücre), `translucencyVolumeInnerDistance` (15 m), `translucencyVolumeOuterDistance` (50 m), `translucencyVolumeBlur` (true), `translucencyVolumeTemporal` (false) ve diğerleri, sonradan `world.translucencyVolume` ile değiştirilir; malzemesi `translucencyLighting` değerini bir hacim moduna ayarlayan yarı saydam yüzeyleri aydınlatır. Yansımaların izlemesi de aynı şekilde (`../../../../sdk-core/src/contracts/reflectionOptions.ts`): `reflectionScreenSteps` (50, yansıyan bir ışının ekran yürüyüşünün yinelemeleri; sahne yürüyüşü küresel mesafe alanınındır, clipmap başına 256 adım), ve `reflectionDistantScreenTraces` (true), `reflectionDistantScreenSteps` (16) ve `reflectionDistantScreenDistance` (2000 m), uzak ekran izlemesi, ve `reflectionFrontLayer` (false), şeffafların ön katmanının izlenip izlenmediği, `reflectionSkylightLeaking` (0, tonu ve ortalama albedosuyla), bir vuruşa sızan gökyüzü ışığının yaygın ışığı, sonradan `world.reflections` ile değiştirilir; `reflectionStatistics` (false), ışınların sayaçları, oturum açıldığında okunur. Yüzey önbelleği de aynı şekilde (`../../../../sdk-core/src/contracts/surfaceCacheOptions.ts`): `surfaceCacheAtlasSize` (4096, her meshin kartlarının yakalandığı atlasın texel cinsinden kenarı), `surfaceCacheCardCapturesPerFrame` (300), `surfaceCacheCardMaxResolution` (512), `surfaceCacheAllowCardSharing` (true), `surfaceCacheDilationMode` (0) ve diğerleri, sonradan `world.surfaceCache` ile değiştirilir. Ekran uzayı çevresel kapanma da aynı şekilde (`../../../../sdk-core/src/contracts/ambientOcclusionOptions.ts`): `ambientOcclusion` (true: ana anahtar), `ambientOcclusionIntensity` (0,5; 0 kapalı), `ambientOcclusionRadius` (2 m) ve onun `ambientOcclusionRadiusInWorldSpace` (false), `ambientOcclusionFadeDistance` (80 m) ve `ambientOcclusionFadeRadius` (50 m), `ambientOcclusionPower` (2), `ambientOcclusionBias` (3), kalite (`ambientOcclusionQuality`, 50) ile `ambientOcclusionLevels` (-1) ve `ambientOcclusionMaxQuality` (100), ve `ambientOcclusionWithScreenProbes` (false); sonradan `world.ambientOcclusion` ile değiştirilir. Derinlik piramidi de aynı şekilde (`../../../../sdk-core/src/contracts/hizOptions.ts`): `hizTrace` (`'reference'`, ya da `'planes'`) — yansımaların izlemesinin onu nasıl okuduğu —, `hizFoldTransparents` (false) — izleme katmanlarının şeffaf yüzeyleri tutup tutmadığı —, `hizTransparentTest` (`'finer'`, ya da `'reference'`) — şeffaf kümelerin ona karşı nasıl test edildiği —, `hizFullResDepth` (true) — ekran problarının yürüyüşünün tam çözünürlüklü derinliğe inip inmediği —, `lightGridHizCull` (true) — ışık ızgarasının sütununun en uzak derinliğinin arkasındaki hücreleri boş bırakıp bırakmadığı — ve `lightGridMaxCulledLightsPerCell` (32) — görünümün ışık ızgarasının hücre başına tuttuğu ışık girdileri —, sonra `hizPrime` (`'off'`, `'whenMissing'` ya da `'always'`) — bir görünümün, önceki görüntü hiç bırakmadığında kesitinin ana geçişinin karşı test etmesi için `farField` ayarlayan nesnelerin küçük, kaba bir çiziminden bir piramit kurduğu zaman — `hizPrimeSizeBias` (2), `hizPrimeDepthBias` (1,5 m), `hizPrimeErrorScale` (32) ve `hizPrimeFarFieldOnly` (true) ile; sonradan `world.hiz` ile değiştirilir. Işık işlevleri de aynı şekilde (`../../../../sdk-core/src/contracts/lightFunctionOptions.ts`): `lightFunctionAtlas` (true), `lightFunctionSlotResolution` (128), `lightFunctionAtlasSize` (4), `lightFunctionMaxLights` (-1, sınır yok), `lightFunctionFormat` (`'grey'`), `lightFunctionDeferred` (true), `lightFunctionFog` (true), `lightFunctionBounce` (true) ve `lightFunctionTranslucent` (false); sonradan `world.lightFunction` ile değiştirilir. Küme rasterinin bölünmesi de aynı şekilde (`../../../../sdk-core/src/contracts/rasterOptions.ts`): `softwareRaster` (true) — en uzun kenarı `hardwareRasterEdgePixels` altında izdüşen ve kutusu iki kırpma düzlemini de kesmeyen bir küme compute içinde rasterlenir, diğer her biri donanım rasterleyicisi tarafından; `false` her kümeyi donanıma verir — ve `hardwareRasterEdgePixels` (32, piksel cinsinden: sıfırın üzerinde sonlu bir sayı), ayrıntı seviyesi küresinin en yakın noktasında görülen bir kümenin donanım rasterleyicisine gittiği kenar; `depthBucketing` (true) yazılım rasterinin kesik kümelerini, kutularının görünüm derinliğine göre, logaritmasıyla `depthBucketsMinZ` (10 m) ile `depthBucketsMaxZ` (1000 m) arasında 256 kovaya yayılmış, sıfırın üzerinde sonlu sayılar, en yakından başlayarak sıralar — referanstaki gibi, yalnızca sahnenin vokselleri olduğu yerde; sonradan `world.softwareRaster`, `world.hardwareRasterEdgePixels`, `world.depthBucketing`, `world.depthBucketsMinZ` ve `world.depthBucketsMaxZ` ile değiştirilir. Geometri akışının ayarları da aynı şekilde (`../../../../sdk-core/src/contracts/streamingOptions.ts`): `streamingMaxPendingPages` (128, aynı anda başlatılmış tutulan geometri sayfaları, 1'den bir tam sayı), `streamingMaxInstallsPerFrame` (128, bir karenin en çok kurduğu sayfalar, asla beklemede olabilenden fazla değil), `streamingQualityMinPoolPercent` (70) ve `streamingQualityMaxPoolPercent` (85, düşük işaretin altında olmayacak şekilde okunur) — havuzun sayfalarının yüzdesi olarak yükü, altında kalite yeniden yükselir ve üstünde düşer, 10'dan 100'e —, `streamingQualityMinScale` (0,3, 0,1'den 1'e, 1 asla ölçeklemez), `streamingNumRetries` (3, başarısız bir sayfa okumasının sayfası bırakılmadan önce yeniden denendiği sayı, hemen ve bir sunucunun istediği dışında beklemeden, negatif bir değer sonsuz; pişirilmiş bir doku seviyesi sayılmaz: sonsuza dek yeniden istenir), `streamingMinRequests` (65 536) ve `streamingMaxRequests` (1 048 576), kamera kesitinin geri okumasının tuttuğu en az ve en çok istek, 4 096'dan 1 048 576'ya — en azdan başlar ve kesitin ondan istediğini izler, en çok en azın altında olmayacak şekilde okunur — ve `streamingBandwidthLimit` (-1: yok, geometri okumalarının sahip olduğu simüle edilen saniyede megabayt: her sayfa karenin bant genişliğinden kendi payını alır). Bir ayarın kabul etmediği değer reddedilir.",
     "members": {
       "interactive": "Dünyanın kendi döngüsünü çalıştırıp çalıştırmadığı: bir şey değiştiğinde çizer ve yeni bir şey olmadan 120 kareden sonra dinlenir. `false`, sayfanın `world.render()`'ı kendisinin çağırmasına izin verir.",
       "pixelRatio": "Ekran pikseli başına kaç görsel pikseli.",
@@ -7881,7 +7925,8 @@
       "p.cloudShadowExtentKm": "Haritanın kapsadığı kameranın çevresindeki yarıçap, kilometre cinsinden, 1'den; varsayılan 150.",
       "p.cloudShadowResolutionScale": "Haritanın kenar başına 512 texel'i üzerindeki çarpan, 0,25'ten; varsayılan 1.",
       "p.cloudShadowRaySamplesScale": "Haritanın bir ışınının aldığı 16 örnek üzerindeki çarpan, 0,25'ten; varsayılan 1.",
-      "p.cloudScatteredLuminanceScale": "Bulutların içindeki ışık üzerindeki çarpan, doğrusal; varsayılan beyaz."
+      "p.cloudScatteredLuminanceScale": "Bulutların içindeki ışık üzerindeki çarpan, doğrusal; varsayılan beyaz.",
+      "p.mobility": "Işığın nasıl hareket etmesinin ve aydınlatılmasının amaçlandığı: `'static'`, `'stationary'` veya `'movable'`; varsayılan olarak `'stationary'`."
     }
   },
   "light.directional": {
@@ -7944,7 +7989,8 @@
       "p.cloudShadowExtentKm": "Haritanın kapsadığı kameranın çevresindeki yarıçap, kilometre cinsinden, 1'den; varsayılan 150.",
       "p.cloudShadowResolutionScale": "Haritanın kenar başına 512 texel'i üzerindeki çarpan, 0,25'ten; varsayılan 1.",
       "p.cloudShadowRaySamplesScale": "Haritanın bir ışınının aldığı 16 örnek üzerindeki çarpan, 0,25'ten; varsayılan 1.",
-      "p.cloudScatteredLuminanceScale": "Bulutların içindeki ışık üzerindeki çarpan, doğrusal; varsayılan beyaz."
+      "p.cloudScatteredLuminanceScale": "Bulutların içindeki ışık üzerindeki çarpan, doğrusal; varsayılan beyaz.",
+      "p.mobility": "Işığın nasıl hareket etmesinin ve aydınlatılmasının amaçlandığı: `'static'`, `'stationary'` veya `'movable'`; varsayılan olarak `'stationary'`."
     }
   },
   "light.point": {
@@ -8007,7 +8053,8 @@
       "p.cloudShadowExtentKm": "Haritanın kapsadığı kameranın çevresindeki yarıçap, kilometre cinsinden, 1'den; varsayılan 150.",
       "p.cloudShadowResolutionScale": "Haritanın kenar başına 512 texel'i üzerindeki çarpan, 0,25'ten; varsayılan 1.",
       "p.cloudShadowRaySamplesScale": "Haritanın bir ışınının aldığı 16 örnek üzerindeki çarpan, 0,25'ten; varsayılan 1.",
-      "p.cloudScatteredLuminanceScale": "Bulutların içindeki ışık üzerindeki çarpan, doğrusal; varsayılan beyaz."
+      "p.cloudScatteredLuminanceScale": "Bulutların içindeki ışık üzerindeki çarpan, doğrusal; varsayılan beyaz.",
+      "p.mobility": "Işığın nasıl hareket etmesinin ve aydınlatılmasının amaçlandığı: `'static'`, `'stationary'` veya `'movable'`; varsayılan olarak `'stationary'`."
     }
   },
   "light.spot": {
@@ -8070,7 +8117,8 @@
       "p.cloudShadowExtentKm": "Haritanın kapsadığı kameranın çevresindeki yarıçap, kilometre cinsinden, 1'den; varsayılan 150.",
       "p.cloudShadowResolutionScale": "Haritanın kenar başına 512 texel'i üzerindeki çarpan, 0,25'ten; varsayılan 1.",
       "p.cloudShadowRaySamplesScale": "Haritanın bir ışınının aldığı 16 örnek üzerindeki çarpan, 0,25'ten; varsayılan 1.",
-      "p.cloudScatteredLuminanceScale": "Bulutların içindeki ışık üzerindeki çarpan, doğrusal; varsayılan beyaz."
+      "p.cloudScatteredLuminanceScale": "Bulutların içindeki ışık üzerindeki çarpan, doğrusal; varsayılan beyaz.",
+      "p.mobility": "Işığın nasıl hareket etmesinin ve aydınlatılmasının amaçlandığı: `'static'`, `'stationary'` veya `'movable'`; varsayılan olarak `'stationary'`."
     }
   },
   "light.hemisphere": {
@@ -8133,7 +8181,8 @@
       "p.cloudShadowExtentKm": "Haritanın kapsadığı kameranın çevresindeki yarıçap, kilometre cinsinden, 1'den; varsayılan 150.",
       "p.cloudShadowResolutionScale": "Haritanın kenar başına 512 texel'i üzerindeki çarpan, 0,25'ten; varsayılan 1.",
       "p.cloudShadowRaySamplesScale": "Haritanın bir ışınının aldığı 16 örnek üzerindeki çarpan, 0,25'ten; varsayılan 1.",
-      "p.cloudScatteredLuminanceScale": "Bulutların içindeki ışık üzerindeki çarpan, doğrusal; varsayılan beyaz."
+      "p.cloudScatteredLuminanceScale": "Bulutların içindeki ışık üzerindeki çarpan, doğrusal; varsayılan beyaz.",
+      "p.mobility": "Işığın nasıl hareket etmesinin ve aydınlatılmasının amaçlandığı: `'static'`, `'stationary'` veya `'movable'`; varsayılan olarak `'stationary'`."
     }
   },
   "light.rectArea": {
@@ -8196,7 +8245,8 @@
       "p.cloudShadowExtentKm": "Haritanın kapsadığı kameranın çevresindeki yarıçap, kilometre cinsinden, 1'den; varsayılan 150.",
       "p.cloudShadowResolutionScale": "Haritanın kenar başına 512 texel'i üzerindeki çarpan, 0,25'ten; varsayılan 1.",
       "p.cloudShadowRaySamplesScale": "Haritanın bir ışınının aldığı 16 örnek üzerindeki çarpan, 0,25'ten; varsayılan 1.",
-      "p.cloudScatteredLuminanceScale": "Bulutların içindeki ışık üzerindeki çarpan, doğrusal; varsayılan beyaz."
+      "p.cloudScatteredLuminanceScale": "Bulutların içindeki ışık üzerindeki çarpan, doğrusal; varsayılan beyaz.",
+      "p.mobility": "Işığın nasıl hareket etmesinin ve aydınlatılmasının amaçlandığı: `'static'`, `'stationary'` veya `'movable'`; varsayılan olarak `'stationary'`."
     }
   },
   "light.probe": {
@@ -8259,7 +8309,8 @@
       "p.cloudShadowExtentKm": "Haritanın kapsadığı kameranın çevresindeki yarıçap, kilometre cinsinden, 1'den; varsayılan 150.",
       "p.cloudShadowResolutionScale": "Haritanın kenar başına 512 texel'i üzerindeki çarpan, 0,25'ten; varsayılan 1.",
       "p.cloudShadowRaySamplesScale": "Haritanın bir ışınının aldığı 16 örnek üzerindeki çarpan, 0,25'ten; varsayılan 1.",
-      "p.cloudScatteredLuminanceScale": "Bulutların içindeki ışık üzerindeki çarpan, doğrusal; varsayılan beyaz."
+      "p.cloudScatteredLuminanceScale": "Bulutların içindeki ışık üzerindeki çarpan, doğrusal; varsayılan beyaz.",
+      "p.mobility": "Işığın nasıl hareket etmesinin ve aydınlatılmasının amaçlandığı: `'static'`, `'stationary'` veya `'movable'`; varsayılan olarak `'stationary'`."
     }
   },
   "lightLattice": {
@@ -8361,7 +8412,13 @@
       "parameters.physics": "Onu giyen cismin maddesi: yoğunluk, sürtünme, sekme.",
       "parameters.density": "kg/m³; hacimle çarpılınca kütleyi verir.",
       "parameters.friction": "Cismin ne kadar tuttuğu, 0 ve üstü.",
-      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası."
+      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası.",
+      "parameters.specularIntensity": "Yüzeyin dielektriğinin speküler girdisi, 0 ile 1: dik gelişteki yansıtıcılığı bunun 0,08'idir; böylece 0,5 (hiçbirini bildirmeyen bir yüzeyin değeri) olağan %4'ü, 1 %8'i ve 0 hiç parlama vermez. Bir glTF malzemesinin `KHR_materials_specular` çarpanı bildirildiği gibi yazılır. Metal bunu yok sayar.",
+      "parameters.specularIntensityMap": "`specularIntensity` değerini bir görüntünün alfa kanalıyla çarpar.",
+      "parameters.displacementMagnitude": "Malzeme grafiğinin `displacement` çıktısının, `displacementCenter` değerinin 1 üstünde olduğu yerde bir yüzeyi normali boyunca metre cinsinden ne kadar kaydırdığı: kaydırılmış yükseklik `(çıktı - displacementCenter) * displacementMagnitude` değeridir.",
+      "parameters.displacementCenter": "Yüzeyi olduğu yerde bırakan `displacement` çıktısının değeri, 0 ile 1.",
+      "parameters.displacementFadeStart": "Kaymanın mesafeyle nerede sönümlendiği, en büyük kaymasının ekrandaki piksel boyutu olarak: `displacementFadeStart` üstünde tam, `displacementFadeEnd` altında yok; ikincisi daha küçük olmalıdır; ikisi de verilmezse hiç sönümlenmez.",
+      "parameters.displacementFadeEnd": "Bkz. `displacementFadeStart`."
     }
   },
   "material.meshPhysical": {
@@ -8424,7 +8481,13 @@
       "parameters.physics": "Onu giyen cismin maddesi: yoğunluk, sürtünme, sekme.",
       "parameters.density": "kg/m³; hacimle çarpılınca kütleyi verir.",
       "parameters.friction": "Cismin ne kadar tuttuğu, 0 ve üstü.",
-      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası."
+      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası.",
+      "parameters.specularIntensity": "Yüzeyin dielektriğinin speküler girdisi, 0 ile 1: dik gelişteki yansıtıcılığı bunun 0,08'idir; böylece 0,5 (hiçbirini bildirmeyen bir yüzeyin değeri) olağan %4'ü, 1 %8'i ve 0 hiç parlama vermez. Bir glTF malzemesinin `KHR_materials_specular` çarpanı bildirildiği gibi yazılır. Metal bunu yok sayar.",
+      "parameters.specularIntensityMap": "`specularIntensity` değerini bir görüntünün alfa kanalıyla çarpar.",
+      "parameters.displacementMagnitude": "Malzeme grafiğinin `displacement` çıktısının, `displacementCenter` değerinin 1 üstünde olduğu yerde bir yüzeyi normali boyunca metre cinsinden ne kadar kaydırdığı: kaydırılmış yükseklik `(çıktı - displacementCenter) * displacementMagnitude` değeridir.",
+      "parameters.displacementCenter": "Yüzeyi olduğu yerde bırakan `displacement` çıktısının değeri, 0 ile 1.",
+      "parameters.displacementFadeStart": "Kaymanın mesafeyle nerede sönümlendiği, en büyük kaymasının ekrandaki piksel boyutu olarak: `displacementFadeStart` üstünde tam, `displacementFadeEnd` altında yok; ikincisi daha küçük olmalıdır; ikisi de verilmezse hiç sönümlenmez.",
+      "parameters.displacementFadeEnd": "Bkz. `displacementFadeStart`."
     }
   },
   "material.meshBasic": {
@@ -8487,7 +8550,13 @@
       "parameters.physics": "Onu giyen cismin maddesi: yoğunluk, sürtünme, sekme.",
       "parameters.density": "kg/m³; hacimle çarpılınca kütleyi verir.",
       "parameters.friction": "Cismin ne kadar tuttuğu, 0 ve üstü.",
-      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası."
+      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası.",
+      "parameters.specularIntensity": "Yüzeyin dielektriğinin speküler girdisi, 0 ile 1: dik gelişteki yansıtıcılığı bunun 0,08'idir; böylece 0,5 (hiçbirini bildirmeyen bir yüzeyin değeri) olağan %4'ü, 1 %8'i ve 0 hiç parlama vermez. Bir glTF malzemesinin `KHR_materials_specular` çarpanı bildirildiği gibi yazılır. Metal bunu yok sayar.",
+      "parameters.specularIntensityMap": "`specularIntensity` değerini bir görüntünün alfa kanalıyla çarpar.",
+      "parameters.displacementMagnitude": "Malzeme grafiğinin `displacement` çıktısının, `displacementCenter` değerinin 1 üstünde olduğu yerde bir yüzeyi normali boyunca metre cinsinden ne kadar kaydırdığı: kaydırılmış yükseklik `(çıktı - displacementCenter) * displacementMagnitude` değeridir.",
+      "parameters.displacementCenter": "Yüzeyi olduğu yerde bırakan `displacement` çıktısının değeri, 0 ile 1.",
+      "parameters.displacementFadeStart": "Kaymanın mesafeyle nerede sönümlendiği, en büyük kaymasının ekrandaki piksel boyutu olarak: `displacementFadeStart` üstünde tam, `displacementFadeEnd` altında yok; ikincisi daha küçük olmalıdır; ikisi de verilmezse hiç sönümlenmez.",
+      "parameters.displacementFadeEnd": "Bkz. `displacementFadeStart`."
     }
   },
   "material.meshPhong": {
@@ -8550,7 +8619,13 @@
       "parameters.physics": "Onu giyen cismin maddesi: yoğunluk, sürtünme, sekme.",
       "parameters.density": "kg/m³; hacimle çarpılınca kütleyi verir.",
       "parameters.friction": "Cismin ne kadar tuttuğu, 0 ve üstü.",
-      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası."
+      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası.",
+      "parameters.specularIntensity": "Yüzeyin dielektriğinin speküler girdisi, 0 ile 1: dik gelişteki yansıtıcılığı bunun 0,08'idir; böylece 0,5 (hiçbirini bildirmeyen bir yüzeyin değeri) olağan %4'ü, 1 %8'i ve 0 hiç parlama vermez. Bir glTF malzemesinin `KHR_materials_specular` çarpanı bildirildiği gibi yazılır. Metal bunu yok sayar.",
+      "parameters.specularIntensityMap": "`specularIntensity` değerini bir görüntünün alfa kanalıyla çarpar.",
+      "parameters.displacementMagnitude": "Malzeme grafiğinin `displacement` çıktısının, `displacementCenter` değerinin 1 üstünde olduğu yerde bir yüzeyi normali boyunca metre cinsinden ne kadar kaydırdığı: kaydırılmış yükseklik `(çıktı - displacementCenter) * displacementMagnitude` değeridir.",
+      "parameters.displacementCenter": "Yüzeyi olduğu yerde bırakan `displacement` çıktısının değeri, 0 ile 1.",
+      "parameters.displacementFadeStart": "Kaymanın mesafeyle nerede sönümlendiği, en büyük kaymasının ekrandaki piksel boyutu olarak: `displacementFadeStart` üstünde tam, `displacementFadeEnd` altında yok; ikincisi daha küçük olmalıdır; ikisi de verilmezse hiç sönümlenmez.",
+      "parameters.displacementFadeEnd": "Bkz. `displacementFadeStart`."
     }
   },
   "material.meshLambert": {
@@ -8613,7 +8688,13 @@
       "parameters.physics": "Onu giyen cismin maddesi: yoğunluk, sürtünme, sekme.",
       "parameters.density": "kg/m³; hacimle çarpılınca kütleyi verir.",
       "parameters.friction": "Cismin ne kadar tuttuğu, 0 ve üstü.",
-      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası."
+      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası.",
+      "parameters.specularIntensity": "Yüzeyin dielektriğinin speküler girdisi, 0 ile 1: dik gelişteki yansıtıcılığı bunun 0,08'idir; böylece 0,5 (hiçbirini bildirmeyen bir yüzeyin değeri) olağan %4'ü, 1 %8'i ve 0 hiç parlama vermez. Bir glTF malzemesinin `KHR_materials_specular` çarpanı bildirildiği gibi yazılır. Metal bunu yok sayar.",
+      "parameters.specularIntensityMap": "`specularIntensity` değerini bir görüntünün alfa kanalıyla çarpar.",
+      "parameters.displacementMagnitude": "Malzeme grafiğinin `displacement` çıktısının, `displacementCenter` değerinin 1 üstünde olduğu yerde bir yüzeyi normali boyunca metre cinsinden ne kadar kaydırdığı: kaydırılmış yükseklik `(çıktı - displacementCenter) * displacementMagnitude` değeridir.",
+      "parameters.displacementCenter": "Yüzeyi olduğu yerde bırakan `displacement` çıktısının değeri, 0 ile 1.",
+      "parameters.displacementFadeStart": "Kaymanın mesafeyle nerede sönümlendiği, en büyük kaymasının ekrandaki piksel boyutu olarak: `displacementFadeStart` üstünde tam, `displacementFadeEnd` altında yok; ikincisi daha küçük olmalıdır; ikisi de verilmezse hiç sönümlenmez.",
+      "parameters.displacementFadeEnd": "Bkz. `displacementFadeStart`."
     }
   },
   "material.meshToon": {
@@ -8676,7 +8757,13 @@
       "parameters.physics": "Onu giyen cismin maddesi: yoğunluk, sürtünme, sekme.",
       "parameters.density": "kg/m³; hacimle çarpılınca kütleyi verir.",
       "parameters.friction": "Cismin ne kadar tuttuğu, 0 ve üstü.",
-      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası."
+      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası.",
+      "parameters.specularIntensity": "Yüzeyin dielektriğinin speküler girdisi, 0 ile 1: dik gelişteki yansıtıcılığı bunun 0,08'idir; böylece 0,5 (hiçbirini bildirmeyen bir yüzeyin değeri) olağan %4'ü, 1 %8'i ve 0 hiç parlama vermez. Bir glTF malzemesinin `KHR_materials_specular` çarpanı bildirildiği gibi yazılır. Metal bunu yok sayar.",
+      "parameters.specularIntensityMap": "`specularIntensity` değerini bir görüntünün alfa kanalıyla çarpar.",
+      "parameters.displacementMagnitude": "Malzeme grafiğinin `displacement` çıktısının, `displacementCenter` değerinin 1 üstünde olduğu yerde bir yüzeyi normali boyunca metre cinsinden ne kadar kaydırdığı: kaydırılmış yükseklik `(çıktı - displacementCenter) * displacementMagnitude` değeridir.",
+      "parameters.displacementCenter": "Yüzeyi olduğu yerde bırakan `displacement` çıktısının değeri, 0 ile 1.",
+      "parameters.displacementFadeStart": "Kaymanın mesafeyle nerede sönümlendiği, en büyük kaymasının ekrandaki piksel boyutu olarak: `displacementFadeStart` üstünde tam, `displacementFadeEnd` altında yok; ikincisi daha küçük olmalıdır; ikisi de verilmezse hiç sönümlenmez.",
+      "parameters.displacementFadeEnd": "Bkz. `displacementFadeStart`."
     }
   },
   "material.meshNormal": {
@@ -8739,7 +8826,13 @@
       "parameters.physics": "Onu giyen cismin maddesi: yoğunluk, sürtünme, sekme.",
       "parameters.density": "kg/m³; hacimle çarpılınca kütleyi verir.",
       "parameters.friction": "Cismin ne kadar tuttuğu, 0 ve üstü.",
-      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası."
+      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası.",
+      "parameters.specularIntensity": "Yüzeyin dielektriğinin speküler girdisi, 0 ile 1: dik gelişteki yansıtıcılığı bunun 0,08'idir; böylece 0,5 (hiçbirini bildirmeyen bir yüzeyin değeri) olağan %4'ü, 1 %8'i ve 0 hiç parlama vermez. Bir glTF malzemesinin `KHR_materials_specular` çarpanı bildirildiği gibi yazılır. Metal bunu yok sayar.",
+      "parameters.specularIntensityMap": "`specularIntensity` değerini bir görüntünün alfa kanalıyla çarpar.",
+      "parameters.displacementMagnitude": "Malzeme grafiğinin `displacement` çıktısının, `displacementCenter` değerinin 1 üstünde olduğu yerde bir yüzeyi normali boyunca metre cinsinden ne kadar kaydırdığı: kaydırılmış yükseklik `(çıktı - displacementCenter) * displacementMagnitude` değeridir.",
+      "parameters.displacementCenter": "Yüzeyi olduğu yerde bırakan `displacement` çıktısının değeri, 0 ile 1.",
+      "parameters.displacementFadeStart": "Kaymanın mesafeyle nerede sönümlendiği, en büyük kaymasının ekrandaki piksel boyutu olarak: `displacementFadeStart` üstünde tam, `displacementFadeEnd` altında yok; ikincisi daha küçük olmalıdır; ikisi de verilmezse hiç sönümlenmez.",
+      "parameters.displacementFadeEnd": "Bkz. `displacementFadeStart`."
     }
   },
   "material.meshMatcap": {
@@ -8802,7 +8895,13 @@
       "parameters.physics": "Onu giyen cismin maddesi: yoğunluk, sürtünme, sekme.",
       "parameters.density": "kg/m³; hacimle çarpılınca kütleyi verir.",
       "parameters.friction": "Cismin ne kadar tuttuğu, 0 ve üstü.",
-      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası."
+      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası.",
+      "parameters.specularIntensity": "Yüzeyin dielektriğinin speküler girdisi, 0 ile 1: dik gelişteki yansıtıcılığı bunun 0,08'idir; böylece 0,5 (hiçbirini bildirmeyen bir yüzeyin değeri) olağan %4'ü, 1 %8'i ve 0 hiç parlama vermez. Bir glTF malzemesinin `KHR_materials_specular` çarpanı bildirildiği gibi yazılır. Metal bunu yok sayar.",
+      "parameters.specularIntensityMap": "`specularIntensity` değerini bir görüntünün alfa kanalıyla çarpar.",
+      "parameters.displacementMagnitude": "Malzeme grafiğinin `displacement` çıktısının, `displacementCenter` değerinin 1 üstünde olduğu yerde bir yüzeyi normali boyunca metre cinsinden ne kadar kaydırdığı: kaydırılmış yükseklik `(çıktı - displacementCenter) * displacementMagnitude` değeridir.",
+      "parameters.displacementCenter": "Yüzeyi olduğu yerde bırakan `displacement` çıktısının değeri, 0 ile 1.",
+      "parameters.displacementFadeStart": "Kaymanın mesafeyle nerede sönümlendiği, en büyük kaymasının ekrandaki piksel boyutu olarak: `displacementFadeStart` üstünde tam, `displacementFadeEnd` altında yok; ikincisi daha küçük olmalıdır; ikisi de verilmezse hiç sönümlenmez.",
+      "parameters.displacementFadeEnd": "Bkz. `displacementFadeStart`."
     }
   },
   "material.meshDepth": {
@@ -8865,7 +8964,13 @@
       "parameters.physics": "Onu giyen cismin maddesi: yoğunluk, sürtünme, sekme.",
       "parameters.density": "kg/m³; hacimle çarpılınca kütleyi verir.",
       "parameters.friction": "Cismin ne kadar tuttuğu, 0 ve üstü.",
-      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası."
+      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası.",
+      "parameters.specularIntensity": "Yüzeyin dielektriğinin speküler girdisi, 0 ile 1: dik gelişteki yansıtıcılığı bunun 0,08'idir; böylece 0,5 (hiçbirini bildirmeyen bir yüzeyin değeri) olağan %4'ü, 1 %8'i ve 0 hiç parlama vermez. Bir glTF malzemesinin `KHR_materials_specular` çarpanı bildirildiği gibi yazılır. Metal bunu yok sayar.",
+      "parameters.specularIntensityMap": "`specularIntensity` değerini bir görüntünün alfa kanalıyla çarpar.",
+      "parameters.displacementMagnitude": "Malzeme grafiğinin `displacement` çıktısının, `displacementCenter` değerinin 1 üstünde olduğu yerde bir yüzeyi normali boyunca metre cinsinden ne kadar kaydırdığı: kaydırılmış yükseklik `(çıktı - displacementCenter) * displacementMagnitude` değeridir.",
+      "parameters.displacementCenter": "Yüzeyi olduğu yerde bırakan `displacement` çıktısının değeri, 0 ile 1.",
+      "parameters.displacementFadeStart": "Kaymanın mesafeyle nerede sönümlendiği, en büyük kaymasının ekrandaki piksel boyutu olarak: `displacementFadeStart` üstünde tam, `displacementFadeEnd` altında yok; ikincisi daha küçük olmalıdır; ikisi de verilmezse hiç sönümlenmez.",
+      "parameters.displacementFadeEnd": "Bkz. `displacementFadeStart`."
     }
   },
   "material.points": {
@@ -8928,7 +9033,13 @@
       "parameters.physics": "Onu giyen cismin maddesi: yoğunluk, sürtünme, sekme.",
       "parameters.density": "kg/m³; hacimle çarpılınca kütleyi verir.",
       "parameters.friction": "Cismin ne kadar tuttuğu, 0 ve üstü.",
-      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası."
+      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası.",
+      "parameters.specularIntensity": "Yüzeyin dielektriğinin speküler girdisi, 0 ile 1: dik gelişteki yansıtıcılığı bunun 0,08'idir; böylece 0,5 (hiçbirini bildirmeyen bir yüzeyin değeri) olağan %4'ü, 1 %8'i ve 0 hiç parlama vermez. Bir glTF malzemesinin `KHR_materials_specular` çarpanı bildirildiği gibi yazılır. Metal bunu yok sayar.",
+      "parameters.specularIntensityMap": "`specularIntensity` değerini bir görüntünün alfa kanalıyla çarpar.",
+      "parameters.displacementMagnitude": "Malzeme grafiğinin `displacement` çıktısının, `displacementCenter` değerinin 1 üstünde olduğu yerde bir yüzeyi normali boyunca metre cinsinden ne kadar kaydırdığı: kaydırılmış yükseklik `(çıktı - displacementCenter) * displacementMagnitude` değeridir.",
+      "parameters.displacementCenter": "Yüzeyi olduğu yerde bırakan `displacement` çıktısının değeri, 0 ile 1.",
+      "parameters.displacementFadeStart": "Kaymanın mesafeyle nerede sönümlendiği, en büyük kaymasının ekrandaki piksel boyutu olarak: `displacementFadeStart` üstünde tam, `displacementFadeEnd` altında yok; ikincisi daha küçük olmalıdır; ikisi de verilmezse hiç sönümlenmez.",
+      "parameters.displacementFadeEnd": "Bkz. `displacementFadeStart`."
     }
   },
   "material.line": {
@@ -8991,7 +9102,13 @@
       "parameters.physics": "Onu giyen cismin maddesi: yoğunluk, sürtünme, sekme.",
       "parameters.density": "kg/m³; hacimle çarpılınca kütleyi verir.",
       "parameters.friction": "Cismin ne kadar tuttuğu, 0 ve üstü.",
-      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası."
+      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası.",
+      "parameters.specularIntensity": "Yüzeyin dielektriğinin speküler girdisi, 0 ile 1: dik gelişteki yansıtıcılığı bunun 0,08'idir; böylece 0,5 (hiçbirini bildirmeyen bir yüzeyin değeri) olağan %4'ü, 1 %8'i ve 0 hiç parlama vermez. Bir glTF malzemesinin `KHR_materials_specular` çarpanı bildirildiği gibi yazılır. Metal bunu yok sayar.",
+      "parameters.specularIntensityMap": "`specularIntensity` değerini bir görüntünün alfa kanalıyla çarpar.",
+      "parameters.displacementMagnitude": "Malzeme grafiğinin `displacement` çıktısının, `displacementCenter` değerinin 1 üstünde olduğu yerde bir yüzeyi normali boyunca metre cinsinden ne kadar kaydırdığı: kaydırılmış yükseklik `(çıktı - displacementCenter) * displacementMagnitude` değeridir.",
+      "parameters.displacementCenter": "Yüzeyi olduğu yerde bırakan `displacement` çıktısının değeri, 0 ile 1.",
+      "parameters.displacementFadeStart": "Kaymanın mesafeyle nerede sönümlendiği, en büyük kaymasının ekrandaki piksel boyutu olarak: `displacementFadeStart` üstünde tam, `displacementFadeEnd` altında yok; ikincisi daha küçük olmalıdır; ikisi de verilmezse hiç sönümlenmez.",
+      "parameters.displacementFadeEnd": "Bkz. `displacementFadeStart`."
     }
   },
   "material.lineDashed": {
@@ -9054,7 +9171,13 @@
       "parameters.physics": "Onu giyen cismin maddesi: yoğunluk, sürtünme, sekme.",
       "parameters.density": "kg/m³; hacimle çarpılınca kütleyi verir.",
       "parameters.friction": "Cismin ne kadar tuttuğu, 0 ve üstü.",
-      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası."
+      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası.",
+      "parameters.specularIntensity": "Yüzeyin dielektriğinin speküler girdisi, 0 ile 1: dik gelişteki yansıtıcılığı bunun 0,08'idir; böylece 0,5 (hiçbirini bildirmeyen bir yüzeyin değeri) olağan %4'ü, 1 %8'i ve 0 hiç parlama vermez. Bir glTF malzemesinin `KHR_materials_specular` çarpanı bildirildiği gibi yazılır. Metal bunu yok sayar.",
+      "parameters.specularIntensityMap": "`specularIntensity` değerini bir görüntünün alfa kanalıyla çarpar.",
+      "parameters.displacementMagnitude": "Malzeme grafiğinin `displacement` çıktısının, `displacementCenter` değerinin 1 üstünde olduğu yerde bir yüzeyi normali boyunca metre cinsinden ne kadar kaydırdığı: kaydırılmış yükseklik `(çıktı - displacementCenter) * displacementMagnitude` değeridir.",
+      "parameters.displacementCenter": "Yüzeyi olduğu yerde bırakan `displacement` çıktısının değeri, 0 ile 1.",
+      "parameters.displacementFadeStart": "Kaymanın mesafeyle nerede sönümlendiği, en büyük kaymasının ekrandaki piksel boyutu olarak: `displacementFadeStart` üstünde tam, `displacementFadeEnd` altında yok; ikincisi daha küçük olmalıdır; ikisi de verilmezse hiç sönümlenmez.",
+      "parameters.displacementFadeEnd": "Bkz. `displacementFadeStart`."
     }
   },
   "material.sprite": {
@@ -9117,7 +9240,13 @@
       "parameters.physics": "Onu giyen cismin maddesi: yoğunluk, sürtünme, sekme.",
       "parameters.density": "kg/m³; hacimle çarpılınca kütleyi verir.",
       "parameters.friction": "Cismin ne kadar tuttuğu, 0 ve üstü.",
-      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası."
+      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası.",
+      "parameters.specularIntensity": "Yüzeyin dielektriğinin speküler girdisi, 0 ile 1: dik gelişteki yansıtıcılığı bunun 0,08'idir; böylece 0,5 (hiçbirini bildirmeyen bir yüzeyin değeri) olağan %4'ü, 1 %8'i ve 0 hiç parlama vermez. Bir glTF malzemesinin `KHR_materials_specular` çarpanı bildirildiği gibi yazılır. Metal bunu yok sayar.",
+      "parameters.specularIntensityMap": "`specularIntensity` değerini bir görüntünün alfa kanalıyla çarpar.",
+      "parameters.displacementMagnitude": "Malzeme grafiğinin `displacement` çıktısının, `displacementCenter` değerinin 1 üstünde olduğu yerde bir yüzeyi normali boyunca metre cinsinden ne kadar kaydırdığı: kaydırılmış yükseklik `(çıktı - displacementCenter) * displacementMagnitude` değeridir.",
+      "parameters.displacementCenter": "Yüzeyi olduğu yerde bırakan `displacement` çıktısının değeri, 0 ile 1.",
+      "parameters.displacementFadeStart": "Kaymanın mesafeyle nerede sönümlendiği, en büyük kaymasının ekrandaki piksel boyutu olarak: `displacementFadeStart` üstünde tam, `displacementFadeEnd` altında yok; ikincisi daha küçük olmalıdır; ikisi de verilmezse hiç sönümlenmez.",
+      "parameters.displacementFadeEnd": "Bkz. `displacementFadeStart`."
     }
   },
   "material.volume": {
@@ -9181,7 +9310,13 @@
       "parameters.physics": "Onu giyen bir gövdenin maddesi: yoğunluk, sürtünme, sekme.",
       "parameters.density": "kg/m³, kütle için hacimle çarpılır.",
       "parameters.friction": "Bir gövdenin ne kadar tuttuğu, 0 ve üstü.",
-      "parameters.restitution": "Bir gövdenin ne kadar sektiği, 0 ila 1."
+      "parameters.restitution": "Bir gövdenin ne kadar sektiği, 0 ila 1.",
+      "parameters.specularIntensity": "Yüzeyin dielektriğinin speküler girdisi, 0 ile 1: dik gelişteki yansıtıcılığı bunun 0,08'idir; böylece 0,5 (hiçbirini bildirmeyen bir yüzeyin değeri) olağan %4'ü, 1 %8'i ve 0 hiç parlama vermez. Bir glTF malzemesinin `KHR_materials_specular` çarpanı bildirildiği gibi yazılır. Metal bunu yok sayar.",
+      "parameters.specularIntensityMap": "`specularIntensity` değerini bir görüntünün alfa kanalıyla çarpar.",
+      "parameters.displacementMagnitude": "Malzeme grafiğinin `displacement` çıktısının, `displacementCenter` değerinin 1 üstünde olduğu yerde bir yüzeyi normali boyunca metre cinsinden ne kadar kaydırdığı: kaydırılmış yükseklik `(çıktı - displacementCenter) * displacementMagnitude` değeridir.",
+      "parameters.displacementCenter": "Yüzeyi olduğu yerde bırakan `displacement` çıktısının değeri, 0 ile 1.",
+      "parameters.displacementFadeStart": "Kaymanın mesafeyle nerede sönümlendiği, en büyük kaymasının ekrandaki piksel boyutu olarak: `displacementFadeStart` üstünde tam, `displacementFadeEnd` altında yok; ikincisi daha küçük olmalıdır; ikisi de verilmezse hiç sönümlenmez.",
+      "parameters.displacementFadeEnd": "Bkz. `displacementFadeStart`."
     }
   },
   "material.lightFunction": {
@@ -9245,7 +9380,13 @@
       "parameters.physics": "Onu giyen bir gövdenin maddesi: yoğunluk, sürtünme, sekme.",
       "parameters.density": "kg/m³, kütle için hacimle çarpılır.",
       "parameters.friction": "Bir gövdenin ne kadar tuttuğu, 0 ve üstü.",
-      "parameters.restitution": "Bir gövdenin ne kadar sektiği, 0 ila 1."
+      "parameters.restitution": "Bir gövdenin ne kadar sektiği, 0 ila 1.",
+      "parameters.specularIntensity": "Yüzeyin dielektriğinin speküler girdisi, 0 ile 1: dik gelişteki yansıtıcılığı bunun 0,08'idir; böylece 0,5 (hiçbirini bildirmeyen bir yüzeyin değeri) olağan %4'ü, 1 %8'i ve 0 hiç parlama vermez. Bir glTF malzemesinin `KHR_materials_specular` çarpanı bildirildiği gibi yazılır. Metal bunu yok sayar.",
+      "parameters.specularIntensityMap": "`specularIntensity` değerini bir görüntünün alfa kanalıyla çarpar.",
+      "parameters.displacementMagnitude": "Malzeme grafiğinin `displacement` çıktısının, `displacementCenter` değerinin 1 üstünde olduğu yerde bir yüzeyi normali boyunca metre cinsinden ne kadar kaydırdığı: kaydırılmış yükseklik `(çıktı - displacementCenter) * displacementMagnitude` değeridir.",
+      "parameters.displacementCenter": "Yüzeyi olduğu yerde bırakan `displacement` çıktısının değeri, 0 ile 1.",
+      "parameters.displacementFadeStart": "Kaymanın mesafeyle nerede sönümlendiği, en büyük kaymasının ekrandaki piksel boyutu olarak: `displacementFadeStart` üstünde tam, `displacementFadeEnd` altında yok; ikincisi daha küçük olmalıdır; ikisi de verilmezse hiç sönümlenmez.",
+      "parameters.displacementFadeEnd": "Bkz. `displacementFadeStart`."
     }
   },
   "material.graph": {
@@ -9315,7 +9456,13 @@
       "parameters.physics": "Onu giyen cismin maddesi: yoğunluk, sürtünme, sekme.",
       "parameters.density": "kg/m³; hacimle çarpılınca kütleyi verir.",
       "parameters.friction": "Cismin ne kadar tuttuğu, 0 ve üstü.",
-      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası."
+      "parameters.restitution": "Cismin ne kadar sektiği, 0 ile 1 arası.",
+      "parameters.specularIntensity": "Yüzeyin dielektriğinin speküler girdisi, 0 ile 1: dik gelişteki yansıtıcılığı bunun 0,08'idir; böylece 0,5 (hiçbirini bildirmeyen bir yüzeyin değeri) olağan %4'ü, 1 %8'i ve 0 hiç parlama vermez. Bir glTF malzemesinin `KHR_materials_specular` çarpanı bildirildiği gibi yazılır. Metal bunu yok sayar.",
+      "parameters.specularIntensityMap": "`specularIntensity` değerini bir görüntünün alfa kanalıyla çarpar.",
+      "parameters.displacementMagnitude": "Malzeme grafiğinin `displacement` çıktısının, `displacementCenter` değerinin 1 üstünde olduğu yerde bir yüzeyi normali boyunca metre cinsinden ne kadar kaydırdığı: kaydırılmış yükseklik `(çıktı - displacementCenter) * displacementMagnitude` değeridir.",
+      "parameters.displacementCenter": "Yüzeyi olduğu yerde bırakan `displacement` çıktısının değeri, 0 ile 1.",
+      "parameters.displacementFadeStart": "Kaymanın mesafeyle nerede sönümlendiği, en büyük kaymasının ekrandaki piksel boyutu olarak: `displacementFadeStart` üstünde tam, `displacementFadeEnd` altında yok; ikincisi daha küçük olmalıdır; ikisi de verilmezse hiç sönümlenmez.",
+      "parameters.displacementFadeEnd": "Bkz. `displacementFadeStart`."
     }
   },
   "material.createShader": {
@@ -9980,5 +10127,80 @@
   },
   "writeEngineCamera": {
     "summary": "Bir karenin okuduğu her şeyi, zaten ayarlanmış `into.world`'den ve bildirilen optikten türetir: motorun derinlik kuralındaki izdüşüm, sonra view, view-projection ve altı frustum düzlemi (`updateCameraFrame`), render karesi (`renderOrigin.ts`) ve göz."
+  },
+  "COLLISION_CHANNELS": {
+    "summary": "ÇARPIŞMA KANALLARI VE YANITLARI.",
+    "description": "Bir cismin bir nesne türü, 64 kanaldan biri, ve her kanala bir yanıtı vardır — `ignore`, `overlap` veya `block`. İki cisim, her birinin diğerinin kanalına verdiği yanıta göre karşılaşır; iki yanıttan zayıf olan belirler: ikisi de `block` ise çarpışırlar; zayıf olan `overlap` ise birbirinin içinden geçerler ve örtüştüklerini bildirirler; biri `ignore` ise birbirlerini tanımazlar. Bir sahne sorgusunun kendine ait bir kanalı ve yanıtları vardır ve cisimlerle aynı kuralla karşılaşır (`channelsMeet`). İlk sekiz kanal motorundur; altı kanal daha ayrılmıştır ve elli kanal oyunundur, istenildiği gibi adlandırılır. Adlandırılmış bir PROFİL, bir sözcükle bir nesne türünü, hangi cisimlerin hareket ettiğini veya algıladığını ve her kanala bir yanıtı belirler; aşağıdaki profiller motorun varsayılanlarıdır."
+  },
+  "COLLISION_PROFILES": {
+    "summary": "Motorun çarpışma profilleri.",
+    "description": "Adı geçmeyen her kanal `block` yanıtı verir."
+  },
+  "CharacterMode": {
+    "summary": "Gövdenin nasıl hareket ettiği: zeminde, havada, suda veya yerçekiminden bağımsız uçarak."
+  },
+  "CollisionChannel": {
+    "summary": "Adıyla bir kanal."
+  },
+  "CollisionProfileName": {
+    "summary": "Adıyla bir profil."
+  },
+  "CollisionResponse": {
+    "summary": "Adıyla bir yanıt."
+  },
+  "OverlapHit": {
+    "summary": "Bir şeklin karşılaştığı bir cisim: nesnesi, sorguyu engelleyip engellemediği (yoksa onunla örtüşür) ve karşılaşılan pişirilmiş üçgenin glTF malzemesi (bir cismin kendi şekli için `-1`)."
+  },
+  "OverlapOptions": {
+    "summary": "`world.physics.overlap` şekle ek olarak neyi sorar.",
+    "members": {
+      "at": "Şeklin merkezi, dünya çerçevesinde.",
+      "rotation": "Bir birim kuaterniyon `[x, y, z, w]`.",
+      "channel": "Sorgunun içinde bulunduğu kanal ve kanallara verdiği yanıtlar, bir cismin sahip olduğu gibi (`CollisionOptions`): sorgu bir cisimle, her birinin diğerinin kanalına verdiği yanıtın zayıf olanıyla karşılaşır — ikisi de `block`, cisim sorguyu engeller; biri `overlap`, onunla örtüşür; biri `ignore`, karşılaşılmaz. Hiçbir sorguya katılmayan bir cisimle asla karşılaşılmaz.",
+      "objectTypes": "Bu nesne türlerinin cisimlerini, ne yanıt verirlerse versinler arar: karşılaşılan her biri engeller. `channel` yerine geçer.",
+      "mode": "`multi` karşılaşılan her cismi listeler; `any` karşılaşılan ilkte durur; `blocking` engelleyen ilkte.",
+      "ignore": "Sorgunun içinden geçtiği bir cisim: soranınki."
+    }
+  },
+  "OverlapResult": {
+    "summary": "Bir şeklin karşılaştığı şey: cisimler motor kimliklerinin sırasıyla ve birinin engelleyip engellemediği.",
+    "members": {
+      "blocking": "Karşılaşılan herhangi bir cismin sorguyu engelleyip engellemediği."
+    }
+  },
+  "OverlapShape": {
+    "summary": "Bir yerde sınanacak bir şekil: bir küre, bir kutu veya bir kapsül (dik, `rotation` ile döndürülmüş)."
+  },
+  "RESPONSE": {
+    "summary": "Bir cismin bir kanala yanıtı, en azdan en çoğa: onu tanımaz, içinden geçer ve bildirir, ona çarpıp durur."
+  },
+  "ResolvedCollision": {
+    "summary": "Bir cismin çözülmüş çarpışması: kanalı ve hangi kanalları engellediği ve örtüştüğü bit maskeleri olarak (`i` biti `i` kanalıdır).",
+    "members": {
+      "objectType": "Kanal, 0'dan başlayarak.",
+      "block": "`i` biti ayarlı: cisim `i` kanalını engeller.",
+      "overlap": "`i` biti ayarlı: cisim `i` kanalıyla örtüşür.",
+      "query": "Sahne sorgularına ve örtüşmelere katılır.",
+      "physics": "Simülasyona katılır."
+    }
+  },
+  "channelIndex": {
+    "summary": "Adıyla veya numarasıyla verilen bir kanalın numarası; ikisi de olmayanı reddeder."
+  },
+  "channelsMeet": {
+    "summary": "`a` ve `b`nin karşılaştığı yanıt: her biri diğerinin kanalına yanıt verir, zayıf olan belirler."
+  },
+  "defaultProfile": {
+    "summary": "Bir cisim hiçbirini adlandırmadığında yapıldığı profil (`CollisionOptions.profile`)."
+  },
+  "resolveCollision": {
+    "summary": "Bir cismin `options` ve hiçbirini adlandırmadığında başladığı `fallback` profilinden çözülmüş çarpışması: profilin yanıtları (adı geçmeyen her kanal `block`), sonra üzerine `responses`, profilinkilerin üzerine `objectType` kanalı ve `enabled` anahtarı.",
+    "parameters": {
+      "options": "Bir cismin çarpışması, `obj.physics`'in aldığı gibi: bir profil, sonra ondan farklı olan.",
+      "options.profile": "Başlanacak bir profil.",
+      "options.objectType": "Cismin olduğu kanal: diğerlerinin yanıt verdiği şey.",
+      "options.responses": "Cismin kanallara verdiği yanıtlar, profilinkilerin üzerine; bir kanal bir ad veya numarasıdır.",
+      "options.enabled": "Cismin simülasyona, sorgulara, ikisine de veya hiçbirine katılıp katılmadığı."
+    }
   }
 }

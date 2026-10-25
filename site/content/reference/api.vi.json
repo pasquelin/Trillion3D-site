@@ -619,14 +619,16 @@
   },
   "CharacterCameraControls": {
     "summary": "MỘT NHÂN VẬT, được nhìn bằng mắt của nó: một cơ thể có khối lượng biết đi, chạy, nhảy và ngã, và va chạm với các vật thể của vật lý thế giới như một viên nang đứng thẳng.",
-    "description": "Con trỏ xoay đầu như trong góc nhìn thứ nhất (`look.ts`). Các phím, theo `KeyboardEvent.code` để mọi bố cục bàn phím chơi cùng các phím: W/S hoặc mũi tên lên xuống đi tới và lùi, A/D hoặc mũi tên ngang bước ngang, Shift chạy nước rút, Space nhảy, C ngồi xuống (`canCrouch`); dưới nước cơ thể bơi theo hướng đầu nhìn, Space nổi lên và phím ngồi xuống chìm xuống, và khi đặt `flying` thì nó bay như vậy. Cơ thể không khởi động hay dừng ngay lập tức: nó lấy đà trong `responseTime` và phanh trong `stopTime`, không bao giờ nhanh hơn mức ma sát của sàn cho phép một đế giày đẩy, nên một lần dừng trượt một chút trên đá và xa trên băng; nó giữ đà trong không khí, bay lên và rơi dưới trọng lực của thế giới nhân `gravityScale`, trèo các gờ đến `stepHeight`, trượt dọc tường và đứng trên dốc đến `maxSlope` (`sdk-browser/src/physics/character/characterDriver.ts`, `sdk-core/src/collision/characterDrive.ts`). Camera là con mắt, cao `eyeHeight` trên bàn chân, nhấp nhô theo sải bước một lượng `headBob` và lún khi tiếp đất một lượng `landingDip` (`sdk-core/src/collision/characterEye.ts`); cả hai tác động lên mắt sau bước đi của cơ thể và không bao giờ di chuyển cơ thể. Một ứng dụng chủ tự di chuyển camera sẽ dịch chuyển cơ thể đến đó, ở trạng thái nghỉ. Một nhân vật đứng yên — trên mặt đất, không vận tốc, không phím, không còn độ lún — không phát ra gì, nên cảnh vẫn đứng yên.",
+    "description": "Con trỏ xoay đầu như góc nhìn thứ nhất (`look.ts`). Các phím, theo `KeyboardEvent.code` để mọi bố cục bàn phím chơi cùng các phím: W/S hoặc mũi tên lên và xuống đi tới và lùi, A/D hoặc mũi tên ngang đi ngang, Shift chạy nước rút, Space nhảy, C ngồi xổm (`canCrouch`); dưới nước thân bơi về nơi đầu nhìn, Space nổi lên và phím ngồi xổm chìm xuống, và khi đặt `flying` thì nó bay như vậy. Thân không khởi động hay dừng ngay lập tức: trên sàn nó tăng tốc theo `maxAcceleration` và phanh theo `groundFriction` và `brakingDecelerationWalking`; nó giữ đà trên không, lên và rơi dưới trọng lực của thế giới nhân `gravityScale`, leo các gờ đến `stepHeight`, trượt dọc tường và đứng trên dốc đến `maxSlope` (`sdk-browser/src/physics/character/characterDriver.ts`, `sdk-core/src/collision/characterDrive.ts`). Camera là con mắt, ở `eyeHeight` phía trên chân, lắc theo sải bước bởi `headBob` và hạ xuống khi tiếp đất bởi `landingDip` (`sdk-core/src/collision/characterEye.ts`); cả hai tác động lên mắt sau bước của thân và không bao giờ di chuyển thân. Một host tự di chuyển camera thì dịch chuyển tức thời thân đến đó, ở trạng thái nghỉ. Một nhân vật đứng yên — trên sàn, không tốc độ, không phím, không còn độ hạ — không phát ra gì, nên cảnh vẫn đứng yên.",
     "members": {
       "velocity": "Vận tốc của thân thể tính bằng mét trên giây, trực tiếp: `[x, y, z]`, y hướng lên.",
       "onGround": "Liệu chân có đang chạm đất hay không.",
       "stride": "Pha của bước chân tính bằng radian, trong [0, 2π): một chân chạm đất tại 0, chân kia tại π.",
       "onLand": "Được gọi khi đáp đất với tốc độ hướng xuống, tính bằng mét trên giây: một âm thanh, một rung lắc.",
       "onJump": "Được gọi khi thân thể rời khỏi mặt đất trong một cú nhảy.",
-      "update": "Trải qua `delta` giây; trả về liệu camera có di chuyển hay không, và phát ra `change` khi nó có di chuyển."
+      "update": "Trải qua `delta` giây; trả về liệu camera có di chuyển hay không, và phát ra `change` khi nó có di chuyển.",
+      "mode": "Thân đang di chuyển ra sao: `walking`, `falling`, `swimming` hoặc `flying`.",
+      "crouched": "Thân có đang ngồi xổm hay không."
     }
   },
   "CharacterSettings": {
@@ -1957,7 +1959,7 @@
       "emptyTexels": "Atlas của một lớp `approximate` hoặc `simplify` chứa gì ở nơi không có giá trị của chart nào (`HLOD_EMPTY_TEXELS`): `nearestChart`, giá trị của chart gần nhất trên mọi map, hoặc `black`; `true` là mặc định, `false` là `black`.",
       "clusterDag": "Mesh của mỗi actor mà một lớp `approximate`, `merge` hoặc `simplify` dựng có được một cluster DAG hay không, các mức thô hơn của nó được vẽ trong sai số pixel; `false`, mặc định, một mức được vẽ nguyên ở mọi khoảng cách, như bản tham chiếu dựng mặc định một mesh đã gộp, xấp xỉ hay đơn giản hóa.",
       "allowDistanceField": "Mesh của mỗi actor mà một lớp `approximate`, `merge` hoặc `simplify` dựng có được một distance field hay không (một thiết lập của mỗi bộ dựng của bản tham chiếu): trình biên dịch dựng nó từ các tam giác của chính actor trong không gian thế giới, với các thiết lập của các mesh của cảnh (`distanceField…` của `meshBuild`), vào `distanceFields.bin`, và bóng distance field của mặt trời vẽ nó nơi actor được vẽ — bóng của các mức đã gộp vượt quá shadow map cuối cùng. `true` theo mặc định cho một lớp `approximate`, `false` cho một lớp `merge` hoặc `simplify`, như các bộ dựng của bản tham chiếu đặt mặc định. Các đối tượng của một lớp `instanced` vẽ các mesh của riêng chúng, vốn có các field của riêng chúng; một lớp `voxel` không dựng tam giác.",
-      "disallowClusterDag": "Một lớp `instanced` có vẽ các đối tượng nó nhận mà không có cluster DAG của chúng hay không: `false`, mặc định, mỗi cái giữ DAG riêng, mesh nguồn của nó được đặt, và lớp không dựng mesh nào; `true`, mỗi cái được vẽ ở LOD cuối của mesh của nó, mesh dự phòng của nó (`lodSelection: 'lowest'`), như bản tham chiếu vẽ một mesh instanced mà cluster DAG bị cấm. Khi đó lớp dựng các mesh dự phòng ấy như một lớp `merge` giữ vật liệu của nó làm — một mesh mỗi ô và vật liệu, vẽ nguyên, mặc vật liệu của nguồn, không bao giờ là bản sao DAG của một đối tượng — và mọi quy tắc `merge` áp dụng cho nó (`parent`, `spatiallyLoaded`, lưới các ô của nó); một đối tượng được đánh dấu `hlodInstance` vẫn đứng như chính nó.",
+      "disallowClusterDag": "Một lớp `instanced` có vẽ các đối tượng nó nhận mà không có DAG cụm của chúng hay không: `false`, mặc định, mỗi đối tượng giữ DAG riêng, mesh nguồn của nó được đặt, và lớp không dựng mesh nào; `true`, mỗi đối tượng được vẽ ở LOD cuối cùng của mesh, mesh dự phòng của nó (`lodSelection: 'lowest'`), như tham chiếu vẽ một mesh được nhân bản có DAG cụm bị cấm. Lớp vẫn được nhân bản: trình biên dịch làm bản dự phòng của mỗi mesh nguồn một lần, và các đối tượng của lớp là những hàng của nó tại ma trận của chúng — không có gì được sao chép theo đối tượng hay theo ô —, vẽ nguyên vẹn ở mọi khoảng cách. Một đối tượng có skinning, morphing hoặc được mô phỏng, và đối tượng của một cụm lắp ghép, giữ mesh riêng.",
       "meshBuild": "Cách một lớp `merge` hoặc `simplify` dựng mesh của mỗi actor nó tạo (`HLOD_MESH_BUILD_SETTINGS`), như bản tham chiếu chỉ đọc từ những lớp ấy: mức mịn nhất của nó giữ gì (`keptTriangles`, `trimmedError`), các tam giác gần như sụp của nó có bị bỏ không (`dropNearCollapsed`), bao nhiêu của nó còn thường trú khi actor của nó được nạp (`alwaysResidentKib`, các trang gốc của ô của nó), và cách nó giữ hình dạng (`shapePreservation`, `edgeLengthBound`, `holdTextureCoordinates`). Của một lớp `voxel` thì thay vào đó nêu cách các voxel của các ô của nó được lấy mẫu — `voxelRays`, `voxelLevel`, `voxelBackUp`, `voxelSeparable`, `voxelNdf`, `voxelOpacity`, như `meshBuild` của một mesh nêu chúng.",
       "sizeFilter": "Một lớp `instanced` nhận những đối tượng nào theo kích thước hộp thế giới của chúng: `none`; `extent`, nửa kích thước lớn nhất của nó ít nhất `minExtent` mét; `area`, bề mặt của nó ít nhất `minArea` mét vuông; `volume`, thể tích của nó ít nhất `minVolume` mét khối. Một đối tượng bị từ chối không vào HLOD nào.",
       "minExtent": "Nửa kích thước nhỏ nhất, tính bằng mét, của một bộ lọc `extent`.",
@@ -2392,7 +2394,7 @@
     "description": "Đây là các lựa chọn sản phẩm có tên, không phải các hằng số bị chôn giấu: mọi giới hạn khi chạy đều đọc lại chúng, và bảng chẩn đoán công bố chúng nguyên trạng.",
     "members": {
       "sunAngularRadius": "Bán kính góc của đĩa mặt trời tính bằng radian; không có nghĩa là yêu cầu rõ ràng bóng cứng. Đây là giá trị mặc định riêng của ánh sáng có hướng (một đĩa 0.5357 độ); phần mặt trời của mô-đun bầu trời đặt giá trị của tầng (0.7357 độ, `modules/sky/sunPart.ts`) lên ánh sáng mà nó tạo ra, nên một ánh sáng đặt riêng và mặt trời của bầu trời khác nhau ở đây như thành phần và tầng mà chúng xuất phát từ đó khác nhau.",
-      "tileLights": "Danh sách dài nhất của một ô trong lưới ánh sáng mà một ảnh ĐANG CHUYỂN ĐỘNG lấy mẫu (X2): vượt quá đó, các nguồn sáng của ô được cộng đầy đủ. Một cảnh có tối đa chừng ấy nguồn sáng được chiếu bằng một mảng nguồn sáng dài như vậy. Danh sách của một ô giữ mọi nguồn sáng chạm tới nó, bao nhiêu cũng được, trong một vùng chứa bằng kích thước khung nhìn; ô nào vùng chứa không còn chỗ sẽ duyệt mọi nguồn sáng của cảnh — những nguồn không chạm tới nó cộng một số không chính xác —, nên không nguồn sáng nào bị mất.",
+      "tileLights": "Danh sách dài nhất của một ô trong lưới ánh sáng mà một ảnh ĐANG CHUYỂN ĐỘNG lấy mẫu (X2): vượt quá đó, các nguồn sáng của ô được cộng đầy đủ. Một cảnh có tối đa chừng ấy nguồn sáng được chiếu bằng một mảng nguồn sáng dài chừng ấy. Danh sách của một ô giữ các nguồn sáng chạm tới nó trong một pool kích thước cố định, số ô của nó nhân `lightGridMaxCulledLightsPerCell` (`hizOptions.ts`, 32): một cột vượt quá nó giữ các nguồn sáng đã nhận, theo thứ tự, và bỏ phần còn lại, như tham chiếu làm.",
       "tileSize": "Cạnh tính bằng điểm ảnh của một ô trong lưới ánh sáng.",
       "gridSlices": "Các lát độ sâu của lưới ánh sáng: lát cuối bắt đầu ở tầm với của ánh sáng xa nhất và một ô của nó vươn tới vô tận.",
       "gridDepthDistribution": "Phân bố các lát của lưới, `slice = log2(depth · B + O) · S` (`lighting/tiles/gridMap.ts`): `S`, bao nhiêu lát trải trên một lần gấp đôi độ sâu mà điểm bắt đầu của lát đầu tiên bị dịch đi.",
@@ -2501,7 +2503,8 @@
       "p.cloudShadowExtentKm": "Bán kính quanh camera mà bản đồ bao phủ, tính bằng kilômét, từ 1; mặc định 150.",
       "p.cloudShadowResolutionScale": "Hệ số lên 512 texel mỗi cạnh của bản đồ, từ 0.25; mặc định 1.",
       "p.cloudShadowRaySamplesScale": "Hệ số lên 16 mẫu mà một tia của bản đồ lấy, từ 0.25; mặc định 1.",
-      "p.cloudScatteredLuminanceScale": "Hệ số lên ánh sáng bên trong các đám mây, tuyến tính; mặc định trắng."
+      "p.cloudScatteredLuminanceScale": "Hệ số lên ánh sáng bên trong các đám mây, tuyến tính; mặc định trắng.",
+      "p.mobility": "Nguồn sáng được định để di chuyển và được chiếu sáng ra sao: `'static'`, `'stationary'` hoặc `'movable'`; mặc định `'stationary'`."
     },
     "members": {
       "isLight": "Luôn là `true`: phân biệt một nguồn sáng với bất kỳ vật thể nào khác.",
@@ -2574,7 +2577,8 @@
       "cloudShadowExtentKm": "Bán kính quanh camera mà bản đồ bao phủ, tính bằng kilômét, từ 1; 150.",
       "cloudShadowResolutionScale": "Hệ số lên 512 texel mỗi cạnh của bản đồ, từ 0.25; 1.",
       "cloudShadowRaySamplesScale": "Hệ số lên 16 mẫu mà một tia của bản đồ lấy, từ 0.25; 1.",
-      "cloudScatteredLuminanceScale": "Hệ số lên ánh sáng bên trong các đám mây, tuyến tính; trắng. Đổi tại chỗ bằng `set`."
+      "cloudScatteredLuminanceScale": "Hệ số lên ánh sáng bên trong các đám mây, tuyến tính; trắng. Đổi tại chỗ bằng `set`.",
+      "mobility": "Nguồn sáng được định để di chuyển và được chiếu sáng ra sao: `'static'` (được nướng sẵn, không đổ bóng động), `'stationary'` (không di chuyển; màu và cường độ có thể đổi) hoặc `'movable'` (hoàn toàn động); mặc định `'stationary'`, cho mọi loại. Mọi giá trị khác bị từ chối (`INVALID_SCENE_LIGHT`). Một lần ghi đến thế giới ngay lập tức."
     }
   },
   "LightCloudShadowParameters": {
@@ -2630,7 +2634,8 @@
       "shadowsAir": "Chỉ ánh sáng có hướng: bóng của ánh sáng có đổ bóng lên cả không khí hay không (khói mù và bước đi của bầu trời đọc nó dọc theo các tia của chúng); mặc định tắt.",
       "transmittancePerPixel": "Chỉ ánh sáng có hướng: độ truyền qua của không khí về phía ánh sáng có được đọc cho từng điểm bề mặt thay vì một lần ở mặt đất hay không; mặc định tắt.",
       "sunDiskTint": "Chỉ ánh sáng có hướng: màu mà đĩa mặt trời trên bầu trời được nhân với, tuyến tính; mặc định trắng.",
-      "sh": "Độ chiếu sáng của một đầu dò: 27 con số, chín hệ số điều hòa cầu RGB của độ bức xạ theo thứ tự dải hằng số, `y`, `z`, `x`, `xy`, `yz`, `3z² − 1`, `xz`, `x² − y²`, được nhân tỉ lệ bởi `intensity`; dựng bởi `emptyIrradiance` và các hàm trợ giúp `add…Irradiance`. Nếu vắng, đầu dò đồng nhất."
+      "sh": "Độ chiếu sáng của một đầu dò: 27 con số, chín hệ số điều hòa cầu RGB của độ bức xạ theo thứ tự dải hằng số, `y`, `z`, `x`, `xy`, `yz`, `3z² − 1`, `xz`, `x² − y²`, được nhân tỉ lệ bởi `intensity`; dựng bởi `emptyIrradiance` và các hàm trợ giúp `add…Irradiance`. Nếu vắng, đầu dò đồng nhất.",
+      "mobility": "Nguồn sáng được định để di chuyển và được chiếu sáng ra sao: `'static'`, `'stationary'` hoặc `'movable'`; mặc định `'stationary'`."
     }
   },
   "LightShadowOptions": {
@@ -2811,7 +2816,13 @@
       "parameters.physics": "Chất liệu của vật mang nó: mật độ, ma sát, độ nảy.",
       "parameters.density": "kg/m³, nhân với thể tích ra khối lượng.",
       "parameters.friction": "Mức bám của vật, từ 0 trở lên.",
-      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1."
+      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1.",
+      "parameters.specularIntensity": "Đầu vào phản chiếu của chất điện môi của bề mặt, từ 0 đến 1: độ phản xạ của nó ở góc tới vuông góc là 0,08 lần giá trị đó, nên 0,5 (giá trị của bề mặt không khai báo) cho 4 % thông thường, 1 cho 8 % và 0 không có điểm sáng. Hệ số `KHR_materials_specular` của một vật liệu glTF được ghi đúng như đã khai báo. Kim loại bỏ qua nó.",
+      "parameters.specularIntensityMap": "Nhân `specularIntensity` với kênh alpha của một ảnh.",
+      "parameters.displacementMagnitude": "Đầu ra `displacement` của đồ thị vật liệu dịch một bề mặt dọc pháp tuyến của nó bao xa, tính bằng mét, ở nơi nó lớn hơn `displacementCenter` là 1: chiều cao bị dịch là `(đầu ra - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Giá trị của đầu ra `displacement` để bề mặt nguyên chỗ cũ, từ 0 đến 1.",
+      "parameters.displacementFadeStart": "Nơi độ dịch mờ dần theo khoảng cách, tính theo kích thước trên màn hình bằng pixel của độ dịch lớn nhất của nó: đầy đủ trên `displacementFadeStart`, biến mất dưới `displacementFadeEnd`, giá trị này phải nhỏ hơn; bỏ cả hai thì nó không bao giờ mờ đi.",
+      "parameters.displacementFadeEnd": "Xem `displacementFadeStart`."
     },
     "members": {
       "isMaterial": "Luôn là `true`: phân biệt một vật liệu với bất cứ thứ gì khác.",
@@ -2852,7 +2863,11 @@
       "volumeOutputs": "Các đầu ra của một vật liệu thuộc miền thể tích, được giữ trong dải của chúng: albedo, sự tắt dần và ánh sáng phát xạ của nó (`emissive` nhân `emissiveIntensity`).",
       "surface": "Bản ghi bề mặt vật lý của bộ máy cho vật liệu này (`contracts/material.ts`). Một loại nằm ngoài họ vật lý được vẽ qua họ chủ có cùng tên, mà bộ máy ánh xạ vào mô hình chiếu sáng duy nhất của nó (`surfaceModel.ts`).",
       "clone": "Một vật liệu mới cùng loại, với các giá trị giống nhau.",
-      "dispose": "Quên những người mang nó: một vật liệu đã bị hủy thì không tô lại cho ai cả."
+      "dispose": "Quên những người mang nó: một vật liệu đã bị hủy thì không tô lại cho ai cả.",
+      "displacementMagnitude": "Đầu ra `displacement` của đồ thị vật liệu dịch một bề mặt dọc pháp tuyến của nó bao xa, tính bằng mét, ở nơi nó lớn hơn `displacementCenter` là 1: chiều cao bị dịch là `(đầu ra - displacementCenter) * displacementMagnitude`.",
+      "displacementCenter": "Giá trị của đầu ra `displacement` để bề mặt nguyên chỗ cũ, từ 0 đến 1.",
+      "displacementFadeStart": "Nơi độ dịch của bề mặt mờ dần theo khoảng cách, tính theo kích thước trên màn hình bằng pixel của độ dịch lớn nhất của nó: đầy đủ trên `displacementFadeStart`, biến mất dưới `displacementFadeEnd` (giá trị nhỏ hơn). Cả hai chưa đặt thì nó không bao giờ mờ đi.",
+      "displacementFadeEnd": "Xem `displacementFadeStart`."
     }
   },
   "MaterialGraph": {
@@ -2923,7 +2938,13 @@
       "physics": "Chất liệu của vật mang nó: mật độ, ma sát, độ nảy.",
       "density": "kg/m³, nhân với thể tích ra khối lượng.",
       "friction": "Mức bám của vật, từ 0 trở lên.",
-      "restitution": "Mức nảy của vật, từ 0 đến 1."
+      "restitution": "Mức nảy của vật, từ 0 đến 1.",
+      "specularIntensity": "Đầu vào phản chiếu của chất điện môi của bề mặt, từ 0 đến 1: độ phản xạ của nó ở góc tới vuông góc là 0,08 lần giá trị đó, nên 0,5 (giá trị của bề mặt không khai báo) cho 4 % thông thường, 1 cho 8 % và 0 không có điểm sáng. Hệ số `KHR_materials_specular` của một vật liệu glTF được ghi đúng như đã khai báo. Kim loại bỏ qua nó.",
+      "specularIntensityMap": "Nhân `specularIntensity` với kênh alpha của một ảnh.",
+      "displacementMagnitude": "Đầu ra `displacement` của đồ thị vật liệu dịch một bề mặt dọc pháp tuyến của nó bao xa, tính bằng mét, ở nơi nó lớn hơn `displacementCenter` là 1: chiều cao bị dịch là `(đầu ra - displacementCenter) * displacementMagnitude`.",
+      "displacementCenter": "Giá trị của đầu ra `displacement` để bề mặt nguyên chỗ cũ, từ 0 đến 1.",
+      "displacementFadeStart": "Nơi độ dịch mờ dần theo khoảng cách, tính theo kích thước trên màn hình bằng pixel của độ dịch lớn nhất của nó: đầy đủ trên `displacementFadeStart`, biến mất dưới `displacementFadeEnd`, giá trị này phải nhỏ hơn; bỏ cả hai thì nó không bao giờ mờ đi.",
+      "displacementFadeEnd": "Xem `displacementFadeStart`."
     }
   },
   "MaterialSettings": {
@@ -3376,7 +3397,10 @@
       "rotateZ": "Xoay node quanh trục z riêng của nó.",
       "translateOnAxis": "Di chuyển node dọc theo `axis` riêng của nó.",
       "getWorldDirection": "Hướng mà node hướng tới trong thế giới.",
-      "localBounds": "Hộp của nội dung riêng của node này, khung cục bộ; một node thông thường không chứa cái nào cả."
+      "localBounds": "Hộp của nội dung riêng của node này, khung cục bộ; một node thông thường không chứa cái nào cả.",
+      "firstPerson": "Đối tượng có được vẽ như một đối tượng góc nhìn thứ nhất hay không (đôi tay và vũ khí của người chơi): nó không đổ bóng động riêng, và các pixel của nó mang dấu góc nhìn thứ nhất mà các bóng xử lý riêng; mặc định `false`, và không bao giờ cùng với `firstPersonWorldSpaceRepresentation`.",
+      "firstPersonWorldSpaceRepresentation": "Đối tượng có đại diện, trong thế giới, cho một đối tượng góc nhìn thứ nhất hay không (thân người chơi): góc nhìn của chủ không thấy nó, và nó đổ bóng vào clipmap góc nhìn thứ nhất của các mặt trời (`shadowFirstPersonClipmap`), tách khỏi các bản đồ thường, và góc nhìn sở hữu nó (của camera chính) không vẽ nó; mặc định `false`, và không bao giờ cùng với `firstPerson`.",
+      "castHiddenShadow": "Đối tượng có tiếp tục đổ bóng khi bị ẩn hay không (`visible = false`, hoặc dưới một node bị ẩn): không góc nhìn nào vẽ nó, các bản đồ bóng thì có; mặc định `false`, và chỉ được đọc với đối tượng có đổ bóng và không phải là `firstPersonWorldSpaceRepresentation`."
     }
   },
   "ObjectPhysics": {
@@ -3772,7 +3796,9 @@
       "forVertexTangents": "Các hệ số pháp tuyến của nó có được viết cho tiếp tuyến đỉnh không; không nói thì không biết.",
       "shininess": "Số mũ và màu điểm sáng của một bề mặt Phong, như được khai báo.",
       "released": "Được gọi khi tài nguyên được trả lại: thứ mà bản sao của chính engine về nó lắng nghe.",
-      "dispose": "Trả lại tài nguyên."
+      "dispose": "Trả lại tài nguyên.",
+      "subsurfaceOpacity": "Độ đục của lớp dưới bề mặt của nó, từ 0 đến 1, bằng một khi không nói gì (`SUBSURFACE_OPACITY_MODEL_SHIFT`).",
+      "specularIntensity": "Đầu vào phản chiếu của một chất điện môi (`KHR_materials_specular`): độ phản xạ của nó ở góc tới vuông góc là 0,08 lần giá trị đó (`surfaceF0`), 0,5 ở nơi bề mặt không khai báo. Alpha của bản đồ của nó co giãn nó. Khi đã khai báo, nó được đọc từ bản ghi bất kể bề mặt còn mang gì khác."
     }
   },
   "PageUnit": {
@@ -4693,7 +4719,8 @@
       "shaftBloomScale": "Cùng quầng sáng: hệ số lên màu được thêm; nếu vắng, 0.2.",
       "shaftBloomThreshold": "Cùng quầng sáng: độ sáng mà ảnh phải vượt qua, sau phơi sáng, để tạo quầng sáng; nếu vắng, 0.",
       "shaftBloomMaxBrightness": "Cùng quầng sáng: một độ sáng trên mức đó, sau phơi sáng, bị hạ xuống bằng nó; nếu vắng, 100.",
-      "shaftBloomTint": "Cùng quầng sáng: hệ số lên màu của quầng sáng, tuyến tính, ba số từ 0 trở lên; nếu vắng, trắng."
+      "shaftBloomTint": "Cùng quầng sáng: hệ số lên màu của quầng sáng, tuyến tính, ba số từ 0 trở lên; nếu vắng, trắng.",
+      "mobility": "Nguồn sáng được định để di chuyển và được chiếu sáng ra sao: `static` (nướng vào lightmap, nó không di chuyển cũng không đổi và không đổ bóng động), `stationary` (nó không di chuyển, màu và cường độ có thể đổi: ánh sáng trực tiếp của nó trên bề mặt tĩnh được nướng, bóng động của nó được đổ) hoặc `movable` (hoàn toàn động); khi vắng, `stationary`, mặc định của tham chiếu cho mọi loại nguồn sáng. Lightmap thể tích đọc nó (`mobilityOf`)."
     }
   },
   "SceneLightStore": {
@@ -4931,7 +4958,7 @@
   },
   "ShadowCacheInvalidation": {
     "summary": "CÁCH MỘT NODE CẢNH GIỮ ĐỘ LỆCH VỊ TRÍ THẾ GIỚI CỦA NÓ: bốn công tắc của đối tượng mà vật liệu bề mặt dịch chuyển đỉnh bằng đầu ra `worldPositionOffset` (`Material.graph`), được các raster của engine đọc.",
-    "description": "`evaluateWorldPositionOffset` (true) bật độ lệch cho đối tượng, `worldPositionOffsetDisableDistance` (0, không bao giờ) dừng nó ngoài chừng ấy mét từ camera đến tâm bounds của đối tượng, `worldPositionOffsetWritesVelocity` (true) biến chuyển động thành một chuyển động cho khử răng cưa theo thời gian và motion blur, và `shadowCacheInvalidation` nói cách bóng của nó được giữ: `auto` (mặc định) vẽ lại chúng khi độ lệch của nó được tính hoặc đối tượng di chuyển, `always` mọi ảnh, `rigid` không vì độ lệch của nó, `static` không vì độ lệch cũng không vì các chuyển động của nó. `alwaysEvaluateWorldPositionOffset` riêng của một vật liệu ghi đè hai cái đầu, `maxWorldPositionOffset` của nó giới hạn các đỉnh đi xa bao nhiêu. Được giữ trong một bảng riêng, để một node không đặt cái nào thì không tốn gì: một công tắc được ghi qua thuộc tính của node (`defineOffsetSwitches`), và được ghi chú như bất kỳ trường node nào mà không pose hook nào nghe thấy (`noteNodeWrite`)."
+    "description": "`evaluateWorldPositionOffset` (true) bật độ lệch cho đối tượng, `worldPositionOffsetDisableDistance` (0, không bao giờ) dừng nó ngoài chừng ấy mét từ camera đến tâm khung bao của đối tượng, `worldPositionOffsetWritesVelocity` (true) biến chuyển động thành một chuyển động cho khử răng cưa theo thời gian và nhòe chuyển động, và `shadowCacheInvalidation` nói bóng của nó được giữ ra sao: `auto` (mặc định) vẽ lại chúng khi độ lệch của nó được đánh giá hoặc đối tượng di chuyển, `always` mọi ảnh, `rigid` không vì độ lệch, `static` không vì độ lệch cũng không vì các di chuyển của nó. `alwaysEvaluateWorldPositionOffset` riêng của vật liệu ghi đè hai cái đầu, `maxWorldPositionOffset` của nó giới hạn các đỉnh đi xa đến đâu. Hai công tắc nữa của đối tượng được giữ bên cạnh, vì chúng hiếm khi được đặt: `firstPerson` (false), một đối tượng được vẽ như đối tượng góc nhìn thứ nhất — trong không gian của góc nhìn, gần camera, như đôi tay và vũ khí của người chơi —, không đổ bóng động riêng, và `firstPersonWorldSpaceRepresentation` (false), đối tượng đại diện trong thế giới cho một đối tượng góc nhìn thứ nhất — thân người chơi —, mà góc nhìn của chủ không thấy và đổ bóng tách khỏi các bản đồ thường (`shadowFirstPersonClipmap`). Một node là cái này hoặc cái kia, không bao giờ cả hai. Cái cuối, `castHiddenShadow` (false), để một đối tượng bị ẩn (`visible = false`, hoặc dưới một node bị ẩn) tiếp tục đổ bóng; không góc nhìn nào vẽ nó. Biểu diễn trong không gian thế giới bị ẩn khỏi góc nhìn sở hữu nó và đổ bóng, bất kể điều này nói gì. Được giữ trong một bảng riêng, để một node không đặt cái nào thì không tốn gì: một công tắc được ghi qua thuộc tính của node (`defineOffsetSwitches`), và được ghi nhận như mọi trường node mà không hook tư thế nào nghe (`noteNodeWrite`)."
   },
   "ShadowDistanceOption": {
     "summary": "Một khoảng cách bóng như host viết: mét, `true` mặc định, `false` không có."
@@ -4948,7 +4975,7 @@
       "shadowVsmPagesRendered": "Các trang được xóa rồi dựng trong khung này; đọc ngược lại chậm vài khung.",
       "shadowVsmFreePages": "Số trang vật lý còn trống trong thông điệp trạng thái gần nhất của pool.",
       "shadowVsmLodBias": "Độ lệch LOD độ phân giải toàn cục do tải của pool đặt ra.",
-      "shadowVsmProjectionPasses": "Số pass chiếu trong khung này, mỗi pass bốn ánh sáng.",
+      "shadowVsmProjectionPasses": "Các pass chiếu của ảnh này: của các mặt trời và của các nguồn sáng cục bộ.",
       "shadowVsmInvalidationMs": "Thời gian GPU của việc vô hiệu hóa trang, tính bằng ms, từ thời gian các pass.",
       "shadowVsmMarkingMs": "Thời gian GPU của việc đánh dấu trang, tính bằng ms, từ thời gian các pass.",
       "shadowVsmPageManagementMs": "Thời gian GPU của việc quản lý trang, tính bằng ms, từ thời gian các pass.",
@@ -4960,15 +4987,15 @@
       "gpuLightListsMs": "Thời gian GPU của các danh sách nguồn sáng.",
       "tileLightPoolReserved": "Số từ mà các ô vượt quá danh sách của chúng đã đặt trước trong hồ chỉ số nguồn sáng, trên khung hình lấy mẫu gần nhất của một cảnh có nhiều nguồn sáng hơn một danh sách; nếu không thì `null`.",
       "tileLightPoolCapacity": "Số từ vùng chỉ số nguồn sáng giữ trên khung hình được lấy mẫu đó; tương tự là `null`.",
-      "tileLightPoolOverflowed": "Liệu có ô nào không tìm được chỗ trong vùng trên khung hình được lấy mẫu đó và đã duyệt mọi nguồn sáng.",
-      "tileLightPoolGrowths": "Số lần vùng tăng lên đến mức một khung hình tràn yêu cầu, kể từ khi trình khám phá mở.",
+      "tileLightPoolOverflowed": "Một cột có không tìm thấy chỗ trong pool trên ảnh được lấy mẫu đó và bỏ các nguồn sáng vượt quá nó hay không (`lightGridMaxCulledLightsPerCell`).",
       "gpuShadowsMs": "Thời gian GPU của giai đoạn Bóng: mọi lượt của các bản đồ bóng ảo, và không lượt nào khác.",
       "gpuLightingMs": "Thời gian GPU của việc chiếu sáng.",
       "bounce": "Các đầu dò của ánh sáng nảy: chúng có tồn tại không, chúng giữ gì, các lần cập nhật của chúng đã làm gì.",
       "reflections": "Các tia phản chiếu của ảnh cuối đã đếm: mỗi tia kết thúc ở đâu, các bước đi của chúng qua trường khoảng cách toàn cục kết thúc ra sao và số bước chúng đã đi. `null` khi góc nhìn không tạo phản chiếu.",
       "surfaceCache": "Bộ nhớ đệm bề mặt của ảnh cuối: độ lấp đầy atlas của nó, các trang nó đã chụp, vì sao nó tắt. `null` khi nó chưa được tạo.",
       "ambientOcclusion": "Che khuất môi trường trong không gian màn hình của ảnh cuối. `null` khi góc nhìn không có.",
-      "toneTable": "Khối lập phương mà chỉnh màu nướng các màu của màn hình vào. `null` khi góc nhìn không có."
+      "toneTable": "Khối lập phương mà chỉnh màu nướng các màu của màn hình vào. `null` khi góc nhìn không có.",
+      "shadowVsmOverflowFlags": "Các lần tràn mà các bóng đã thấy trong 10 giây qua, mỗi loại một bit: 1 hàng đợi công việc của việc đánh dấu không theo cụm, 2 các nguồn sáng của phép chiếu một pass vượt quá mặt nạ của nó, 4 pool trang, 8 danh sách vật đổ bóng vượt quá chỗ của nó. 0 khi không có, hoặc khi `shadowAllowScreenOverflowMessages` là false."
     }
   },
   "ShadowOptions": {
@@ -5333,7 +5360,9 @@
       "translucencyLighting": "Cách các đèn chiếu sáng một bề mặt pha trộn (`VisMaterial.translucencyLighting`).",
       "translucencyPass": "Pass của ảnh mà một bề mặt pha trộn được vẽ (`VisMaterial.translucencyPass`).",
       "responsive": "Khử răng cưa theo thời gian tin lịch sử nơi bề mặt được vẽ đến đâu (`RESPONSIVE_SHIFT`): `'medium'` đọc các pixel của nó như hoạt ảnh pixel, `'full'` khởi động lại lịch sử của chúng mỗi ảnh.",
-      "graph": "Đồ thị tính các đầu ra thay cho các tham số và map; được đọc bởi các họ vẽ màu của vật liệu (`GRAPH_FAMILIES`, `surfaceRecord.ts`)."
+      "graph": "Đồ thị tính các đầu ra thay cho các tham số và map; được đọc bởi các họ vẽ màu của vật liệu (`GRAPH_FAMILIES`, `surfaceRecord.ts`).",
+      "subsurfaceOpacity": "Lớp dưới bề mặt của nó đục đến mức nào, từ 0 đến 1.",
+      "specularIntensity": "Đầu vào phản chiếu của chất điện môi của một bề mặt vật lý, mà một hệ số glTF `KHR_materials_specular` khai báo, và bản đồ có alpha co giãn nó; khi không nói, bề mặt giữ 0,5."
     }
   },
   "SurfaceDisplacement": {
@@ -5591,7 +5620,7 @@
   },
   "TextureCompression": {
     "summary": "Họ khối nào mà các bể của một phiên chọn, và mọi thứ theo sau đó.",
-    "description": "Bộ nhớ đệm lưu mọi chuỗi trong BC (`PREVIEW_STORED_FORMAT`) và nướng nó trong các họ khác mà bước nấu đã yêu cầu — mặc định là tất cả — chỉ ở nơi một cổng chất lượng đã giữ nó; thiết bị cho biết nó lấy mẫu họ nào — card máy tính để bàn BC, card di động ASTC hoặc ETC2, một số có nhiều họ, bộ điều hợp phần mềm thì không họ nào. Khi đó một atlas có một hồ cho mỗi LANE, các bố cục mà tệp phụ nêu tên: `lossless` (RGBA8, bốn byte mỗi texel — thứ mà một chuỗi mà họ của phiên không giữ đọc, với các tệp BC của nó được giải mã (`blockDecode.ts`), và thứ mà một ảnh của ứng dụng chủ đọc), `rgba` (BC7, ASTC hoặc ETC2 RGBA8, một byte mỗi texel) và `two-channel` (BC5, ASTC độ sáng-alpha hoặc EAC RG11, một byte mỗi texel, X và Y của bản đồ pháp tuyến với Z được shader dựng lại). Engine không làm mất gì: một kết cấu lấy lane mà chuỗi của nó được giữ lại, và lựa chọn được công bố (`texturePoolFormat`)."
+    "description": "Bộ nhớ đệm lưu mọi chuỗi ở dạng BC (`PREVIEW_STORED_FORMAT`) và nướng nó trong các họ khác mà việc nướng đã yêu cầu — mặc định là tất cả — chỉ ở nơi một cổng chất lượng đã giữ nó; thiết bị cho biết nó lấy mẫu họ nào — card máy tính để bàn BC, card di động ASTC hoặc ETC2, một số nhiều họ, bộ điều hợp phần mềm không họ nào. Một atlas khi đó có một pool cho mỗi LANE, các bố cục mà tệp đi kèm nêu tên: `lossless` (RGBA8, bốn byte mỗi texel — điều một chuỗi mà họ của phiên không có đọc, các tệp BC của nó được giải mã (`blockDecode.ts`), và điều một ảnh của host đọc), `rgba` (BC7, ASTC hoặc ETC2 RGBA8, một byte mỗi texel), `two-channel` (BC5, ASTC luminance-alpha hoặc EAC RG11, một byte mỗi texel, X và Y của bản đồ pháp tuyến với Z được shader dựng lại). Pool thứ ba của atlas dữ liệu là pool KÊNH: BC5 cho bản đồ pháp tuyến, hoặc — nơi atlas không có cái nào — của các bản đồ một kênh (`alpha`, `grayscale`, `displacementmap`): BC4, nửa byte mỗi texel, khi mọi chuỗi của pool là BC4 và thiết bị lấy mẫu BC; nếu không thì R8, một byte mỗi texel, các khối BC4 được giải mã (`channelPoolOf`). Engine không mất gì: một texture lấy lane mà chuỗi của nó được giữ, và lựa chọn được công bố (`texturePoolFormat`)."
   },
   "TextureFilter": {
     "summary": "Quy tắc lấy mẫu của một kết cấu: bộ lọc cơ bản, và quy tắc mip khi bộ lấy mẫu thu nhỏ."
@@ -5637,7 +5666,8 @@
       "level": "Mức nào.",
       "format": "Định dạng nào.",
       "rgba": "Được giải mã thành RGBA8 — việc đọc của lane không mất dữ liệu đối với các khối của họ được lưu.",
-      "half": "Các texel nửa dấu phẩy động, không phải khối: tệp của lane nửa dấu phẩy động (`tileRecord`)."
+      "half": "Lane nửa số thực dấu phẩy động đọc điều này: các texel, dù từ một tệp nửa số thực hay từ các khối BC6H được giải mã (`tileLevelBytes`).",
+      "single": "Pool một kênh của các texel tám bit đọc điều này: một byte mỗi texel, các khối của một chuỗi BC4, `gray` hoặc `displacement` được giải mã (`tileLevelBytes`)."
     }
   },
   "TextureLevelFormat": {
@@ -5654,7 +5684,8 @@
       "level": "Mức nào.",
       "format": "Định dạng nào.",
       "rgba": "Được giải mã thành RGBA8 — việc đọc của lane không mất dữ liệu đối với các khối của họ được lưu.",
-      "half": "Các texel nửa dấu phẩy động, không phải khối: tệp của lane nửa dấu phẩy động (`tileRecord`)."
+      "half": "Lane nửa số thực dấu phẩy động đọc điều này: các texel, dù từ một tệp nửa số thực hay từ các khối BC6H được giải mã (`tileLevelBytes`).",
+      "single": "Pool một kênh của các texel tám bit đọc điều này: một byte mỗi texel, các khối của một chuỗi BC4, `gray` hoặc `displacement` được giải mã (`tileLevelBytes`)."
     }
   },
   "TextureLevelStore": {
@@ -6172,7 +6203,9 @@
       "model": "Mô hình bề mặt mà một họ không vật lý được ánh xạ tới (`../materials/surface/surfaceModel.ts`); vật lý nếu vắng.",
       "lineWidth": "Độ rộng tính bằng pixel CSS mà các raster mở rộng một quad đường tới (`shader/lineWgsl.ts`); vắng hoặc bằng không trên bề mặt vẽ tam giác.",
       "dashSize": "Nét và khoảng trống của một đường nét đứt dọc theo đường, tính bằng đơn vị thế giới (`shader/lineWgsl.ts`, `lineDash`); vắng trên mọi bề mặt khác.",
-      "sprite": "Quad của một sprite, mà mọi raster xoay về phía camera (`shader/spriteWgsl.ts`): góc xoay của nó trong ảnh tính bằng radian, và nó có co lại theo khoảng cách không; vắng trên mọi bề mặt khác."
+      "sprite": "Quad của một sprite, mà mọi raster xoay về phía camera (`shader/spriteWgsl.ts`): góc xoay của nó trong ảnh tính bằng radian, và nó có co lại theo khoảng cách không; vắng trên mọi bề mặt khác.",
+      "subsurfaceOpacity": "Độ đục của lớp dưới bề mặt của nó, từ 0 đến 1, bằng một khi không nói gì (`SUBSURFACE_OPACITY_MODEL_SHIFT`).",
+      "specularIntensity": "Đầu vào phản chiếu của một chất điện môi (`KHR_materials_specular`): độ phản xạ của nó ở góc tới vuông góc là 0,08 lần giá trị đó (`surfaceF0`), 0,5 ở nơi bề mặt không khai báo. Alpha của bản đồ của nó co giãn nó. Khi đã khai báo, nó được đọc từ bản ghi bất kể bề mặt còn mang gì khác."
     }
   },
   "VolumeMaterial": {
@@ -6298,13 +6331,11 @@
       "autoForward": "Chỉ flight: bay về phía trước ở `movementSpeed` không cần phím nào, W nhanh hơn, S để dừng lại.",
       "onLand": "Chỉ character: được gọi khi đáp đất với tốc độ hướng xuống tính bằng m/s; mặc định là `null`.",
       "onJump": "Chỉ character: được gọi khi thân thể rời khỏi mặt đất trong một cú nhảy; mặc định là `null`.",
-      "walkSpeed": "Chỉ character: mét trên giây khi đi bộ; mặc định là 3,5, một cuộc chạy bộ.",
+      "walkSpeed": "Chỉ character: mét trên giây khi đi bộ; mặc định là 6.",
       "sprintSpeed": "Chỉ character: mét trên giây khi giữ Shift; mặc định là 6,5, tốc độ tối đa của một người trưởng thành chưa qua tập luyện.",
-      "jumpSpeed": "Chỉ character: tốc độ hướng lên mà một cú nhảy bắt đầu, m/s; `sqrt(2 g h)` đạt tới `h`, mặc định là 0,5 m, một cú nhảy đứng tại chỗ.",
-      "gravityScale": "Chỉ character: phần trọng lực của thế giới (`world.physics.gravity`) mà cơ thể cảm nhận, khi nâng lên, rơi xuống và trong sự bám của đế giày; mặc định 1, 0 là không trọng lượng.",
-      "airControl": "Chỉ character: các phím điều khiển nhanh đến mức nào trên không, dưới dạng một phân số của tốc độ khởi đầu trên mặt đất; mặc định là 0,05, 0 là đạn đạo.",
-      "responseTime": "Chỉ character: số giây chân cần để đạt 95% tốc độ mong muốn, trên mặt đất; mặc định là 0,12. Ma sát của sàn giới hạn việc khởi động trước: đế giày đẩy tối đa `μ g`, `μ` là độ bám của đế cao su trên `material.physics` của sàn (đá khi không có vật lý), nên chạy chậm đạt được sau 0,45 s trên đá và 2,2 s trên băng.",
-      "stopTime": "Chỉ character: số giây chân cần để mất 95% tốc độ khi không có phím nào được giữ, trên mặt đất; mặc định là 0,12. Ma sát của sàn giới hạn việc dừng trước: chạy chậm trượt `v² / (2 μ g)`, 0,8 m trên đá và 3,8 m trên băng; thời gian dài hơn phanh nhẹ hơn.",
+      "jumpSpeed": "Chỉ character: tốc độ hướng lên mà một cú nhảy bắt đầu, tính bằng m/s; mặc định là 4,2 (đỉnh 0,9 m trên Trái Đất).",
+      "gravityScale": "Chỉ character: phần trọng lực của thế giới (`world.physics.gravity`) mà thân cảm nhận; mặc định là 1, 0 là không trọng lượng.",
+      "airControl": "Chỉ character: phần lực đẩy của các phím mà một thân có trên không; mặc định là 0,05, 0 là đạn đạo.",
       "capsuleRadius": "Chỉ character: bán kính của thân thể, tính bằng mét; nửa chiều rộng vai (0,23 m) theo mặc định.",
       "capsuleHeight": "Chỉ character: chiều cao của thân thể, tính bằng mét; mặc định là 1,75.",
       "eyeHeight": "Chỉ character: chiều cao của camera phía trên chân, tính bằng mét; mặc định là 1,64.",
@@ -6326,10 +6357,23 @@
       "flying": "Chỉ character: cơ thể có bay, tự do khỏi trọng lực, hay không; mặc định false. Đặt lại false thì cơ thể rơi.",
       "buoyancy": "Chỉ character: phần trọng lượng của nó mà nước nâng một cơ thể chìm hoàn toàn; mặc định 1, một cơ thể nổi tại chỗ.",
       "fluidFriction": "Chỉ character: ma sát của chất lưu mà cơ thể bơi hay bay qua, mỗi giây; mặc định 0.3.",
-      "maxAcceleration": "Chỉ character: mét trên giây bình phương mà cơ thể lấy đà khi bơi và bay; mặc định 20.48.",
+      "maxAcceleration": "Chỉ character: mét trên giây bình phương mà thân tăng tốc trên sàn, trên không, khi bơi và khi bay; mặc định là 20,48.",
       "swimBraking": "Chỉ character: mét trên giây bình phương mà cơ thể phanh khi bơi mà không giữ phím nào, cộng thêm ma sát của nước; mặc định 0.",
       "flyBraking": "Chỉ character: như vậy khi bay; mặc định 0.",
-      "vehicle": "Chỉ phương tiện: thứ mà điều khiển `'vehicle'` lái — bất cứ thứ gì có `drive(input)`, nhận ga, phanh, lái và phanh tay mỗi khi phím thay đổi. Mặc định `null`; điều khiển `'vehicle'` không bao giờ chạy nếu thiếu nó: `kind = 'vehicle'` và `createWorld(…, { controls: 'vehicle' })` ném `NO_VEHICLE` khi nó là `null`, và việc đặt nó thành `null` khi chúng đang lái cũng vậy."
+      "vehicle": "Chỉ phương tiện: thứ mà điều khiển `'vehicle'` lái — bất cứ thứ gì có `drive(input)`, nhận ga, phanh, lái và phanh tay mỗi khi phím thay đổi. Mặc định `null`; điều khiển `'vehicle'` không bao giờ chạy nếu thiếu nó: `kind = 'vehicle'` và `createWorld(…, { controls: 'vehicle' })` ném `NO_VEHICLE` khi nó là `null`, và việc đặt nó thành `null` khi chúng đang lái cũng vậy.",
+      "groundFriction": "Chỉ character: mỗi giây, vận tốc quay về hướng mong muốn nhanh thế nào trên sàn, và việc phanh lấy đi bao nhiêu tốc độ khi không giữ phím; mặc định là 8.",
+      "brakingDecelerationWalking": "Chỉ character: mét trên giây bình phương mà một thân trên sàn phanh khi không giữ phím, cộng thêm ma sát sàn; mặc định là 20,48 (toàn bộ `maxAcceleration`).",
+      "brakingDecelerationFalling": "Chỉ character: giống vậy trên không; mặc định là 0.",
+      "fallingLateralFriction": "Chỉ character: ma sát quay và phanh vận tốc ngang của một thân trên không, mỗi giây; mặc định là 0, thân giữ đà.",
+      "brakingFrictionFactor": "Chỉ character: hệ số trên một ma sát khi phanh; mặc định là 2.",
+      "brakingSubStepTime": "Chỉ character: số giây tối đa mà việc phanh được cắt thành, để một khung hình chậm phanh như một khung hình nhanh; mặc định một phần ba mươi ba giây, giữ trong khoảng 1/75 đến 1/20.",
+      "airControlBoostMultiplier": "Chỉ character: hệ số trên `airControl` khi tốc độ ngang dưới `airControlBoostVelocityThreshold`, điều khiển không bao giờ vượt 1; mặc định là 2, 0 tắt nó.",
+      "airControlBoostVelocityThreshold": "Chỉ character: mét trên giây của tốc độ ngang dưới đó `airControl` được tăng cường; mặc định là 0,25.",
+      "terminalVelocity": "Chỉ character: tốc độ rơi nhanh nhất của một thân, mét trên giây; mặc định là 40.",
+      "maxSimulationTimeStep": "Chỉ character: số giây tối đa mà một bước được cắt thành; mặc định là 0,05.",
+      "maxSimulationIterations": "Chỉ character: số bước con tối đa mà một tick được cắt thành; mặc định là 8.",
+      "maxJumpApexAttemptsPerSimulation": "Chỉ character: số lần một tick bị cắt ngắn để kết thúc đúng ở đỉnh của một cú nhảy; mặc định là 2.",
+      "minAnalogWalkSpeed": "Chỉ character: tốc độ đi bộ mà lực đẩy phím yếu nhất đạt tới, mét trên giây; mặc định là 0."
     }
   },
   "world.camera": {
@@ -6431,7 +6475,7 @@
     "description": "Được ghi, các thiết lập được nêu áp dụng từ khung hình kế trên preset — một `null` trả nó về preset, một cái bị bỏ giữ nguyên —; một giá trị mà thiết lập không nhận bị từ chối."
   },
   "world.hiz": {
-    "summary": "Các thiết lập của kim tự tháp độ sâu, mỗi cái theo trường của nó (`WorldOptions`), được phân giải trên trang và preset chất lượng: `hizTrace`, cách phép truy vết của phản chiếu đọc kim tự tháp; `hizFoldTransparents`, các lớp truy vết của nó có giữ các bề mặt trong suốt không; `hizTransparentTest`, cách các cluster trong suốt được thử với nó; `hizFullResDepth`, lượt đi của các đầu dò màn hình có xuống tới độ sâu độ phân giải đầy đủ không; `lightGridHizCull`, lưới đèn có để trống các ô sau độ sâu xa nhất của cột của chúng không; `hizPrime` (`'off'`, `'whenMissing'`, `'always'`) cùng `hizPrimeSizeBias`, `hizPrimeDepthBias`, `hizPrimeErrorScale` và `hizPrimeFarFieldOnly`, kim tự tháp được dựng từ một lần vẽ nhỏ, thô của các đối tượng đặt `farField`.",
+    "summary": "Các thiết lập của kim tự tháp độ sâu, mỗi cái theo trường của nó (`WorldOptions`), được phân giải trên trang và preset chất lượng: `hizTrace`, cách phép truy vết của phản chiếu đọc kim tự tháp; `hizFoldTransparents`, các lớp truy vết của nó có giữ các bề mặt trong suốt không; `hizTransparentTest`, cách các cluster trong suốt được thử với nó; `hizFullResDepth`, lượt đi của các đầu dò màn hình có xuống tới độ sâu độ phân giải đầy đủ không; `lightGridHizCull`, lưới đèn có để trống các ô sau độ sâu xa nhất của cột của chúng không; `lightGridMaxCulledLightsPerCell`, số mục ánh sáng mà lưới đèn của khung nhìn giữ mỗi ô; `hizPrime` (`'off'`, `'whenMissing'`, `'always'`) cùng `hizPrimeSizeBias`, `hizPrimeDepthBias`, `hizPrimeErrorScale` và `hizPrimeFarFieldOnly`, kim tự tháp được dựng từ một lần vẽ nhỏ, thô của các đối tượng đặt `farField`.",
     "description": "Được ghi, các thiết lập được nêu áp dụng từ khung hình kế trên preset — một `null` trả nó về preset, một cái bị bỏ giữ nguyên —; một giá trị mà thiết lập không nhận bị từ chối."
   },
   "world.lightFunction": {
@@ -6700,7 +6744,7 @@
       "shading": "Cách các bin tô bóng giữ pixel của mỗi lớp vật liệu, mỗi thiết lập theo trường của nó (`WorldOptions`), được phân giải trên trang và preset chất lượng. Được ghi, các thiết lập được nêu áp dụng từ khung hình kế trên preset — một `null` trả nó về preset, một cái bị bỏ giữ nguyên —; một giá trị mà thiết lập không nhận bị từ chối.",
       "exposureSettings": "Các thiết lập của phơi sáng tự động, dùng nơi `world.exposure` là `'auto'`, mỗi cái theo trường của nó (`WorldOptions`), được phân giải trên trang và preset chất lượng: độ lệch, khoảng EV100 mà trung bình được giữ, độ rộng của histogram, các phần pixel bị bỏ ra, các tốc độ tính bằng stop mỗi giây, khoảng cách chuyển tiếp, trọng số của thùng đen và cách độ chói của một pixel được đọc. Được ghi, các thiết lập được nêu áp dụng từ khung hình kế trên preset — một `null` trả nó về preset, một cái bị bỏ giữ nguyên —; một giá trị mà thiết lập không nhận bị từ chối.",
       "temporal": "Các thiết lập của khử răng cưa theo thời gian bên cạnh mức của nó, mỗi cái theo trường của nó (`WorldOptions`), được phân giải trên trang và preset chất lượng: `temporalThinGeometry`, pass có tìm hình học mỏng hơn một pixel và nới lịch sử của nó ở đó không; `temporalWaveOps`, `temporalWaveSize` và `temporalHalfPrecision`, cách các chương trình của nó chạy (subgroup, kích thước của chúng, float 16 bit, nơi thiết bị cho phép), ảnh như nhau; các mẫu của lịch sử, của phép đo nhấp nháy, các ngưỡng của phép phát hiện hình học mỏng, phơi sáng mà phép loại bỏ đo ở đó và `temporalDownsampleQuality`, chất lượng của ảnh nửa kích thước mà phơi sáng và bloom đọc. Được ghi, các thiết lập được nêu áp dụng từ khung hình kế trên preset — một `null` trả nó về preset, một cái bị bỏ giữ nguyên —; một giá trị mà thiết lập không nhận bị từ chối.",
-      "hiz": "Các thiết lập của kim tự tháp độ sâu, mỗi cái theo trường của nó (`WorldOptions`), được phân giải trên trang và preset chất lượng: `hizTrace`, cách phép truy vết của phản chiếu đọc kim tự tháp; `hizFoldTransparents`, các lớp truy vết của nó có giữ các bề mặt trong suốt không; `hizTransparentTest`, cách các cluster trong suốt được thử với nó; `hizFullResDepth`, lượt đi của các đầu dò màn hình có xuống tới độ sâu độ phân giải đầy đủ không; `lightGridHizCull`, lưới đèn có để trống các ô sau độ sâu xa nhất của cột của chúng không; `hizPrime` (`'off'`, `'whenMissing'`, `'always'`) cùng `hizPrimeSizeBias`, `hizPrimeDepthBias`, `hizPrimeErrorScale` và `hizPrimeFarFieldOnly`, kim tự tháp được dựng từ một lần vẽ nhỏ, thô của các đối tượng đặt `farField`. Được ghi, các thiết lập được nêu áp dụng từ khung hình kế trên preset — một `null` trả nó về preset, một cái bị bỏ giữ nguyên —; một giá trị mà thiết lập không nhận bị từ chối.",
+      "hiz": "Các thiết lập của kim tự tháp độ sâu, mỗi cái theo trường của nó (`WorldOptions`), được phân giải trên trang và preset chất lượng: `hizTrace`, cách phép truy vết của phản chiếu đọc kim tự tháp; `hizFoldTransparents`, các lớp truy vết của nó có giữ các bề mặt trong suốt không; `hizTransparentTest`, cách các cluster trong suốt được thử với nó; `hizFullResDepth`, lượt đi của các đầu dò màn hình có xuống tới độ sâu độ phân giải đầy đủ không; `lightGridHizCull`, lưới đèn có để trống các ô sau độ sâu xa nhất của cột của chúng không; `lightGridMaxCulledLightsPerCell`, số mục ánh sáng mà lưới đèn của khung nhìn giữ mỗi ô; `hizPrime` (`'off'`, `'whenMissing'`, `'always'`) cùng `hizPrimeSizeBias`, `hizPrimeDepthBias`, `hizPrimeErrorScale` và `hizPrimeFarFieldOnly`, kim tự tháp được dựng từ một lần vẽ nhỏ, thô của các đối tượng đặt `farField`. Được ghi, các thiết lập được nêu áp dụng từ khung hình kế trên preset — một `null` trả nó về preset, một cái bị bỏ giữ nguyên —; một giá trị mà thiết lập không nhận bị từ chối.",
       "lightFunction": "Các thiết lập của các hàm ánh sáng, mỗi cái theo trường của nó (`WorldOptions`), được phân giải trên trang và preset chất lượng: `lightFunctionAtlas` (true) — atlas có được tạo không —, `lightFunctionSlotResolution` (128) và `lightFunctionAtlasSize` (4) — số texel mỗi cạnh của slot và số slot mỗi cạnh —, `lightFunctionMaxLights` (-1, không giới hạn), `lightFunctionFormat` (`'grey'` hoặc `'colour'`), và các bên tiêu thụ: `lightFunctionDeferred` (true), `lightFunctionFog` (true), `lightFunctionBounce` (true), `lightFunctionTranslucent` (false). Được ghi, các thiết lập được nêu áp dụng từ khung hình kế trên preset — một `null` trả nó về preset, một cái bị bỏ giữ nguyên —; một giá trị mà thiết lập không nhận bị từ chối.",
       "volumetricLightmap": "Thiết lập của lightmap thể tích, theo trường của nó (`WorldOptions`), được phân giải trên trang và preset chất lượng: `volumetricLightmap`, ánh sáng tính trước có được đọc không, mặc định bật. Được ghi, thiết lập được nêu áp dụng từ khung hình kế trên preset — `null` trả nó về preset, một trường bị bỏ giữ nguyên —; một giá trị mà thiết lập không nhận bị từ chối.",
       "globalDistanceField": "Các thiết lập của distance field toàn cục, mỗi cái theo trường của nó (`WorldOptions`), được phân giải trên trang và preset chất lượng: `globalDistanceField` (true) — các clipmap có được tạo không —, `globalDistanceFieldClipmaps` (4), `globalDistanceFieldViewDistance` (20000 cm), độ phân giải của chúng (128), nhịp cập nhật (hai clipmap mỗi khung hình, các cái lớn hơn ít thường xuyên hơn), các cache (các mesh tĩnh được hợp thành riêng) và các ngân sách của atlas mà các distance field của mesh được stream vào (`meshDistanceField…`). Được ghi, các thiết lập được nêu áp dụng từ khung hình kế trên preset — một `null` trả nó về preset, một cái bị bỏ giữ nguyên —; một giá trị mà thiết lập không nhận bị từ chối.",
@@ -6724,7 +6768,7 @@
   },
   "WorldOptions": {
     "summary": "Những gì một trang có thể đặt khi nó tạo ra một thế giới; không nói gì cả là trường hợp bình thường.",
-    "description": "Bên cạnh các tùy chọn dưới đây, cách góc nhìn truyền tải các ô của một cảnh đã phân vùng và bước làm nóng mà một lần chuyển HLOD chờ, mỗi thiết lập theo trường của nó với giá trị mặc định của tham chiếu (`../../../../sdk-core/src/contracts/worldStreamingOptions.ts`): `worldStreamingMaxLoadingCells` (4), `worldStreamingAngleWeight` (0.4), `worldStreamingSortByExtent` (true), `worldStreamingSortByPriority` (true), `worldStreamingUseGridRange` (true), `worldStreamingRangeScale` (1), `worldStreamingRadius` (100 m), `worldStreamingSector` (false), `worldStreamingSectorAngle` (360°), `worldStreamingZCulling` (false), `worldStreamingBlockOnSlowStreaming` (true), `worldStreamingBlockOnSlowStreamingRatio` (0.25), `worldStreamingUpdateOptimization` (true), `worldStreamingLocationQuantization` (4 m), `worldStreamingRotationQuantization` (10°), `worldStreamingForceUpdateFrameCount` (0), `worldStreamingForce2D` (false), `worldStreamingExtraRadius` (0 m), `worldStreamingExtraAngle` (0°), `worldStreamingTargetState` (`'activated'`), `worldStreamingPriority` (128), `worldStreamingUseVelocity` (false), `hlodEnabled` (true), `hlodWarmup` (true), `hlodWarmupFrames` (5), `hlodWarmupGeometry` (true), `hlodWarmupTextures` (true), `hlodWarmupTextureScale` (2), `hlodWarmupTextureClamp` (2048). Khi được nêu ở đây, mỗi thiết lập đè lên thiết lập chất lượng sẵn; sau đó được đổi bằng `world.worldStreaming`, từ khung hình kế. Các thiết lập của lát cắt cũng vậy, mỗi thiết lập theo trường của nó với giá trị mặc định của tham chiếu (`../../../../sdk-core/src/contracts/cutOptions.ts`): `cutTwoPassOcclusion` (true), `cutOcclusionCulling` (true), `cutFrustumCulling` (true), `cutMinLodCulling` (true), `cutDrawDistanceCulling` (true: các khoảng cách vẽ của một thực thể của mesh được nhân bản có loại bỏ; một đối tượng đứng riêng luôn bị loại bỏ theo chúng), `cutDistanceCullToSphereEdge` (true: khoảng cách vẽ của một đối tượng được đo đến rìa quả cầu biên của nó, nếu không thì đến tâm), `cutViewDistanceScale` (1; các mức chất lượng của khoảng cách nhìn ghi nó), `cutViewDistanceApplySecondaryScale` (false) và `cutViewDistanceSecondaryScale` (1), tỉ lệ thứ hai của các khoảng cách vẽ chỉ nhân chúng khi tỉ lệ thứ nhất bật, `cutViewDistanceFovMinAngle` (45) và `cutViewDistanceFovMaxAngle` (90), tính bằng độ, với `cutViewDistanceFovMinAngleScale` và `cutViewDistanceFovMaxAngleScale` (cả hai 1): tỉ lệ mà các khoảng cách vẽ của một đối tượng đứng riêng nhận ở góc thứ nhất và dưới, ở góc thứ hai và trên, và ở giữa, `cutClipPlane` (false: `clipPlane` của một camera chỉ có hiệu lực trong một thế giới được tạo với nó bật, thiết lập duy nhất được đọc một lần, khi phiên mở), `cutClipPlaneCulling` (true), `cutViewFiltering` (true: các danh sách `hidden` và `showOnly` của một camera có hiệu lực), `cutLodBiasFollowsUpscale` (true), `cutLodBiasOffset` (0), `cutLodBiasMin` (-2), `cutEdgeScaleBudgetMs` (0: không có, thời gian GPU tính bằng ms dành cho lát cắt và bộ raster của nó, vượt quá đó sai số màn hình được làm thô đi ở nơi tỉ lệ kết xuất là `'auto'`) và `cutEdgeScaleMinPercent` (30, từ 1 đến 100: tỉ lệ thấp nhất mà nó hạ xuống), `cutMaxNodes` (2097152), `cutMaxCandidateClusters` (16777216), `cutMaxVisibleClusters` (4194304); sau đó được đổi bằng `world.cut`. Phương pháp heuristic của độ phân giải động cũng vậy (`../../../../sdk-core/src/contracts/dynamicResolutionOptions.ts`, điều chỉnh tỉ lệ kết xuất và tỉ lệ cạnh của lát cắt theo ngân sách thời gian GPU của chúng): `dynamicResolutionFrameTimeBudgetMs` (0: khoảng của giới hạn khung hình), `dynamicResolutionThrottlingMaxPercent` (0: không có), `dynamicResolutionHeadroomPercent` (10), `dynamicResolutionOverBudgetHeadroomPercent` (0), `dynamicResolutionHistorySize` (16), `dynamicResolutionFrameWeightExponent` (0.9), `dynamicResolutionChangePeriod` (8), `dynamicResolutionIncreaseAmortization` (0.9), `dynamicResolutionChangePercentThreshold` (2), `dynamicResolutionMaxOverBudgetFrames` (2, đọc không thấp hơn 2) và `dynamicResolutionUseCpuTimeLogic` (false); sau đó được đổi bằng `world.dynamicResolution`. Các thiết lập của hoạt ảnh cũng vậy (`../../../../sdk-core/src/contracts/animationOptions.ts`): `animationMinScreenSize` (0.1), `animationBankInterpolation` (true), `animationBankTimeScale` (1); sau đó được đổi bằng `world.animation`. Các thiết lập của việc tô bóng cũng vậy (`../../../../sdk-core/src/contracts/shadingOptions.ts`): `shadeBinningMode` (`'auto'`, hoặc `'pixel'`, `'quad'`) và `materialClosures` (`'single'`: mỗi bề mặt được tô như một lớp mỗi điểm ảnh, một lớp phủ trong được gộp vào nền của nó; hoặc `'layered'`: lớp phủ là một lớp riêng); sau đó được đổi bằng `world.shading`. Phơi sáng tự động cũng vậy (`../../../../sdk-core/src/contracts/exposureOptions.ts`), được dùng khi `world.exposure` là `'auto'`, mặc định: `exposureBias` (+1 stop), `exposureMinBrightness` (−10) và `exposureMaxBrightness` (+20) tính bằng EV100, `exposureHistogramLogMin` (−10) và `exposureHistogramLogMax` (+20) tính bằng stop độ chói, `exposureLowPercent` (10) và `exposureHighPercent` (90), `exposureSpeedUp` (3) và `exposureSpeedDown` (1) tính bằng stop mỗi giây, `exposureTransitionDistance` (1.5 stop), `exposureBlackBucketWeight` (0) và `exposureLuminanceMethod` (`'uniform'`, hoặc `'ntsc'`, `'workingSpace'`), `exposureMethod` (`'histogram'`, hoặc `'basic'`, `'manual'`: độ phơi sáng của camera, đọc từ `exposureApplyPhysicalCamera` (true), `exposureCameraShutterSpeed` (60) và `exposureCameraIso` (100) và độ lệch), `exposureLensAttenuation` (0.78), các thiết lập phơi sáng trước `preExposure` (true), `preExposureOverride` (0) và `cachedLightingPreExposure` (4 stop, của việc chụp thời gian thực ánh sáng bầu trời), áp dụng cho một góc nhìn đã chiếu sáng bất kể độ phơi sáng của nó, và các thiết lập phơi sáng cục bộ `localExposureHighlightContrast` và `localExposureShadowContrast` (0.8, khi phơi sáng cục bộ chạy), `localExposureDetailStrength` (1), `localExposureBlurBlend` (0.6), `localExposureBlurSize` (50 %), `localExposureMiddleGreyBias` (0) và hai ngưỡng cùng cường độ của chúng, áp dụng cho một góc nhìn đã chiếu sáng bất kể độ phơi sáng của nó; sau đó được đổi bằng `world.exposureSettings`. Đường cong bù phơi sáng `exposureCurve` (không có) và mặt nạ đo sáng `exposureMeterMask` (không có) chỉ được đọc khi mở. Lượt chạy theo thời gian cũng vậy (`../../../../sdk-core/src/contracts/temporalOptions.ts`): `temporalThinGeometry` (false) — nó có tìm hình học mỏng hơn một điểm ảnh và nới lịch sử của nó ở đó hay không, ở mọi mức trừ `'off'` —, `temporalWaveOps` (true), `temporalWaveSize` (0) và `temporalHalfPrecision` (true) — cách các chương trình của nó chạy: qua các nhóm con, ở kích thước nào, bằng số thực 16 bit, ở nơi thiết bị cho phép, ảnh vẫn như nhau —, các mẫu của lịch sử (`temporalHistorySampleCount`, `temporalShadingRejectionSampleCount`, `temporalVelocityWeightClampingSampleCount`, `temporalVelocityWeightClampingPixelSpeed`), của thước đo nhấp nháy (`temporalFlickering…`), độ phơi sáng mà sự từ chối đo ở đó (`temporalShadingExposureOffset`), các ngưỡng của việc phát hiện hình học mỏng (`temporalThinGeometry…`) và chất lượng của ảnh nửa kích thước mà phơi sáng và quầng sáng đọc (`temporalDownsampleQuality`), mỗi cái ở giá trị mặc định của tham chiếu; sau đó được đổi bằng `world.temporal`. Bóng đổ của mặt trời cũng vậy (`../../../../sdk-core/src/contracts/shadowOptions.ts`): `shadowDistanceScale` (1, từ 0 đến 2) — hệ số lên `shadowDistance` của mỗi ánh sáng có hướng —, `farShadowCulling` (true) — các bản đồ bóng của mặt trời có loại những vật đổ bóng có độ sâu, trừ bán kính của chúng, vượt quá rìa của khoảng cách đó (xa hơn một chút: 427 mét ở 400) hay không, trừ khi đối tượng của chúng đặt `castFarShadow` —, `farShadowCullsAllMeshes` (false) — phép kiểm tra đó chạm tới mọi vật đổ bóng, hay chỉ các vỏ đã gộp của thế giới ở các mức thô hơn —, `shadowNearLevels` (10, từ 0 đến 10, tối đa `shadowCascades` của ánh sáng), `shadowOverlapScale` (1, từ 0 đến 2) và `shadowFarField` (true: tầng trường khoảng cách có theo các mức gần hay không, ở nơi cảnh có trường khoảng cách) — ba thiết lập định hình rìa —, các thiết lập riêng của các mức xa và của tầng đó (`../../../../sdk-core/src/contracts/sunShadowOptions.ts`: `shadowMaxFarCascades`, `shadowFarDistanceOverride` (không mức xa nào được vẽ: không có hiệu ứng nhìn thấy), `distanceFieldDistanceScale`, `distanceFieldFarTransitionScale`, `distanceFieldShadowQuality`, `distanceFieldShadowFullResolution`, `distanceFieldShadowTileSize` và `distanceFieldShadowTwoSidedBias`), và các thiết lập riêng của các bản đồ bóng (`../../../../sdk-core/src/contracts/shadowMapOptions.ts`: các mức và dải độ sâu của clipmap, các trang thô, các độ lệch độ phân giải, ngưỡng bán kính, các tia và bước của một lần truy vết và hồ trang); sau đó được đổi bằng `world.shadows`. Việc vẽ làm mờ chuyển động cũng vậy (`../../../../sdk-core/src/contracts/motionBlurOptions.ts`): `motionBlurQuality` (`'veryHigh'`, hoặc `'off'`, `'low'`, `'medium'`, `'high'`: tối đa 16 mẫu mỗi điểm ảnh, ít hơn ở các mức thấp hơn), `motionBlurHalfResGather` (false), `motionBlurHalfResInput` (true), `motionBlurSeparable` (false), `motionBlurScatter` (false) và `motionBlurDirections` (1, hoặc 2); sau đó được đổi bằng `world.motionBlur`. Việc vẽ độ sâu trường ảnh cũng vậy (`../../../../sdk-core/src/contracts/depthOfFieldRules.ts`): `depthOfFieldQuality` (`'on'`, hoặc `'off'`), `depthOfFieldGatherDivisor` (2), `depthOfFieldAccumulator` (`'high'`), `depthOfFieldRingCount` (4), `depthOfFieldPostfilter` (`'median'`), các thiết lập của tán xạ và tái kết hợp và những thiết lập khác mà tệp liệt kê, mỗi cái là giá trị mặc định của tham chiếu; sau đó được đổi bằng `world.depthOfField`. Việc vẽ quầng sáng cũng vậy (`../../../../sdk-core/src/contracts/bloomRules.ts`): `bloomQuality` (`'highest'`, hoặc `'off'`, `'lowest'`, `'low'`, `'medium'`, `'high'`: bao nhiêu trong sáu tầng Gauss được vẽ), `bloomCross` (0), `bloomScreenPercentage` (50: độ phân giải của phép tích chập), `bloomApplyLocalExposure` (true) và `bloomCacheKernel` (true); sau đó được đổi bằng `world.bloom`. Làm mờ Gauss cũng vậy (`../../../../sdk-core/src/contracts/gaussianBlurRules.ts`): `gaussianFastBlurThreshold` (100: bán kính mà từ đó lượt đầu của một phép làm mờ được giảm một nửa), `gaussianSampleScale` (1: tầm với của hạt nhân) và `gaussianLoopMode` (0: số lần đọc nhiều nhất của một lượt); sau đó được đổi bằng `world.gaussianBlur`. Các hiệu ứng phim cũng vậy (`../../../../sdk-core/src/contracts/filmOptions.ts`): hạt (`filmGrain…`, mặc định tắt), viền màu (`chromaticAberration…`, tắt), diện mạo của vignette (`vignette…`, bên cạnh cường độ của cảnh), `tonemapperQuality` (5), `tonemapperSharpen` (−1: của cảnh), sắc thái (`sceneColorTint…`, 1) và `quantizationDitheringBits` (0: bước riêng của màn hình); sau đó được đổi bằng `world.film`. Sương mù thể tích (`../../../../sdk-core/src/contracts/volumetricFogOptions.ts`): `volumetricFogQuality` (`'high'`; `'off'` không vẽ gì, `'low'`, `'high'` và `'ultra'` đặt kích thước ô và độ sâu của lưới và các mẫu của lịch sử) và mười một thiết lập được đọc cùng nó, sau đó được đổi bằng `world.volumetricFog`; sương mù chỉ tồn tại trong một cảnh có sương mù đặt `volumetric`. Thể tích chiếu sáng trong suốt cũng vậy (`../../../../sdk-core/src/contracts/translucencyVolumeOptions.ts`): `translucencyVolume` (true), `translucencyVolumeDim` (64 ô mỗi cạnh của mỗi trong hai tầng của nó), `translucencyVolumeInnerDistance` (15 m), `translucencyVolumeOuterDistance` (50 m), `translucencyVolumeBlur` (true), `translucencyVolumeTemporal` (false) và những thiết lập khác, sau đó được đổi bằng `world.translucencyVolume`; nó chiếu sáng các bề mặt nhìn xuyên qua có vật liệu đặt `translucencyLighting` thành một chế độ thể tích. Việc truy vết phản chiếu cũng vậy (`../../../../sdk-core/src/contracts/reflectionOptions.ts`): `reflectionScreenSteps` (50, số lần lặp của bước đi trên màn hình của một tia phản chiếu; bước đi trong cảnh của nó là của trường khoảng cách toàn cục, 256 bước mỗi clipmap), và `reflectionDistantScreenTraces` (true), `reflectionDistantScreenSteps` (16) và `reflectionDistantScreenDistance` (2000 m), phép truy vết màn hình xa, và `reflectionFrontLayer` (false), lớp trước của các vật trong suốt có được truy vết hay không, `reflectionSkylightLeaking` (0, cùng sắc thái và albedo trung bình của nó), ánh sáng khuếch tán của ánh sáng bầu trời rò rỉ lên một điểm va chạm, sau đó được đổi bằng `world.reflections`; `reflectionStatistics` (false), các bộ đếm của các tia, được đọc khi phiên mở. Bộ nhớ đệm bề mặt cũng vậy (`../../../../sdk-core/src/contracts/surfaceCacheOptions.ts`): `surfaceCacheAtlasSize` (4096, cạnh tính bằng texel của atlas mà các thẻ của mỗi mesh được chụp vào), `surfaceCacheCardCapturesPerFrame` (300), `surfaceCacheCardMaxResolution` (512), `surfaceCacheAllowCardSharing` (true), `surfaceCacheDilationMode` (0) và những thiết lập khác, sau đó được đổi bằng `world.surfaceCache`. Che khuất môi trường trong không gian màn hình cũng vậy (`../../../../sdk-core/src/contracts/ambientOcclusionOptions.ts`): `ambientOcclusion` (true: công tắc chính), `ambientOcclusionIntensity` (0.5; 0 là tắt), `ambientOcclusionRadius` (2 m) và `ambientOcclusionRadiusInWorldSpace` của nó (false), `ambientOcclusionFadeDistance` (80 m) và `ambientOcclusionFadeRadius` (50 m), `ambientOcclusionPower` (2), `ambientOcclusionBias` (3), chất lượng (`ambientOcclusionQuality`, 50) với `ambientOcclusionLevels` (-1) và `ambientOcclusionMaxQuality` (100), và `ambientOcclusionWithScreenProbes` (false); sau đó được đổi bằng `world.ambientOcclusion`. Kim tự tháp độ sâu cũng vậy (`../../../../sdk-core/src/contracts/hizOptions.ts`): `hizTrace` (`'reference'`, hoặc `'planes'`) — phép truy vết phản chiếu đọc nó ra sao —, `hizFoldTransparents` (false) — các lớp truy vết của nó có chứa các bề mặt trong suốt hay không —, `hizTransparentTest` (`'finer'`, hoặc `'reference'`) — các cụm trong suốt được kiểm tra với nó ra sao —, `hizFullResDepth` (true) — bước duyệt của các đầu dò màn hình có đi xuống độ sâu độ phân giải đầy đủ hay không — và `lightGridHizCull` (true) — lưới ánh sáng có để trống các ô nằm sau độ sâu xa nhất của cột của chúng hay không —, rồi `hizPrime` (`'off'`, `'whenMissing'` hoặc `'always'`) — khi một góc nhìn dựng một kim tự tháp từ một lần vẽ thô, nhỏ các đối tượng đặt `farField`, để lượt chính của lát cắt của nó kiểm tra khi ảnh trước không để lại cái nào — cùng `hizPrimeSizeBias` (2), `hizPrimeDepthBias` (1.5 m), `hizPrimeErrorScale` (32) và `hizPrimeFarFieldOnly` (true); sau đó được đổi bằng `world.hiz`. Các hàm ánh sáng cũng vậy (`../../../../sdk-core/src/contracts/lightFunctionOptions.ts`): `lightFunctionAtlas` (true), `lightFunctionSlotResolution` (128), `lightFunctionAtlasSize` (4), `lightFunctionMaxLights` (-1, không giới hạn), `lightFunctionFormat` (`'grey'`), `lightFunctionDeferred` (true), `lightFunctionFog` (true), `lightFunctionBounce` (true) và `lightFunctionTranslucent` (false); sau đó được đổi bằng `world.lightFunction`. Việc tách raster cụm cũng vậy (`../../../../sdk-core/src/contracts/rasterOptions.ts`): `softwareRaster` (true) — một cụm có cạnh dài nhất chiếu xuống dưới `hardwareRasterEdgePixels` và có hộp không cắt mặt phẳng cắt nào được raster trong compute, mọi cụm khác bởi bộ raster phần cứng; `false` giao mọi cụm cho phần cứng — và `hardwareRasterEdgePixels` (32, tính bằng điểm ảnh: một số hữu hạn lớn hơn không), cạnh mà từ đó một cụm, nhìn ở điểm gần nhất của quả cầu mức chi tiết của nó, đi tới bộ raster phần cứng; `depthBucketing` (true) sắp xếp các cụm bị khoét của raster phần mềm từ gần nhất, theo độ sâu góc nhìn của hộp của chúng được chia trên 256 thùng theo logarit của nó từ `depthBucketsMinZ` (10 m) đến `depthBucketsMaxZ` (1000 m), các số hữu hạn lớn hơn không — như trong tham chiếu, chỉ ở nơi cảnh chứa voxel; sau đó được đổi bằng `world.softwareRaster`, `world.hardwareRasterEdgePixels`, `world.depthBucketing`, `world.depthBucketsMinZ` và `world.depthBucketsMaxZ`. Việc truyền tải hình học cũng vậy (`../../../../sdk-core/src/contracts/streamingOptions.ts`): `streamingMaxPendingPages` (128, số trang hình học được giữ ở trạng thái đã khởi động cùng lúc, một số nguyên từ 1), `streamingMaxInstallsPerFrame` (128, số trang nhiều nhất mà một khung hình cài, không bao giờ nhiều hơn mức có thể đang chờ), `streamingQualityMinPoolPercent` (70) và `streamingQualityMaxPoolPercent` (85, đọc không thấp hơn mốc thấp) — mức tải của hồ, tính theo phần trăm số trang của nó, dưới đó chất lượng tăng lại và trên đó nó giảm, từ 10 đến 100 —, `streamingQualityMinScale` (0.3, từ 0.1 đến 1, 1 không bao giờ co giãn), `streamingNumRetries` (3, số lần một lần đọc trang thất bại được thử lại trước khi trang bị bỏ, ngay lập tức và không chờ ngoài lần chờ mà máy chủ yêu cầu, một giá trị âm là không có hồi kết; một mức kết cấu đã nướng không được tính: nó được hỏi lại mãi mãi), `streamingMinRequests` (65 536) và `streamingMaxRequests` (1 048 576), số yêu cầu ít nhất và nhiều nhất mà phần đọc lại của lát cắt camera giữ, từ 4 096 đến 1 048 576 — nó bắt đầu ở mức ít nhất và theo những gì lát cắt đòi hỏi, mức nhiều nhất đọc không thấp hơn mức ít nhất — và `streamingBandwidthLimit` (-1: không có, số megabyte mỗi giây mà các lần đọc hình học được mô phỏng là có: mỗi trang lấy một phần băng thông của khung hình thuộc về riêng nó). Một giá trị mà một thiết lập không nhận sẽ bị từ chối.",
+    "description": "Bên cạnh các tùy chọn dưới đây, cách góc nhìn truyền tải các ô của một cảnh đã phân vùng và bước làm nóng mà một lần chuyển HLOD chờ, mỗi thiết lập theo trường của nó với giá trị mặc định của tham chiếu (`../../../../sdk-core/src/contracts/worldStreamingOptions.ts`): `worldStreamingMaxLoadingCells` (4), `worldStreamingAngleWeight` (0.4), `worldStreamingSortByExtent` (true), `worldStreamingSortByPriority` (true), `worldStreamingUseGridRange` (true), `worldStreamingRangeScale` (1), `worldStreamingRadius` (100 m), `worldStreamingSector` (false), `worldStreamingSectorAngle` (360°), `worldStreamingZCulling` (false), `worldStreamingBlockOnSlowStreaming` (true), `worldStreamingBlockOnSlowStreamingRatio` (0.25), `worldStreamingUpdateOptimization` (true), `worldStreamingLocationQuantization` (4 m), `worldStreamingRotationQuantization` (10°), `worldStreamingForceUpdateFrameCount` (0), `worldStreamingForce2D` (false), `worldStreamingExtraRadius` (0 m), `worldStreamingExtraAngle` (0°), `worldStreamingTargetState` (`'activated'`), `worldStreamingPriority` (128), `worldStreamingUseVelocity` (false), `hlodEnabled` (true), `hlodWarmup` (true), `hlodWarmupFrames` (5), `hlodWarmupGeometry` (true), `hlodWarmupTextures` (true), `hlodWarmupTextureScale` (2), `hlodWarmupTextureClamp` (2048). Khi được nêu ở đây, mỗi thiết lập đè lên thiết lập chất lượng sẵn; sau đó được đổi bằng `world.worldStreaming`, từ khung hình kế. Các thiết lập của lát cắt cũng vậy, mỗi thiết lập theo trường của nó với giá trị mặc định của tham chiếu (`../../../../sdk-core/src/contracts/cutOptions.ts`): `cutTwoPassOcclusion` (true), `cutOcclusionCulling` (true), `cutFrustumCulling` (true), `cutMinLodCulling` (true), `cutDrawDistanceCulling` (true: các khoảng cách vẽ của một thực thể của mesh được nhân bản có loại bỏ; một đối tượng đứng riêng luôn bị loại bỏ theo chúng), `cutDistanceCullToSphereEdge` (true: khoảng cách vẽ của một đối tượng được đo đến rìa quả cầu biên của nó, nếu không thì đến tâm), `cutViewDistanceScale` (1; các mức chất lượng của khoảng cách nhìn ghi nó), `cutViewDistanceApplySecondaryScale` (false) và `cutViewDistanceSecondaryScale` (1), tỉ lệ thứ hai của các khoảng cách vẽ chỉ nhân chúng khi tỉ lệ thứ nhất bật, `cutViewDistanceFovMinAngle` (45) và `cutViewDistanceFovMaxAngle` (90), tính bằng độ, với `cutViewDistanceFovMinAngleScale` và `cutViewDistanceFovMaxAngleScale` (cả hai 1): tỉ lệ mà các khoảng cách vẽ của một đối tượng đứng riêng nhận ở góc thứ nhất và dưới, ở góc thứ hai và trên, và ở giữa, `cutClipPlane` (false: `clipPlane` của một camera chỉ có hiệu lực trong một thế giới được tạo với nó bật, thiết lập duy nhất được đọc một lần, khi phiên mở), `cutClipPlaneCulling` (true), `cutViewFiltering` (true: các danh sách `hidden` và `showOnly` của một camera có hiệu lực), `cutLodBiasFollowsUpscale` (true), `cutLodBiasOffset` (0), `cutLodBiasMin` (-2), `cutEdgeScaleBudgetMs` (0: không có, thời gian GPU tính bằng ms dành cho lát cắt và bộ raster của nó, vượt quá đó sai số màn hình được làm thô đi ở nơi tỉ lệ kết xuất là `'auto'`) và `cutEdgeScaleMinPercent` (30, từ 1 đến 100: tỉ lệ thấp nhất mà nó hạ xuống), `cutMaxNodes` (2097152), `cutMaxCandidateClusters` (16777216), `cutMaxVisibleClusters` (4194304); sau đó được đổi bằng `world.cut`. Phương pháp heuristic của độ phân giải động cũng vậy (`../../../../sdk-core/src/contracts/dynamicResolutionOptions.ts`, điều chỉnh tỉ lệ kết xuất và tỉ lệ cạnh của lát cắt theo ngân sách thời gian GPU của chúng): `dynamicResolutionFrameTimeBudgetMs` (0: khoảng của giới hạn khung hình), `dynamicResolutionThrottlingMaxPercent` (0: không có), `dynamicResolutionHeadroomPercent` (10), `dynamicResolutionOverBudgetHeadroomPercent` (0), `dynamicResolutionHistorySize` (16), `dynamicResolutionFrameWeightExponent` (0.9), `dynamicResolutionChangePeriod` (8), `dynamicResolutionIncreaseAmortization` (0.9), `dynamicResolutionChangePercentThreshold` (2), `dynamicResolutionMaxOverBudgetFrames` (2, đọc không thấp hơn 2) và `dynamicResolutionUseCpuTimeLogic` (false); sau đó được đổi bằng `world.dynamicResolution`. Các thiết lập của hoạt ảnh cũng vậy (`../../../../sdk-core/src/contracts/animationOptions.ts`): `animationMinScreenSize` (0.1), `animationBankInterpolation` (true), `animationBankTimeScale` (1); sau đó được đổi bằng `world.animation`. Các thiết lập của việc tô bóng cũng vậy (`../../../../sdk-core/src/contracts/shadingOptions.ts`): `shadeBinningMode` (`'auto'`, hoặc `'pixel'`, `'quad'`) và `materialClosures` (`'single'`: mỗi bề mặt được tô như một lớp mỗi điểm ảnh, một lớp phủ trong được gộp vào nền của nó; hoặc `'layered'`: lớp phủ là một lớp riêng); sau đó được đổi bằng `world.shading`. Phơi sáng tự động cũng vậy (`../../../../sdk-core/src/contracts/exposureOptions.ts`), được dùng khi `world.exposure` là `'auto'`, mặc định: `exposureBias` (+1 stop), `exposureMinBrightness` (−10) và `exposureMaxBrightness` (+20) tính bằng EV100, `exposureHistogramLogMin` (−10) và `exposureHistogramLogMax` (+20) tính bằng stop độ chói, `exposureLowPercent` (10) và `exposureHighPercent` (90), `exposureSpeedUp` (3) và `exposureSpeedDown` (1) tính bằng stop mỗi giây, `exposureTransitionDistance` (1.5 stop), `exposureBlackBucketWeight` (0) và `exposureLuminanceMethod` (`'uniform'`, hoặc `'ntsc'`, `'workingSpace'`), `exposureMethod` (`'histogram'`, hoặc `'basic'`, `'manual'`: độ phơi sáng của camera, đọc từ `exposureApplyPhysicalCamera` (true), `exposureCameraShutterSpeed` (60) và `exposureCameraIso` (100) và độ lệch), `exposureLensAttenuation` (0.78), các thiết lập phơi sáng trước `preExposure` (true), `preExposureOverride` (0) và `cachedLightingPreExposure` (4 stop, của việc chụp thời gian thực ánh sáng bầu trời), áp dụng cho một góc nhìn đã chiếu sáng bất kể độ phơi sáng của nó, và các thiết lập phơi sáng cục bộ `localExposureHighlightContrast` và `localExposureShadowContrast` (0.8, khi phơi sáng cục bộ chạy), `localExposureDetailStrength` (1), `localExposureBlurBlend` (0.6), `localExposureBlurSize` (50 %), `localExposureMiddleGreyBias` (0) và hai ngưỡng cùng cường độ của chúng, áp dụng cho một góc nhìn đã chiếu sáng bất kể độ phơi sáng của nó; sau đó được đổi bằng `world.exposureSettings`. Đường cong bù phơi sáng `exposureCurve` (không có) và mặt nạ đo sáng `exposureMeterMask` (không có) chỉ được đọc khi mở. Lượt chạy theo thời gian cũng vậy (`../../../../sdk-core/src/contracts/temporalOptions.ts`): `temporalThinGeometry` (false) — nó có tìm hình học mỏng hơn một điểm ảnh và nới lịch sử của nó ở đó hay không, ở mọi mức trừ `'off'` —, `temporalWaveOps` (true), `temporalWaveSize` (0) và `temporalHalfPrecision` (true) — cách các chương trình của nó chạy: qua các nhóm con, ở kích thước nào, bằng số thực 16 bit, ở nơi thiết bị cho phép, ảnh vẫn như nhau —, các mẫu của lịch sử (`temporalHistorySampleCount`, `temporalShadingRejectionSampleCount`, `temporalVelocityWeightClampingSampleCount`, `temporalVelocityWeightClampingPixelSpeed`), của thước đo nhấp nháy (`temporalFlickering…`), độ phơi sáng mà sự từ chối đo ở đó (`temporalShadingExposureOffset`), các ngưỡng của việc phát hiện hình học mỏng (`temporalThinGeometry…`) và chất lượng của ảnh nửa kích thước mà phơi sáng và quầng sáng đọc (`temporalDownsampleQuality`), mỗi cái ở giá trị mặc định của tham chiếu; sau đó được đổi bằng `world.temporal`. Bóng đổ của mặt trời cũng vậy (`../../../../sdk-core/src/contracts/shadowOptions.ts`): `shadowDistanceScale` (1, từ 0 đến 2) — hệ số lên `shadowDistance` của mỗi ánh sáng có hướng —, `farShadowCulling` (true) — các bản đồ bóng của mặt trời có loại những vật đổ bóng có độ sâu, trừ bán kính của chúng, vượt quá rìa của khoảng cách đó (xa hơn một chút: 427 mét ở 400) hay không, trừ khi đối tượng của chúng đặt `castFarShadow` —, `farShadowCullsAllMeshes` (false) — phép kiểm tra đó chạm tới mọi vật đổ bóng, hay chỉ các vỏ đã gộp của thế giới ở các mức thô hơn —, `shadowNearLevels` (10, từ 0 đến 10, tối đa `shadowCascades` của ánh sáng), `shadowOverlapScale` (1, từ 0 đến 2) và `shadowFarField` (true: tầng trường khoảng cách có theo các mức gần hay không, ở nơi cảnh có trường khoảng cách) — ba thiết lập định hình rìa —, các thiết lập riêng của các mức xa và của tầng đó (`../../../../sdk-core/src/contracts/sunShadowOptions.ts`: `shadowMaxFarCascades`, `shadowFarDistanceOverride` (không mức xa nào được vẽ: không có hiệu ứng nhìn thấy), `distanceFieldDistanceScale`, `distanceFieldFarTransitionScale`, `distanceFieldShadowQuality`, `distanceFieldShadowFullResolution`, `distanceFieldShadowTileSize` và `distanceFieldShadowTwoSidedBias`), và các thiết lập riêng của các bản đồ bóng (`../../../../sdk-core/src/contracts/shadowMapOptions.ts`: các mức và dải độ sâu của clipmap, các trang thô, các độ lệch độ phân giải, ngưỡng bán kính, các tia và bước của một lần truy vết và hồ trang); sau đó được đổi bằng `world.shadows`. Việc vẽ làm mờ chuyển động cũng vậy (`../../../../sdk-core/src/contracts/motionBlurOptions.ts`): `motionBlurQuality` (`'veryHigh'`, hoặc `'off'`, `'low'`, `'medium'`, `'high'`: tối đa 16 mẫu mỗi điểm ảnh, ít hơn ở các mức thấp hơn), `motionBlurHalfResGather` (false), `motionBlurHalfResInput` (true), `motionBlurSeparable` (false), `motionBlurScatter` (false) và `motionBlurDirections` (1, hoặc 2); sau đó được đổi bằng `world.motionBlur`. Việc vẽ độ sâu trường ảnh cũng vậy (`../../../../sdk-core/src/contracts/depthOfFieldRules.ts`): `depthOfFieldQuality` (`'on'`, hoặc `'off'`), `depthOfFieldGatherDivisor` (2), `depthOfFieldAccumulator` (`'high'`), `depthOfFieldRingCount` (4), `depthOfFieldPostfilter` (`'median'`), các thiết lập của tán xạ và tái kết hợp và những thiết lập khác mà tệp liệt kê, mỗi cái là giá trị mặc định của tham chiếu; sau đó được đổi bằng `world.depthOfField`. Việc vẽ quầng sáng cũng vậy (`../../../../sdk-core/src/contracts/bloomRules.ts`): `bloomQuality` (`'highest'`, hoặc `'off'`, `'lowest'`, `'low'`, `'medium'`, `'high'`: bao nhiêu trong sáu tầng Gauss được vẽ), `bloomCross` (0), `bloomScreenPercentage` (50: độ phân giải của phép tích chập), `bloomApplyLocalExposure` (true) và `bloomCacheKernel` (true); sau đó được đổi bằng `world.bloom`. Làm mờ Gauss cũng vậy (`../../../../sdk-core/src/contracts/gaussianBlurRules.ts`): `gaussianFastBlurThreshold` (100: bán kính mà từ đó lượt đầu của một phép làm mờ được giảm một nửa), `gaussianSampleScale` (1: tầm với của hạt nhân) và `gaussianLoopMode` (0: số lần đọc nhiều nhất của một lượt); sau đó được đổi bằng `world.gaussianBlur`. Các hiệu ứng phim cũng vậy (`../../../../sdk-core/src/contracts/filmOptions.ts`): hạt (`filmGrain…`, mặc định tắt), viền màu (`chromaticAberration…`, tắt), diện mạo của vignette (`vignette…`, bên cạnh cường độ của cảnh), `tonemapperQuality` (5), `tonemapperSharpen` (−1: của cảnh), sắc thái (`sceneColorTint…`, 1) và `quantizationDitheringBits` (0: bước riêng của màn hình); sau đó được đổi bằng `world.film`. Sương mù thể tích (`../../../../sdk-core/src/contracts/volumetricFogOptions.ts`): `volumetricFogQuality` (`'high'`; `'off'` không vẽ gì, `'low'`, `'high'` và `'ultra'` đặt kích thước ô và độ sâu của lưới và các mẫu của lịch sử) và mười một thiết lập được đọc cùng nó, sau đó được đổi bằng `world.volumetricFog`; sương mù chỉ tồn tại trong một cảnh có sương mù đặt `volumetric`. Thể tích chiếu sáng trong suốt cũng vậy (`../../../../sdk-core/src/contracts/translucencyVolumeOptions.ts`): `translucencyVolume` (true), `translucencyVolumeDim` (64 ô mỗi cạnh của mỗi trong hai tầng của nó), `translucencyVolumeInnerDistance` (15 m), `translucencyVolumeOuterDistance` (50 m), `translucencyVolumeBlur` (true), `translucencyVolumeTemporal` (false) và những thiết lập khác, sau đó được đổi bằng `world.translucencyVolume`; nó chiếu sáng các bề mặt nhìn xuyên qua có vật liệu đặt `translucencyLighting` thành một chế độ thể tích. Việc truy vết phản chiếu cũng vậy (`../../../../sdk-core/src/contracts/reflectionOptions.ts`): `reflectionScreenSteps` (50, số lần lặp của bước đi trên màn hình của một tia phản chiếu; bước đi trong cảnh của nó là của trường khoảng cách toàn cục, 256 bước mỗi clipmap), và `reflectionDistantScreenTraces` (true), `reflectionDistantScreenSteps` (16) và `reflectionDistantScreenDistance` (2000 m), phép truy vết màn hình xa, và `reflectionFrontLayer` (false), lớp trước của các vật trong suốt có được truy vết hay không, `reflectionSkylightLeaking` (0, cùng sắc thái và albedo trung bình của nó), ánh sáng khuếch tán của ánh sáng bầu trời rò rỉ lên một điểm va chạm, sau đó được đổi bằng `world.reflections`; `reflectionStatistics` (false), các bộ đếm của các tia, được đọc khi phiên mở. Bộ nhớ đệm bề mặt cũng vậy (`../../../../sdk-core/src/contracts/surfaceCacheOptions.ts`): `surfaceCacheAtlasSize` (4096, cạnh tính bằng texel của atlas mà các thẻ của mỗi mesh được chụp vào), `surfaceCacheCardCapturesPerFrame` (300), `surfaceCacheCardMaxResolution` (512), `surfaceCacheAllowCardSharing` (true), `surfaceCacheDilationMode` (0) và những thiết lập khác, sau đó được đổi bằng `world.surfaceCache`. Che khuất môi trường trong không gian màn hình cũng vậy (`../../../../sdk-core/src/contracts/ambientOcclusionOptions.ts`): `ambientOcclusion` (true: công tắc chính), `ambientOcclusionIntensity` (0.5; 0 là tắt), `ambientOcclusionRadius` (2 m) và `ambientOcclusionRadiusInWorldSpace` của nó (false), `ambientOcclusionFadeDistance` (80 m) và `ambientOcclusionFadeRadius` (50 m), `ambientOcclusionPower` (2), `ambientOcclusionBias` (3), chất lượng (`ambientOcclusionQuality`, 50) với `ambientOcclusionLevels` (-1) và `ambientOcclusionMaxQuality` (100), và `ambientOcclusionWithScreenProbes` (false); sau đó được đổi bằng `world.ambientOcclusion`. Kim tự tháp độ sâu cũng vậy (`../../../../sdk-core/src/contracts/hizOptions.ts`): `hizTrace` (`'reference'`, hoặc `'planes'`) — phép truy vết phản chiếu đọc nó ra sao —, `hizFoldTransparents` (false) — các lớp truy vết của nó có chứa các bề mặt trong suốt hay không —, `hizTransparentTest` (`'finer'`, hoặc `'reference'`) — các cụm trong suốt được kiểm tra với nó ra sao —, `hizFullResDepth` (true) — bước duyệt của các đầu dò màn hình có đi xuống độ sâu độ phân giải đầy đủ hay không —, `lightGridHizCull` (true) — lưới ánh sáng có để trống các ô nằm sau độ sâu xa nhất của cột của chúng hay không — và `lightGridMaxCulledLightsPerCell` (32) — số mục ánh sáng mà lưới ánh sáng của khung nhìn giữ mỗi ô —, rồi `hizPrime` (`'off'`, `'whenMissing'` hoặc `'always'`) — khi một góc nhìn dựng một kim tự tháp từ một lần vẽ thô, nhỏ các đối tượng đặt `farField`, để lượt chính của lát cắt của nó kiểm tra khi ảnh trước không để lại cái nào — cùng `hizPrimeSizeBias` (2), `hizPrimeDepthBias` (1.5 m), `hizPrimeErrorScale` (32) và `hizPrimeFarFieldOnly` (true); sau đó được đổi bằng `world.hiz`. Các hàm ánh sáng cũng vậy (`../../../../sdk-core/src/contracts/lightFunctionOptions.ts`): `lightFunctionAtlas` (true), `lightFunctionSlotResolution` (128), `lightFunctionAtlasSize` (4), `lightFunctionMaxLights` (-1, không giới hạn), `lightFunctionFormat` (`'grey'`), `lightFunctionDeferred` (true), `lightFunctionFog` (true), `lightFunctionBounce` (true) và `lightFunctionTranslucent` (false); sau đó được đổi bằng `world.lightFunction`. Việc tách raster cụm cũng vậy (`../../../../sdk-core/src/contracts/rasterOptions.ts`): `softwareRaster` (true) — một cụm có cạnh dài nhất chiếu xuống dưới `hardwareRasterEdgePixels` và có hộp không cắt mặt phẳng cắt nào được raster trong compute, mọi cụm khác bởi bộ raster phần cứng; `false` giao mọi cụm cho phần cứng — và `hardwareRasterEdgePixels` (32, tính bằng điểm ảnh: một số hữu hạn lớn hơn không), cạnh mà từ đó một cụm, nhìn ở điểm gần nhất của quả cầu mức chi tiết của nó, đi tới bộ raster phần cứng; `depthBucketing` (true) sắp xếp các cụm bị khoét của raster phần mềm từ gần nhất, theo độ sâu góc nhìn của hộp của chúng được chia trên 256 thùng theo logarit của nó từ `depthBucketsMinZ` (10 m) đến `depthBucketsMaxZ` (1000 m), các số hữu hạn lớn hơn không — như trong tham chiếu, chỉ ở nơi cảnh chứa voxel; sau đó được đổi bằng `world.softwareRaster`, `world.hardwareRasterEdgePixels`, `world.depthBucketing`, `world.depthBucketsMinZ` và `world.depthBucketsMaxZ`. Việc truyền tải hình học cũng vậy (`../../../../sdk-core/src/contracts/streamingOptions.ts`): `streamingMaxPendingPages` (128, số trang hình học được giữ ở trạng thái đã khởi động cùng lúc, một số nguyên từ 1), `streamingMaxInstallsPerFrame` (128, số trang nhiều nhất mà một khung hình cài, không bao giờ nhiều hơn mức có thể đang chờ), `streamingQualityMinPoolPercent` (70) và `streamingQualityMaxPoolPercent` (85, đọc không thấp hơn mốc thấp) — mức tải của hồ, tính theo phần trăm số trang của nó, dưới đó chất lượng tăng lại và trên đó nó giảm, từ 10 đến 100 —, `streamingQualityMinScale` (0.3, từ 0.1 đến 1, 1 không bao giờ co giãn), `streamingNumRetries` (3, số lần một lần đọc trang thất bại được thử lại trước khi trang bị bỏ, ngay lập tức và không chờ ngoài lần chờ mà máy chủ yêu cầu, một giá trị âm là không có hồi kết; một mức kết cấu đã nướng không được tính: nó được hỏi lại mãi mãi), `streamingMinRequests` (65 536) và `streamingMaxRequests` (1 048 576), số yêu cầu ít nhất và nhiều nhất mà phần đọc lại của lát cắt camera giữ, từ 4 096 đến 1 048 576 — nó bắt đầu ở mức ít nhất và theo những gì lát cắt đòi hỏi, mức nhiều nhất đọc không thấp hơn mức ít nhất — và `streamingBandwidthLimit` (-1: không có, số megabyte mỗi giây mà các lần đọc hình học được mô phỏng là có: mỗi trang lấy một phần băng thông của khung hình thuộc về riêng nó). Một giá trị mà một thiết lập không nhận sẽ bị từ chối.",
     "members": {
       "interactive": "Thế giới có chạy vòng lặp riêng của nó hay không: nó vẽ khi có gì đó thay đổi và nghỉ sau 120 khung hình không có gì mới. `false` để trang tự gọi `world.render()`.",
       "pixelRatio": "Bao nhiêu điểm ảnh hình ảnh cho mỗi điểm ảnh màn hình.",
@@ -7881,7 +7925,8 @@
       "p.cloudShadowExtentKm": "Bán kính quanh camera mà bản đồ bao phủ, tính bằng kilômét, từ 1; mặc định 150.",
       "p.cloudShadowResolutionScale": "Hệ số lên 512 texel mỗi cạnh của bản đồ, từ 0.25; mặc định 1.",
       "p.cloudShadowRaySamplesScale": "Hệ số lên 16 mẫu mà một tia của bản đồ lấy, từ 0.25; mặc định 1.",
-      "p.cloudScatteredLuminanceScale": "Hệ số lên ánh sáng bên trong các đám mây, tuyến tính; mặc định trắng."
+      "p.cloudScatteredLuminanceScale": "Hệ số lên ánh sáng bên trong các đám mây, tuyến tính; mặc định trắng.",
+      "p.mobility": "Nguồn sáng được định để di chuyển và được chiếu sáng ra sao: `'static'`, `'stationary'` hoặc `'movable'`; mặc định `'stationary'`."
     }
   },
   "light.directional": {
@@ -7944,7 +7989,8 @@
       "p.cloudShadowExtentKm": "Bán kính quanh camera mà bản đồ bao phủ, tính bằng kilômét, từ 1; mặc định 150.",
       "p.cloudShadowResolutionScale": "Hệ số lên 512 texel mỗi cạnh của bản đồ, từ 0.25; mặc định 1.",
       "p.cloudShadowRaySamplesScale": "Hệ số lên 16 mẫu mà một tia của bản đồ lấy, từ 0.25; mặc định 1.",
-      "p.cloudScatteredLuminanceScale": "Hệ số lên ánh sáng bên trong các đám mây, tuyến tính; mặc định trắng."
+      "p.cloudScatteredLuminanceScale": "Hệ số lên ánh sáng bên trong các đám mây, tuyến tính; mặc định trắng.",
+      "p.mobility": "Nguồn sáng được định để di chuyển và được chiếu sáng ra sao: `'static'`, `'stationary'` hoặc `'movable'`; mặc định `'stationary'`."
     }
   },
   "light.point": {
@@ -8007,7 +8053,8 @@
       "p.cloudShadowExtentKm": "Bán kính quanh camera mà bản đồ bao phủ, tính bằng kilômét, từ 1; mặc định 150.",
       "p.cloudShadowResolutionScale": "Hệ số lên 512 texel mỗi cạnh của bản đồ, từ 0.25; mặc định 1.",
       "p.cloudShadowRaySamplesScale": "Hệ số lên 16 mẫu mà một tia của bản đồ lấy, từ 0.25; mặc định 1.",
-      "p.cloudScatteredLuminanceScale": "Hệ số lên ánh sáng bên trong các đám mây, tuyến tính; mặc định trắng."
+      "p.cloudScatteredLuminanceScale": "Hệ số lên ánh sáng bên trong các đám mây, tuyến tính; mặc định trắng.",
+      "p.mobility": "Nguồn sáng được định để di chuyển và được chiếu sáng ra sao: `'static'`, `'stationary'` hoặc `'movable'`; mặc định `'stationary'`."
     }
   },
   "light.spot": {
@@ -8070,7 +8117,8 @@
       "p.cloudShadowExtentKm": "Bán kính quanh camera mà bản đồ bao phủ, tính bằng kilômét, từ 1; mặc định 150.",
       "p.cloudShadowResolutionScale": "Hệ số lên 512 texel mỗi cạnh của bản đồ, từ 0.25; mặc định 1.",
       "p.cloudShadowRaySamplesScale": "Hệ số lên 16 mẫu mà một tia của bản đồ lấy, từ 0.25; mặc định 1.",
-      "p.cloudScatteredLuminanceScale": "Hệ số lên ánh sáng bên trong các đám mây, tuyến tính; mặc định trắng."
+      "p.cloudScatteredLuminanceScale": "Hệ số lên ánh sáng bên trong các đám mây, tuyến tính; mặc định trắng.",
+      "p.mobility": "Nguồn sáng được định để di chuyển và được chiếu sáng ra sao: `'static'`, `'stationary'` hoặc `'movable'`; mặc định `'stationary'`."
     }
   },
   "light.hemisphere": {
@@ -8133,7 +8181,8 @@
       "p.cloudShadowExtentKm": "Bán kính quanh camera mà bản đồ bao phủ, tính bằng kilômét, từ 1; mặc định 150.",
       "p.cloudShadowResolutionScale": "Hệ số lên 512 texel mỗi cạnh của bản đồ, từ 0.25; mặc định 1.",
       "p.cloudShadowRaySamplesScale": "Hệ số lên 16 mẫu mà một tia của bản đồ lấy, từ 0.25; mặc định 1.",
-      "p.cloudScatteredLuminanceScale": "Hệ số lên ánh sáng bên trong các đám mây, tuyến tính; mặc định trắng."
+      "p.cloudScatteredLuminanceScale": "Hệ số lên ánh sáng bên trong các đám mây, tuyến tính; mặc định trắng.",
+      "p.mobility": "Nguồn sáng được định để di chuyển và được chiếu sáng ra sao: `'static'`, `'stationary'` hoặc `'movable'`; mặc định `'stationary'`."
     }
   },
   "light.rectArea": {
@@ -8196,7 +8245,8 @@
       "p.cloudShadowExtentKm": "Bán kính quanh camera mà bản đồ bao phủ, tính bằng kilômét, từ 1; mặc định 150.",
       "p.cloudShadowResolutionScale": "Hệ số lên 512 texel mỗi cạnh của bản đồ, từ 0.25; mặc định 1.",
       "p.cloudShadowRaySamplesScale": "Hệ số lên 16 mẫu mà một tia của bản đồ lấy, từ 0.25; mặc định 1.",
-      "p.cloudScatteredLuminanceScale": "Hệ số lên ánh sáng bên trong các đám mây, tuyến tính; mặc định trắng."
+      "p.cloudScatteredLuminanceScale": "Hệ số lên ánh sáng bên trong các đám mây, tuyến tính; mặc định trắng.",
+      "p.mobility": "Nguồn sáng được định để di chuyển và được chiếu sáng ra sao: `'static'`, `'stationary'` hoặc `'movable'`; mặc định `'stationary'`."
     }
   },
   "light.probe": {
@@ -8259,7 +8309,8 @@
       "p.cloudShadowExtentKm": "Bán kính quanh camera mà bản đồ bao phủ, tính bằng kilômét, từ 1; mặc định 150.",
       "p.cloudShadowResolutionScale": "Hệ số lên 512 texel mỗi cạnh của bản đồ, từ 0.25; mặc định 1.",
       "p.cloudShadowRaySamplesScale": "Hệ số lên 16 mẫu mà một tia của bản đồ lấy, từ 0.25; mặc định 1.",
-      "p.cloudScatteredLuminanceScale": "Hệ số lên ánh sáng bên trong các đám mây, tuyến tính; mặc định trắng."
+      "p.cloudScatteredLuminanceScale": "Hệ số lên ánh sáng bên trong các đám mây, tuyến tính; mặc định trắng.",
+      "p.mobility": "Nguồn sáng được định để di chuyển và được chiếu sáng ra sao: `'static'`, `'stationary'` hoặc `'movable'`; mặc định `'stationary'`."
     }
   },
   "lightLattice": {
@@ -8361,7 +8412,13 @@
       "parameters.physics": "Chất liệu của vật mang nó: mật độ, ma sát, độ nảy.",
       "parameters.density": "kg/m³, nhân với thể tích ra khối lượng.",
       "parameters.friction": "Mức bám của vật, từ 0 trở lên.",
-      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1."
+      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1.",
+      "parameters.specularIntensity": "Đầu vào phản chiếu của chất điện môi của bề mặt, từ 0 đến 1: độ phản xạ của nó ở góc tới vuông góc là 0,08 lần giá trị đó, nên 0,5 (giá trị của bề mặt không khai báo) cho 4 % thông thường, 1 cho 8 % và 0 không có điểm sáng. Hệ số `KHR_materials_specular` của một vật liệu glTF được ghi đúng như đã khai báo. Kim loại bỏ qua nó.",
+      "parameters.specularIntensityMap": "Nhân `specularIntensity` với kênh alpha của một ảnh.",
+      "parameters.displacementMagnitude": "Đầu ra `displacement` của đồ thị vật liệu dịch một bề mặt dọc pháp tuyến của nó bao xa, tính bằng mét, ở nơi nó lớn hơn `displacementCenter` là 1: chiều cao bị dịch là `(đầu ra - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Giá trị của đầu ra `displacement` để bề mặt nguyên chỗ cũ, từ 0 đến 1.",
+      "parameters.displacementFadeStart": "Nơi độ dịch mờ dần theo khoảng cách, tính theo kích thước trên màn hình bằng pixel của độ dịch lớn nhất của nó: đầy đủ trên `displacementFadeStart`, biến mất dưới `displacementFadeEnd`, giá trị này phải nhỏ hơn; bỏ cả hai thì nó không bao giờ mờ đi.",
+      "parameters.displacementFadeEnd": "Xem `displacementFadeStart`."
     }
   },
   "material.meshPhysical": {
@@ -8424,7 +8481,13 @@
       "parameters.physics": "Chất liệu của vật mang nó: mật độ, ma sát, độ nảy.",
       "parameters.density": "kg/m³, nhân với thể tích ra khối lượng.",
       "parameters.friction": "Mức bám của vật, từ 0 trở lên.",
-      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1."
+      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1.",
+      "parameters.specularIntensity": "Đầu vào phản chiếu của chất điện môi của bề mặt, từ 0 đến 1: độ phản xạ của nó ở góc tới vuông góc là 0,08 lần giá trị đó, nên 0,5 (giá trị của bề mặt không khai báo) cho 4 % thông thường, 1 cho 8 % và 0 không có điểm sáng. Hệ số `KHR_materials_specular` của một vật liệu glTF được ghi đúng như đã khai báo. Kim loại bỏ qua nó.",
+      "parameters.specularIntensityMap": "Nhân `specularIntensity` với kênh alpha của một ảnh.",
+      "parameters.displacementMagnitude": "Đầu ra `displacement` của đồ thị vật liệu dịch một bề mặt dọc pháp tuyến của nó bao xa, tính bằng mét, ở nơi nó lớn hơn `displacementCenter` là 1: chiều cao bị dịch là `(đầu ra - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Giá trị của đầu ra `displacement` để bề mặt nguyên chỗ cũ, từ 0 đến 1.",
+      "parameters.displacementFadeStart": "Nơi độ dịch mờ dần theo khoảng cách, tính theo kích thước trên màn hình bằng pixel của độ dịch lớn nhất của nó: đầy đủ trên `displacementFadeStart`, biến mất dưới `displacementFadeEnd`, giá trị này phải nhỏ hơn; bỏ cả hai thì nó không bao giờ mờ đi.",
+      "parameters.displacementFadeEnd": "Xem `displacementFadeStart`."
     }
   },
   "material.meshBasic": {
@@ -8487,7 +8550,13 @@
       "parameters.physics": "Chất liệu của vật mang nó: mật độ, ma sát, độ nảy.",
       "parameters.density": "kg/m³, nhân với thể tích ra khối lượng.",
       "parameters.friction": "Mức bám của vật, từ 0 trở lên.",
-      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1."
+      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1.",
+      "parameters.specularIntensity": "Đầu vào phản chiếu của chất điện môi của bề mặt, từ 0 đến 1: độ phản xạ của nó ở góc tới vuông góc là 0,08 lần giá trị đó, nên 0,5 (giá trị của bề mặt không khai báo) cho 4 % thông thường, 1 cho 8 % và 0 không có điểm sáng. Hệ số `KHR_materials_specular` của một vật liệu glTF được ghi đúng như đã khai báo. Kim loại bỏ qua nó.",
+      "parameters.specularIntensityMap": "Nhân `specularIntensity` với kênh alpha của một ảnh.",
+      "parameters.displacementMagnitude": "Đầu ra `displacement` của đồ thị vật liệu dịch một bề mặt dọc pháp tuyến của nó bao xa, tính bằng mét, ở nơi nó lớn hơn `displacementCenter` là 1: chiều cao bị dịch là `(đầu ra - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Giá trị của đầu ra `displacement` để bề mặt nguyên chỗ cũ, từ 0 đến 1.",
+      "parameters.displacementFadeStart": "Nơi độ dịch mờ dần theo khoảng cách, tính theo kích thước trên màn hình bằng pixel của độ dịch lớn nhất của nó: đầy đủ trên `displacementFadeStart`, biến mất dưới `displacementFadeEnd`, giá trị này phải nhỏ hơn; bỏ cả hai thì nó không bao giờ mờ đi.",
+      "parameters.displacementFadeEnd": "Xem `displacementFadeStart`."
     }
   },
   "material.meshPhong": {
@@ -8550,7 +8619,13 @@
       "parameters.physics": "Chất liệu của vật mang nó: mật độ, ma sát, độ nảy.",
       "parameters.density": "kg/m³, nhân với thể tích ra khối lượng.",
       "parameters.friction": "Mức bám của vật, từ 0 trở lên.",
-      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1."
+      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1.",
+      "parameters.specularIntensity": "Đầu vào phản chiếu của chất điện môi của bề mặt, từ 0 đến 1: độ phản xạ của nó ở góc tới vuông góc là 0,08 lần giá trị đó, nên 0,5 (giá trị của bề mặt không khai báo) cho 4 % thông thường, 1 cho 8 % và 0 không có điểm sáng. Hệ số `KHR_materials_specular` của một vật liệu glTF được ghi đúng như đã khai báo. Kim loại bỏ qua nó.",
+      "parameters.specularIntensityMap": "Nhân `specularIntensity` với kênh alpha của một ảnh.",
+      "parameters.displacementMagnitude": "Đầu ra `displacement` của đồ thị vật liệu dịch một bề mặt dọc pháp tuyến của nó bao xa, tính bằng mét, ở nơi nó lớn hơn `displacementCenter` là 1: chiều cao bị dịch là `(đầu ra - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Giá trị của đầu ra `displacement` để bề mặt nguyên chỗ cũ, từ 0 đến 1.",
+      "parameters.displacementFadeStart": "Nơi độ dịch mờ dần theo khoảng cách, tính theo kích thước trên màn hình bằng pixel của độ dịch lớn nhất của nó: đầy đủ trên `displacementFadeStart`, biến mất dưới `displacementFadeEnd`, giá trị này phải nhỏ hơn; bỏ cả hai thì nó không bao giờ mờ đi.",
+      "parameters.displacementFadeEnd": "Xem `displacementFadeStart`."
     }
   },
   "material.meshLambert": {
@@ -8613,7 +8688,13 @@
       "parameters.physics": "Chất liệu của vật mang nó: mật độ, ma sát, độ nảy.",
       "parameters.density": "kg/m³, nhân với thể tích ra khối lượng.",
       "parameters.friction": "Mức bám của vật, từ 0 trở lên.",
-      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1."
+      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1.",
+      "parameters.specularIntensity": "Đầu vào phản chiếu của chất điện môi của bề mặt, từ 0 đến 1: độ phản xạ của nó ở góc tới vuông góc là 0,08 lần giá trị đó, nên 0,5 (giá trị của bề mặt không khai báo) cho 4 % thông thường, 1 cho 8 % và 0 không có điểm sáng. Hệ số `KHR_materials_specular` của một vật liệu glTF được ghi đúng như đã khai báo. Kim loại bỏ qua nó.",
+      "parameters.specularIntensityMap": "Nhân `specularIntensity` với kênh alpha của một ảnh.",
+      "parameters.displacementMagnitude": "Đầu ra `displacement` của đồ thị vật liệu dịch một bề mặt dọc pháp tuyến của nó bao xa, tính bằng mét, ở nơi nó lớn hơn `displacementCenter` là 1: chiều cao bị dịch là `(đầu ra - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Giá trị của đầu ra `displacement` để bề mặt nguyên chỗ cũ, từ 0 đến 1.",
+      "parameters.displacementFadeStart": "Nơi độ dịch mờ dần theo khoảng cách, tính theo kích thước trên màn hình bằng pixel của độ dịch lớn nhất của nó: đầy đủ trên `displacementFadeStart`, biến mất dưới `displacementFadeEnd`, giá trị này phải nhỏ hơn; bỏ cả hai thì nó không bao giờ mờ đi.",
+      "parameters.displacementFadeEnd": "Xem `displacementFadeStart`."
     }
   },
   "material.meshToon": {
@@ -8676,7 +8757,13 @@
       "parameters.physics": "Chất liệu của vật mang nó: mật độ, ma sát, độ nảy.",
       "parameters.density": "kg/m³, nhân với thể tích ra khối lượng.",
       "parameters.friction": "Mức bám của vật, từ 0 trở lên.",
-      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1."
+      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1.",
+      "parameters.specularIntensity": "Đầu vào phản chiếu của chất điện môi của bề mặt, từ 0 đến 1: độ phản xạ của nó ở góc tới vuông góc là 0,08 lần giá trị đó, nên 0,5 (giá trị của bề mặt không khai báo) cho 4 % thông thường, 1 cho 8 % và 0 không có điểm sáng. Hệ số `KHR_materials_specular` của một vật liệu glTF được ghi đúng như đã khai báo. Kim loại bỏ qua nó.",
+      "parameters.specularIntensityMap": "Nhân `specularIntensity` với kênh alpha của một ảnh.",
+      "parameters.displacementMagnitude": "Đầu ra `displacement` của đồ thị vật liệu dịch một bề mặt dọc pháp tuyến của nó bao xa, tính bằng mét, ở nơi nó lớn hơn `displacementCenter` là 1: chiều cao bị dịch là `(đầu ra - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Giá trị của đầu ra `displacement` để bề mặt nguyên chỗ cũ, từ 0 đến 1.",
+      "parameters.displacementFadeStart": "Nơi độ dịch mờ dần theo khoảng cách, tính theo kích thước trên màn hình bằng pixel của độ dịch lớn nhất của nó: đầy đủ trên `displacementFadeStart`, biến mất dưới `displacementFadeEnd`, giá trị này phải nhỏ hơn; bỏ cả hai thì nó không bao giờ mờ đi.",
+      "parameters.displacementFadeEnd": "Xem `displacementFadeStart`."
     }
   },
   "material.meshNormal": {
@@ -8739,7 +8826,13 @@
       "parameters.physics": "Chất liệu của vật mang nó: mật độ, ma sát, độ nảy.",
       "parameters.density": "kg/m³, nhân với thể tích ra khối lượng.",
       "parameters.friction": "Mức bám của vật, từ 0 trở lên.",
-      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1."
+      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1.",
+      "parameters.specularIntensity": "Đầu vào phản chiếu của chất điện môi của bề mặt, từ 0 đến 1: độ phản xạ của nó ở góc tới vuông góc là 0,08 lần giá trị đó, nên 0,5 (giá trị của bề mặt không khai báo) cho 4 % thông thường, 1 cho 8 % và 0 không có điểm sáng. Hệ số `KHR_materials_specular` của một vật liệu glTF được ghi đúng như đã khai báo. Kim loại bỏ qua nó.",
+      "parameters.specularIntensityMap": "Nhân `specularIntensity` với kênh alpha của một ảnh.",
+      "parameters.displacementMagnitude": "Đầu ra `displacement` của đồ thị vật liệu dịch một bề mặt dọc pháp tuyến của nó bao xa, tính bằng mét, ở nơi nó lớn hơn `displacementCenter` là 1: chiều cao bị dịch là `(đầu ra - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Giá trị của đầu ra `displacement` để bề mặt nguyên chỗ cũ, từ 0 đến 1.",
+      "parameters.displacementFadeStart": "Nơi độ dịch mờ dần theo khoảng cách, tính theo kích thước trên màn hình bằng pixel của độ dịch lớn nhất của nó: đầy đủ trên `displacementFadeStart`, biến mất dưới `displacementFadeEnd`, giá trị này phải nhỏ hơn; bỏ cả hai thì nó không bao giờ mờ đi.",
+      "parameters.displacementFadeEnd": "Xem `displacementFadeStart`."
     }
   },
   "material.meshMatcap": {
@@ -8802,7 +8895,13 @@
       "parameters.physics": "Chất liệu của vật mang nó: mật độ, ma sát, độ nảy.",
       "parameters.density": "kg/m³, nhân với thể tích ra khối lượng.",
       "parameters.friction": "Mức bám của vật, từ 0 trở lên.",
-      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1."
+      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1.",
+      "parameters.specularIntensity": "Đầu vào phản chiếu của chất điện môi của bề mặt, từ 0 đến 1: độ phản xạ của nó ở góc tới vuông góc là 0,08 lần giá trị đó, nên 0,5 (giá trị của bề mặt không khai báo) cho 4 % thông thường, 1 cho 8 % và 0 không có điểm sáng. Hệ số `KHR_materials_specular` của một vật liệu glTF được ghi đúng như đã khai báo. Kim loại bỏ qua nó.",
+      "parameters.specularIntensityMap": "Nhân `specularIntensity` với kênh alpha của một ảnh.",
+      "parameters.displacementMagnitude": "Đầu ra `displacement` của đồ thị vật liệu dịch một bề mặt dọc pháp tuyến của nó bao xa, tính bằng mét, ở nơi nó lớn hơn `displacementCenter` là 1: chiều cao bị dịch là `(đầu ra - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Giá trị của đầu ra `displacement` để bề mặt nguyên chỗ cũ, từ 0 đến 1.",
+      "parameters.displacementFadeStart": "Nơi độ dịch mờ dần theo khoảng cách, tính theo kích thước trên màn hình bằng pixel của độ dịch lớn nhất của nó: đầy đủ trên `displacementFadeStart`, biến mất dưới `displacementFadeEnd`, giá trị này phải nhỏ hơn; bỏ cả hai thì nó không bao giờ mờ đi.",
+      "parameters.displacementFadeEnd": "Xem `displacementFadeStart`."
     }
   },
   "material.meshDepth": {
@@ -8865,7 +8964,13 @@
       "parameters.physics": "Chất liệu của vật mang nó: mật độ, ma sát, độ nảy.",
       "parameters.density": "kg/m³, nhân với thể tích ra khối lượng.",
       "parameters.friction": "Mức bám của vật, từ 0 trở lên.",
-      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1."
+      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1.",
+      "parameters.specularIntensity": "Đầu vào phản chiếu của chất điện môi của bề mặt, từ 0 đến 1: độ phản xạ của nó ở góc tới vuông góc là 0,08 lần giá trị đó, nên 0,5 (giá trị của bề mặt không khai báo) cho 4 % thông thường, 1 cho 8 % và 0 không có điểm sáng. Hệ số `KHR_materials_specular` của một vật liệu glTF được ghi đúng như đã khai báo. Kim loại bỏ qua nó.",
+      "parameters.specularIntensityMap": "Nhân `specularIntensity` với kênh alpha của một ảnh.",
+      "parameters.displacementMagnitude": "Đầu ra `displacement` của đồ thị vật liệu dịch một bề mặt dọc pháp tuyến của nó bao xa, tính bằng mét, ở nơi nó lớn hơn `displacementCenter` là 1: chiều cao bị dịch là `(đầu ra - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Giá trị của đầu ra `displacement` để bề mặt nguyên chỗ cũ, từ 0 đến 1.",
+      "parameters.displacementFadeStart": "Nơi độ dịch mờ dần theo khoảng cách, tính theo kích thước trên màn hình bằng pixel của độ dịch lớn nhất của nó: đầy đủ trên `displacementFadeStart`, biến mất dưới `displacementFadeEnd`, giá trị này phải nhỏ hơn; bỏ cả hai thì nó không bao giờ mờ đi.",
+      "parameters.displacementFadeEnd": "Xem `displacementFadeStart`."
     }
   },
   "material.points": {
@@ -8928,7 +9033,13 @@
       "parameters.physics": "Chất liệu của vật mang nó: mật độ, ma sát, độ nảy.",
       "parameters.density": "kg/m³, nhân với thể tích ra khối lượng.",
       "parameters.friction": "Mức bám của vật, từ 0 trở lên.",
-      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1."
+      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1.",
+      "parameters.specularIntensity": "Đầu vào phản chiếu của chất điện môi của bề mặt, từ 0 đến 1: độ phản xạ của nó ở góc tới vuông góc là 0,08 lần giá trị đó, nên 0,5 (giá trị của bề mặt không khai báo) cho 4 % thông thường, 1 cho 8 % và 0 không có điểm sáng. Hệ số `KHR_materials_specular` của một vật liệu glTF được ghi đúng như đã khai báo. Kim loại bỏ qua nó.",
+      "parameters.specularIntensityMap": "Nhân `specularIntensity` với kênh alpha của một ảnh.",
+      "parameters.displacementMagnitude": "Đầu ra `displacement` của đồ thị vật liệu dịch một bề mặt dọc pháp tuyến của nó bao xa, tính bằng mét, ở nơi nó lớn hơn `displacementCenter` là 1: chiều cao bị dịch là `(đầu ra - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Giá trị của đầu ra `displacement` để bề mặt nguyên chỗ cũ, từ 0 đến 1.",
+      "parameters.displacementFadeStart": "Nơi độ dịch mờ dần theo khoảng cách, tính theo kích thước trên màn hình bằng pixel của độ dịch lớn nhất của nó: đầy đủ trên `displacementFadeStart`, biến mất dưới `displacementFadeEnd`, giá trị này phải nhỏ hơn; bỏ cả hai thì nó không bao giờ mờ đi.",
+      "parameters.displacementFadeEnd": "Xem `displacementFadeStart`."
     }
   },
   "material.line": {
@@ -8991,7 +9102,13 @@
       "parameters.physics": "Chất liệu của vật mang nó: mật độ, ma sát, độ nảy.",
       "parameters.density": "kg/m³, nhân với thể tích ra khối lượng.",
       "parameters.friction": "Mức bám của vật, từ 0 trở lên.",
-      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1."
+      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1.",
+      "parameters.specularIntensity": "Đầu vào phản chiếu của chất điện môi của bề mặt, từ 0 đến 1: độ phản xạ của nó ở góc tới vuông góc là 0,08 lần giá trị đó, nên 0,5 (giá trị của bề mặt không khai báo) cho 4 % thông thường, 1 cho 8 % và 0 không có điểm sáng. Hệ số `KHR_materials_specular` của một vật liệu glTF được ghi đúng như đã khai báo. Kim loại bỏ qua nó.",
+      "parameters.specularIntensityMap": "Nhân `specularIntensity` với kênh alpha của một ảnh.",
+      "parameters.displacementMagnitude": "Đầu ra `displacement` của đồ thị vật liệu dịch một bề mặt dọc pháp tuyến của nó bao xa, tính bằng mét, ở nơi nó lớn hơn `displacementCenter` là 1: chiều cao bị dịch là `(đầu ra - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Giá trị của đầu ra `displacement` để bề mặt nguyên chỗ cũ, từ 0 đến 1.",
+      "parameters.displacementFadeStart": "Nơi độ dịch mờ dần theo khoảng cách, tính theo kích thước trên màn hình bằng pixel của độ dịch lớn nhất của nó: đầy đủ trên `displacementFadeStart`, biến mất dưới `displacementFadeEnd`, giá trị này phải nhỏ hơn; bỏ cả hai thì nó không bao giờ mờ đi.",
+      "parameters.displacementFadeEnd": "Xem `displacementFadeStart`."
     }
   },
   "material.lineDashed": {
@@ -9054,7 +9171,13 @@
       "parameters.physics": "Chất liệu của vật mang nó: mật độ, ma sát, độ nảy.",
       "parameters.density": "kg/m³, nhân với thể tích ra khối lượng.",
       "parameters.friction": "Mức bám của vật, từ 0 trở lên.",
-      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1."
+      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1.",
+      "parameters.specularIntensity": "Đầu vào phản chiếu của chất điện môi của bề mặt, từ 0 đến 1: độ phản xạ của nó ở góc tới vuông góc là 0,08 lần giá trị đó, nên 0,5 (giá trị của bề mặt không khai báo) cho 4 % thông thường, 1 cho 8 % và 0 không có điểm sáng. Hệ số `KHR_materials_specular` của một vật liệu glTF được ghi đúng như đã khai báo. Kim loại bỏ qua nó.",
+      "parameters.specularIntensityMap": "Nhân `specularIntensity` với kênh alpha của một ảnh.",
+      "parameters.displacementMagnitude": "Đầu ra `displacement` của đồ thị vật liệu dịch một bề mặt dọc pháp tuyến của nó bao xa, tính bằng mét, ở nơi nó lớn hơn `displacementCenter` là 1: chiều cao bị dịch là `(đầu ra - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Giá trị của đầu ra `displacement` để bề mặt nguyên chỗ cũ, từ 0 đến 1.",
+      "parameters.displacementFadeStart": "Nơi độ dịch mờ dần theo khoảng cách, tính theo kích thước trên màn hình bằng pixel của độ dịch lớn nhất của nó: đầy đủ trên `displacementFadeStart`, biến mất dưới `displacementFadeEnd`, giá trị này phải nhỏ hơn; bỏ cả hai thì nó không bao giờ mờ đi.",
+      "parameters.displacementFadeEnd": "Xem `displacementFadeStart`."
     }
   },
   "material.sprite": {
@@ -9117,7 +9240,13 @@
       "parameters.physics": "Chất liệu của vật mang nó: mật độ, ma sát, độ nảy.",
       "parameters.density": "kg/m³, nhân với thể tích ra khối lượng.",
       "parameters.friction": "Mức bám của vật, từ 0 trở lên.",
-      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1."
+      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1.",
+      "parameters.specularIntensity": "Đầu vào phản chiếu của chất điện môi của bề mặt, từ 0 đến 1: độ phản xạ của nó ở góc tới vuông góc là 0,08 lần giá trị đó, nên 0,5 (giá trị của bề mặt không khai báo) cho 4 % thông thường, 1 cho 8 % và 0 không có điểm sáng. Hệ số `KHR_materials_specular` của một vật liệu glTF được ghi đúng như đã khai báo. Kim loại bỏ qua nó.",
+      "parameters.specularIntensityMap": "Nhân `specularIntensity` với kênh alpha của một ảnh.",
+      "parameters.displacementMagnitude": "Đầu ra `displacement` của đồ thị vật liệu dịch một bề mặt dọc pháp tuyến của nó bao xa, tính bằng mét, ở nơi nó lớn hơn `displacementCenter` là 1: chiều cao bị dịch là `(đầu ra - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Giá trị của đầu ra `displacement` để bề mặt nguyên chỗ cũ, từ 0 đến 1.",
+      "parameters.displacementFadeStart": "Nơi độ dịch mờ dần theo khoảng cách, tính theo kích thước trên màn hình bằng pixel của độ dịch lớn nhất của nó: đầy đủ trên `displacementFadeStart`, biến mất dưới `displacementFadeEnd`, giá trị này phải nhỏ hơn; bỏ cả hai thì nó không bao giờ mờ đi.",
+      "parameters.displacementFadeEnd": "Xem `displacementFadeStart`."
     }
   },
   "material.volume": {
@@ -9181,7 +9310,13 @@
       "parameters.physics": "Chất liệu của một body mặc nó: mật độ, ma sát, độ nảy.",
       "parameters.density": "kg/m³, nhân với thể tích để ra khối lượng.",
       "parameters.friction": "Một body bám chặt bao nhiêu, từ 0 trở lên.",
-      "parameters.restitution": "Một body nảy bao nhiêu, 0 đến 1."
+      "parameters.restitution": "Một body nảy bao nhiêu, 0 đến 1.",
+      "parameters.specularIntensity": "Đầu vào phản chiếu của chất điện môi của bề mặt, từ 0 đến 1: độ phản xạ của nó ở góc tới vuông góc là 0,08 lần giá trị đó, nên 0,5 (giá trị của bề mặt không khai báo) cho 4 % thông thường, 1 cho 8 % và 0 không có điểm sáng. Hệ số `KHR_materials_specular` của một vật liệu glTF được ghi đúng như đã khai báo. Kim loại bỏ qua nó.",
+      "parameters.specularIntensityMap": "Nhân `specularIntensity` với kênh alpha của một ảnh.",
+      "parameters.displacementMagnitude": "Đầu ra `displacement` của đồ thị vật liệu dịch một bề mặt dọc pháp tuyến của nó bao xa, tính bằng mét, ở nơi nó lớn hơn `displacementCenter` là 1: chiều cao bị dịch là `(đầu ra - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Giá trị của đầu ra `displacement` để bề mặt nguyên chỗ cũ, từ 0 đến 1.",
+      "parameters.displacementFadeStart": "Nơi độ dịch mờ dần theo khoảng cách, tính theo kích thước trên màn hình bằng pixel của độ dịch lớn nhất của nó: đầy đủ trên `displacementFadeStart`, biến mất dưới `displacementFadeEnd`, giá trị này phải nhỏ hơn; bỏ cả hai thì nó không bao giờ mờ đi.",
+      "parameters.displacementFadeEnd": "Xem `displacementFadeStart`."
     }
   },
   "material.lightFunction": {
@@ -9245,7 +9380,13 @@
       "parameters.physics": "Chất liệu của một body mặc nó: mật độ, ma sát, độ nảy.",
       "parameters.density": "kg/m³, nhân với thể tích để ra khối lượng.",
       "parameters.friction": "Một body bám chặt bao nhiêu, từ 0 trở lên.",
-      "parameters.restitution": "Một body nảy bao nhiêu, 0 đến 1."
+      "parameters.restitution": "Một body nảy bao nhiêu, 0 đến 1.",
+      "parameters.specularIntensity": "Đầu vào phản chiếu của chất điện môi của bề mặt, từ 0 đến 1: độ phản xạ của nó ở góc tới vuông góc là 0,08 lần giá trị đó, nên 0,5 (giá trị của bề mặt không khai báo) cho 4 % thông thường, 1 cho 8 % và 0 không có điểm sáng. Hệ số `KHR_materials_specular` của một vật liệu glTF được ghi đúng như đã khai báo. Kim loại bỏ qua nó.",
+      "parameters.specularIntensityMap": "Nhân `specularIntensity` với kênh alpha của một ảnh.",
+      "parameters.displacementMagnitude": "Đầu ra `displacement` của đồ thị vật liệu dịch một bề mặt dọc pháp tuyến của nó bao xa, tính bằng mét, ở nơi nó lớn hơn `displacementCenter` là 1: chiều cao bị dịch là `(đầu ra - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Giá trị của đầu ra `displacement` để bề mặt nguyên chỗ cũ, từ 0 đến 1.",
+      "parameters.displacementFadeStart": "Nơi độ dịch mờ dần theo khoảng cách, tính theo kích thước trên màn hình bằng pixel của độ dịch lớn nhất của nó: đầy đủ trên `displacementFadeStart`, biến mất dưới `displacementFadeEnd`, giá trị này phải nhỏ hơn; bỏ cả hai thì nó không bao giờ mờ đi.",
+      "parameters.displacementFadeEnd": "Xem `displacementFadeStart`."
     }
   },
   "material.graph": {
@@ -9315,7 +9456,13 @@
       "parameters.physics": "Chất liệu của vật mang nó: mật độ, ma sát, độ nảy.",
       "parameters.density": "kg/m³, nhân với thể tích ra khối lượng.",
       "parameters.friction": "Mức bám của vật, từ 0 trở lên.",
-      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1."
+      "parameters.restitution": "Mức nảy của vật, từ 0 đến 1.",
+      "parameters.specularIntensity": "Đầu vào phản chiếu của chất điện môi của bề mặt, từ 0 đến 1: độ phản xạ của nó ở góc tới vuông góc là 0,08 lần giá trị đó, nên 0,5 (giá trị của bề mặt không khai báo) cho 4 % thông thường, 1 cho 8 % và 0 không có điểm sáng. Hệ số `KHR_materials_specular` của một vật liệu glTF được ghi đúng như đã khai báo. Kim loại bỏ qua nó.",
+      "parameters.specularIntensityMap": "Nhân `specularIntensity` với kênh alpha của một ảnh.",
+      "parameters.displacementMagnitude": "Đầu ra `displacement` của đồ thị vật liệu dịch một bề mặt dọc pháp tuyến của nó bao xa, tính bằng mét, ở nơi nó lớn hơn `displacementCenter` là 1: chiều cao bị dịch là `(đầu ra - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Giá trị của đầu ra `displacement` để bề mặt nguyên chỗ cũ, từ 0 đến 1.",
+      "parameters.displacementFadeStart": "Nơi độ dịch mờ dần theo khoảng cách, tính theo kích thước trên màn hình bằng pixel của độ dịch lớn nhất của nó: đầy đủ trên `displacementFadeStart`, biến mất dưới `displacementFadeEnd`, giá trị này phải nhỏ hơn; bỏ cả hai thì nó không bao giờ mờ đi.",
+      "parameters.displacementFadeEnd": "Xem `displacementFadeStart`."
     }
   },
   "material.createShader": {
@@ -9980,5 +10127,80 @@
   },
   "writeEngineCamera": {
     "summary": "Suy ra mọi thứ mà một khung hình đọc từ `into.world`, đã được đặt, và quang học đã khai báo: phép chiếu theo quy ước độ sâu của bộ máy, sau đó là view, view-projection và sáu mặt phẳng khối nhìn (`updateCameraFrame`), khung render (`renderOrigin.ts`) và mắt."
+  },
+  "COLLISION_CHANNELS": {
+    "summary": "KÊNH VA CHẠM VÀ PHẢN HỒI.",
+    "description": "Một vật thể có một kiểu đối tượng, một trong 64 kênh, và một phản hồi cho mỗi kênh — `ignore`, `overlap` hoặc `block`. Hai vật thể gặp nhau theo điều mỗi bên đáp lại kênh của bên kia, phản hồi yếu hơn trong hai phản hồi quyết định: cả hai `block` thì va chạm; phản hồi yếu hơn là `overlap` thì chúng xuyên qua nhau và báo là chúng chồng lên nhau; một bên `ignore` thì chúng không biết nhau. Một truy vấn cảnh có kênh và phản hồi riêng và gặp các vật thể theo cùng quy tắc (`channelsMeet`). Tám kênh đầu là của engine; sáu kênh nữa được dành riêng, và năm mươi kênh là của trò chơi, đặt tên tùy ý. Một HỒ SƠ có tên đặt trong một từ một kiểu đối tượng, vật thể nào di chuyển hay cảm nhận, và một phản hồi cho mọi kênh; các hồ sơ dưới đây là mặc định của engine."
+  },
+  "COLLISION_PROFILES": {
+    "summary": "Các hồ sơ va chạm của engine.",
+    "description": "Mọi kênh không được nêu tên đều đáp `block`."
+  },
+  "CharacterMode": {
+    "summary": "Thân di chuyển ra sao: trên sàn, trên không, dưới nước, hoặc bay tự do khỏi trọng lực."
+  },
+  "CollisionChannel": {
+    "summary": "Một kênh theo tên."
+  },
+  "CollisionProfileName": {
+    "summary": "Một hồ sơ theo tên."
+  },
+  "CollisionResponse": {
+    "summary": "Một phản hồi theo tên."
+  },
+  "OverlapHit": {
+    "summary": "Một vật thể mà một hình đã gặp: đối tượng của nó, nó có chặn truy vấn hay không (nếu không thì nó chồng lên truy vấn), và vật liệu glTF của tam giác đã nướng được gặp (`-1` cho hình riêng của vật thể)."
+  },
+  "OverlapOptions": {
+    "summary": "Điều `world.physics.overlap` hỏi, ngoài hình.",
+    "members": {
+      "at": "Tâm của hình, trong hệ quy chiếu thế giới.",
+      "rotation": "Một quaternion đơn vị `[x, y, z, w]`.",
+      "channel": "Kênh mà truy vấn đang ở và các phản hồi nó đưa ra cho các kênh, như một vật thể có (`CollisionOptions`): truy vấn gặp một vật thể theo phản hồi yếu hơn trong điều mỗi bên đáp lại kênh của bên kia — cả hai `block`, vật thể chặn truy vấn; một bên `overlap`, nó chồng lên truy vấn; một bên `ignore`, nó không được gặp. Một vật thể không tham gia truy vấn nào thì không bao giờ được gặp.",
+      "objectTypes": "Tìm các vật thể thuộc các kiểu đối tượng này, bất kể chúng đáp gì: mọi vật thể được gặp đều chặn. Thay thế `channel`.",
+      "mode": "`multi` liệt kê mọi vật thể được gặp; `any` dừng ở vật thể đầu tiên được gặp; `blocking` ở vật thể đầu tiên chặn.",
+      "ignore": "Một vật thể mà truy vấn đi xuyên qua: của bên hỏi."
+    }
+  },
+  "OverlapResult": {
+    "summary": "Điều một hình đã gặp: các vật thể theo thứ tự id engine của chúng, và có vật thể nào chặn hay không.",
+    "members": {
+      "blocking": "Có vật thể nào được gặp chặn truy vấn hay không."
+    }
+  },
+  "OverlapShape": {
+    "summary": "Một hình để kiểm tra tại một nơi: hình cầu, hình hộp hoặc viên nang (đứng thẳng, xoay bởi `rotation`)."
+  },
+  "RESPONSE": {
+    "summary": "Điều một vật thể đáp lại một kênh, từ ít đến nhiều: nó không biết kênh, nó xuyên qua kênh và báo, nó dừng lại trước kênh."
+  },
+  "ResolvedCollision": {
+    "summary": "Va chạm của một vật thể đã được xác định: kênh của nó, và các kênh nó chặn và chồng lên dưới dạng mặt nạ bit (bit `i` là kênh `i`).",
+    "members": {
+      "objectType": "Kênh, bắt đầu từ 0.",
+      "block": "Bit `i` được đặt: vật thể chặn kênh `i`.",
+      "overlap": "Bit `i` được đặt: vật thể chồng lên kênh `i`.",
+      "query": "Tham gia các truy vấn cảnh và các phép chồng lấn.",
+      "physics": "Tham gia mô phỏng."
+    }
+  },
+  "channelIndex": {
+    "summary": "Số của một kênh được cho theo tên hoặc theo số; từ chối thứ không phải cả hai."
+  },
+  "channelsMeet": {
+    "summary": "Phản hồi mà `a` và `b` gặp nhau: mỗi bên đáp lại kênh của bên kia, phản hồi yếu hơn quyết định."
+  },
+  "defaultProfile": {
+    "summary": "Hồ sơ mà một vật thể được tạo ra khi nó không nêu hồ sơ nào (`CollisionOptions.profile`)."
+  },
+  "resolveCollision": {
+    "summary": "Va chạm của một vật thể được xác định từ `options` và hồ sơ `fallback` nó xuất phát khi không nêu hồ sơ nào: các phản hồi của hồ sơ (mọi kênh không nêu tên là `block`), rồi `responses` đè lên chúng, kênh `objectType` và công tắc `enabled` đè lên của hồ sơ.",
+    "parameters": {
+      "options": "Va chạm của một vật thể, như `obj.physics` nhận: một hồ sơ, rồi những gì khác với nó.",
+      "options.profile": "Một hồ sơ để xuất phát.",
+      "options.objectType": "Kênh mà vật thể là: điều những vật khác đáp lại.",
+      "options.responses": "Điều vật thể đáp lại các kênh, đè lên của hồ sơ; một kênh là một tên hoặc số của nó.",
+      "options.enabled": "Vật thể có tham gia mô phỏng, các truy vấn, cả hai hay không cái nào."
+    }
   }
 }

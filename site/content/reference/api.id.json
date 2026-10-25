@@ -619,14 +619,16 @@
   },
   "CharacterCameraControls": {
     "summary": "SEORANG KARAKTER, dilihat lewat matanya: tubuh bermassa yang berjalan, berlari, melompat, dan jatuh, dan bertabrakan dengan benda-benda fisika dunia sebagai kapsul tegak.",
-    "description": "Penunjuk memutar kepala seperti pada orang pertama (`look.ts`). Tombol-tombolnya, menurut `KeyboardEvent.code` sehingga setiap tata letak keyboard memainkan tombol yang sama: W/S atau panah atas dan bawah berjalan maju dan mundur, A/D atau panah samping bergeser ke samping, Shift berlari, Spasi melompat, C berjongkok (`canCrouch`); di dalam air tubuh berenang ke arah kepala memandang, Spasi naik dan tombol jongkok tenggelam, dan dengan `flying` diatur ia terbang demikian. Tubuh tidak mulai atau berhenti seketika: ia mengumpulkan kecepatan selama `responseTime` dan mengerem selama `stopTime`, tidak pernah lebih cepat daripada yang diizinkan gesekan lantainya bagi tolakan sebuah telapak, sehingga berhenti sedikit meluncur di batu dan jauh di es; ia mempertahankan momentumnya di udara, naik dan turun di bawah gravitasi dunia kali `gravityScale`, memanjat tepian hingga `stepHeight`, meluncur di sepanjang dinding dan berdiri di lereng hingga `maxSlope` (`sdk-browser/src/physics/character/characterDriver.ts`, `sdk-core/src/collision/characterDrive.ts`). Kamera adalah mata, `eyeHeight` di atas kaki, bergoyang mengikuti langkah sebesar `headBob` dan merunduk saat mendarat sebesar `landingDip` (`sdk-core/src/collision/characterEye.ts`); keduanya bertumpu pada mata setelah langkah tubuh dan tidak pernah menggerakkan tubuh. Host yang menggerakkan kamera sendiri memindahkan tubuh ke sana, dalam keadaan diam. Karakter yang diam — menapak, tanpa kecepatan, tanpa tombol, tanpa sisa dip — tidak memancarkan apa pun, sehingga adegan tetap diam.",
+    "description": "Penunjuk memutar kepala seperti dalam orang pertama (`look.ts`). Tombolnya, menurut `KeyboardEvent.code` agar setiap tata letak papan ketik memainkan tombol yang sama: W/S atau panah atas dan bawah berjalan maju dan mundur, A/D atau panah samping bergeser ke samping, Shift berlari kencang, Spasi melompat, C jongkok (`canCrouch`); di air tubuh berenang ke arah kepala memandang, Spasi naik dan tombol jongkok tenggelam, dan dengan `flying` diatur ia terbang demikian. Tubuh tidak mulai atau berhenti sekaligus: di lantai ia menambah kecepatan dengan `maxAcceleration` dan mengerem dengan `groundFriction` dan `brakingDecelerationWalking`; ia mempertahankan momentum di udara, naik dan jatuh di bawah gravitasi dunia kali `gravityScale`, memanjat tepian hingga `stepHeight`, meluncur di sepanjang dinding dan berdiri di lereng hingga `maxSlope` (`sdk-browser/src/physics/character/characterDriver.ts`, `sdk-core/src/collision/characterDrive.ts`). Kamera adalah mata, setinggi `eyeHeight` di atas kaki, yang bergoyang dengan langkah sebesar `headBob` dan turun saat mendarat sebesar `landingDip` (`sdk-core/src/collision/characterEye.ts`); keduanya bekerja pada mata setelah langkah tubuh dan tidak pernah menggerakkan tubuh. Host yang menggerakkan kamera sendiri memindahkan tubuh ke sana, dalam keadaan diam. Karakter yang diam — di lantai, tanpa kecepatan, tanpa tombol, tanpa sisa penurunan — tidak memancarkan apa-apa, sehingga adegan tetap diam.",
     "members": {
       "velocity": "Kecepatan tubuh dalam meter per detik, langsung: `[x, y, z]`, y ke atas.",
       "onGround": "Apakah kaki berada di lantai.",
       "stride": "Fase langkah dalam radian, dalam [0, 2π): satu kaki melangkah pada 0, yang lain pada π.",
       "onLand": "Dipanggil saat mendarat dengan kecepatan ke bawah, dalam meter per detik: sebuah suara, sebuah goncangan.",
       "onJump": "Dipanggil saat tubuh meninggalkan tanah karena melompat.",
-      "update": "Menjalani `delta` detik; mengembalikan apakah kamera bergerak, dan memancarkan `change` saat ia bergerak."
+      "update": "Menjalani `delta` detik; mengembalikan apakah kamera bergerak, dan memancarkan `change` saat ia bergerak.",
+      "mode": "Bagaimana tubuh bergerak sekarang: `walking`, `falling`, `swimming` atau `flying`.",
+      "crouched": "Apakah tubuh sedang jongkok."
     }
   },
   "CharacterSettings": {
@@ -1957,7 +1959,7 @@
       "emptyTexels": "Apa yang dimuat atlas layer `approximate` atau `simplify` di tempat yang tak memuat nilai chart mana pun (`HLOD_EMPTY_TEXELS`): `nearestChart`, nilai chart terdekat pada setiap peta, atau `black`; `true` bawaan, `false` `black`.",
       "clusterDag": "Apakah mesh tiap aktor yang dibangun layer `approximate`, `merge`, atau `simplify` mendapat DAG cluster, tingkat yang lebih kasar digambar dalam galat piksel; `false`, bawaan, satu tingkat digambar utuh pada setiap jarak, seperti acuan membangun mesh gabungan, aproksimasi, atau sederhanaan secara bawaan.",
       "allowDistanceField": "Apakah mesh tiap aktor yang dibangun layer `approximate`, `merge`, atau `simplify` mendapat distance field (pengaturan tiap pembangun acuan): kompilator membangunnya dari segitiga milik aktor dalam ruang dunia, dengan pengaturan mesh adegan (`distanceField…` milik `meshBuild`), ke dalam `distanceFields.bin`, dan bayangan distance field matahari menggambarnya di tempat aktor digambar — bayangan tingkat gabungan melewati peta bayangan terakhir. `true` secara bawaan untuk layer `approximate`, `false` untuk layer `merge` atau `simplify`, sebagaimana pembangun acuan menetapkannya. Objek layer `instanced` menggambar mesh-nya sendiri, yang punya field-nya sendiri; layer `voxel` tidak membangun segitiga.",
-      "disallowClusterDag": "Apakah layer `instanced` menggambar objek yang diambilnya tanpa DAG cluster-nya: `false`, bawaan, masing-masing mempertahankan DAG-nya sendiri, mesh sumbernya ditempatkan, dan layer tidak membangun mesh; `true`, masing-masing digambar pada LOD terakhir mesh-nya, mesh cadangannya (`lodSelection: 'lowest'`), sebagaimana acuan menggambar mesh ter-instance yang DAG cluster-nya tidak diizinkan. Layer lalu membangun cadangan itu seperti layer `merge` yang mempertahankan materialnya — satu mesh per sel dan material, digambar utuh, memakai material sumber, tidak pernah salinan DAG milik objek — dan setiap aturan `merge` berlaku padanya (`parent`, `spatiallyLoaded`, grid selnya); objek yang ditandai `hlodInstance` tetap berdiri sendiri.",
+      "disallowClusterDag": "Apakah lapisan `instanced` menggambar objek yang diambilnya tanpa DAG klaster-nya: `false`, bawaannya, masing-masing mempertahankan DAG-nya sendiri, mesh sumbernya ditempatkan, dan lapisan tidak membangun mesh; `true`, masing-masing digambar pada LOD terakhir mesh-nya, mesh cadangannya (`lodSelection: 'lowest'`), seperti referensi menggambar mesh terinstansi yang DAG klaster-nya dilarang. Lapisan tetap terinstansi: kompiler membuat cadangan setiap mesh sumber sekali saja, dan objek lapisan adalah baris darinya pada matriksnya — tidak ada yang disalin per objek atau per sel —, digambar utuh pada setiap jarak. Objek berskinning, bermorphing atau tersimulasi, dan milik sebuah rakitan, mempertahankan mesh-nya sendiri.",
       "meshBuild": "Bagaimana layer `merge` atau `simplify` membangun mesh tiap aktor yang dibuatnya (`HLOD_MESH_BUILD_SETTINGS`), sebagaimana acuan membacanya hanya dari layer itu: apa yang dipertahankan tingkat terhalusnya (`keptTriangles`, `trimmedError`), apakah segitiganya yang nyaris runtuh dibuang (`dropNearCollapsed`), berapa banyak yang tetap resident selama aktornya dimuat (`alwaysResidentKib`, halaman akar selnya), dan bagaimana ia mempertahankan bentuknya (`shapePreservation`, `edgeLengthBound`, `holdTextureCoordinates`). Milik layer `voxel` justru menamai bagaimana voxel selnya disampel — `voxelRays`, `voxelLevel`, `voxelBackUp`, `voxelSeparable`, `voxelNdf`, `voxelOpacity`, sebagaimana `meshBuild` sebuah mesh menamainya.",
       "sizeFilter": "Objek mana yang diambil layer `instanced` menurut ukuran kotak dunianya: `none`; `extent`, setengah rentang terbesarnya paling sedikit `minExtent` meter; `area`, permukaannya paling sedikit `minArea` meter persegi; `volume`, volumenya paling sedikit `minVolume` meter kubik. Objek yang ditolak tidak masuk HLOD mana pun.",
       "minExtent": "Setengah rentang terkecil, meter, sebuah filter `extent`.",
@@ -2392,7 +2394,7 @@
     "description": "Ini adalah pilihan produk bernama, bukan konstanta terkubur: setiap batas saat berjalan membacanya ulang, dan diagnostik mempublikasikannya apa adanya.",
     "members": {
       "sunAngularRadius": "Radius sudut cakram matahari dalam radian; nol secara eksplisit meminta bayangan keras. Ini adalah bawaan cahaya directional sendiri (cakram 0,5357 derajat); bagian matahari modul langit mengatur milik tingkat (0,7357 derajat, `modules/sky/sunPart.ts`) pada cahaya yang dibuatnya, sehingga cahaya yang ditempatkan sendiri dan matahari langit berbeda di sini sebagaimana komponen dan tingkat asalnya berbeda.",
-      "tileLights": "Daftar terpanjang sel kisi cahaya tempat gambar yang BERGERAK mengambil sampel (X2): melewati itu, cahaya sel dijumlahkan penuh. Adegan dengan paling banyak sejumlah itu cahaya diterangi dengan larik cahaya sepanjang itu. Daftar sebuah sel memuat setiap cahaya yang mencapainya, berapa pun jumlahnya, dalam kolam seukuran tampilan; sel yang tidak lagi mendapat tempat di kolam menelusuri semua cahaya adegan — yang tidak mencapainya menambahkan nol tepat —, sehingga tidak ada cahaya yang hilang.",
+      "tileLights": "Daftar terpanjang sebuah sel kisi cahaya tempat gambar yang BERGERAK mengambil sampel (X2): melewati itu, cahaya sel dijumlahkan penuh. Adegan dengan paling banyak sejumlah itu cahaya diterangi dengan larik cahaya sepanjang itu. Daftar sebuah sel menyimpan cahaya yang mencapainya dalam pool berukuran tetap, sel-selnya kali `lightGridMaxCulledLightsPerCell` (`hizOptions.ts`, 32): kolom yang melampauinya mempertahankan cahaya yang didapatnya, berurutan, dan membuang sisanya, seperti yang dilakukan referensi.",
       "tileSize": "Sisi dalam piksel dari sel kisi cahaya.",
       "gridSlices": "Irisan kedalaman grid cahaya: yang terakhir dimulai pada jangkauan cahaya terjauh dan selnya mencapai tak terhingga.",
       "gridDepthDistribution": "Distribusi irisan grid, `slice = log2(depth · B + O) · S` (`lighting/tiles/gridMap.ts`): `S`, berapa banyak irisan yang mencakup penggandaan kedalaman yang awal irisan pertamanya digeser oleh O.",
@@ -2501,7 +2503,8 @@
       "p.cloudShadowExtentKm": "Radius di sekitar kamera yang dicakup peta, dalam kilometer, mulai dari 1; 150 secara bawaan.",
       "p.cloudShadowResolutionScale": "Faktor pada 512 texel per sisi peta, mulai dari 0,25; 1 secara bawaan.",
       "p.cloudShadowRaySamplesScale": "Faktor pada 16 sampel yang diambil sinar peta, mulai dari 0,25; 1 secara bawaan.",
-      "p.cloudScatteredLuminanceScale": "Faktor pada cahaya di dalam awan, linear; putih secara bawaan."
+      "p.cloudScatteredLuminanceScale": "Faktor pada cahaya di dalam awan, linear; putih secara bawaan.",
+      "p.mobility": "Bagaimana cahaya dimaksudkan bergerak dan diterangi: `'static'`, `'stationary'` atau `'movable'`; `'stationary'` secara bawaan."
     },
     "members": {
       "isLight": "Selalu `true`: membedakan sebuah cahaya dari objek lain.",
@@ -2574,7 +2577,8 @@
       "cloudShadowExtentKm": "Radius di sekitar kamera yang dicakup peta, dalam kilometer, mulai dari 1; 150.",
       "cloudShadowResolutionScale": "Faktor pada 512 texel per sisi peta, mulai dari 0,25; 1.",
       "cloudShadowRaySamplesScale": "Faktor pada 16 sampel yang diambil sinar peta, mulai dari 0,25; 1.",
-      "cloudScatteredLuminanceScale": "Faktor pada cahaya di dalam awan, linear; putih. Ubah di tempat dengan `set`."
+      "cloudScatteredLuminanceScale": "Faktor pada cahaya di dalam awan, linear; putih. Ubah di tempat dengan `set`.",
+      "mobility": "Bagaimana cahaya dimaksudkan bergerak dan diterangi: `'static'` (dipanggang, tidak menghasilkan bayangan dinamis), `'stationary'` (tidak bergerak; warna dan intensitasnya boleh berubah) atau `'movable'` (sepenuhnya dinamis); `'stationary'` secara bawaan, untuk setiap jenis. Nilai lain ditolak (`INVALID_SCENE_LIGHT`). Penulisan langsung sampai ke dunia."
     }
   },
   "LightCloudShadowParameters": {
@@ -2630,7 +2634,8 @@
       "shadowsAir": "Hanya directional: apakah bayangan cahaya juga menaungi udara (haze dan march langit membacanya sepanjang sinarnya); mati secara bawaan.",
       "transmittancePerPixel": "Hanya directional: apakah transmitans udara menuju cahaya dibaca untuk setiap titik permukaan dan bukan sekali di tanah; mati secara bawaan.",
       "sunDiskTint": "Hanya directional: warna yang dikalikan pada cakram matahari di langit, linear; putih secara bawaan.",
-      "sh": "Irradiansi sebuah probe: 27 angka, sembilan koefisien harmonik sferis RGB dari radiansi dalam urutan pita konstan, `y`, `z`, `x`, `xy`, `yz`, `3z² − 1`, `xz`, `x² − y²`, diskalakan oleh `intensity`; dibangun oleh `emptyIrradiance` dan helper `add…Irradiance`. Jika tidak ada, probe seragam."
+      "sh": "Irradiansi sebuah probe: 27 angka, sembilan koefisien harmonik sferis RGB dari radiansi dalam urutan pita konstan, `y`, `z`, `x`, `xy`, `yz`, `3z² − 1`, `xz`, `x² − y²`, diskalakan oleh `intensity`; dibangun oleh `emptyIrradiance` dan helper `add…Irradiance`. Jika tidak ada, probe seragam.",
+      "mobility": "Bagaimana cahaya dimaksudkan bergerak dan diterangi: `'static'`, `'stationary'` atau `'movable'`; `'stationary'` secara bawaan."
     }
   },
   "LightShadowOptions": {
@@ -2811,7 +2816,13 @@
       "parameters.physics": "Bahan benda yang memakainya: massa jenis, gesekan, pantulan.",
       "parameters.density": "kg/m³, dikali volume menjadi massa.",
       "parameters.friction": "Seberapa kuat benda mencengkeram, 0 ke atas.",
-      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1."
+      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1.",
+      "parameters.specularIntensity": "Masukan spekular dielektrik permukaan, 0 sampai 1: reflektansinya pada datang tegak lurus adalah 0,08 darinya, sehingga 0,5 (nilai permukaan yang tidak mendeklarasikannya) memberi 4 % yang lazim, 1 memberi 8 % dan 0 tanpa sorotan. Faktor `KHR_materials_specular` material glTF ditulis sebagaimana dideklarasikan. Logam mengabaikannya.",
+      "parameters.specularIntensityMap": "Mengalikan `specularIntensity` dengan kanal alfa sebuah gambar.",
+      "parameters.displacementMagnitude": "Sejauh apa, dalam meter, keluaran `displacement` graf material menggeser permukaan sepanjang normalnya di mana nilainya 1 di atas `displacementCenter`: tinggi yang digeser adalah `(keluaran - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Nilai keluaran `displacement` yang membiarkan permukaan di tempatnya, dari 0 sampai 1.",
+      "parameters.displacementFadeStart": "Di mana pergeseran memudar menurut jarak, sebagai ukuran di layar dalam piksel dari pergeseran terbesarnya: utuh di atas `displacementFadeStart`, hilang di bawah `displacementFadeEnd`, yang harus lebih kecil; keduanya dihilangkan, ia tidak pernah memudar.",
+      "parameters.displacementFadeEnd": "Lihat `displacementFadeStart`."
     },
     "members": {
       "isMaterial": "Selalu `true`: membedakan sebuah material dari yang lain.",
@@ -2852,7 +2863,11 @@
       "volumeOutputs": "Output material domain volume, ditahan pada rentangnya: albedonya, ekstingsinya, dan cahaya emisifnya (`emissive` dikali `emissiveIntensity`).",
       "surface": "Catatan permukaan fisik mesin untuk material ini (`contracts/material.ts`). Sebuah jenis di luar keluarga fisik digambar lewat keluarga host bernama sama, yang dipetakan mesin ke satu model pencahayaannya (`surfaceModel.ts`).",
       "clone": "Material baru dengan jenis yang sama, dengan nilai yang sama.",
-      "dispose": "Melupakan pemakainya: sebuah material yang dibuang tidak mengecat siapa pun."
+      "dispose": "Melupakan pemakainya: sebuah material yang dibuang tidak mengecat siapa pun.",
+      "displacementMagnitude": "Sejauh apa, dalam meter, keluaran `displacement` graf material menggeser permukaan sepanjang normalnya di mana nilainya 1 di atas `displacementCenter`: tinggi yang digeser adalah `(keluaran - displacementCenter) * displacementMagnitude`.",
+      "displacementCenter": "Nilai keluaran `displacement` yang membiarkan permukaan di tempatnya, dari 0 sampai 1.",
+      "displacementFadeStart": "Di mana pergeseran permukaan memudar menurut jarak, sebagai ukuran di layar dalam piksel dari pergeseran terbesarnya: utuh di atas `displacementFadeStart`, hilang di bawah `displacementFadeEnd` (yang lebih kecil). Keduanya tidak diatur, ia tidak pernah memudar.",
+      "displacementFadeEnd": "Lihat `displacementFadeStart`."
     }
   },
   "MaterialGraph": {
@@ -2923,7 +2938,13 @@
       "physics": "Bahan benda yang memakainya: massa jenis, gesekan, pantulan.",
       "density": "kg/m³, dikali volume menjadi massa.",
       "friction": "Seberapa kuat benda mencengkeram, 0 ke atas.",
-      "restitution": "Seberapa kuat benda memantul, 0 sampai 1."
+      "restitution": "Seberapa kuat benda memantul, 0 sampai 1.",
+      "specularIntensity": "Masukan spekular dielektrik permukaan, 0 sampai 1: reflektansinya pada datang tegak lurus adalah 0,08 darinya, sehingga 0,5 (nilai permukaan yang tidak mendeklarasikannya) memberi 4 % yang lazim, 1 memberi 8 % dan 0 tanpa sorotan. Faktor `KHR_materials_specular` material glTF ditulis sebagaimana dideklarasikan. Logam mengabaikannya.",
+      "specularIntensityMap": "Mengalikan `specularIntensity` dengan kanal alfa sebuah gambar.",
+      "displacementMagnitude": "Sejauh apa, dalam meter, keluaran `displacement` graf material menggeser permukaan sepanjang normalnya di mana nilainya 1 di atas `displacementCenter`: tinggi yang digeser adalah `(keluaran - displacementCenter) * displacementMagnitude`.",
+      "displacementCenter": "Nilai keluaran `displacement` yang membiarkan permukaan di tempatnya, dari 0 sampai 1.",
+      "displacementFadeStart": "Di mana pergeseran memudar menurut jarak, sebagai ukuran di layar dalam piksel dari pergeseran terbesarnya: utuh di atas `displacementFadeStart`, hilang di bawah `displacementFadeEnd`, yang harus lebih kecil; keduanya dihilangkan, ia tidak pernah memudar.",
+      "displacementFadeEnd": "Lihat `displacementFadeStart`."
     }
   },
   "MaterialSettings": {
@@ -3376,7 +3397,10 @@
       "rotateZ": "Memutar node mengelilingi sumbu z-nya sendiri.",
       "translateOnAxis": "Menggerakkan node sepanjang `axis`-nya sendiri.",
       "getWorldDirection": "Arah hadap node di dunia.",
-      "localBounds": "Kotak isi node ini sendiri, kerangka lokal; node biasa tidak memilikinya."
+      "localBounds": "Kotak isi node ini sendiri, kerangka lokal; node biasa tidak memilikinya.",
+      "firstPerson": "Apakah objek digambar sebagai objek orang pertama (tangan dan senjata seorang pemain): ia tidak menghasilkan bayangan dinamis sendiri, dan pikselnya membawa tanda orang pertama yang diperlakukan terpisah oleh bayangan; `false` secara bawaan, dan tidak pernah bersama `firstPersonWorldSpaceRepresentation`.",
+      "firstPersonWorldSpaceRepresentation": "Apakah objek mewakili, di dunia, objek orang pertama (tubuh pemain): tampilan pemiliknya tidak melihatnya, dan ia menghasilkan bayangannya ke clipmap orang pertama matahari (`shadowFirstPersonClipmap`), terpisah dari peta biasa, dan tampilan yang memilikinya (milik kamera utama) tidak menggambarnya; `false` secara bawaan, dan tidak pernah bersama `firstPerson`.",
+      "castHiddenShadow": "Apakah objek tetap menghasilkan bayangannya selagi tersembunyi (`visible = false`, atau di bawah node tersembunyi): tidak ada tampilan yang menggambarnya, peta bayangan ya; `false` secara bawaan, dan hanya dibaca untuk objek yang menghasilkan bayangan dan bukan `firstPersonWorldSpaceRepresentation`."
     }
   },
   "ObjectPhysics": {
@@ -3772,7 +3796,9 @@
       "forVertexTangents": "Apakah faktor normalnya ditulis untuk tangen vertex; tak disebut, tidak diketahui.",
       "shininess": "Eksponen dan warna sorot permukaan Phong, sebagaimana dideklarasikan.",
       "released": "Dipanggil ketika sumber daya dikembalikan: apa yang didengarkan salinan milik mesin.",
-      "dispose": "Mengembalikan sumber daya."
+      "dispose": "Mengembalikan sumber daya.",
+      "subsurfaceOpacity": "Opasitas subpermukaannya, 0 sampai 1, satu bila tidak disebut (`SUBSURFACE_OPACITY_MODEL_SHIFT`).",
+      "specularIntensity": "Masukan spekular sebuah dielektrik (`KHR_materials_specular`): reflektansinya pada datang tegak lurus adalah 0,08 darinya (`surfaceF0`), 0,5 di mana permukaan tidak mendeklarasikannya. Alfa petanya menskalakannya. Bila dideklarasikan, ia dibaca dari rekaman apa pun lagi yang dikenakan permukaan."
     }
   },
   "PageUnit": {
@@ -4693,7 +4719,8 @@
       "shaftBloomScale": "Dengan bloom: faktor pada warna yang ditambahkan; jika tidak ada, 0,2.",
       "shaftBloomThreshold": "Dengan bloom: kecerahan yang harus dilampaui gambar, setelah eksposur, agar mekar; jika tidak ada, 0.",
       "shaftBloomMaxBrightness": "Dengan bloom: kecerahan di atasnya, setelah eksposur, diturunkan ke nilai itu; jika tidak ada, 100.",
-      "shaftBloomTint": "Dengan bloom: faktor pada warna bloom, linear, tiga angka minimal 0; jika tidak ada, putih."
+      "shaftBloomTint": "Dengan bloom: faktor pada warna bloom, linear, tiga angka minimal 0; jika tidak ada, putih.",
+      "mobility": "Bagaimana cahaya dimaksudkan bergerak dan diterangi: `static` (dipanggang ke dalam lightmap, ia tidak bergerak atau berubah dan tidak menghasilkan bayangan dinamis), `stationary` (ia tidak bergerak, warna dan intensitasnya boleh berubah: cahaya langsungnya pada permukaan statis dipanggang, bayangan dinamisnya dihasilkan) atau `movable` (sepenuhnya dinamis); bila tidak ada, `stationary`, bawaan referensi untuk setiap jenis cahaya. Lightmap volumetrik membacanya (`mobilityOf`)."
     }
   },
   "SceneLightStore": {
@@ -4931,7 +4958,7 @@
   },
   "ShadowCacheInvalidation": {
     "summary": "BAGAIMANA SEBUAH NODE ADEGAN MENYIMPAN WORLD POSITION OFFSET-NYA: empat saklar objek yang material permukaannya menggeser vertex dengan keluaran `worldPositionOffset` (`Material.graph`), dibaca raster mesin.",
-    "description": "`evaluateWorldPositionOffset` (true) menyalakan offset untuk objek, `worldPositionOffsetDisableDistance` (0, tidak pernah) menghentikannya melewati sekian meter dari kamera ke pusat batas objek, `worldPositionOffsetWritesVelocity` (true) menjadikan gerakan itu gerak bagi anti-aliasing temporal dan motion blur, dan `shadowCacheInvalidation` menyatakan bagaimana bayangannya disimpan: `auto` (bawaan) menggambarnya lagi selama offset-nya dievaluasi atau objek bergerak, `always` setiap gambar, `rigid` tidak karena offset-nya, `static` tidak karena offset maupun gerakannya. `alwaysEvaluateWorldPositionOffset` milik material sendiri menimpa dua yang pertama, `maxWorldPositionOffset`-nya membatasi seberapa jauh vertex bergerak. Disimpan dalam tabel tersendiri, sehingga node yang tidak menetapkan satu pun tidak memakan biaya: saklar ditulis melalui properti node (`defineOffsetSwitches`), dan dicatat seperti field node mana pun yang tak didengar hook pose (`noteNodeWrite`)."
+    "description": "`evaluateWorldPositionOffset` (true) menyalakan offset untuk objek, `worldPositionOffsetDisableDistance` (0, tidak pernah) menghentikannya melewati sekian meter dari kamera ke pusat batas objek, `worldPositionOffsetWritesVelocity` (true) menjadikan pergerakan itu gerakan bagi antialiasing temporal dan blur gerak, dan `shadowCacheInvalidation` menyatakan bagaimana bayangannya disimpan: `auto` (bawaan) menggambarnya lagi selama offsetnya dievaluasi atau objek bergerak, `always` setiap gambar, `rigid` tidak untuk offsetnya, `static` tidak untuk offsetnya maupun geraknya. `alwaysEvaluateWorldPositionOffset` milik material menimpa dua yang pertama, `maxWorldPositionOffset`-nya membatasi sejauh mana vertex bergerak. Dua sakelar lain objek disimpan di sampingnya, karena jarang sekali diatur: `firstPerson` (false), objek yang digambar sebagai objek orang pertama — dalam ruang tampilan, dekat kamera, seperti tangan dan senjata seorang pemain —, yang tidak menghasilkan bayangan dinamis sendiri, dan `firstPersonWorldSpaceRepresentation` (false), objek yang mewakili di dunia objek orang pertama — tubuh pemain —, yang tidak dilihat tampilan pemiliknya dan yang menghasilkan bayangannya terpisah dari peta biasa (`shadowFirstPersonClipmap`). Sebuah node adalah yang satu atau yang lain, tidak pernah keduanya. Yang terakhir, `castHiddenShadow` (false), membiarkan objek yang tersembunyi (`visible = false`, atau di bawah node tersembunyi) tetap menghasilkan bayangannya; tidak ada tampilan yang menggambarnya. Representasi ruang dunia disembunyikan dari tampilan yang memilikinya dan menghasilkan bayangan, apa pun kata ini. Disimpan dalam tabel tersendiri, sehingga node yang tidak mengatur satu pun tidak memakan biaya: sakelar ditulis melalui properti node (`defineOffsetSwitches`), dan dicatat seperti bidang node mana pun yang tidak didengar hook pose (`noteNodeWrite`)."
   },
   "ShadowDistanceOption": {
     "summary": "Jarak bayangan sebagaimana ditulis host: meter, `true` bawaan, `false` tidak ada."
@@ -4948,7 +4975,7 @@
       "shadowVsmPagesRendered": "Halaman yang dibersihkan lalu dirender pada frame ini; dibaca kembali beberapa frame kemudian.",
       "shadowVsmFreePages": "Halaman fisik bebas pada pesan status terakhir pool.",
       "shadowVsmLodBias": "Bias LOD resolusi global yang ditetapkan oleh beban pool.",
-      "shadowVsmProjectionPasses": "Pass proyeksi pada frame ini, masing-masing empat cahaya.",
+      "shadowVsmProjectionPasses": "Pass proyeksi pada gambar ini: milik matahari dan milik cahaya lokal.",
       "shadowVsmInvalidationMs": "Waktu GPU invalidasi halaman, dalam ms, dari waktu pass.",
       "shadowVsmMarkingMs": "Waktu GPU penandaan halaman, dalam ms, dari waktu pass.",
       "shadowVsmPageManagementMs": "Waktu GPU manajemen halaman, dalam ms, dari waktu pass.",
@@ -4960,15 +4987,15 @@
       "gpuLightListsMs": "Waktu GPU daftar cahaya.",
       "tileLightPoolReserved": "Kata yang dicadangkan ubin di luar daftarnya dalam pool indeks cahaya, pada bingkai tersampel terakhir dari adegan dengan lebih banyak cahaya daripada satu daftar; `null` selain itu.",
       "tileLightPoolCapacity": "Kata yang dimiliki pool indeks lampu pada frame sampel itu; `null` juga.",
-      "tileLightPoolOverflowed": "Apakah sebuah tile tidak mendapat ruang di pool pada frame sampel itu dan menelusuri setiap lampu.",
-      "tileLightPoolGrowths": "Berapa kali pool tumbuh hingga yang diminta frame yang meluap, sejak penjelajah dibuka.",
+      "tileLightPoolOverflowed": "Apakah sebuah kolom tidak menemukan ruang tersisa di pool pada frame yang disampel itu dan membuang cahaya melewatinya (`lightGridMaxCulledLightsPerCell`).",
       "gpuShadowsMs": "Waktu GPU tahap Shadows: setiap pass peta bayangan virtual, dan tidak ada pass lain.",
       "gpuLightingMs": "Waktu GPU pencahayaan.",
       "bounce": "Probe cahaya pantulan: apakah ada, apa yang dikandungnya, apa yang dilakukan pembaruannya.",
       "reflections": "Sinar refleksi gambar terakhir yang dihitung: tempat masing-masing berakhir, bagaimana march-nya melalui distance field global berakhir dan langkah yang ditempuh. `null` selama tampilan tidak membuat refleksi.",
       "surfaceCache": "Cache permukaan gambar terakhir: isi atlasnya, halaman yang ditangkapnya, mengapa mati. `null` selama tidak dibuat.",
       "ambientOcclusion": "Ambient occlusion ruang layar gambar terakhir. `null` selama tampilan tidak memilikinya.",
-      "toneTable": "Kubus tempat color grading mem-bake warna layar. `null` selama tampilan tidak memilikinya."
+      "toneTable": "Kubus tempat color grading mem-bake warna layar. `null` selama tampilan tidak memilikinya.",
+      "shadowVsmOverflowFlags": "Luapan yang dilihat bayangan dalam 10 detik terakhir, satu bit per jenis: 1 antrean pekerjaan penandaan non-klaster, 2 cahaya proyeksi satu-pass melewati maskernya, 4 pool halaman, 8 daftar pelempar bayangan melewati ruangnya. 0 bila tidak ada, atau bila `shadowAllowScreenOverflowMessages` bernilai false."
     }
   },
   "ShadowOptions": {
@@ -5333,7 +5360,9 @@
       "translucencyLighting": "Bagaimana cahaya menerangi permukaan blending (`VisMaterial.translucencyLighting`).",
       "translucencyPass": "Pass gambar tempat permukaan blending digambar (`VisMaterial.translucencyPass`).",
       "responsive": "Seberapa jauh anti-aliasing temporal memercayai riwayat di tempat permukaan digambar (`RESPONSIVE_SHIFT`): `'medium'` membaca pikselnya sebagai animasi piksel, `'full'` memulai ulang riwayatnya setiap gambar.",
-      "graph": "Graf yang menghitung keluaran sebagai ganti parameter dan peta; dibaca keluarga yang menggambar warna material (`GRAPH_FAMILIES`, `surfaceRecord.ts`)."
+      "graph": "Graf yang menghitung keluaran sebagai ganti parameter dan peta; dibaca keluarga yang menggambar warna material (`GRAPH_FAMILIES`, `surfaceRecord.ts`).",
+      "subsurfaceOpacity": "Seberapa opak subpermukaannya, 0 sampai 1.",
+      "specularIntensity": "Masukan spekular dielektrik permukaan fisik, yang dideklarasikan faktor glTF `KHR_materials_specular`, dan peta yang alfanya menskalakannya; bila tidak disebut, permukaan mempertahankan 0,5."
     }
   },
   "SurfaceDisplacement": {
@@ -5591,7 +5620,7 @@
   },
   "TextureCompression": {
     "summary": "Keluarga blok mana yang diambil kolam sebuah sesi, dan segala sesuatu yang mengikutinya.",
-    "description": "Cache menyimpan setiap rantai dalam BC (`PREVIEW_STORED_FORMAT`) dan men-bake-nya dalam keluarga lain yang diminta cook — semuanya secara bawaan — hanya di tempat gerbang kualitas mempertahankannya; perangkat menyebut keluarga mana yang disampelnya — kartu desktop BC, yang mobile ASTC atau ETC2, sebagian beberapa, adaptor perangkat lunak tidak ada. Sebuah atlas kemudian memiliki satu pool per LANE, tata letak yang dinamai sidecar: `lossless` (RGBA8, empat byte per texel — apa yang dibaca rantai yang tidak dimiliki keluarga sesi, file BC-nya didekode (`blockDecode.ts`), dan apa yang dibaca gambar host), `rgba` (BC7, ASTC atau ETC2 RGBA8, satu byte per texel) dan `two-channel` (BC5, ASTC luminance-alpha atau EAC RG11, satu byte per texel, X dan Y peta normal dengan Z dibangun ulang oleh shader). Tidak ada yang hilang oleh mesin: sebuah tekstur mengambil lane tempat rantainya disimpan, dan pilihannya dipublikasikan (`texturePoolFormat`)."
+    "description": "Cache menyimpan setiap rantai dalam BC (`PREVIEW_STORED_FORMAT`) dan memanggangnya dalam keluarga lain yang diminta pemanggangan — semuanya secara bawaan — hanya di mana gerbang kualitas mempertahankannya; perangkat menyatakan keluarga mana yang disampelnya — kartu desktop BC, yang seluler ASTC atau ETC2, sebagian beberapa, adaptor perangkat lunak tidak ada. Sebuah atlas lalu punya satu pool per LANE, tata letak yang disebut berkas pendamping: `lossless` (RGBA8, empat byte per texel — yang dibaca rantai yang tidak dimiliki keluarga sesi, berkas BC-nya didekode (`blockDecode.ts`), dan yang dibaca gambar host), `rgba` (BC7, ASTC atau ETC2 RGBA8, satu byte per texel), `two-channel` (BC5, ASTC luminans-alfa atau EAC RG11, satu byte per texel, X dan Y peta normal dengan Z direkonstruksi shader). Pool ketiga atlas data adalah pool KANAL: BC5 untuk peta normal, atau — bila atlas tidak punya — pool peta satu kanal (`alpha`, `grayscale`, `displacementmap`): BC4, setengah byte per texel, bila setiap rantai pool adalah BC4 dan perangkat menyampel BC; jika tidak R8, satu byte per texel, blok BC4 didekode (`channelPoolOf`). Mesin tidak kehilangan apa pun: tekstur mengambil lane tempat rantainya disimpan, dan pilihan itu dipublikasikan (`texturePoolFormat`)."
   },
   "TextureFilter": {
     "summary": "Aturan sampling sebuah tekstur: filter dasar, dan aturan mip saat sampler memperkecil."
@@ -5637,7 +5666,8 @@
       "level": "Level yang mana.",
       "format": "Format yang mana.",
       "rgba": "Didekode ke RGBA8 — pembacaan lane lossless atas blok keluarga tersimpan.",
-      "half": "Texel half-float, bukan blok: file lane half-float (`tileRecord`)."
+      "half": "Lane setengah float membaca ini: texel, baik dari berkas setengah float maupun dari blok BC6H yang didekode (`tileLevelBytes`).",
+      "single": "Pool satu kanal berisi texel delapan bit membaca ini: satu byte per texel, blok rantai BC4, `gray` atau `displacement` didekode (`tileLevelBytes`)."
     }
   },
   "TextureLevelFormat": {
@@ -5654,7 +5684,8 @@
       "level": "Tingkat mana.",
       "format": "Format mana.",
       "rgba": "Didekode ke RGBA8 — pembacaan lane lossless atas blok keluarga tersimpan.",
-      "half": "Texel half-float, bukan blok: file lane half-float (`tileRecord`)."
+      "half": "Lane setengah float membaca ini: texel, baik dari berkas setengah float maupun dari blok BC6H yang didekode (`tileLevelBytes`).",
+      "single": "Pool satu kanal berisi texel delapan bit membaca ini: satu byte per texel, blok rantai BC4, `gray` atau `displacement` didekode (`tileLevelBytes`)."
     }
   },
   "TextureLevelStore": {
@@ -6172,7 +6203,9 @@
       "model": "Model permukaan yang menjadi sasaran pemetaan keluarga non-fisik (`../materials/surface/surfaceModel.ts`); fisik bila tidak ada.",
       "lineWidth": "Lebar dalam piksel CSS yang dipakai raster untuk melebarkan quad garis (`shader/lineWgsl.ts`); tidak ada atau nol pada permukaan yang menggambar segitiga.",
       "dashSize": "Goresan dan celah garis putus-putus sepanjang garis, dalam satuan dunia (`shader/lineWgsl.ts`, `lineDash`); tidak ada pada permukaan lain.",
-      "sprite": "Quad sebuah sprite, yang diputar setiap raster menghadap kamera (`shader/spriteWgsl.ts`): putarannya dalam gambar dalam radian, dan apakah ia mengecil seiring jarak; tidak ada pada permukaan lain."
+      "sprite": "Quad sebuah sprite, yang diputar setiap raster menghadap kamera (`shader/spriteWgsl.ts`): putarannya dalam gambar dalam radian, dan apakah ia mengecil seiring jarak; tidak ada pada permukaan lain.",
+      "subsurfaceOpacity": "Opasitas subpermukaannya, 0 sampai 1, satu bila tidak disebut (`SUBSURFACE_OPACITY_MODEL_SHIFT`).",
+      "specularIntensity": "Masukan spekular sebuah dielektrik (`KHR_materials_specular`): reflektansinya pada datang tegak lurus adalah 0,08 darinya (`surfaceF0`), 0,5 di mana permukaan tidak mendeklarasikannya. Alfa petanya menskalakannya. Bila dideklarasikan, ia dibaca dari rekaman apa pun lagi yang dikenakan permukaan."
     }
   },
   "VolumeMaterial": {
@@ -6298,13 +6331,11 @@
       "autoForward": "Hanya flight: terbang maju pada `movementSpeed` tanpa tombol, W lebih cepat, S untuk berhenti.",
       "onLand": "Hanya character: dipanggil saat mendarat dengan kecepatan ke bawah dalam m/s; `null` secara default.",
       "onJump": "Hanya character: dipanggil saat tubuh meninggalkan tanah karena melompat; `null` secara default.",
-      "walkSpeed": "Hanya karakter: meter per detik berjalan kaki; 3,5 secara bawaan, sebuah jog.",
+      "walkSpeed": "Hanya karakter: meter per detik berjalan kaki; 6 secara bawaan.",
       "sprintSpeed": "Hanya karakter: meter per detik dengan Shift ditahan; 6,5 secara bawaan, kecepatan tertinggi orang dewasa tak terlatih.",
-      "jumpSpeed": "Hanya karakter: kecepatan ke atas yang dimulai lompatan, m/s; `sqrt(2 g h)` mencapai `h`, 0,5 m secara bawaan, lompatan berdiri.",
-      "gravityScale": "Hanya karakter: bagian gravitasi dunia (`world.physics.gravity`) yang dirasakan tubuh, saat naik, jatuh dan dalam cengkeraman telapaknya; 1 secara bawaan, 0 tanpa bobot.",
-      "airControl": "Hanya karakter: seberapa cepat tombol mengemudi di udara, sebagai pecahan dari awal di tanah; 0,05 secara bawaan, 0 balistik.",
-      "responseTime": "Hanya karakter: detik yang dibutuhkan kaki untuk mencapai 95 % kecepatan yang dikehendaki di tanah; 0,12 secara bawaan. Gesekan lantai membatasi awal lebih dulu: telapak mendorong paling banyak `μ g`, `μ` cengkeraman telapak karet pada `material.physics` lantai (batu hingga fisika menamai satu), sehingga jog dicapai dalam 0,45 s di batu dan 2,2 s di es.",
-      "stopTime": "Hanya karakter: detik yang dibutuhkan kaki untuk kehilangan 95 % kecepatan setelah tidak ada tombol ditahan, di tanah; 0,12 secara bawaan. Gesekan lantai membatasi berhenti lebih dulu: jog meluncur `v² / (2 μ g)`, 0,8 m di batu dan 3,8 m di es; waktu lebih lama mengerem lebih halus.",
+      "jumpSpeed": "Hanya karakter: kecepatan ke atas saat lompatan dimulai, dalam m/s; 4,2 secara bawaan (puncak 0,9 m di Bumi).",
+      "gravityScale": "Hanya karakter: bagian gravitasi dunia (`world.physics.gravity`) yang dirasakan tubuh; 1 secara bawaan, 0 tanpa bobot.",
+      "airControl": "Hanya karakter: bagian dorongan tombol yang dimiliki tubuh di udara; 0,05 secara bawaan, 0 balistik.",
       "capsuleRadius": "Hanya karakter: radius tubuh, meter; setengah lebar bahu (0,23 m) secara bawaan.",
       "capsuleHeight": "Hanya karakter: tinggi tubuh, meter; 1,75 secara bawaan.",
       "eyeHeight": "Hanya karakter: tinggi kamera di atas kaki, meter; 1,64 secara bawaan.",
@@ -6326,10 +6357,23 @@
       "flying": "Hanya karakter: apakah tubuh terbang, bebas dari gravitasi; false secara bawaan. Mengaturnya false lagi membuat tubuh jatuh.",
       "buoyancy": "Hanya karakter: bagian beratnya yang diangkat air pada tubuh yang terendam penuh; 1 secara bawaan, tubuh yang mengapung di tempat.",
       "fluidFriction": "Hanya karakter: gesekan fluida tempat tubuh berenang atau terbang, per detik; 0,3 secara bawaan.",
-      "maxAcceleration": "Hanya karakter: meter per detik kuadrat tubuh mengumpulkan kecepatan dengan berenang dan terbang; 20,48 secara bawaan.",
+      "maxAcceleration": "Hanya karakter: meter per detik kuadrat yang dengannya tubuh menambah kecepatan di lantai, di udara, saat berenang dan terbang; 20,48 secara bawaan.",
       "swimBraking": "Hanya karakter: meter per detik kuadrat tubuh mengerem dengan berenang tanpa tombol ditahan, di atas gesekan air; 0 secara bawaan.",
       "flyBraking": "Hanya karakter: hal yang sama saat terbang; 0 secara bawaan.",
-      "vehicle": "Hanya kendaraan: apa yang dikemudikan kontrol `'vehicle'` — apa pun dengan `drive(input)`, yang mendengar throttle, rem, kemudi, dan rem tangan setiap kali tombol mengubahnya. `null` secara bawaan; kontrol `'vehicle'` tidak pernah berjalan tanpanya: `kind = 'vehicle'` dan `createWorld(…, { controls: 'vehicle' })` melempar `NO_VEHICLE` selama `null`, demikian pula mengaturnya ke `null` saat kontrol mengemudi."
+      "vehicle": "Hanya kendaraan: apa yang dikemudikan kontrol `'vehicle'` — apa pun dengan `drive(input)`, yang mendengar throttle, rem, kemudi, dan rem tangan setiap kali tombol mengubahnya. `null` secara bawaan; kontrol `'vehicle'` tidak pernah berjalan tanpanya: `kind = 'vehicle'` dan `createWorld(…, { controls: 'vehicle' })` melempar `NO_VEHICLE` selama `null`, demikian pula mengaturnya ke `null` saat kontrol mengemudi.",
+      "groundFriction": "Hanya karakter: per detik, seberapa cepat kecepatan berbelok ke arah yang diinginkan di lantai, dan seberapa banyak kecepatan yang diambil pengereman tanpa tombol ditahan; 8 secara bawaan.",
+      "brakingDecelerationWalking": "Hanya karakter: meter per detik kuadrat yang dengannya tubuh di lantai mengerem tanpa tombol ditahan, di atas gesekan lantai; 20,48 secara bawaan (seluruh `maxAcceleration`).",
+      "brakingDecelerationFalling": "Hanya karakter: yang sama di udara; 0 secara bawaan.",
+      "fallingLateralFriction": "Hanya karakter: gesekan yang membelokkan dan mengerem kecepatan samping tubuh di udara, per detik; 0 secara bawaan, tubuh mempertahankan momentumnya.",
+      "brakingFrictionFactor": "Hanya karakter: faktor pada gesekan saat mengerem; 2 secara bawaan.",
+      "brakingSubStepTime": "Hanya karakter: detik pengereman dipotong paling banyak, sehingga frame lambat mengerem seperti yang cepat; sepertiga puluh tiga detik secara bawaan, dijaga antara 1/75 dan 1/20.",
+      "airControlBoostMultiplier": "Hanya karakter: faktor pada `airControl` selama kecepatan samping di bawah `airControlBoostVelocityThreshold`, kendali tidak pernah melebihi 1; 2 secara bawaan, 0 mematikannya.",
+      "airControlBoostVelocityThreshold": "Hanya karakter: meter per detik kecepatan samping di bawah mana `airControl` diperkuat; 0,25 secara bawaan.",
+      "terminalVelocity": "Hanya karakter: jatuh tercepat sebuah tubuh, meter per detik; 40 secara bawaan.",
+      "maxSimulationTimeStep": "Hanya karakter: detik sebuah langkah dipotong paling banyak; 0,05 secara bawaan.",
+      "maxSimulationIterations": "Hanya karakter: sub-langkah tempat sebuah tick dipotong paling banyak; 8 secara bawaan.",
+      "maxJumpApexAttemptsPerSimulation": "Hanya karakter: berapa kali sebuah tick dipersingkat agar berakhir tepat di puncak lompatan; 2 secara bawaan.",
+      "minAnalogWalkSpeed": "Hanya karakter: kecepatan berjalan kaki yang dicapai dorongan tombol terlemah, meter per detik; 0 secara bawaan."
     }
   },
   "world.camera": {
@@ -6431,7 +6475,7 @@
     "description": "Bila ditulis, pengaturan yang disebut berlaku mulai bingkai berikutnya di atas preset — satu `null` mengembalikannya ke preset, yang dihilangkan tetap —; yang tidak diterima pengaturan ditolak."
   },
   "world.hiz": {
-    "summary": "Pengaturan piramida kedalaman, masing-masing menurut field-nya (`WorldOptions`), diselesaikan di atas halaman dan preset kualitas: `hizTrace`, bagaimana pelacakan refleksi membaca piramida; `hizFoldTransparents`, apakah lapisan pelacakannya memuat permukaan transparan; `hizTransparentTest`, bagaimana cluster transparan diuji terhadapnya; `hizFullResDepth`, apakah penelusuran probe layar turun sampai kedalaman resolusi penuh; `lightGridHizCull`, apakah grid cahaya mengosongkan sel di belakang kedalaman terjauh kolomnya; `hizPrime` (`'off'`, `'whenMissing'`, `'always'`) dengan `hizPrimeSizeBias`, `hizPrimeDepthBias`, `hizPrimeErrorScale`, dan `hizPrimeFarFieldOnly`, piramida yang dibangun dari gambar kecil kasar objek yang menetapkan `farField`.",
+    "summary": "Pengaturan piramida kedalaman, masing-masing menurut field-nya (`WorldOptions`), diselesaikan di atas halaman dan preset kualitas: `hizTrace`, bagaimana pelacakan refleksi membaca piramida; `hizFoldTransparents`, apakah lapisan pelacakannya memuat permukaan transparan; `hizTransparentTest`, bagaimana cluster transparan diuji terhadapnya; `hizFullResDepth`, apakah penelusuran probe layar turun sampai kedalaman resolusi penuh; `lightGridHizCull`, apakah grid cahaya mengosongkan sel di belakang kedalaman terjauh kolomnya; `lightGridMaxCulledLightsPerCell`, entri cahaya yang disimpan grid cahaya tampilan per sel; `hizPrime` (`'off'`, `'whenMissing'`, `'always'`) dengan `hizPrimeSizeBias`, `hizPrimeDepthBias`, `hizPrimeErrorScale`, dan `hizPrimeFarFieldOnly`, piramida yang dibangun dari gambar kecil kasar objek yang menetapkan `farField`.",
     "description": "Bila ditulis, pengaturan yang disebut berlaku mulai bingkai berikutnya di atas preset — satu `null` mengembalikannya ke preset, yang dihilangkan tetap —; yang tidak diterima pengaturan ditolak."
   },
   "world.lightFunction": {
@@ -6700,7 +6744,7 @@
       "shading": "Bagaimana bin shading menyimpan piksel setiap kelas material, setiap pengaturan menurut field-nya (`WorldOptions`), diselesaikan di atas halaman dan preset kualitas. Bila ditulis, pengaturan yang disebut berlaku mulai bingkai berikutnya di atas preset — satu `null` mengembalikannya ke preset, yang dihilangkan tetap —; yang tidak diterima pengaturan ditolak.",
       "exposureSettings": "Pengaturan eksposur otomatis, dipakai di mana `world.exposure` adalah `'auto'`, masing-masing menurut field-nya (`WorldOptions`), diselesaikan di atas halaman dan preset kualitas: bias, rentang tempat rata-rata ditahan dalam EV100, bentang histogram, bagian piksel yang dikecualikan, kecepatan dalam stop per detik, jarak transisi, bobot bucket hitam, dan bagaimana luminans piksel dibaca. Bila ditulis, pengaturan yang disebut berlaku mulai bingkai berikutnya di atas preset — satu `null` mengembalikannya ke preset, yang dihilangkan tetap —; yang tidak diterima pengaturan ditolak.",
       "temporal": "Pengaturan anti-aliasing temporal di samping tingkatnya, masing-masing menurut field-nya (`WorldOptions`), diselesaikan di atas halaman dan preset kualitas: `temporalThinGeometry`, apakah pass mencari geometri yang lebih tipis dari piksel dan melonggarkan riwayatnya di sana; `temporalWaveOps`, `temporalWaveSize`, dan `temporalHalfPrecision`, bagaimana programnya berjalan (subgrup, ukurannya, float 16-bit, di mana perangkat mengizinkannya), gambarnya sama; sampel riwayat, sampel ukuran kedipan, ambang deteksi geometri tipis, eksposur tempat penolakan mengukur dan `temporalDownsampleQuality`, kualitas gambar setengah ukuran yang dibaca eksposur dan bloom. Bila ditulis, pengaturan yang disebut berlaku mulai bingkai berikutnya di atas preset — satu `null` mengembalikannya ke preset, yang dihilangkan tetap —; yang tidak diterima pengaturan ditolak.",
-      "hiz": "Pengaturan piramida kedalaman, masing-masing menurut field-nya (`WorldOptions`), diselesaikan di atas halaman dan preset kualitas: `hizTrace`, bagaimana pelacakan refleksi membaca piramida; `hizFoldTransparents`, apakah lapisan pelacakannya memuat permukaan transparan; `hizTransparentTest`, bagaimana cluster transparan diuji terhadapnya; `hizFullResDepth`, apakah penelusuran probe layar turun sampai kedalaman resolusi penuh; `lightGridHizCull`, apakah grid cahaya mengosongkan sel di belakang kedalaman terjauh kolomnya; `hizPrime` (`'off'`, `'whenMissing'`, `'always'`) dengan `hizPrimeSizeBias`, `hizPrimeDepthBias`, `hizPrimeErrorScale`, dan `hizPrimeFarFieldOnly`, piramida yang dibangun dari gambar kecil kasar objek yang menetapkan `farField`. Bila ditulis, pengaturan yang disebut berlaku mulai bingkai berikutnya di atas preset — satu `null` mengembalikannya ke preset, yang dihilangkan tetap —; yang tidak diterima pengaturan ditolak.",
+      "hiz": "Pengaturan piramida kedalaman, masing-masing menurut field-nya (`WorldOptions`), diselesaikan di atas halaman dan preset kualitas: `hizTrace`, bagaimana pelacakan refleksi membaca piramida; `hizFoldTransparents`, apakah lapisan pelacakannya memuat permukaan transparan; `hizTransparentTest`, bagaimana cluster transparan diuji terhadapnya; `hizFullResDepth`, apakah penelusuran probe layar turun sampai kedalaman resolusi penuh; `lightGridHizCull`, apakah grid cahaya mengosongkan sel di belakang kedalaman terjauh kolomnya; `lightGridMaxCulledLightsPerCell`, entri cahaya yang disimpan grid cahaya tampilan per sel; `hizPrime` (`'off'`, `'whenMissing'`, `'always'`) dengan `hizPrimeSizeBias`, `hizPrimeDepthBias`, `hizPrimeErrorScale`, dan `hizPrimeFarFieldOnly`, piramida yang dibangun dari gambar kecil kasar objek yang menetapkan `farField`. Bila ditulis, pengaturan yang disebut berlaku mulai bingkai berikutnya di atas preset — satu `null` mengembalikannya ke preset, yang dihilangkan tetap —; yang tidak diterima pengaturan ditolak.",
       "lightFunction": "Pengaturan fungsi cahaya, masing-masing menurut field-nya (`WorldOptions`), diselesaikan di atas halaman dan preset kualitas: `lightFunctionAtlas` (true) — apakah atlas dibuat —, `lightFunctionSlotResolution` (128) dan `lightFunctionAtlasSize` (4) — texel per sisi slot dan slot per sisi —, `lightFunctionMaxLights` (-1, tanpa batas), `lightFunctionFormat` (`'grey'` atau `'colour'`), dan konsumennya: `lightFunctionDeferred` (true), `lightFunctionFog` (true), `lightFunctionBounce` (true), `lightFunctionTranslucent` (false). Bila ditulis, pengaturan yang disebut berlaku mulai bingkai berikutnya di atas preset — satu `null` mengembalikannya ke preset, yang dihilangkan tetap —; yang tidak diterima pengaturan ditolak.",
       "volumetricLightmap": "Pengaturan lightmap volumetrik, menurut field-nya (`WorldOptions`), diselesaikan di atas halaman dan preset kualitas: `volumetricLightmap`, apakah cahaya yang dihitung sebelumnya dibaca, aktif secara bawaan. Bila ditulis, pengaturan yang disebut berlaku mulai bingkai berikutnya di atas preset — `null` mengembalikannya ke preset, field yang dihilangkan tetap —; yang tidak diterima pengaturan ditolak.",
       "globalDistanceField": "Pengaturan distance field global, masing-masing menurut field-nya (`WorldOptions`), diselesaikan di atas halaman dan preset kualitas: `globalDistanceField` (true) — apakah clipmap dibuat —, `globalDistanceFieldClipmaps` (4), `globalDistanceFieldViewDistance` (20000 cm), resolusinya (128), ritme pembaruan (dua clipmap per bingkai, yang lebih besar lebih jarang), cache (mesh statis dikomposit terpisah), dan anggaran atlas tempat distance field mesh di-stream (`meshDistanceField…`). Bila ditulis, pengaturan yang disebut berlaku mulai bingkai berikutnya di atas preset — satu `null` mengembalikannya ke preset, yang dihilangkan tetap —; yang tidak diterima pengaturan ditolak.",
@@ -6724,7 +6768,7 @@
   },
   "WorldOptions": {
     "summary": "Yang boleh diatur sebuah halaman saat membuat sebuah dunia; tidak mengatakan apa-apa adalah kasus normal.",
-    "description": "Di samping opsi di bawah, cara tampilan men-stream sel adegan terpartisi dan warm-up yang ditunggu pergantian HLOD, setiap pengaturan menurut field-nya dengan bawaan acuan (`../../../../sdk-core/src/contracts/worldStreamingOptions.ts`): `worldStreamingMaxLoadingCells` (4), `worldStreamingAngleWeight` (0.4), `worldStreamingSortByExtent` (true), `worldStreamingSortByPriority` (true), `worldStreamingUseGridRange` (true), `worldStreamingRangeScale` (1), `worldStreamingRadius` (100 m), `worldStreamingSector` (false), `worldStreamingSectorAngle` (360°), `worldStreamingZCulling` (false), `worldStreamingBlockOnSlowStreaming` (true), `worldStreamingBlockOnSlowStreamingRatio` (0.25), `worldStreamingUpdateOptimization` (true), `worldStreamingLocationQuantization` (4 m), `worldStreamingRotationQuantization` (10°), `worldStreamingForceUpdateFrameCount` (0), `worldStreamingForce2D` (false), `worldStreamingExtraRadius` (0 m), `worldStreamingExtraAngle` (0°), `worldStreamingTargetState` (`'activated'`), `worldStreamingPriority` (128), `worldStreamingUseVelocity` (false), `hlodEnabled` (true), `hlodWarmup` (true), `hlodWarmupFrames` (5), `hlodWarmupGeometry` (true), `hlodWarmupTextures` (true), `hlodWarmupTextureScale` (2), `hlodWarmupTextureClamp` (2048). Jika dinamai di sini, masing-masing berlaku di atas preset kualitas; diubah kemudian oleh `world.worldStreaming`, mulai bingkai berikutnya. Pengaturan pemotongan demikian pula, masing-masing menurut field-nya dengan bawaan acuan (`../../../../sdk-core/src/contracts/cutOptions.ts`): `cutTwoPassOcclusion` (true), `cutOcclusionCulling` (true), `cutFrustumCulling` (true), `cutMinLodCulling` (true), `cutDrawDistanceCulling` (true: jarak gambar instance dari mesh berinstansi di-cull; objek tersendiri selalu di-cull olehnya), `cutDistanceCullToSphereEdge` (true: jarak gambar objek diukur hingga tepi bola batasnya, jika tidak hingga pusatnya), `cutViewDistanceScale` (1; tingkat kualitas jarak pandang menuliskannya), `cutViewDistanceApplySecondaryScale` (false) dan `cutViewDistanceSecondaryScale` (1), skala kedua jarak gambar yang mengalikannya hanya setelah yang pertama menyala, `cutViewDistanceFovMinAngle` (45) dan `cutViewDistanceFovMaxAngle` (90), dalam derajat, dengan `cutViewDistanceFovMinAngleScale` dan `cutViewDistanceFovMaxAngleScale` (keduanya 1): skala yang diambil jarak gambar objek tersendiri pada sudut pertama ke bawah, pada sudut kedua ke atas, dan di antaranya, `cutClipPlane` (false: `clipPlane` kamera hanya berlaku di dunia yang dibuat dengannya menyala, satu-satunya pengaturan yang dibaca sekali, saat sesi dibuka), `cutClipPlaneCulling` (true), `cutViewFiltering` (true: daftar `hidden` dan `showOnly` kamera berlaku), `cutLodBiasFollowsUpscale` (true), `cutLodBiasOffset` (0), `cutLodBiasMin` (-2), `cutEdgeScaleBudgetMs` (0: tidak ada, waktu GPU dalam ms yang diberikan kepada pemotongan dan rasternya, yang di atasnya galat layar dikasarkan di tempat skala render adalah `'auto'`) dan `cutEdgeScaleMinPercent` (30, dari 1 hingga 100: skala terendah yang dibawanya), `cutMaxNodes` (2097152), `cutMaxCandidateClusters` (16777216), `cutMaxVisibleClusters` (4194304); diubah kemudian oleh `world.cut`. Heuristik resolusi dinamis demikian pula (`../../../../sdk-core/src/contracts/dynamicResolutionOptions.ts`, menyesuaikan skala render dan skala tepi pemotongan dengan anggaran waktu GPU-nya): `dynamicResolutionFrameTimeBudgetMs` (0: interval batas bingkai), `dynamicResolutionThrottlingMaxPercent` (0: tidak ada), `dynamicResolutionHeadroomPercent` (10), `dynamicResolutionOverBudgetHeadroomPercent` (0), `dynamicResolutionHistorySize` (16), `dynamicResolutionFrameWeightExponent` (0.9), `dynamicResolutionChangePeriod` (8), `dynamicResolutionIncreaseAmortization` (0.9), `dynamicResolutionChangePercentThreshold` (2), `dynamicResolutionMaxOverBudgetFrames` (2, dibaca tidak kurang dari 2) dan `dynamicResolutionUseCpuTimeLogic` (false); diubah kemudian oleh `world.dynamicResolution`. Pengaturan animasi demikian pula (`../../../../sdk-core/src/contracts/animationOptions.ts`): `animationMinScreenSize` (0.1), `animationBankInterpolation` (true), `animationBankTimeScale` (1); diubah kemudian oleh `world.animation`. Pengaturan shading demikian pula (`../../../../sdk-core/src/contracts/shadingOptions.ts`): `shadeBinningMode` (`'auto'`, atau `'pixel'`, `'quad'`) dan `materialClosures` (`'single'`: setiap permukaan di-shade sebagai satu slab per piksel, clear coat digabung ke dasarnya; atau `'layered'`: coat sebagai layer tersendiri); diubah kemudian oleh `world.shading`. Pengaturan eksposur otomatis demikian pula (`../../../../sdk-core/src/contracts/exposureOptions.ts`), dipakai di tempat `world.exposure` adalah `'auto'`, bawaan: `exposureBias` (+1 stop), `exposureMinBrightness` (−10) dan `exposureMaxBrightness` (+20) dalam EV100, `exposureHistogramLogMin` (−10) dan `exposureHistogramLogMax` (+20) dalam stop luminansi, `exposureLowPercent` (10) dan `exposureHighPercent` (90), `exposureSpeedUp` (3) dan `exposureSpeedDown` (1) dalam stop per detik, `exposureTransitionDistance` (1.5 stop), `exposureBlackBucketWeight` (0) dan `exposureLuminanceMethod` (`'uniform'`, atau `'ntsc'`, `'workingSpace'`), `exposureMethod` (`'histogram'`, atau `'basic'`, `'manual'`: eksposur kamera, dibaca dari `exposureApplyPhysicalCamera` (true), `exposureCameraShutterSpeed` (60) dan `exposureCameraIso` (100) dan bias), `exposureLensAttenuation` (0.78), `preExposure` (true), `preExposureOverride` (0) dan `cachedLightingPreExposure` (4 stop, milik tangkapan real-time cahaya langit) dari pra-eksposur, yang berlaku untuk tampilan yang diterangi apa pun eksposurnya, dan `localExposureHighlightContrast` dan `localExposureShadowContrast` (0.8, eksposur lokal berjalan), `localExposureDetailStrength` (1), `localExposureBlurBlend` (0.6), `localExposureBlurSize` (50 %), `localExposureMiddleGreyBias` (0) dari eksposur lokal dan kedua ambang serta kekuatannya, yang berlaku untuk tampilan yang diterangi apa pun eksposurnya; diubah kemudian oleh `world.exposureSettings`. Kurva kompensasi eksposur, `exposureCurve` (tidak ada), dan mask pengukurannya, `exposureMeterMask` (tidak ada), dibaca hanya saat pembukaan. Pengaturan pass temporal demikian pula (`../../../../sdk-core/src/contracts/temporalOptions.ts`): `temporalThinGeometry` (false) — apakah ia mencari geometri yang lebih tipis dari piksel dan melonggarkan riwayatnya di sana, pada setiap tingkat kecuali `'off'` —, `temporalWaveOps` (true), `temporalWaveSize` (0) dan `temporalHalfPrecision` (true) — cara programnya berjalan: melalui subgroup, pada ukuran berapa, dalam float 16-bit, di tempat perangkat mengizinkannya, gambar tetap sama —, sampel riwayat (`temporalHistorySampleCount`, `temporalShadingRejectionSampleCount`, `temporalVelocityWeightClampingSampleCount`, `temporalVelocityWeightClampingPixelSpeed`), sampel ukuran kedipan (`temporalFlickering…`), eksposur tempat penolakan mengukur (`temporalShadingExposureOffset`), ambang deteksi geometri tipis (`temporalThinGeometry…`) dan kualitas gambar setengah ukuran yang dibaca eksposur dan bloom (`temporalDownsampleQuality`), masing-masing pada bawaan acuan; diubah kemudian oleh `world.temporal`. Bayangan matahari demikian pula (`../../../../sdk-core/src/contracts/shadowOptions.ts`): `shadowDistanceScale` (1, dari 0 hingga 2) — faktor pada `shadowDistance` setiap cahaya directional —, `farShadowCulling` (true) — apakah peta bayangan matahari mengeluarkan pembentuk bayangan yang kedalamannya, dikurangi radiusnya, melewati tepi jarak itu (sedikit lebih jauh: 427 meter pada 400), kecuali objeknya mengatur `castFarShadow` —, `farShadowCullsAllMeshes` (false) — apakah uji itu menjangkau setiap pembentuk bayangan, atau hanya shell gabungan dunia dari tingkat yang lebih kasar —, `shadowNearLevels` (10, dari 0 hingga 10, paling banyak `shadowCascades` cahaya), `shadowOverlapScale` (1, dari 0 hingga 2) dan `shadowFarField` (true: apakah kaskade distance field mengikuti tingkat dekat, di tempat adegan memiliki distance field) — ketiganya yang membentuk tepi —, milik tingkat jauh dan kaskade itu sendiri (`../../../../sdk-core/src/contracts/sunShadowOptions.ts`: `shadowMaxFarCascades`, `shadowFarDistanceOverride` (tidak ada tingkat jauh yang digambar: tanpa efek terlihat), `distanceFieldDistanceScale`, `distanceFieldFarTransitionScale`, `distanceFieldShadowQuality`, `distanceFieldShadowFullResolution`, `distanceFieldShadowTileSize` dan `distanceFieldShadowTwoSidedBias`), dan milik peta bayangan sendiri (`../../../../sdk-core/src/contracts/shadowMapOptions.ts`: tingkat clipmap dan rentang depth-nya, halaman kasar, bias resolusi, ambang radius, sinar dan langkah sebuah trace serta pool halaman); diubah kemudian oleh `world.shadows`. Penggambaran motion blur demikian pula (`../../../../sdk-core/src/contracts/motionBlurOptions.ts`): `motionBlurQuality` (`'veryHigh'`, atau `'off'`, `'low'`, `'medium'`, `'high'`: paling banyak 16 sampel per piksel, lebih sedikit pada tingkat lebih rendah), `motionBlurHalfResGather` (false), `motionBlurHalfResInput` (true), `motionBlurSeparable` (false), `motionBlurScatter` (false) dan `motionBlurDirections` (1, atau 2); diubah kemudian oleh `world.motionBlur`. Penggambaran depth of field demikian pula (`../../../../sdk-core/src/contracts/depthOfFieldRules.ts`): `depthOfFieldQuality` (`'on'`, atau `'off'`), `depthOfFieldGatherDivisor` (2), `depthOfFieldAccumulator` (`'high'`), `depthOfFieldRingCount` (4), `depthOfFieldPostfilter` (`'median'`), pengaturan scatter dan recombine serta yang lain yang dicantumkan file itu, masing-masing bawaan acuan; diubah kemudian oleh `world.depthOfField`. Penggambaran bloom demikian pula (`../../../../sdk-core/src/contracts/bloomRules.ts`): `bloomQuality` (`'highest'`, atau `'off'`, `'lowest'`, `'low'`, `'medium'`, `'high'`: berapa banyak dari enam tingkat Gaussian yang digambar), `bloomCross` (0), `bloomScreenPercentage` (50: resolusi konvolusi), `bloomApplyLocalExposure` (true) dan `bloomCacheKernel` (true); diubah kemudian oleh `world.bloom`. Blur Gaussian demikian pula (`../../../../sdk-core/src/contracts/gaussianBlurRules.ts`): `gaussianFastBlurThreshold` (100: radius tempat pass pertama sebuah blur dibagi dua), `gaussianSampleScale` (1: jangkauan kernel) dan `gaussianLoopMode` (0: pembacaan terbanyak sebuah pass); diubah kemudian oleh `world.gaussianBlur`. Efek film demikian pula (`../../../../sdk-core/src/contracts/filmOptions.ts`): grain (`filmGrain…`, mati secara bawaan), pinggiran warna (`chromaticAberration…`, mati), tampilan vinyet (`vignette…`, di samping kekuatan adegan), `tonemapperQuality` (5), `tonemapperSharpen` (−1: milik adegan), tint (`sceneColorTint…`, 1) dan `quantizationDitheringBits` (0: langkah layar sendiri); diubah kemudian oleh `world.film`. Kabut volumetrik (`../../../../sdk-core/src/contracts/volumetricFogOptions.ts`): `volumetricFogQuality` (`'high'`; `'off'` tidak menggambar, `'low'`, `'high'` dan `'ultra'` mengatur ukuran sel dan kedalaman grid serta sampel riwayat) dan sebelas pengaturan yang dibaca bersamanya, diubah kemudian oleh `world.volumetricFog`; kabut hanya ada di adegan yang kabutnya mengatur `volumetric`. Volume pencahayaan translusensi demikian pula (`../../../../sdk-core/src/contracts/translucencyVolumeOptions.ts`): `translucencyVolume` (true), `translucencyVolumeDim` (64 sel per sisi dari masing-masing dua kaskadenya), `translucencyVolumeInnerDistance` (15 m), `translucencyVolumeOuterDistance` (50 m), `translucencyVolumeBlur` (true), `translucencyVolumeTemporal` (false) dan yang lain, diubah kemudian oleh `world.translucencyVolume`; ia menerangi permukaan tembus pandang yang materialnya mengatur `translucencyLighting` ke mode volume. Trace refleksi demikian pula (`../../../../sdk-core/src/contracts/reflectionOptions.ts`): `reflectionScreenSteps` (50, iterasi march layar sinar terpantul; march adegannya adalah milik distance field global, 256 langkah per clipmap), dan `reflectionDistantScreenTraces` (true), `reflectionDistantScreenSteps` (16) dan `reflectionDistantScreenDistance` (2000 m), trace layar jauh, dan `reflectionFrontLayer` (false), apakah layer depan objek transparan ditelusuri, `reflectionSkylightLeaking` (0, dengan tint dan albedo rata-ratanya), cahaya difus langit yang bocor ke titik kena, diubah kemudian oleh `world.reflections`; `reflectionStatistics` (false), penghitung sinar, dibaca saat sesi dibuka. Cache permukaan demikian pula (`../../../../sdk-core/src/contracts/surfaceCacheOptions.ts`): `surfaceCacheAtlasSize` (4096, sisi dalam texel atlas tempat kartu setiap mesh ditangkap), `surfaceCacheCardCapturesPerFrame` (300), `surfaceCacheCardMaxResolution` (512), `surfaceCacheAllowCardSharing` (true), `surfaceCacheDilationMode` (0) dan yang lain, diubah kemudian oleh `world.surfaceCache`. Ambient occlusion ruang layar demikian pula (`../../../../sdk-core/src/contracts/ambientOcclusionOptions.ts`): `ambientOcclusion` (true: sakelar utama), `ambientOcclusionIntensity` (0.5; 0 mati), `ambientOcclusionRadius` (2 m) dan `ambientOcclusionRadiusInWorldSpace`-nya (false), `ambientOcclusionFadeDistance` (80 m) dan `ambientOcclusionFadeRadius` (50 m), `ambientOcclusionPower` (2), `ambientOcclusionBias` (3), kualitas (`ambientOcclusionQuality`, 50) dengan `ambientOcclusionLevels` (-1) dan `ambientOcclusionMaxQuality` (100), dan `ambientOcclusionWithScreenProbes` (false); diubah kemudian oleh `world.ambientOcclusion`. Piramida depth demikian pula (`../../../../sdk-core/src/contracts/hizOptions.ts`): `hizTrace` (`'reference'`, atau `'planes'`) — cara trace refleksi membacanya —, `hizFoldTransparents` (false) — apakah layer trace-nya menyimpan permukaan transparan —, `hizTransparentTest` (`'finer'`, atau `'reference'`) — cara cluster transparan diuji terhadapnya —, `hizFullResDepth` (true) — apakah walk probe layar turun ke depth resolusi penuh — dan `lightGridHizCull` (true) — apakah grid cahaya mengosongkan sel di belakang kedalaman terjauh kolomnya —, lalu `hizPrime` (`'off'`, `'whenMissing'` atau `'always'`) — kapan tampilan membangun piramida dari gambar kecil dan kasar objek yang mengatur `farField`, agar pass utama pemotongannya mengujinya ketika gambar sebelumnya tidak meninggalkan satu pun — dengan `hizPrimeSizeBias` (2), `hizPrimeDepthBias` (1.5 m), `hizPrimeErrorScale` (32) dan `hizPrimeFarFieldOnly` (true); diubah kemudian oleh `world.hiz`. Fungsi cahaya demikian pula (`../../../../sdk-core/src/contracts/lightFunctionOptions.ts`): `lightFunctionAtlas` (true), `lightFunctionSlotResolution` (128), `lightFunctionAtlasSize` (4), `lightFunctionMaxLights` (-1, tanpa batas), `lightFunctionFormat` (`'grey'`), `lightFunctionDeferred` (true), `lightFunctionFog` (true), `lightFunctionBounce` (true) dan `lightFunctionTranslucent` (false); diubah kemudian oleh `world.lightFunction`. Pemisahan raster cluster demikian pula (`../../../../sdk-core/src/contracts/rasterOptions.ts`): `softwareRaster` (true) — cluster yang tepi terpanjangnya diproyeksikan di bawah `hardwareRasterEdgePixels` dan yang kotaknya tidak melintasi kedua bidang klip di-raster dalam compute, yang lain oleh rasterizer perangkat keras; `false` menyerahkan setiap cluster ke perangkat keras — dan `hardwareRasterEdgePixels` (32, dalam piksel: angka terhingga di atas nol), tepi yang mulai darinya cluster, dilihat pada titik terdekat bola level-of-detail-nya, pergi ke rasterizer perangkat keras; `depthBucketing` (true) mengurutkan cluster cutout raster perangkat lunak dari yang terdekat, menurut kedalaman tampilan kotaknya yang disebar ke 256 bucket menurut logaritmanya dari `depthBucketsMinZ` (10 m) hingga `depthBucketsMaxZ` (1000 m), angka terhingga di atas nol — seperti pada acuan, hanya di tempat adegan menyimpan voksel; diubah kemudian oleh `world.softwareRaster`, `world.hardwareRasterEdgePixels`, `world.depthBucketing`, `world.depthBucketsMinZ` dan `world.depthBucketsMaxZ`. Streaming geometri demikian pula (`../../../../sdk-core/src/contracts/streamingOptions.ts`): `streamingMaxPendingPages` (128, halaman geometri yang dijaga tetap dimulai sekaligus, bilangan bulat mulai 1), `streamingMaxInstallsPerFrame` (128, halaman yang dipasang sebuah bingkai paling banyak, tidak pernah lebih dari yang boleh tertunda), `streamingQualityMinPoolPercent` (70) dan `streamingQualityMaxPoolPercent` (85, dibaca tidak kurang dari tanda rendah) — beban pool, dalam persen halamannya, yang di bawahnya kualitas naik lagi dan yang di atasnya turun, dari 10 hingga 100 —, `streamingQualityMinScale` (0.3, dari 0.1 hingga 1, 1 tidak pernah menskalakan), `streamingNumRetries` (3, berapa kali pembacaan halaman yang gagal dicoba lagi sebelum halamannya dilepas, seketika dan tanpa menunggu selain yang diminta server, nilai negatif tanpa akhir; tingkat tekstur yang di-bake tidak dihitung: ia diminta lagi selamanya), `streamingMinRequests` (65 536) dan `streamingMaxRequests` (1 048 576), permintaan paling sedikit dan paling banyak yang dipegang readout pemotongan kamera, dari 4 096 hingga 1 048 576 — ia mulai dari yang paling sedikit dan mengikuti apa yang diminta pemotongan darinya, yang paling banyak dibaca tidak kurang dari yang paling sedikit — dan `streamingBandwidthLimit` (-1: tidak ada, megabyte per detik yang disimulasikan dimiliki pembacaan geometri: setiap halaman mengambil bagian bandwidth bingkai miliknya sendiri). Nilai yang tidak diterima sebuah pengaturan ditolak.",
+    "description": "Di samping opsi di bawah, cara tampilan men-stream sel adegan terpartisi dan warm-up yang ditunggu pergantian HLOD, setiap pengaturan menurut field-nya dengan bawaan acuan (`../../../../sdk-core/src/contracts/worldStreamingOptions.ts`): `worldStreamingMaxLoadingCells` (4), `worldStreamingAngleWeight` (0.4), `worldStreamingSortByExtent` (true), `worldStreamingSortByPriority` (true), `worldStreamingUseGridRange` (true), `worldStreamingRangeScale` (1), `worldStreamingRadius` (100 m), `worldStreamingSector` (false), `worldStreamingSectorAngle` (360°), `worldStreamingZCulling` (false), `worldStreamingBlockOnSlowStreaming` (true), `worldStreamingBlockOnSlowStreamingRatio` (0.25), `worldStreamingUpdateOptimization` (true), `worldStreamingLocationQuantization` (4 m), `worldStreamingRotationQuantization` (10°), `worldStreamingForceUpdateFrameCount` (0), `worldStreamingForce2D` (false), `worldStreamingExtraRadius` (0 m), `worldStreamingExtraAngle` (0°), `worldStreamingTargetState` (`'activated'`), `worldStreamingPriority` (128), `worldStreamingUseVelocity` (false), `hlodEnabled` (true), `hlodWarmup` (true), `hlodWarmupFrames` (5), `hlodWarmupGeometry` (true), `hlodWarmupTextures` (true), `hlodWarmupTextureScale` (2), `hlodWarmupTextureClamp` (2048). Jika dinamai di sini, masing-masing berlaku di atas preset kualitas; diubah kemudian oleh `world.worldStreaming`, mulai bingkai berikutnya. Pengaturan pemotongan demikian pula, masing-masing menurut field-nya dengan bawaan acuan (`../../../../sdk-core/src/contracts/cutOptions.ts`): `cutTwoPassOcclusion` (true), `cutOcclusionCulling` (true), `cutFrustumCulling` (true), `cutMinLodCulling` (true), `cutDrawDistanceCulling` (true: jarak gambar instance dari mesh berinstansi di-cull; objek tersendiri selalu di-cull olehnya), `cutDistanceCullToSphereEdge` (true: jarak gambar objek diukur hingga tepi bola batasnya, jika tidak hingga pusatnya), `cutViewDistanceScale` (1; tingkat kualitas jarak pandang menuliskannya), `cutViewDistanceApplySecondaryScale` (false) dan `cutViewDistanceSecondaryScale` (1), skala kedua jarak gambar yang mengalikannya hanya setelah yang pertama menyala, `cutViewDistanceFovMinAngle` (45) dan `cutViewDistanceFovMaxAngle` (90), dalam derajat, dengan `cutViewDistanceFovMinAngleScale` dan `cutViewDistanceFovMaxAngleScale` (keduanya 1): skala yang diambil jarak gambar objek tersendiri pada sudut pertama ke bawah, pada sudut kedua ke atas, dan di antaranya, `cutClipPlane` (false: `clipPlane` kamera hanya berlaku di dunia yang dibuat dengannya menyala, satu-satunya pengaturan yang dibaca sekali, saat sesi dibuka), `cutClipPlaneCulling` (true), `cutViewFiltering` (true: daftar `hidden` dan `showOnly` kamera berlaku), `cutLodBiasFollowsUpscale` (true), `cutLodBiasOffset` (0), `cutLodBiasMin` (-2), `cutEdgeScaleBudgetMs` (0: tidak ada, waktu GPU dalam ms yang diberikan kepada pemotongan dan rasternya, yang di atasnya galat layar dikasarkan di tempat skala render adalah `'auto'`) dan `cutEdgeScaleMinPercent` (30, dari 1 hingga 100: skala terendah yang dibawanya), `cutMaxNodes` (2097152), `cutMaxCandidateClusters` (16777216), `cutMaxVisibleClusters` (4194304); diubah kemudian oleh `world.cut`. Heuristik resolusi dinamis demikian pula (`../../../../sdk-core/src/contracts/dynamicResolutionOptions.ts`, menyesuaikan skala render dan skala tepi pemotongan dengan anggaran waktu GPU-nya): `dynamicResolutionFrameTimeBudgetMs` (0: interval batas bingkai), `dynamicResolutionThrottlingMaxPercent` (0: tidak ada), `dynamicResolutionHeadroomPercent` (10), `dynamicResolutionOverBudgetHeadroomPercent` (0), `dynamicResolutionHistorySize` (16), `dynamicResolutionFrameWeightExponent` (0.9), `dynamicResolutionChangePeriod` (8), `dynamicResolutionIncreaseAmortization` (0.9), `dynamicResolutionChangePercentThreshold` (2), `dynamicResolutionMaxOverBudgetFrames` (2, dibaca tidak kurang dari 2) dan `dynamicResolutionUseCpuTimeLogic` (false); diubah kemudian oleh `world.dynamicResolution`. Pengaturan animasi demikian pula (`../../../../sdk-core/src/contracts/animationOptions.ts`): `animationMinScreenSize` (0.1), `animationBankInterpolation` (true), `animationBankTimeScale` (1); diubah kemudian oleh `world.animation`. Pengaturan shading demikian pula (`../../../../sdk-core/src/contracts/shadingOptions.ts`): `shadeBinningMode` (`'auto'`, atau `'pixel'`, `'quad'`) dan `materialClosures` (`'single'`: setiap permukaan di-shade sebagai satu slab per piksel, clear coat digabung ke dasarnya; atau `'layered'`: coat sebagai layer tersendiri); diubah kemudian oleh `world.shading`. Pengaturan eksposur otomatis demikian pula (`../../../../sdk-core/src/contracts/exposureOptions.ts`), dipakai di tempat `world.exposure` adalah `'auto'`, bawaan: `exposureBias` (+1 stop), `exposureMinBrightness` (−10) dan `exposureMaxBrightness` (+20) dalam EV100, `exposureHistogramLogMin` (−10) dan `exposureHistogramLogMax` (+20) dalam stop luminansi, `exposureLowPercent` (10) dan `exposureHighPercent` (90), `exposureSpeedUp` (3) dan `exposureSpeedDown` (1) dalam stop per detik, `exposureTransitionDistance` (1.5 stop), `exposureBlackBucketWeight` (0) dan `exposureLuminanceMethod` (`'uniform'`, atau `'ntsc'`, `'workingSpace'`), `exposureMethod` (`'histogram'`, atau `'basic'`, `'manual'`: eksposur kamera, dibaca dari `exposureApplyPhysicalCamera` (true), `exposureCameraShutterSpeed` (60) dan `exposureCameraIso` (100) dan bias), `exposureLensAttenuation` (0.78), `preExposure` (true), `preExposureOverride` (0) dan `cachedLightingPreExposure` (4 stop, milik tangkapan real-time cahaya langit) dari pra-eksposur, yang berlaku untuk tampilan yang diterangi apa pun eksposurnya, dan `localExposureHighlightContrast` dan `localExposureShadowContrast` (0.8, eksposur lokal berjalan), `localExposureDetailStrength` (1), `localExposureBlurBlend` (0.6), `localExposureBlurSize` (50 %), `localExposureMiddleGreyBias` (0) dari eksposur lokal dan kedua ambang serta kekuatannya, yang berlaku untuk tampilan yang diterangi apa pun eksposurnya; diubah kemudian oleh `world.exposureSettings`. Kurva kompensasi eksposur, `exposureCurve` (tidak ada), dan mask pengukurannya, `exposureMeterMask` (tidak ada), dibaca hanya saat pembukaan. Pengaturan pass temporal demikian pula (`../../../../sdk-core/src/contracts/temporalOptions.ts`): `temporalThinGeometry` (false) — apakah ia mencari geometri yang lebih tipis dari piksel dan melonggarkan riwayatnya di sana, pada setiap tingkat kecuali `'off'` —, `temporalWaveOps` (true), `temporalWaveSize` (0) dan `temporalHalfPrecision` (true) — cara programnya berjalan: melalui subgroup, pada ukuran berapa, dalam float 16-bit, di tempat perangkat mengizinkannya, gambar tetap sama —, sampel riwayat (`temporalHistorySampleCount`, `temporalShadingRejectionSampleCount`, `temporalVelocityWeightClampingSampleCount`, `temporalVelocityWeightClampingPixelSpeed`), sampel ukuran kedipan (`temporalFlickering…`), eksposur tempat penolakan mengukur (`temporalShadingExposureOffset`), ambang deteksi geometri tipis (`temporalThinGeometry…`) dan kualitas gambar setengah ukuran yang dibaca eksposur dan bloom (`temporalDownsampleQuality`), masing-masing pada bawaan acuan; diubah kemudian oleh `world.temporal`. Bayangan matahari demikian pula (`../../../../sdk-core/src/contracts/shadowOptions.ts`): `shadowDistanceScale` (1, dari 0 hingga 2) — faktor pada `shadowDistance` setiap cahaya directional —, `farShadowCulling` (true) — apakah peta bayangan matahari mengeluarkan pembentuk bayangan yang kedalamannya, dikurangi radiusnya, melewati tepi jarak itu (sedikit lebih jauh: 427 meter pada 400), kecuali objeknya mengatur `castFarShadow` —, `farShadowCullsAllMeshes` (false) — apakah uji itu menjangkau setiap pembentuk bayangan, atau hanya shell gabungan dunia dari tingkat yang lebih kasar —, `shadowNearLevels` (10, dari 0 hingga 10, paling banyak `shadowCascades` cahaya), `shadowOverlapScale` (1, dari 0 hingga 2) dan `shadowFarField` (true: apakah kaskade distance field mengikuti tingkat dekat, di tempat adegan memiliki distance field) — ketiganya yang membentuk tepi —, milik tingkat jauh dan kaskade itu sendiri (`../../../../sdk-core/src/contracts/sunShadowOptions.ts`: `shadowMaxFarCascades`, `shadowFarDistanceOverride` (tidak ada tingkat jauh yang digambar: tanpa efek terlihat), `distanceFieldDistanceScale`, `distanceFieldFarTransitionScale`, `distanceFieldShadowQuality`, `distanceFieldShadowFullResolution`, `distanceFieldShadowTileSize` dan `distanceFieldShadowTwoSidedBias`), dan milik peta bayangan sendiri (`../../../../sdk-core/src/contracts/shadowMapOptions.ts`: tingkat clipmap dan rentang depth-nya, halaman kasar, bias resolusi, ambang radius, sinar dan langkah sebuah trace serta pool halaman); diubah kemudian oleh `world.shadows`. Penggambaran motion blur demikian pula (`../../../../sdk-core/src/contracts/motionBlurOptions.ts`): `motionBlurQuality` (`'veryHigh'`, atau `'off'`, `'low'`, `'medium'`, `'high'`: paling banyak 16 sampel per piksel, lebih sedikit pada tingkat lebih rendah), `motionBlurHalfResGather` (false), `motionBlurHalfResInput` (true), `motionBlurSeparable` (false), `motionBlurScatter` (false) dan `motionBlurDirections` (1, atau 2); diubah kemudian oleh `world.motionBlur`. Penggambaran depth of field demikian pula (`../../../../sdk-core/src/contracts/depthOfFieldRules.ts`): `depthOfFieldQuality` (`'on'`, atau `'off'`), `depthOfFieldGatherDivisor` (2), `depthOfFieldAccumulator` (`'high'`), `depthOfFieldRingCount` (4), `depthOfFieldPostfilter` (`'median'`), pengaturan scatter dan recombine serta yang lain yang dicantumkan file itu, masing-masing bawaan acuan; diubah kemudian oleh `world.depthOfField`. Penggambaran bloom demikian pula (`../../../../sdk-core/src/contracts/bloomRules.ts`): `bloomQuality` (`'highest'`, atau `'off'`, `'lowest'`, `'low'`, `'medium'`, `'high'`: berapa banyak dari enam tingkat Gaussian yang digambar), `bloomCross` (0), `bloomScreenPercentage` (50: resolusi konvolusi), `bloomApplyLocalExposure` (true) dan `bloomCacheKernel` (true); diubah kemudian oleh `world.bloom`. Blur Gaussian demikian pula (`../../../../sdk-core/src/contracts/gaussianBlurRules.ts`): `gaussianFastBlurThreshold` (100: radius tempat pass pertama sebuah blur dibagi dua), `gaussianSampleScale` (1: jangkauan kernel) dan `gaussianLoopMode` (0: pembacaan terbanyak sebuah pass); diubah kemudian oleh `world.gaussianBlur`. Efek film demikian pula (`../../../../sdk-core/src/contracts/filmOptions.ts`): grain (`filmGrain…`, mati secara bawaan), pinggiran warna (`chromaticAberration…`, mati), tampilan vinyet (`vignette…`, di samping kekuatan adegan), `tonemapperQuality` (5), `tonemapperSharpen` (−1: milik adegan), tint (`sceneColorTint…`, 1) dan `quantizationDitheringBits` (0: langkah layar sendiri); diubah kemudian oleh `world.film`. Kabut volumetrik (`../../../../sdk-core/src/contracts/volumetricFogOptions.ts`): `volumetricFogQuality` (`'high'`; `'off'` tidak menggambar, `'low'`, `'high'` dan `'ultra'` mengatur ukuran sel dan kedalaman grid serta sampel riwayat) dan sebelas pengaturan yang dibaca bersamanya, diubah kemudian oleh `world.volumetricFog`; kabut hanya ada di adegan yang kabutnya mengatur `volumetric`. Volume pencahayaan translusensi demikian pula (`../../../../sdk-core/src/contracts/translucencyVolumeOptions.ts`): `translucencyVolume` (true), `translucencyVolumeDim` (64 sel per sisi dari masing-masing dua kaskadenya), `translucencyVolumeInnerDistance` (15 m), `translucencyVolumeOuterDistance` (50 m), `translucencyVolumeBlur` (true), `translucencyVolumeTemporal` (false) dan yang lain, diubah kemudian oleh `world.translucencyVolume`; ia menerangi permukaan tembus pandang yang materialnya mengatur `translucencyLighting` ke mode volume. Trace refleksi demikian pula (`../../../../sdk-core/src/contracts/reflectionOptions.ts`): `reflectionScreenSteps` (50, iterasi march layar sinar terpantul; march adegannya adalah milik distance field global, 256 langkah per clipmap), dan `reflectionDistantScreenTraces` (true), `reflectionDistantScreenSteps` (16) dan `reflectionDistantScreenDistance` (2000 m), trace layar jauh, dan `reflectionFrontLayer` (false), apakah layer depan objek transparan ditelusuri, `reflectionSkylightLeaking` (0, dengan tint dan albedo rata-ratanya), cahaya difus langit yang bocor ke titik kena, diubah kemudian oleh `world.reflections`; `reflectionStatistics` (false), penghitung sinar, dibaca saat sesi dibuka. Cache permukaan demikian pula (`../../../../sdk-core/src/contracts/surfaceCacheOptions.ts`): `surfaceCacheAtlasSize` (4096, sisi dalam texel atlas tempat kartu setiap mesh ditangkap), `surfaceCacheCardCapturesPerFrame` (300), `surfaceCacheCardMaxResolution` (512), `surfaceCacheAllowCardSharing` (true), `surfaceCacheDilationMode` (0) dan yang lain, diubah kemudian oleh `world.surfaceCache`. Ambient occlusion ruang layar demikian pula (`../../../../sdk-core/src/contracts/ambientOcclusionOptions.ts`): `ambientOcclusion` (true: sakelar utama), `ambientOcclusionIntensity` (0.5; 0 mati), `ambientOcclusionRadius` (2 m) dan `ambientOcclusionRadiusInWorldSpace`-nya (false), `ambientOcclusionFadeDistance` (80 m) dan `ambientOcclusionFadeRadius` (50 m), `ambientOcclusionPower` (2), `ambientOcclusionBias` (3), kualitas (`ambientOcclusionQuality`, 50) dengan `ambientOcclusionLevels` (-1) dan `ambientOcclusionMaxQuality` (100), dan `ambientOcclusionWithScreenProbes` (false); diubah kemudian oleh `world.ambientOcclusion`. Piramida depth demikian pula (`../../../../sdk-core/src/contracts/hizOptions.ts`): `hizTrace` (`'reference'`, atau `'planes'`) — cara trace refleksi membacanya —, `hizFoldTransparents` (false) — apakah layer trace-nya menyimpan permukaan transparan —, `hizTransparentTest` (`'finer'`, atau `'reference'`) — cara cluster transparan diuji terhadapnya —, `hizFullResDepth` (true) — apakah walk probe layar turun ke depth resolusi penuh —, `lightGridHizCull` (true) — apakah grid cahaya mengosongkan sel di belakang kedalaman terjauh kolomnya — dan `lightGridMaxCulledLightsPerCell` (32) — entri cahaya yang disimpan grid cahaya tampilan per sel —, lalu `hizPrime` (`'off'`, `'whenMissing'` atau `'always'`) — kapan tampilan membangun piramida dari gambar kecil dan kasar objek yang mengatur `farField`, agar pass utama pemotongannya mengujinya ketika gambar sebelumnya tidak meninggalkan satu pun — dengan `hizPrimeSizeBias` (2), `hizPrimeDepthBias` (1.5 m), `hizPrimeErrorScale` (32) dan `hizPrimeFarFieldOnly` (true); diubah kemudian oleh `world.hiz`. Fungsi cahaya demikian pula (`../../../../sdk-core/src/contracts/lightFunctionOptions.ts`): `lightFunctionAtlas` (true), `lightFunctionSlotResolution` (128), `lightFunctionAtlasSize` (4), `lightFunctionMaxLights` (-1, tanpa batas), `lightFunctionFormat` (`'grey'`), `lightFunctionDeferred` (true), `lightFunctionFog` (true), `lightFunctionBounce` (true) dan `lightFunctionTranslucent` (false); diubah kemudian oleh `world.lightFunction`. Pemisahan raster cluster demikian pula (`../../../../sdk-core/src/contracts/rasterOptions.ts`): `softwareRaster` (true) — cluster yang tepi terpanjangnya diproyeksikan di bawah `hardwareRasterEdgePixels` dan yang kotaknya tidak melintasi kedua bidang klip di-raster dalam compute, yang lain oleh rasterizer perangkat keras; `false` menyerahkan setiap cluster ke perangkat keras — dan `hardwareRasterEdgePixels` (32, dalam piksel: angka terhingga di atas nol), tepi yang mulai darinya cluster, dilihat pada titik terdekat bola level-of-detail-nya, pergi ke rasterizer perangkat keras; `depthBucketing` (true) mengurutkan cluster cutout raster perangkat lunak dari yang terdekat, menurut kedalaman tampilan kotaknya yang disebar ke 256 bucket menurut logaritmanya dari `depthBucketsMinZ` (10 m) hingga `depthBucketsMaxZ` (1000 m), angka terhingga di atas nol — seperti pada acuan, hanya di tempat adegan menyimpan voksel; diubah kemudian oleh `world.softwareRaster`, `world.hardwareRasterEdgePixels`, `world.depthBucketing`, `world.depthBucketsMinZ` dan `world.depthBucketsMaxZ`. Streaming geometri demikian pula (`../../../../sdk-core/src/contracts/streamingOptions.ts`): `streamingMaxPendingPages` (128, halaman geometri yang dijaga tetap dimulai sekaligus, bilangan bulat mulai 1), `streamingMaxInstallsPerFrame` (128, halaman yang dipasang sebuah bingkai paling banyak, tidak pernah lebih dari yang boleh tertunda), `streamingQualityMinPoolPercent` (70) dan `streamingQualityMaxPoolPercent` (85, dibaca tidak kurang dari tanda rendah) — beban pool, dalam persen halamannya, yang di bawahnya kualitas naik lagi dan yang di atasnya turun, dari 10 hingga 100 —, `streamingQualityMinScale` (0.3, dari 0.1 hingga 1, 1 tidak pernah menskalakan), `streamingNumRetries` (3, berapa kali pembacaan halaman yang gagal dicoba lagi sebelum halamannya dilepas, seketika dan tanpa menunggu selain yang diminta server, nilai negatif tanpa akhir; tingkat tekstur yang di-bake tidak dihitung: ia diminta lagi selamanya), `streamingMinRequests` (65 536) dan `streamingMaxRequests` (1 048 576), permintaan paling sedikit dan paling banyak yang dipegang readout pemotongan kamera, dari 4 096 hingga 1 048 576 — ia mulai dari yang paling sedikit dan mengikuti apa yang diminta pemotongan darinya, yang paling banyak dibaca tidak kurang dari yang paling sedikit — dan `streamingBandwidthLimit` (-1: tidak ada, megabyte per detik yang disimulasikan dimiliki pembacaan geometri: setiap halaman mengambil bagian bandwidth bingkai miliknya sendiri). Nilai yang tidak diterima sebuah pengaturan ditolak.",
     "members": {
       "interactive": "Apakah dunia menjalankan loop-nya sendiri: ia menggambar saat sesuatu berubah dan beristirahat setelah 120 bingkai tanpa yang baru. `false` membiarkan halaman memanggil `world.render()` sendiri.",
       "pixelRatio": "Berapa banyak piksel gambar per piksel layar.",
@@ -7881,7 +7925,8 @@
       "p.cloudShadowExtentKm": "Radius di sekitar kamera yang dicakup peta, dalam kilometer, mulai dari 1; 150 secara bawaan.",
       "p.cloudShadowResolutionScale": "Faktor pada 512 texel per sisi peta, mulai dari 0,25; 1 secara bawaan.",
       "p.cloudShadowRaySamplesScale": "Faktor pada 16 sampel yang diambil sinar peta, mulai dari 0,25; 1 secara bawaan.",
-      "p.cloudScatteredLuminanceScale": "Faktor pada cahaya di dalam awan, linear; putih secara bawaan."
+      "p.cloudScatteredLuminanceScale": "Faktor pada cahaya di dalam awan, linear; putih secara bawaan.",
+      "p.mobility": "Bagaimana cahaya dimaksudkan bergerak dan diterangi: `'static'`, `'stationary'` atau `'movable'`; `'stationary'` secara bawaan."
     }
   },
   "light.directional": {
@@ -7944,7 +7989,8 @@
       "p.cloudShadowExtentKm": "Radius di sekitar kamera yang dicakup peta, dalam kilometer, mulai dari 1; 150 secara bawaan.",
       "p.cloudShadowResolutionScale": "Faktor pada 512 texel per sisi peta, mulai dari 0,25; 1 secara bawaan.",
       "p.cloudShadowRaySamplesScale": "Faktor pada 16 sampel yang diambil sinar peta, mulai dari 0,25; 1 secara bawaan.",
-      "p.cloudScatteredLuminanceScale": "Faktor pada cahaya di dalam awan, linear; putih secara bawaan."
+      "p.cloudScatteredLuminanceScale": "Faktor pada cahaya di dalam awan, linear; putih secara bawaan.",
+      "p.mobility": "Bagaimana cahaya dimaksudkan bergerak dan diterangi: `'static'`, `'stationary'` atau `'movable'`; `'stationary'` secara bawaan."
     }
   },
   "light.point": {
@@ -8007,7 +8053,8 @@
       "p.cloudShadowExtentKm": "Radius di sekitar kamera yang dicakup peta, dalam kilometer, mulai dari 1; 150 secara bawaan.",
       "p.cloudShadowResolutionScale": "Faktor pada 512 texel per sisi peta, mulai dari 0,25; 1 secara bawaan.",
       "p.cloudShadowRaySamplesScale": "Faktor pada 16 sampel yang diambil sinar peta, mulai dari 0,25; 1 secara bawaan.",
-      "p.cloudScatteredLuminanceScale": "Faktor pada cahaya di dalam awan, linear; putih secara bawaan."
+      "p.cloudScatteredLuminanceScale": "Faktor pada cahaya di dalam awan, linear; putih secara bawaan.",
+      "p.mobility": "Bagaimana cahaya dimaksudkan bergerak dan diterangi: `'static'`, `'stationary'` atau `'movable'`; `'stationary'` secara bawaan."
     }
   },
   "light.spot": {
@@ -8070,7 +8117,8 @@
       "p.cloudShadowExtentKm": "Radius di sekitar kamera yang dicakup peta, dalam kilometer, mulai dari 1; 150 secara bawaan.",
       "p.cloudShadowResolutionScale": "Faktor pada 512 texel per sisi peta, mulai dari 0,25; 1 secara bawaan.",
       "p.cloudShadowRaySamplesScale": "Faktor pada 16 sampel yang diambil sinar peta, mulai dari 0,25; 1 secara bawaan.",
-      "p.cloudScatteredLuminanceScale": "Faktor pada cahaya di dalam awan, linear; putih secara bawaan."
+      "p.cloudScatteredLuminanceScale": "Faktor pada cahaya di dalam awan, linear; putih secara bawaan.",
+      "p.mobility": "Bagaimana cahaya dimaksudkan bergerak dan diterangi: `'static'`, `'stationary'` atau `'movable'`; `'stationary'` secara bawaan."
     }
   },
   "light.hemisphere": {
@@ -8133,7 +8181,8 @@
       "p.cloudShadowExtentKm": "Radius di sekitar kamera yang dicakup peta, dalam kilometer, mulai dari 1; 150 secara bawaan.",
       "p.cloudShadowResolutionScale": "Faktor pada 512 texel per sisi peta, mulai dari 0,25; 1 secara bawaan.",
       "p.cloudShadowRaySamplesScale": "Faktor pada 16 sampel yang diambil sinar peta, mulai dari 0,25; 1 secara bawaan.",
-      "p.cloudScatteredLuminanceScale": "Faktor pada cahaya di dalam awan, linear; putih secara bawaan."
+      "p.cloudScatteredLuminanceScale": "Faktor pada cahaya di dalam awan, linear; putih secara bawaan.",
+      "p.mobility": "Bagaimana cahaya dimaksudkan bergerak dan diterangi: `'static'`, `'stationary'` atau `'movable'`; `'stationary'` secara bawaan."
     }
   },
   "light.rectArea": {
@@ -8196,7 +8245,8 @@
       "p.cloudShadowExtentKm": "Radius di sekitar kamera yang dicakup peta, dalam kilometer, mulai dari 1; 150 secara bawaan.",
       "p.cloudShadowResolutionScale": "Faktor pada 512 texel per sisi peta, mulai dari 0,25; 1 secara bawaan.",
       "p.cloudShadowRaySamplesScale": "Faktor pada 16 sampel yang diambil sinar peta, mulai dari 0,25; 1 secara bawaan.",
-      "p.cloudScatteredLuminanceScale": "Faktor pada cahaya di dalam awan, linear; putih secara bawaan."
+      "p.cloudScatteredLuminanceScale": "Faktor pada cahaya di dalam awan, linear; putih secara bawaan.",
+      "p.mobility": "Bagaimana cahaya dimaksudkan bergerak dan diterangi: `'static'`, `'stationary'` atau `'movable'`; `'stationary'` secara bawaan."
     }
   },
   "light.probe": {
@@ -8259,7 +8309,8 @@
       "p.cloudShadowExtentKm": "Radius di sekitar kamera yang dicakup peta, dalam kilometer, mulai dari 1; 150 secara bawaan.",
       "p.cloudShadowResolutionScale": "Faktor pada 512 texel per sisi peta, mulai dari 0,25; 1 secara bawaan.",
       "p.cloudShadowRaySamplesScale": "Faktor pada 16 sampel yang diambil sinar peta, mulai dari 0,25; 1 secara bawaan.",
-      "p.cloudScatteredLuminanceScale": "Faktor pada cahaya di dalam awan, linear; putih secara bawaan."
+      "p.cloudScatteredLuminanceScale": "Faktor pada cahaya di dalam awan, linear; putih secara bawaan.",
+      "p.mobility": "Bagaimana cahaya dimaksudkan bergerak dan diterangi: `'static'`, `'stationary'` atau `'movable'`; `'stationary'` secara bawaan."
     }
   },
   "lightLattice": {
@@ -8361,7 +8412,13 @@
       "parameters.physics": "Bahan benda yang memakainya: massa jenis, gesekan, pantulan.",
       "parameters.density": "kg/m³, dikali volume menjadi massa.",
       "parameters.friction": "Seberapa kuat benda mencengkeram, 0 ke atas.",
-      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1."
+      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1.",
+      "parameters.specularIntensity": "Masukan spekular dielektrik permukaan, 0 sampai 1: reflektansinya pada datang tegak lurus adalah 0,08 darinya, sehingga 0,5 (nilai permukaan yang tidak mendeklarasikannya) memberi 4 % yang lazim, 1 memberi 8 % dan 0 tanpa sorotan. Faktor `KHR_materials_specular` material glTF ditulis sebagaimana dideklarasikan. Logam mengabaikannya.",
+      "parameters.specularIntensityMap": "Mengalikan `specularIntensity` dengan kanal alfa sebuah gambar.",
+      "parameters.displacementMagnitude": "Sejauh apa, dalam meter, keluaran `displacement` graf material menggeser permukaan sepanjang normalnya di mana nilainya 1 di atas `displacementCenter`: tinggi yang digeser adalah `(keluaran - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Nilai keluaran `displacement` yang membiarkan permukaan di tempatnya, dari 0 sampai 1.",
+      "parameters.displacementFadeStart": "Di mana pergeseran memudar menurut jarak, sebagai ukuran di layar dalam piksel dari pergeseran terbesarnya: utuh di atas `displacementFadeStart`, hilang di bawah `displacementFadeEnd`, yang harus lebih kecil; keduanya dihilangkan, ia tidak pernah memudar.",
+      "parameters.displacementFadeEnd": "Lihat `displacementFadeStart`."
     }
   },
   "material.meshPhysical": {
@@ -8424,7 +8481,13 @@
       "parameters.physics": "Bahan benda yang memakainya: massa jenis, gesekan, pantulan.",
       "parameters.density": "kg/m³, dikali volume menjadi massa.",
       "parameters.friction": "Seberapa kuat benda mencengkeram, 0 ke atas.",
-      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1."
+      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1.",
+      "parameters.specularIntensity": "Masukan spekular dielektrik permukaan, 0 sampai 1: reflektansinya pada datang tegak lurus adalah 0,08 darinya, sehingga 0,5 (nilai permukaan yang tidak mendeklarasikannya) memberi 4 % yang lazim, 1 memberi 8 % dan 0 tanpa sorotan. Faktor `KHR_materials_specular` material glTF ditulis sebagaimana dideklarasikan. Logam mengabaikannya.",
+      "parameters.specularIntensityMap": "Mengalikan `specularIntensity` dengan kanal alfa sebuah gambar.",
+      "parameters.displacementMagnitude": "Sejauh apa, dalam meter, keluaran `displacement` graf material menggeser permukaan sepanjang normalnya di mana nilainya 1 di atas `displacementCenter`: tinggi yang digeser adalah `(keluaran - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Nilai keluaran `displacement` yang membiarkan permukaan di tempatnya, dari 0 sampai 1.",
+      "parameters.displacementFadeStart": "Di mana pergeseran memudar menurut jarak, sebagai ukuran di layar dalam piksel dari pergeseran terbesarnya: utuh di atas `displacementFadeStart`, hilang di bawah `displacementFadeEnd`, yang harus lebih kecil; keduanya dihilangkan, ia tidak pernah memudar.",
+      "parameters.displacementFadeEnd": "Lihat `displacementFadeStart`."
     }
   },
   "material.meshBasic": {
@@ -8487,7 +8550,13 @@
       "parameters.physics": "Bahan benda yang memakainya: massa jenis, gesekan, pantulan.",
       "parameters.density": "kg/m³, dikali volume menjadi massa.",
       "parameters.friction": "Seberapa kuat benda mencengkeram, 0 ke atas.",
-      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1."
+      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1.",
+      "parameters.specularIntensity": "Masukan spekular dielektrik permukaan, 0 sampai 1: reflektansinya pada datang tegak lurus adalah 0,08 darinya, sehingga 0,5 (nilai permukaan yang tidak mendeklarasikannya) memberi 4 % yang lazim, 1 memberi 8 % dan 0 tanpa sorotan. Faktor `KHR_materials_specular` material glTF ditulis sebagaimana dideklarasikan. Logam mengabaikannya.",
+      "parameters.specularIntensityMap": "Mengalikan `specularIntensity` dengan kanal alfa sebuah gambar.",
+      "parameters.displacementMagnitude": "Sejauh apa, dalam meter, keluaran `displacement` graf material menggeser permukaan sepanjang normalnya di mana nilainya 1 di atas `displacementCenter`: tinggi yang digeser adalah `(keluaran - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Nilai keluaran `displacement` yang membiarkan permukaan di tempatnya, dari 0 sampai 1.",
+      "parameters.displacementFadeStart": "Di mana pergeseran memudar menurut jarak, sebagai ukuran di layar dalam piksel dari pergeseran terbesarnya: utuh di atas `displacementFadeStart`, hilang di bawah `displacementFadeEnd`, yang harus lebih kecil; keduanya dihilangkan, ia tidak pernah memudar.",
+      "parameters.displacementFadeEnd": "Lihat `displacementFadeStart`."
     }
   },
   "material.meshPhong": {
@@ -8550,7 +8619,13 @@
       "parameters.physics": "Bahan benda yang memakainya: massa jenis, gesekan, pantulan.",
       "parameters.density": "kg/m³, dikali volume menjadi massa.",
       "parameters.friction": "Seberapa kuat benda mencengkeram, 0 ke atas.",
-      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1."
+      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1.",
+      "parameters.specularIntensity": "Masukan spekular dielektrik permukaan, 0 sampai 1: reflektansinya pada datang tegak lurus adalah 0,08 darinya, sehingga 0,5 (nilai permukaan yang tidak mendeklarasikannya) memberi 4 % yang lazim, 1 memberi 8 % dan 0 tanpa sorotan. Faktor `KHR_materials_specular` material glTF ditulis sebagaimana dideklarasikan. Logam mengabaikannya.",
+      "parameters.specularIntensityMap": "Mengalikan `specularIntensity` dengan kanal alfa sebuah gambar.",
+      "parameters.displacementMagnitude": "Sejauh apa, dalam meter, keluaran `displacement` graf material menggeser permukaan sepanjang normalnya di mana nilainya 1 di atas `displacementCenter`: tinggi yang digeser adalah `(keluaran - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Nilai keluaran `displacement` yang membiarkan permukaan di tempatnya, dari 0 sampai 1.",
+      "parameters.displacementFadeStart": "Di mana pergeseran memudar menurut jarak, sebagai ukuran di layar dalam piksel dari pergeseran terbesarnya: utuh di atas `displacementFadeStart`, hilang di bawah `displacementFadeEnd`, yang harus lebih kecil; keduanya dihilangkan, ia tidak pernah memudar.",
+      "parameters.displacementFadeEnd": "Lihat `displacementFadeStart`."
     }
   },
   "material.meshLambert": {
@@ -8613,7 +8688,13 @@
       "parameters.physics": "Bahan benda yang memakainya: massa jenis, gesekan, pantulan.",
       "parameters.density": "kg/m³, dikali volume menjadi massa.",
       "parameters.friction": "Seberapa kuat benda mencengkeram, 0 ke atas.",
-      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1."
+      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1.",
+      "parameters.specularIntensity": "Masukan spekular dielektrik permukaan, 0 sampai 1: reflektansinya pada datang tegak lurus adalah 0,08 darinya, sehingga 0,5 (nilai permukaan yang tidak mendeklarasikannya) memberi 4 % yang lazim, 1 memberi 8 % dan 0 tanpa sorotan. Faktor `KHR_materials_specular` material glTF ditulis sebagaimana dideklarasikan. Logam mengabaikannya.",
+      "parameters.specularIntensityMap": "Mengalikan `specularIntensity` dengan kanal alfa sebuah gambar.",
+      "parameters.displacementMagnitude": "Sejauh apa, dalam meter, keluaran `displacement` graf material menggeser permukaan sepanjang normalnya di mana nilainya 1 di atas `displacementCenter`: tinggi yang digeser adalah `(keluaran - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Nilai keluaran `displacement` yang membiarkan permukaan di tempatnya, dari 0 sampai 1.",
+      "parameters.displacementFadeStart": "Di mana pergeseran memudar menurut jarak, sebagai ukuran di layar dalam piksel dari pergeseran terbesarnya: utuh di atas `displacementFadeStart`, hilang di bawah `displacementFadeEnd`, yang harus lebih kecil; keduanya dihilangkan, ia tidak pernah memudar.",
+      "parameters.displacementFadeEnd": "Lihat `displacementFadeStart`."
     }
   },
   "material.meshToon": {
@@ -8676,7 +8757,13 @@
       "parameters.physics": "Bahan benda yang memakainya: massa jenis, gesekan, pantulan.",
       "parameters.density": "kg/m³, dikali volume menjadi massa.",
       "parameters.friction": "Seberapa kuat benda mencengkeram, 0 ke atas.",
-      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1."
+      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1.",
+      "parameters.specularIntensity": "Masukan spekular dielektrik permukaan, 0 sampai 1: reflektansinya pada datang tegak lurus adalah 0,08 darinya, sehingga 0,5 (nilai permukaan yang tidak mendeklarasikannya) memberi 4 % yang lazim, 1 memberi 8 % dan 0 tanpa sorotan. Faktor `KHR_materials_specular` material glTF ditulis sebagaimana dideklarasikan. Logam mengabaikannya.",
+      "parameters.specularIntensityMap": "Mengalikan `specularIntensity` dengan kanal alfa sebuah gambar.",
+      "parameters.displacementMagnitude": "Sejauh apa, dalam meter, keluaran `displacement` graf material menggeser permukaan sepanjang normalnya di mana nilainya 1 di atas `displacementCenter`: tinggi yang digeser adalah `(keluaran - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Nilai keluaran `displacement` yang membiarkan permukaan di tempatnya, dari 0 sampai 1.",
+      "parameters.displacementFadeStart": "Di mana pergeseran memudar menurut jarak, sebagai ukuran di layar dalam piksel dari pergeseran terbesarnya: utuh di atas `displacementFadeStart`, hilang di bawah `displacementFadeEnd`, yang harus lebih kecil; keduanya dihilangkan, ia tidak pernah memudar.",
+      "parameters.displacementFadeEnd": "Lihat `displacementFadeStart`."
     }
   },
   "material.meshNormal": {
@@ -8739,7 +8826,13 @@
       "parameters.physics": "Bahan benda yang memakainya: massa jenis, gesekan, pantulan.",
       "parameters.density": "kg/m³, dikali volume menjadi massa.",
       "parameters.friction": "Seberapa kuat benda mencengkeram, 0 ke atas.",
-      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1."
+      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1.",
+      "parameters.specularIntensity": "Masukan spekular dielektrik permukaan, 0 sampai 1: reflektansinya pada datang tegak lurus adalah 0,08 darinya, sehingga 0,5 (nilai permukaan yang tidak mendeklarasikannya) memberi 4 % yang lazim, 1 memberi 8 % dan 0 tanpa sorotan. Faktor `KHR_materials_specular` material glTF ditulis sebagaimana dideklarasikan. Logam mengabaikannya.",
+      "parameters.specularIntensityMap": "Mengalikan `specularIntensity` dengan kanal alfa sebuah gambar.",
+      "parameters.displacementMagnitude": "Sejauh apa, dalam meter, keluaran `displacement` graf material menggeser permukaan sepanjang normalnya di mana nilainya 1 di atas `displacementCenter`: tinggi yang digeser adalah `(keluaran - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Nilai keluaran `displacement` yang membiarkan permukaan di tempatnya, dari 0 sampai 1.",
+      "parameters.displacementFadeStart": "Di mana pergeseran memudar menurut jarak, sebagai ukuran di layar dalam piksel dari pergeseran terbesarnya: utuh di atas `displacementFadeStart`, hilang di bawah `displacementFadeEnd`, yang harus lebih kecil; keduanya dihilangkan, ia tidak pernah memudar.",
+      "parameters.displacementFadeEnd": "Lihat `displacementFadeStart`."
     }
   },
   "material.meshMatcap": {
@@ -8802,7 +8895,13 @@
       "parameters.physics": "Bahan benda yang memakainya: massa jenis, gesekan, pantulan.",
       "parameters.density": "kg/m³, dikali volume menjadi massa.",
       "parameters.friction": "Seberapa kuat benda mencengkeram, 0 ke atas.",
-      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1."
+      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1.",
+      "parameters.specularIntensity": "Masukan spekular dielektrik permukaan, 0 sampai 1: reflektansinya pada datang tegak lurus adalah 0,08 darinya, sehingga 0,5 (nilai permukaan yang tidak mendeklarasikannya) memberi 4 % yang lazim, 1 memberi 8 % dan 0 tanpa sorotan. Faktor `KHR_materials_specular` material glTF ditulis sebagaimana dideklarasikan. Logam mengabaikannya.",
+      "parameters.specularIntensityMap": "Mengalikan `specularIntensity` dengan kanal alfa sebuah gambar.",
+      "parameters.displacementMagnitude": "Sejauh apa, dalam meter, keluaran `displacement` graf material menggeser permukaan sepanjang normalnya di mana nilainya 1 di atas `displacementCenter`: tinggi yang digeser adalah `(keluaran - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Nilai keluaran `displacement` yang membiarkan permukaan di tempatnya, dari 0 sampai 1.",
+      "parameters.displacementFadeStart": "Di mana pergeseran memudar menurut jarak, sebagai ukuran di layar dalam piksel dari pergeseran terbesarnya: utuh di atas `displacementFadeStart`, hilang di bawah `displacementFadeEnd`, yang harus lebih kecil; keduanya dihilangkan, ia tidak pernah memudar.",
+      "parameters.displacementFadeEnd": "Lihat `displacementFadeStart`."
     }
   },
   "material.meshDepth": {
@@ -8865,7 +8964,13 @@
       "parameters.physics": "Bahan benda yang memakainya: massa jenis, gesekan, pantulan.",
       "parameters.density": "kg/m³, dikali volume menjadi massa.",
       "parameters.friction": "Seberapa kuat benda mencengkeram, 0 ke atas.",
-      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1."
+      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1.",
+      "parameters.specularIntensity": "Masukan spekular dielektrik permukaan, 0 sampai 1: reflektansinya pada datang tegak lurus adalah 0,08 darinya, sehingga 0,5 (nilai permukaan yang tidak mendeklarasikannya) memberi 4 % yang lazim, 1 memberi 8 % dan 0 tanpa sorotan. Faktor `KHR_materials_specular` material glTF ditulis sebagaimana dideklarasikan. Logam mengabaikannya.",
+      "parameters.specularIntensityMap": "Mengalikan `specularIntensity` dengan kanal alfa sebuah gambar.",
+      "parameters.displacementMagnitude": "Sejauh apa, dalam meter, keluaran `displacement` graf material menggeser permukaan sepanjang normalnya di mana nilainya 1 di atas `displacementCenter`: tinggi yang digeser adalah `(keluaran - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Nilai keluaran `displacement` yang membiarkan permukaan di tempatnya, dari 0 sampai 1.",
+      "parameters.displacementFadeStart": "Di mana pergeseran memudar menurut jarak, sebagai ukuran di layar dalam piksel dari pergeseran terbesarnya: utuh di atas `displacementFadeStart`, hilang di bawah `displacementFadeEnd`, yang harus lebih kecil; keduanya dihilangkan, ia tidak pernah memudar.",
+      "parameters.displacementFadeEnd": "Lihat `displacementFadeStart`."
     }
   },
   "material.points": {
@@ -8928,7 +9033,13 @@
       "parameters.physics": "Bahan benda yang memakainya: massa jenis, gesekan, pantulan.",
       "parameters.density": "kg/m³, dikali volume menjadi massa.",
       "parameters.friction": "Seberapa kuat benda mencengkeram, 0 ke atas.",
-      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1."
+      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1.",
+      "parameters.specularIntensity": "Masukan spekular dielektrik permukaan, 0 sampai 1: reflektansinya pada datang tegak lurus adalah 0,08 darinya, sehingga 0,5 (nilai permukaan yang tidak mendeklarasikannya) memberi 4 % yang lazim, 1 memberi 8 % dan 0 tanpa sorotan. Faktor `KHR_materials_specular` material glTF ditulis sebagaimana dideklarasikan. Logam mengabaikannya.",
+      "parameters.specularIntensityMap": "Mengalikan `specularIntensity` dengan kanal alfa sebuah gambar.",
+      "parameters.displacementMagnitude": "Sejauh apa, dalam meter, keluaran `displacement` graf material menggeser permukaan sepanjang normalnya di mana nilainya 1 di atas `displacementCenter`: tinggi yang digeser adalah `(keluaran - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Nilai keluaran `displacement` yang membiarkan permukaan di tempatnya, dari 0 sampai 1.",
+      "parameters.displacementFadeStart": "Di mana pergeseran memudar menurut jarak, sebagai ukuran di layar dalam piksel dari pergeseran terbesarnya: utuh di atas `displacementFadeStart`, hilang di bawah `displacementFadeEnd`, yang harus lebih kecil; keduanya dihilangkan, ia tidak pernah memudar.",
+      "parameters.displacementFadeEnd": "Lihat `displacementFadeStart`."
     }
   },
   "material.line": {
@@ -8991,7 +9102,13 @@
       "parameters.physics": "Bahan benda yang memakainya: massa jenis, gesekan, pantulan.",
       "parameters.density": "kg/m³, dikali volume menjadi massa.",
       "parameters.friction": "Seberapa kuat benda mencengkeram, 0 ke atas.",
-      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1."
+      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1.",
+      "parameters.specularIntensity": "Masukan spekular dielektrik permukaan, 0 sampai 1: reflektansinya pada datang tegak lurus adalah 0,08 darinya, sehingga 0,5 (nilai permukaan yang tidak mendeklarasikannya) memberi 4 % yang lazim, 1 memberi 8 % dan 0 tanpa sorotan. Faktor `KHR_materials_specular` material glTF ditulis sebagaimana dideklarasikan. Logam mengabaikannya.",
+      "parameters.specularIntensityMap": "Mengalikan `specularIntensity` dengan kanal alfa sebuah gambar.",
+      "parameters.displacementMagnitude": "Sejauh apa, dalam meter, keluaran `displacement` graf material menggeser permukaan sepanjang normalnya di mana nilainya 1 di atas `displacementCenter`: tinggi yang digeser adalah `(keluaran - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Nilai keluaran `displacement` yang membiarkan permukaan di tempatnya, dari 0 sampai 1.",
+      "parameters.displacementFadeStart": "Di mana pergeseran memudar menurut jarak, sebagai ukuran di layar dalam piksel dari pergeseran terbesarnya: utuh di atas `displacementFadeStart`, hilang di bawah `displacementFadeEnd`, yang harus lebih kecil; keduanya dihilangkan, ia tidak pernah memudar.",
+      "parameters.displacementFadeEnd": "Lihat `displacementFadeStart`."
     }
   },
   "material.lineDashed": {
@@ -9054,7 +9171,13 @@
       "parameters.physics": "Bahan benda yang memakainya: massa jenis, gesekan, pantulan.",
       "parameters.density": "kg/m³, dikali volume menjadi massa.",
       "parameters.friction": "Seberapa kuat benda mencengkeram, 0 ke atas.",
-      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1."
+      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1.",
+      "parameters.specularIntensity": "Masukan spekular dielektrik permukaan, 0 sampai 1: reflektansinya pada datang tegak lurus adalah 0,08 darinya, sehingga 0,5 (nilai permukaan yang tidak mendeklarasikannya) memberi 4 % yang lazim, 1 memberi 8 % dan 0 tanpa sorotan. Faktor `KHR_materials_specular` material glTF ditulis sebagaimana dideklarasikan. Logam mengabaikannya.",
+      "parameters.specularIntensityMap": "Mengalikan `specularIntensity` dengan kanal alfa sebuah gambar.",
+      "parameters.displacementMagnitude": "Sejauh apa, dalam meter, keluaran `displacement` graf material menggeser permukaan sepanjang normalnya di mana nilainya 1 di atas `displacementCenter`: tinggi yang digeser adalah `(keluaran - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Nilai keluaran `displacement` yang membiarkan permukaan di tempatnya, dari 0 sampai 1.",
+      "parameters.displacementFadeStart": "Di mana pergeseran memudar menurut jarak, sebagai ukuran di layar dalam piksel dari pergeseran terbesarnya: utuh di atas `displacementFadeStart`, hilang di bawah `displacementFadeEnd`, yang harus lebih kecil; keduanya dihilangkan, ia tidak pernah memudar.",
+      "parameters.displacementFadeEnd": "Lihat `displacementFadeStart`."
     }
   },
   "material.sprite": {
@@ -9117,7 +9240,13 @@
       "parameters.physics": "Bahan benda yang memakainya: massa jenis, gesekan, pantulan.",
       "parameters.density": "kg/m³, dikali volume menjadi massa.",
       "parameters.friction": "Seberapa kuat benda mencengkeram, 0 ke atas.",
-      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1."
+      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1.",
+      "parameters.specularIntensity": "Masukan spekular dielektrik permukaan, 0 sampai 1: reflektansinya pada datang tegak lurus adalah 0,08 darinya, sehingga 0,5 (nilai permukaan yang tidak mendeklarasikannya) memberi 4 % yang lazim, 1 memberi 8 % dan 0 tanpa sorotan. Faktor `KHR_materials_specular` material glTF ditulis sebagaimana dideklarasikan. Logam mengabaikannya.",
+      "parameters.specularIntensityMap": "Mengalikan `specularIntensity` dengan kanal alfa sebuah gambar.",
+      "parameters.displacementMagnitude": "Sejauh apa, dalam meter, keluaran `displacement` graf material menggeser permukaan sepanjang normalnya di mana nilainya 1 di atas `displacementCenter`: tinggi yang digeser adalah `(keluaran - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Nilai keluaran `displacement` yang membiarkan permukaan di tempatnya, dari 0 sampai 1.",
+      "parameters.displacementFadeStart": "Di mana pergeseran memudar menurut jarak, sebagai ukuran di layar dalam piksel dari pergeseran terbesarnya: utuh di atas `displacementFadeStart`, hilang di bawah `displacementFadeEnd`, yang harus lebih kecil; keduanya dihilangkan, ia tidak pernah memudar.",
+      "parameters.displacementFadeEnd": "Lihat `displacementFadeStart`."
     }
   },
   "material.volume": {
@@ -9181,7 +9310,13 @@
       "parameters.physics": "Zat sebuah benda yang memakainya: kepadatan, gesekan, restitusi.",
       "parameters.density": "kg/m³, dikali volume untuk massa.",
       "parameters.friction": "Seberapa kuat benda mencengkeram, 0 ke atas.",
-      "parameters.restitution": "Seberapa banyak benda memantul, 0 sampai 1."
+      "parameters.restitution": "Seberapa banyak benda memantul, 0 sampai 1.",
+      "parameters.specularIntensity": "Masukan spekular dielektrik permukaan, 0 sampai 1: reflektansinya pada datang tegak lurus adalah 0,08 darinya, sehingga 0,5 (nilai permukaan yang tidak mendeklarasikannya) memberi 4 % yang lazim, 1 memberi 8 % dan 0 tanpa sorotan. Faktor `KHR_materials_specular` material glTF ditulis sebagaimana dideklarasikan. Logam mengabaikannya.",
+      "parameters.specularIntensityMap": "Mengalikan `specularIntensity` dengan kanal alfa sebuah gambar.",
+      "parameters.displacementMagnitude": "Sejauh apa, dalam meter, keluaran `displacement` graf material menggeser permukaan sepanjang normalnya di mana nilainya 1 di atas `displacementCenter`: tinggi yang digeser adalah `(keluaran - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Nilai keluaran `displacement` yang membiarkan permukaan di tempatnya, dari 0 sampai 1.",
+      "parameters.displacementFadeStart": "Di mana pergeseran memudar menurut jarak, sebagai ukuran di layar dalam piksel dari pergeseran terbesarnya: utuh di atas `displacementFadeStart`, hilang di bawah `displacementFadeEnd`, yang harus lebih kecil; keduanya dihilangkan, ia tidak pernah memudar.",
+      "parameters.displacementFadeEnd": "Lihat `displacementFadeStart`."
     }
   },
   "material.lightFunction": {
@@ -9245,7 +9380,13 @@
       "parameters.physics": "Zat sebuah benda yang memakainya: kepadatan, gesekan, restitusi.",
       "parameters.density": "kg/m³, dikali volume untuk massa.",
       "parameters.friction": "Seberapa kuat benda mencengkeram, 0 ke atas.",
-      "parameters.restitution": "Seberapa banyak benda memantul, 0 sampai 1."
+      "parameters.restitution": "Seberapa banyak benda memantul, 0 sampai 1.",
+      "parameters.specularIntensity": "Masukan spekular dielektrik permukaan, 0 sampai 1: reflektansinya pada datang tegak lurus adalah 0,08 darinya, sehingga 0,5 (nilai permukaan yang tidak mendeklarasikannya) memberi 4 % yang lazim, 1 memberi 8 % dan 0 tanpa sorotan. Faktor `KHR_materials_specular` material glTF ditulis sebagaimana dideklarasikan. Logam mengabaikannya.",
+      "parameters.specularIntensityMap": "Mengalikan `specularIntensity` dengan kanal alfa sebuah gambar.",
+      "parameters.displacementMagnitude": "Sejauh apa, dalam meter, keluaran `displacement` graf material menggeser permukaan sepanjang normalnya di mana nilainya 1 di atas `displacementCenter`: tinggi yang digeser adalah `(keluaran - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Nilai keluaran `displacement` yang membiarkan permukaan di tempatnya, dari 0 sampai 1.",
+      "parameters.displacementFadeStart": "Di mana pergeseran memudar menurut jarak, sebagai ukuran di layar dalam piksel dari pergeseran terbesarnya: utuh di atas `displacementFadeStart`, hilang di bawah `displacementFadeEnd`, yang harus lebih kecil; keduanya dihilangkan, ia tidak pernah memudar.",
+      "parameters.displacementFadeEnd": "Lihat `displacementFadeStart`."
     }
   },
   "material.graph": {
@@ -9315,7 +9456,13 @@
       "parameters.physics": "Bahan benda yang memakainya: massa jenis, gesekan, pantulan.",
       "parameters.density": "kg/m³, dikali volume menjadi massa.",
       "parameters.friction": "Seberapa kuat benda mencengkeram, 0 ke atas.",
-      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1."
+      "parameters.restitution": "Seberapa kuat benda memantul, 0 sampai 1.",
+      "parameters.specularIntensity": "Masukan spekular dielektrik permukaan, 0 sampai 1: reflektansinya pada datang tegak lurus adalah 0,08 darinya, sehingga 0,5 (nilai permukaan yang tidak mendeklarasikannya) memberi 4 % yang lazim, 1 memberi 8 % dan 0 tanpa sorotan. Faktor `KHR_materials_specular` material glTF ditulis sebagaimana dideklarasikan. Logam mengabaikannya.",
+      "parameters.specularIntensityMap": "Mengalikan `specularIntensity` dengan kanal alfa sebuah gambar.",
+      "parameters.displacementMagnitude": "Sejauh apa, dalam meter, keluaran `displacement` graf material menggeser permukaan sepanjang normalnya di mana nilainya 1 di atas `displacementCenter`: tinggi yang digeser adalah `(keluaran - displacementCenter) * displacementMagnitude`.",
+      "parameters.displacementCenter": "Nilai keluaran `displacement` yang membiarkan permukaan di tempatnya, dari 0 sampai 1.",
+      "parameters.displacementFadeStart": "Di mana pergeseran memudar menurut jarak, sebagai ukuran di layar dalam piksel dari pergeseran terbesarnya: utuh di atas `displacementFadeStart`, hilang di bawah `displacementFadeEnd`, yang harus lebih kecil; keduanya dihilangkan, ia tidak pernah memudar.",
+      "parameters.displacementFadeEnd": "Lihat `displacementFadeStart`."
     }
   },
   "material.createShader": {
@@ -9980,5 +10127,80 @@
   },
   "writeEngineCamera": {
     "summary": "Menurunkan semua yang dibaca sebuah bingkai dari `into.world`, sudah diatur, dan optik yang dideklarasikan: proyeksi dalam konvensi kedalaman mesin, lalu view, view-projection dan keenam bidang frustum (`updateCameraFrame`), bingkai render (`renderOrigin.ts`) dan mata."
+  },
+  "COLLISION_CHANNELS": {
+    "summary": "KANAL TUMBUKAN DAN RESPONS.",
+    "description": "Sebuah benda punya tipe objek, satu dari 64 kanal, dan respons terhadap setiap kanal — `ignore`, `overlap` atau `block`. Dua benda bertemu menurut apa yang masing-masing jawab pada kanal yang lain, dan jawaban yang lebih lemah dari keduanya yang menentukan: keduanya `block` maka bertabrakan; yang lebih lemah `overlap` maka saling menembus dan melaporkan bahwa keduanya tumpang tindih; salah satu `ignore` maka keduanya tidak saling mengenal. Kueri adegan punya kanal dan respons sendiri dan bertemu benda dengan aturan yang sama (`channelsMeet`). Delapan kanal pertama milik mesin; enam lagi dicadangkan, dan lima puluh milik gim, untuk diberi nama sesuka hati. Sebuah PROFIL bernama menetapkan dalam satu kata tipe objek, benda mana yang bergerak atau merasakan, dan respons terhadap setiap kanal; profil di bawah adalah bawaan mesin."
+  },
+  "COLLISION_PROFILES": {
+    "summary": "Profil tumbukan mesin.",
+    "description": "Setiap kanal yang tidak disebut menjawab `block`."
+  },
+  "CharacterMode": {
+    "summary": "Bagaimana tubuh bergerak: di lantai, di udara, di air, atau terbang bebas dari gravitasi."
+  },
+  "CollisionChannel": {
+    "summary": "Sebuah kanal menurut namanya."
+  },
+  "CollisionProfileName": {
+    "summary": "Sebuah profil menurut namanya."
+  },
+  "CollisionResponse": {
+    "summary": "Sebuah respons menurut namanya."
+  },
+  "OverlapHit": {
+    "summary": "Sebuah benda yang ditemui sebuah bentuk: objeknya, apakah ia memblokir kueri (jika tidak ia tumpang tindih dengannya), dan material glTF segitiga terpanggang yang ditemui (`-1` untuk bentuk milik benda itu sendiri)."
+  },
+  "OverlapOptions": {
+    "summary": "Apa yang ditanyakan `world.physics.overlap`, selain bentuk.",
+    "members": {
+      "at": "Pusat bentuk, dalam kerangka dunia.",
+      "rotation": "Kuaternion satuan `[x, y, z, w]`.",
+      "channel": "Kanal tempat kueri berada dan jawaban yang diberikannya kepada kanal, seperti yang dimiliki sebuah benda (`CollisionOptions`): kueri bertemu benda menurut yang lebih lemah dari jawaban masing-masing pada kanal yang lain — keduanya `block`, benda memblokir kueri; salah satu `overlap`, ia tumpang tindih dengannya; salah satu `ignore`, ia tidak ditemui. Benda yang tidak ikut kueri apa pun tidak pernah ditemui.",
+      "objectTypes": "Mencari benda bertipe objek ini, apa pun jawabannya: setiap yang ditemui memblokir. Menggantikan `channel`.",
+      "mode": "`multi` mendaftar setiap benda yang ditemui; `any` berhenti pada yang pertama ditemui; `blocking` pada yang pertama yang memblokir.",
+      "ignore": "Benda yang dilewati kueri: milik penanya."
+    }
+  },
+  "OverlapResult": {
+    "summary": "Apa yang ditemui sebuah bentuk: benda-benda menurut urutan id mesinnya, dan apakah ada yang memblokir.",
+    "members": {
+      "blocking": "Apakah ada benda yang ditemui memblokir kueri."
+    }
+  },
+  "OverlapShape": {
+    "summary": "Sebuah bentuk untuk diuji di suatu tempat: bola, kotak atau kapsul (tegak, diputar oleh `rotation`)."
+  },
+  "RESPONSE": {
+    "summary": "Apa yang dijawab sebuah benda pada sebuah kanal, dari yang terendah ke tertinggi: ia tidak mengenalnya, ia melewatinya dan melaporkan, ia berhenti di depannya."
+  },
+  "ResolvedCollision": {
+    "summary": "Tumbukan sebuah benda yang telah diputuskan: kanalnya, dan kanal mana yang diblokir dan ditumpang tindihnya sebagai topeng bit (bit `i` adalah kanal `i`).",
+    "members": {
+      "objectType": "Kanalnya, mulai dari 0.",
+      "block": "Bit `i` menyala: benda memblokir kanal `i`.",
+      "overlap": "Bit `i` menyala: benda tumpang tindih dengan kanal `i`.",
+      "query": "Ikut dalam kueri adegan dan tumpang tindih.",
+      "physics": "Ikut dalam simulasi."
+    }
+  },
+  "channelIndex": {
+    "summary": "Nomor sebuah kanal yang diberikan menurut nama atau nomor; menolak yang bukan keduanya."
+  },
+  "channelsMeet": {
+    "summary": "Respons yang dipakai `a` dan `b` untuk bertemu: masing-masing menjawab kanal yang lain, yang lebih lemah menentukan."
+  },
+  "defaultProfile": {
+    "summary": "Profil yang dipakai saat sebuah benda dibuat tanpa menyebut profil (`CollisionOptions.profile`)."
+  },
+  "resolveCollision": {
+    "summary": "Tumbukan sebuah benda yang diputuskan dari `options` dan profil `fallback` yang menjadi titik awalnya bila ia tidak menyebut profil: respons profil (setiap kanal yang tidak disebut `block`), lalu `responses` di atasnya, kanal `objectType` dan sakelar `enabled` di atas milik profil.",
+    "parameters": {
+      "options": "Tumbukan sebuah benda, sebagaimana `obj.physics` menerimanya: sebuah profil, lalu apa yang berbeda darinya.",
+      "options.profile": "Profil sebagai titik awal.",
+      "options.objectType": "Kanal yang adalah benda itu: apa yang dijawab yang lain.",
+      "options.responses": "Apa yang dijawab benda pada kanal, di atas milik profil; kanal adalah nama atau nomornya.",
+      "options.enabled": "Apakah benda ikut dalam simulasi, dalam kueri, keduanya atau tidak keduanya."
+    }
   }
 }

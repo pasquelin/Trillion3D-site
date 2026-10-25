@@ -619,14 +619,16 @@
   },
   "CharacterCameraControls": {
     "summary": "目を通して見たキャラクター：質量を持つ体で、歩き、走り、跳び、落ち、ワールドの物理の物体と直立したカプセルとして衝突します。",
-    "description": "ポインターは一人称と同じく頭を回す（`look.ts`）。キーは `KeyboardEvent.code` によるので、どのキーボード配列でも同じキーが使える: W/S または上下の矢印で前後に歩き、A/D または左右の矢印で横に移動し、Shift でダッシュし、Space でジャンプし、C でしゃがむ（`canCrouch`）。水中では体は頭が向く方へ泳ぎ、Space で浮上、しゃがみキーで沈み、`flying` を設定するとそのように飛ぶ。体は一瞬で動き出したり止まったりしない: `responseTime` かけて加速し、`stopTime` かけて減速するが、床の摩擦で足裏が押せる以上に速くはならないので、石の上では少し、氷の上では大きく滑って止まる。空中では運動量を保ち、ワールドの重力に `gravityScale` を掛けた力で上昇と落下を行い、`stepHeight` までの段差を登り、壁に沿って滑り、`maxSlope` までの斜面に立つ（`sdk-browser/src/physics/character/characterDriver.ts`、`sdk-core/src/collision/characterDrive.ts`）。カメラは目で、足から `eyeHeight` の高さにあり、歩幅に合わせて `headBob` だけ揺れ、着地時に `landingDip` だけ沈む（`sdk-core/src/collision/characterEye.ts`）。どちらも体のステップの後に目に乗り、体を動かすことはない。カメラを自分で動かすホストは、体をそこへ静止状態でテレポートさせる。静止したキャラクター — 接地し、速度なし、キー入力なし、沈み込みも残っていない — は何も出力しないので、シーンは静止したままになる。",
+    "description": "ポインタは一人称のように頭を回します(`look.ts`)。キーは、どのキーボード配列でも同じキーが使えるよう `KeyboardEvent.code` で指定します。W/S または上下の矢印キーで前進・後退、A/D または左右の矢印キーで横移動、Shift でダッシュ、Space でジャンプ、C でしゃがみ(`canCrouch`)。水中では体は頭の向く方向へ泳ぎ、Space で浮き、しゃがみキーで沈み、`flying` が設定されていれば同様に飛びます。体は一度に動き出したり止まったりしません。床の上では `maxAcceleration` で加速し、`groundFriction` と `brakingDecelerationWalking` で減速します。空中では勢いを保ち、世界の重力に `gravityScale` を掛けた力で上昇・落下し、`stepHeight` までの段差を登り、壁に沿って滑り、`maxSlope` までの斜面に立ちます(`sdk-browser/src/physics/character/characterDriver.ts`、`sdk-core/src/collision/characterDrive.ts`)。カメラは目で、足から `eyeHeight` の高さにあり、歩幅に合わせて `headBob` だけ揺れ、着地で `landingDip` だけ沈みます(`sdk-core/src/collision/characterEye.ts`)。どちらも体のステップのあとで目に乗り、体を動かすことはありません。カメラを自分で動かすホストは、体をそこへ静止状態でテレポートします。静止したキャラクター — 接地し、速度なし、キー入力なし、沈み込みも残っていない — は何も出力しないので、シーンは静止したままです。",
     "members": {
       "velocity": "ボディの速度（秒速メートル）、ライブ: `[x, y, z]`、y が上。",
       "onGround": "足が床の上にあるかどうか。",
       "stride": "歩調の位相、ラジアン、[0, 2π)の範囲: 一方の足が0で、もう一方がπで着地する。",
       "onLand": "着地時に下向きの速度（秒速メートル）とともに呼ばれる: 音、揺れ。",
       "onJump": "ジャンプでボディが地面を離れるときに呼ばれる。",
-      "update": "`delta`秒分生きる; カメラが動いたかどうかを返し、動いたときは`change`を発する。"
+      "update": "`delta`秒分生きる; カメラが動いたかどうかを返し、動いたときは`change`を発する。",
+      "mode": "体が今どう動いているか: `walking`、`falling`、`swimming`、`flying` のいずれか。",
+      "crouched": "体がしゃがんでいるかどうか。"
     }
   },
   "CharacterSettings": {
@@ -1957,7 +1959,7 @@
       "emptyTexels": "`approximate` または `simplify` レイヤーのアトラスが、どのチャートの値もない場所に何を持つか（`HLOD_EMPTY_TEXELS`）: `nearestChart` はすべてのマップで最も近いチャートの値、または `black`。`true` は既定、`false` は `black`。",
       "clusterDag": "`approximate`、`merge`、`simplify` レイヤーが作る各アクターのメッシュに、クラスターDAGを持たせるか。そのより粗いレベルはピクセル誤差の範囲内で描画される。`false`（既定）では、リファレンスが統合・近似・簡略化メッシュを既定で作るのと同じく、1つのレベルがあらゆる距離で丸ごと描画される。",
       "allowDistanceField": "`approximate`、`merge`、`simplify` レイヤーが作る各アクターのメッシュに、ディスタンスフィールドを持たせるか（リファレンスの各ビルダーの設定）: コンパイラは、アクター自身の三角形からワールド空間で、シーンのメッシュの設定（`meshBuild` の `distanceField…`）で作り、`distanceFields.bin` に入れ、太陽のディスタンスフィールドシャドウはアクターが描画される場所でそれを描画する — 最後のシャドウマップを超えた統合レベルの影。`approximate` レイヤーでは既定で `true`、`merge` や `simplify` レイヤーでは、リファレンスのビルダーの既定どおり `false`。`instanced` レイヤーのオブジェクトは自身のメッシュ（それぞれのフィールドを持つ）を描画し、`voxel` レイヤーは三角形を作らない。",
-      "disallowClusterDag": "`instanced` レイヤーが、受け取るオブジェクトをクラスターDAGなしで描画するか: `false`（既定）では、各々が自身のDAGを保ち、そのソースメッシュが配置され、レイヤーはメッシュを作らない。`true` では、各々がメッシュの最後のLOD、つまりフォールバックメッシュ（`lodSelection: 'lowest'`）で描画される。リファレンスが、クラスターDAGを許可しないインスタンスメッシュを描画するのと同じである。その場合レイヤーは、マテリアルを保持する `merge` レイヤーと同様にそれらのフォールバックを作る — セルとマテリアルごとに1つのメッシュで、丸ごと描画され、ソースのマテリアルをまとい、オブジェクト自身のDAGのコピーにはならない — そして `merge` のすべてのルールがそれに適用される（`parent`、`spatiallyLoaded`、そのセルのグリッド）。`hlodInstance` とマークされたオブジェクトは、それ自身として立ったままである。",
+      "disallowClusterDag": "`instanced` レイヤーが、取り込んだオブジェクトをクラスター DAG なしで描くかどうか。`false`(既定)では、各オブジェクトは自分の DAG とその配置済みソースメッシュを保ち、レイヤーはメッシュを作りません。`true` では、各オブジェクトはメッシュの最後の LOD、つまりフォールバックメッシュ(`lodSelection: 'lowest'`)で描かれます。これは、リファレンスがクラスター DAG を禁止されたインスタンスメッシュを描くのと同じです。レイヤーはインスタンス化されたままで、コンパイラは各ソースメッシュのフォールバックを一度だけ作り、レイヤーのオブジェクトはそれぞれの行列に置かれたその行です — オブジェクトごとにもセルごとにも何もコピーされず — どの距離でも丸ごと描かれます。スキニング、モーフィング、シミュレーションされるオブジェクト、およびアセンブリのオブジェクトは自分のメッシュを保ちます。",
       "meshBuild": "`merge` または `simplify` レイヤーが作る各アクターのメッシュをどう構築するか（`HLOD_MESH_BUILD_SETTINGS`）。リファレンスがそれらのレイヤーからのみ読むとおり: 最も細かいレベルが何を保つか（`keptTriangles`、`trimmedError`）、ほぼ潰れた三角形を捨てるか（`dropNearCollapsed`）、アクターがロードされている間にそのどれだけが常駐するか（`alwaysResidentKib`、そのセルのルートページ）、そして形状をどう保つか（`shapePreservation`、`edgeLengthBound`、`holdTextureCoordinates`）。`voxel` レイヤーのものは、代わりにそのセルのボクセルがどうサンプリングされるかを指定する — `voxelRays`、`voxelLevel`、`voxelBackUp`、`voxelSeparable`、`voxelNdf`、`voxelOpacity`。メッシュの `meshBuild` が指定するのと同じである。",
       "sizeFilter": "`instanced` レイヤーが、ワールドボックスのサイズでどのオブジェクトを受け取るか: `none`; `extent` は、最大の半径が少なくとも `minExtent` メートル; `area` は、表面積が少なくとも `minArea` 平方メートル; `volume` は、体積が少なくとも `minVolume` 立方メートル。弾かれたオブジェクトはHLODに入らない。",
       "minExtent": "`extent` フィルターの最小の半径。メートル。",
@@ -2392,7 +2394,7 @@
     "description": "これらは名前のついた製品上の選択であり、隠された定数ではない: すべての実行時上限はこれらを再度読み込み、診断はこれらをそのまま公開する。",
     "members": {
       "sunAngularRadius": "太陽円盤の角半径（ラジアン）。ゼロは明示的にハードシャドウを要求する。これはディレクショナルライト自身の既定値（0.5357度の円盤）。スカイモジュールのサンパートは、作成するライトにレベルの値（0.7357度、`modules/sky/sunPart.ts`）を設定するため、単独で置かれたライトとスカイの太陽は、コンポーネントとレベルが異なるのと同様にここで異なる。",
-      "tileLights": "動いている画像がサンプルを引くライトグリッドのセルのリストの最大長 (X2)：これを超えると、セルのライトはすべて合計されます。ライト数がこれ以下のシーンは、この長さのライト配列で照らされます。セルのリストは、いくつであっても、そのセルに届くすべてのライトをビューの大きさのプールに保持します。プールに空きのないセルはシーンのすべてのライトをたどります — 届かないライトは正確なゼロを足すだけです — ので、ライトが失われることはありません。",
+      "tileLights": "動いている画像がサンプルを引くライトグリッドのセルのリストの最大長 (X2):これを超えると、セルのライトはすべて合計されます。ライト数がこれ以下のシーンは、この長さのライト配列で照らされます。セルのリストは、そのセルに届くライトを固定サイズのプールに保持し、その大きさはセル数に `lightGridMaxCulledLightsPerCell`(`hizOptions.ts`、32)を掛けたものです。これを超えた列は、得たライトを順に保ち、残りを捨てます。これはリファレンスと同じです。",
       "tileSize": "ライトグリッドのセルの一辺のピクセル数。",
       "gridSlices": "ライトグリッドの深度スライス: 最後のスライスは最も遠いライトの到達距離から始まり、そのセルは無限遠まで届く。",
       "gridDepthDistribution": "グリッドのスライスの分布、`slice = log2(depth · B + O) · S`（`lighting/tiles/gridMap.ts`）: `S` は、最初のスライスの開始がオフセットされる深度の倍増に何枚のスライスがまたがるか。",
@@ -2501,7 +2503,8 @@
       "p.cloudShadowExtentKm": "マップがカバーするカメラ周囲の半径（キロメートル）。1以上。既定は150。",
       "p.cloudShadowResolutionScale": "マップの一辺512テクセルへの係数。0.25以上。既定は1。",
       "p.cloudShadowRaySamplesScale": "マップのレイが取る16サンプルへの係数。0.25以上。既定は1。",
-      "p.cloudScatteredLuminanceScale": "雲の内部のライトへの係数（リニア）。既定は白。"
+      "p.cloudScatteredLuminanceScale": "雲の内部のライトへの係数（リニア）。既定は白。",
+      "p.mobility": "ライトがどう動き、どう照らされる想定か: `'static'`、`'stationary'`、`'movable'` のいずれか。既定は `'stationary'`。"
     },
     "members": {
       "isLight": "常に`true`: 他のどんなオブジェクトともライトを区別する。",
@@ -2574,7 +2577,8 @@
       "cloudShadowExtentKm": "マップがカバーするカメラ周囲の半径（キロメートル）。1以上。150。",
       "cloudShadowResolutionScale": "マップの一辺512テクセルへの係数。0.25以上。1。",
       "cloudShadowRaySamplesScale": "マップのレイが取る16サンプルへの係数。0.25以上。1。",
-      "cloudScatteredLuminanceScale": "雲の内部のライトへの係数（リニア）。白。`set` でその場で変更する。"
+      "cloudScatteredLuminanceScale": "雲の内部のライトへの係数（リニア）。白。`set` でその場で変更する。",
+      "mobility": "ライトがどう動き、どう照らされる想定か: `'static'`(ベイク済みで、動的な影を落とさない)、`'stationary'`(動かない。色と強度は変えられる)、`'movable'`(完全に動的)。既定はすべての種類で `'stationary'`。それ以外の値は拒否されます(`INVALID_SCENE_LIGHT`)。書き込みはすぐにワールドへ届きます。"
     }
   },
   "LightCloudShadowParameters": {
@@ -2630,7 +2634,8 @@
       "shadowsAir": "ディレクショナルのみ: ライトのシャドウが空気も陰にするかどうか（ヘイズとスカイのマーチがレイに沿ってそれを読む）。既定はオフ。",
       "transmittancePerPixel": "ディレクショナルのみ: ライトへ向かう空気の透過率が、地面で一度ではなく表面の点ごとに読まれるかどうか。既定はオフ。",
       "sunDiskTint": "ディレクショナルのみ: スカイの太陽円盤に掛けられる色（リニア）。既定は白。",
-      "sh": "プローブの放射照度: 27個の数値、すなわち放射輝度の9つのRGB球面調和係数で、バンド順は定数、`y`、`z`、`x`、`xy`、`yz`、`3z² − 1`、`xz`、`x² − y²`、`intensity` でスケールされる。`emptyIrradiance` と `add…Irradiance` ヘルパーで構築される。なしの場合、プローブは一様。"
+      "sh": "プローブの放射照度: 27個の数値、すなわち放射輝度の9つのRGB球面調和係数で、バンド順は定数、`y`、`z`、`x`、`xy`、`yz`、`3z² − 1`、`xz`、`x² − y²`、`intensity` でスケールされる。`emptyIrradiance` と `add…Irradiance` ヘルパーで構築される。なしの場合、プローブは一様。",
+      "mobility": "ライトがどう動き、どう照らされる想定か: `'static'`、`'stationary'`、`'movable'` のいずれか。既定は `'stationary'`。"
     }
   },
   "LightShadowOptions": {
@@ -2811,7 +2816,13 @@
       "parameters.physics": "これをまとう物体の素材：密度、摩擦、反発。",
       "parameters.density": "kg/m³。体積を掛けると質量になる。",
       "parameters.friction": "物体のすべりにくさ。0 以上。",
-      "parameters.restitution": "物体の弾み具合。0 から 1。"
+      "parameters.restitution": "物体の弾み具合。0 から 1。",
+      "parameters.specularIntensity": "サーフェスの誘電体のスペキュラ入力、0 から 1。垂直入射での反射率はこの値の 0.08 倍なので、0.5(何も宣言しないサーフェスの値)で通常の 4%、1 で 8%、0 でハイライトなしになります。glTF マテリアルの `KHR_materials_specular` の係数は宣言どおりに書き込まれます。金属はこれを無視します。",
+      "parameters.specularIntensityMap": "`specularIntensity` に画像のアルファチャンネルを掛けます。",
+      "parameters.displacementMagnitude": "マテリアルのグラフの `displacement` 出力が、`displacementCenter` より 1 大きいところで、サーフェスをその法線に沿って何メートル動かすか。変位後の高さは `(出力 - displacementCenter) * displacementMagnitude` です。",
+      "parameters.displacementCenter": "サーフェスをそのままの位置に残す `displacement` 出力の値、0 から 1。",
+      "parameters.displacementFadeStart": "変位が距離とともに薄れていく位置。最大の変位の画面上のピクセルサイズで表し、`displacementFadeStart` より上では全体、`displacementFadeEnd` より下では消えます。後者は小さいほうでなければなりません。両方を省くと、薄れることはありません。",
+      "parameters.displacementFadeEnd": "`displacementFadeStart` を参照。"
     },
     "members": {
       "isMaterial": "常に`true`: 他の何かとマテリアルを区別する。",
@@ -2852,7 +2863,11 @@
       "volumeOutputs": "ボリュームドメインのマテリアルの出力。その範囲に抑えられる: アルベド、消散、放射光（`emissive` × `emissiveIntensity`）。",
       "surface": "このマテリアルの、エンジン独自の物理表面レコード(`contracts/material.ts`)。物理系ファミリーの外にある種別は、その名前を持つホストファミリーを通じて描かれ、エンジンはそれを自身の唯一のライティングモデルにマッピングする(`surfaceModel.ts`)。",
       "clone": "同じ種別・同じ値を持つ新しいマテリアル。",
-      "dispose": "まとっているものを忘れる: dispose済みのマテリアルは誰も再描画しない。"
+      "dispose": "まとっているものを忘れる: dispose済みのマテリアルは誰も再描画しない。",
+      "displacementMagnitude": "マテリアルのグラフの `displacement` 出力が、`displacementCenter` より 1 大きいところで、サーフェスをその法線に沿って何メートル動かすか。変位後の高さは `(出力 - displacementCenter) * displacementMagnitude` です。",
+      "displacementCenter": "サーフェスをそのままの位置に残す `displacement` 出力の値、0 から 1。",
+      "displacementFadeStart": "サーフェスの変位が距離とともに薄れていく位置。最大の変位の画面上のピクセルサイズで表し、`displacementFadeStart` より上では全体、`displacementFadeEnd`(小さいほう)より下では消えます。両方とも未設定なら、薄れることはありません。",
+      "displacementFadeEnd": "`displacementFadeStart` を参照。"
     }
   },
   "MaterialGraph": {
@@ -2923,7 +2938,13 @@
       "physics": "これをまとう物体の素材：密度、摩擦、反発。",
       "density": "kg/m³。体積を掛けると質量になる。",
       "friction": "物体のすべりにくさ。0 以上。",
-      "restitution": "物体の弾み具合。0 から 1。"
+      "restitution": "物体の弾み具合。0 から 1。",
+      "specularIntensity": "サーフェスの誘電体のスペキュラ入力、0 から 1。垂直入射での反射率はこの値の 0.08 倍なので、0.5(何も宣言しないサーフェスの値)で通常の 4%、1 で 8%、0 でハイライトなしになります。glTF マテリアルの `KHR_materials_specular` の係数は宣言どおりに書き込まれます。金属はこれを無視します。",
+      "specularIntensityMap": "`specularIntensity` に画像のアルファチャンネルを掛けます。",
+      "displacementMagnitude": "マテリアルのグラフの `displacement` 出力が、`displacementCenter` より 1 大きいところで、サーフェスをその法線に沿って何メートル動かすか。変位後の高さは `(出力 - displacementCenter) * displacementMagnitude` です。",
+      "displacementCenter": "サーフェスをそのままの位置に残す `displacement` 出力の値、0 から 1。",
+      "displacementFadeStart": "変位が距離とともに薄れていく位置。最大の変位の画面上のピクセルサイズで表し、`displacementFadeStart` より上では全体、`displacementFadeEnd` より下では消えます。後者は小さいほうでなければなりません。両方を省くと、薄れることはありません。",
+      "displacementFadeEnd": "`displacementFadeStart` を参照。"
     }
   },
   "MaterialSettings": {
@@ -3376,7 +3397,10 @@
       "rotateZ": "ノードを自分自身のz軸まわりに回転させる。",
       "translateOnAxis": "ノードを自分自身の`axis`に沿って動かす。",
       "getWorldDirection": "ノードがワールド内でどちらを向いているか。",
-      "localBounds": "このノード自身の内容が占めるボックス、ローカルフレームで; 普通のノードは何も持たない。"
+      "localBounds": "このノード自身の内容が占めるボックス、ローカルフレームで; 普通のノードは何も持たない。",
+      "firstPerson": "オブジェクトが一人称のものとして描かれるかどうか(プレイヤーの手と武器)。自分では動的な影を落とさず、そのピクセルには、影が別扱いにする一人称の印が付きます。既定は `false` で、`firstPersonWorldSpaceRepresentation` とは併用できません。",
+      "firstPersonWorldSpaceRepresentation": "オブジェクトがワールド内で一人称のもの(プレイヤーの体)の代わりを務めるかどうか。持ち主のビューには見えず、通常のマップとは別に、太陽の一人称クリップマップ(`shadowFirstPersonClipmap`)に影を落とし、それを所有するビュー(メインカメラのビュー)はこれを描きません。既定は `false` で、`firstPerson` とは併用できません。",
+      "castHiddenShadow": "オブジェクトが非表示の間も影を落とし続けるかどうか(`visible = false`、または非表示のノードの下)。どのビューもこれを描きませんが、シャドウマップは描きます。既定は `false` で、影を落とし、`firstPersonWorldSpaceRepresentation` ではないオブジェクトに対してのみ読まれます。"
     }
   },
   "ObjectPhysics": {
@@ -3772,7 +3796,9 @@
       "forVertexTangents": "その法線係数が頂点タンジェント用に書かれたか。未指定は不明。",
       "shininess": "宣言されたままの、Phong表面の指数とハイライトカラー。",
       "released": "リソースが返却されるときに呼ばれる: エンジン自身のそのコピーが聞くもの。",
-      "dispose": "リソースを返却する。"
+      "dispose": "リソースを返却する。",
+      "subsurfaceOpacity": "そのサブサーフェスの不透明度、0 から 1。指定がなければ 1(`SUBSURFACE_OPACITY_MODEL_SHIFT`)。",
+      "specularIntensity": "誘電体のスペキュラ入力(`KHR_materials_specular`)。垂直入射での反射率はこの値の 0.08 倍(`surfaceF0`)で、サーフェスが宣言しないところでは 0.5 です。そのマップのアルファがこれをスケールします。宣言されていれば、サーフェスがほかに何を持っていてもレコードから読まれます。"
     }
   },
   "PageUnit": {
@@ -4693,7 +4719,8 @@
       "shaftBloomScale": "ブルームあり: 加えられる色への係数。存在しなければ0.2。",
       "shaftBloomThreshold": "ブルームあり: ブルームするために画像が露出後に超えなければならない明るさ。存在しなければ0。",
       "shaftBloomMaxBrightness": "ブルームあり: 露出後にこれを超える明るさは、これに引き下げられる。存在しなければ100。",
-      "shaftBloomTint": "ブルームあり: ブルームの色への係数（リニア）、0以上の3つの数値。存在しなければ白。"
+      "shaftBloomTint": "ブルームあり: ブルームの色への係数（リニア）、0以上の3つの数値。存在しなければ白。",
+      "mobility": "ライトがどう動き、どう照らされる想定か: `static`(ライトマップにベイクされ、動かず、変わらず、動的な影を落とさない)、`stationary`(動かない。色と強度は変えられる。静的サーフェスへの直接光はベイクされ、動的な影は落とされる)、`movable`(完全に動的)。指定がなければ `stationary` で、これはすべての種類のライトに対するリファレンスの既定値です。ボリューメトリックライトマップがこれを読みます(`mobilityOf`)。"
     }
   },
   "SceneLightStore": {
@@ -4931,7 +4958,7 @@
   },
   "ShadowCacheInvalidation": {
     "summary": "シーンノードがワールドポジションオフセットをどう保持するか: サーフェスのマテリアルが `worldPositionOffset` 出力（`Material.graph`）で頂点を動かすオブジェクトの4つのスイッチで、エンジンのラスターが読む。",
-    "description": "`evaluateWorldPositionOffset`（true）はオブジェクトのオフセットをオンにし、`worldPositionOffsetDisableDistance`（0、決して）はカメラからオブジェクトのバウンズの中心までそのメートルを超えるとそれを止め、`worldPositionOffsetWritesVelocity`（true）は動きをテンポラルアンチエイリアシングとモーションブラーのための動きにし、`shadowCacheInvalidation` はその影の保ち方を言う: `auto`（既定）はオフセットが評価されるかオブジェクトが動く間は影を描き直し、`always` は毎画像、`rigid` はそのオフセットでは描き直さず、`static` はそのオフセットでも動きでも描き直さない。マテリアル自身の `alwaysEvaluateWorldPositionOffset` は最初の2つを上書きし、その `maxWorldPositionOffset` は頂点がどこまで行くかを制限する。専用のテーブルに保持されるため、何も設定しないノードにコストはかからない: スイッチはノードのプロパティ（`defineOffsetSwitches`）を通して書かれ、どのポーズフックにも聞こえないノードフィールドとして記録される（`noteNodeWrite`）。"
+    "description": "`evaluateWorldPositionOffset`(true)はオブジェクトのオフセットをオンにし、`worldPositionOffsetDisableDistance`(0、無効)はカメラからオブジェクトの境界の中心までがそのメートル数を超えるとオフセットを止め、`worldPositionOffsetWritesVelocity`(true)はその動きを時間的アンチエイリアスとモーションブラー用の動きにし、`shadowCacheInvalidation` は影の保ち方を指定します。`auto`(既定)はオフセットが評価されている間、またはオブジェクトが動く間は影を描き直し、`always` は毎画像、`rigid` はオフセットでは描き直さず、`static` はオフセットでも移動でも描き直しません。マテリアル自身の `alwaysEvaluateWorldPositionOffset` は最初の 2 つを上書きし、`maxWorldPositionOffset` は頂点がどこまで動くかを制限します。オブジェクトのさらに 2 つのスイッチは、ほとんど設定されないので脇に置かれています。`firstPerson`(false)は一人称のものとして描かれるオブジェクト — ビューの空間で、カメラの近くにあり、プレイヤーの手と武器のようなもの — で、自分では動的な影を落としません。`firstPersonWorldSpaceRepresentation`(false)はワールド内で一人称のもの — プレイヤーの体 — の代わりを務めるオブジェクトで、持ち主のビューには見えず、通常のマップとは別に影を落とします(`shadowFirstPersonClipmap`)。ノードはどちらか一方であり、両方になることはありません。最後の `castHiddenShadow`(false)は、非表示のオブジェクト(`visible = false`、または非表示のノードの下)に影を落とし続けさせます。どのビューもこれを描きません。ワールド空間の代理は、それを所有するビューからは隠され、これが何を言っていても影を落とします。独自のテーブルに保持されるので、どれも設定しないノードにはコストがかかりません。スイッチはノードのプロパティを通して書き込まれ(`defineOffsetSwitches`)、どのポーズフックにも聞こえないノードのフィールドと同様に記録されます(`noteNodeWrite`)。"
   },
   "ShadowDistanceOption": {
     "summary": "ホストが書くシャドウ距離: メートル、`true` は既定、`false` はなし。"
@@ -4948,7 +4975,7 @@
       "shadowVsmPagesRendered": "このフレームでクリアされてからレンダリングされたページ。数フレーム遅れて読み戻される。",
       "shadowVsmFreePages": "プールの最後のステータスメッセージにある空きの物理ページ。",
       "shadowVsmLodBias": "プールの負荷が設定するグローバルな解像度LODバイアス。",
-      "shadowVsmProjectionPasses": "このフレームの投影パス。それぞれ4つのライト。",
+      "shadowVsmProjectionPasses": "この画像の投影パス: 太陽のものとローカルライトのもの。",
       "shadowVsmInvalidationMs": "ページ無効化のGPU時間(ms)。パスの計測時間から。",
       "shadowVsmMarkingMs": "ページマーキングのGPU時間(ms)。パスの計測時間から。",
       "shadowVsmPageManagementMs": "ページ管理のGPU時間(ms)。パスの計測時間から。",
@@ -4960,15 +4987,15 @@
       "gpuLightListsMs": "ライトリストのGPU時間。",
       "tileLightPoolReserved": "リストを超えたタイルがライトインデックスプールに予約したワード数。1つのリストより多くのライトがあるシーンの最後にサンプリングされたフレームでの値。それ以外は `null`。",
       "tileLightPoolCapacity": "そのサンプリングされたフレームでライトインデックスプールが保持したワード数。同様に `null`。",
-      "tileLightPoolOverflowed": "そのサンプリングされたフレームで、プールに空きがなくすべてのライトをたどったタイルがあったかどうか。",
-      "tileLightPoolGrowths": "エクスプローラーを開いてから、あふれたフレームが求めた分までプールが拡大した回数。",
+      "tileLightPoolOverflowed": "そのサンプリングされたフレームで、列がプールに空きを見つけられず、それを超えたライトを捨てたかどうか(`lightGridMaxCulledLightsPerCell`)。",
       "gpuShadowsMs": "Shadows ステージのGPU時間: 仮想シャドウマップのすべてのパスで、他のパスは含まない。",
       "gpuLightingMs": "ライティングのGPU時間。",
       "bounce": "バウンス光のプローブ: 存在するか、何を保持するか、その更新が何をしたか。",
       "reflections": "最後の画像の反射のレイの集計: それぞれがどこで終わったか、グローバルディスタンスフィールドを通るそのマーチがどう終わったか、取ったステップ数。ビューが反射を作らない間は `null`。",
       "surfaceCache": "最後の画像のサーフェスキャッシュ: そのアトラスの使用量、キャプチャしたページ、オフの理由。作られない間は `null`。",
       "ambientOcclusion": "最後の画像のスクリーンスペースアンビエントオクルージョン。ビューが持たない間は `null`。",
-      "toneTable": "カラーグレーディングがディスプレイの色をベイクするキューブ。ビューが持たない間は `null`。"
+      "toneTable": "カラーグレーディングがディスプレイの色をベイクするキューブ。ビューが持たない間は `null`。",
+      "shadowVsmOverflowFlags": "直近 10 秒に影が見たオーバーフロー。種類ごとに 1 ビット: 1 は非クラスターマーキングのジョブキュー、2 は 1 パス投影のマスクを超えたライト、4 はページプール、8 は影を落とすオブジェクトのリストが容量を超えたもの。なければ 0、または `shadowAllowScreenOverflowMessages` が false のときも 0。"
     }
   },
   "ShadowOptions": {
@@ -5333,7 +5360,9 @@
       "translucencyLighting": "ライトがブレンドされた表面をどう照らすか（`VisMaterial.translucencyLighting`）。",
       "translucencyPass": "ブレンドされた表面が描画される画像のパス（`VisMaterial.translucencyPass`）。",
       "responsive": "表面が描画される場所で、テンポラルアンチエイリアシングが履歴をどこまで信頼するか（`RESPONSIVE_SHIFT`）: `'medium'` はそのピクセルをピクセルアニメーションとして読み、`'full'` は画像ごとにその履歴を再開する。",
-      "graph": "パラメータとマップの代わりに出力を計算するグラフ。マテリアルの色を描画するファミリーが読む（`GRAPH_FAMILIES`、`surfaceRecord.ts`）。"
+      "graph": "パラメータとマップの代わりに出力を計算するグラフ。マテリアルの色を描画するファミリーが読む（`GRAPH_FAMILIES`、`surfaceRecord.ts`）。",
+      "subsurfaceOpacity": "そのサブサーフェスの不透明さ、0 から 1。",
+      "specularIntensity": "物理サーフェスの誘電体のスペキュラ入力。glTF の `KHR_materials_specular` の係数が宣言し、そのアルファがこれをスケールするマップがあります。指定がなければ、サーフェスは 0.5 を保ちます。"
     }
   },
   "SurfaceDisplacement": {
@@ -5591,7 +5620,7 @@
   },
   "TextureCompression": {
     "summary": "セッションのプールがどのブロックファミリーを採用するか、そしてそこから導かれるすべて。",
-    "description": "キャッシュはすべてのチェーンを BC で保存し（`PREVIEW_STORED_FORMAT`）、品質ゲートが保持した場合にのみ、クックが求めた他のファミリー — 既定ではすべて — にベイクする。デバイスはどのファミリーをサンプリングするかを示す — デスクトップカードは BC、モバイルは ASTC または ETC2、複数のものもあり、ソフトウェアアダプターはなし。アトラスはレーンごとに1つのプールを持ち、サイドカーが名指すレイアウトとなる: `lossless`（RGBA8、1テクセル4バイト — セッションのファミリーが持たないチェーンの読み取り、そのデコードされた BC ファイル（`blockDecode.ts`）、ホスト画像の読み取り）、`rgba`（BC7、ASTC または ETC2 RGBA8、1テクセル1バイト）、`two-channel`（BC5、ASTC 輝度アルファ、または EAC RG11、1テクセル1バイト、ノーマルマップの X と Y で Z はシェーダーが再構築する）。エンジンは何も失わない: テクスチャはそのチェーンが保持されたレーンを取り、その選択は公開される（`texturePoolFormat`）。"
+    "description": "キャッシュはすべてのチェーンを BC(`PREVIEW_STORED_FORMAT`)で保存し、クックが求めたほかのファミリー(既定ではすべて)には、品質ゲートがそれを残した場合にのみベイクします。デバイスは、どのファミリーをサンプリングするかを示します — デスクトップのカードは BC、モバイルは ASTC または ETC2、複数に対応するものもあり、ソフトウェアアダプターはどれにも対応しません。アトラスはそのとき LANE ごとにひとつのプールを持ちます。これはサイドカーファイルが名指しするレイアウトです。`lossless`(RGBA8、1 テクセル 4 バイト — セッションのファミリーが持たないチェーンが読むもの、デコードされたその BC ファイル(`blockDecode.ts`)、およびホストの画像が読むもの)、`rgba`(BC7、ASTC または ETC2 RGBA8、1 テクセル 1 バイト)、`two-channel`(BC5、ASTC 輝度アルファ、または EAC RG11、1 テクセル 1 バイト、法線マップの X と Y で、Z はシェーダーが再構成)。データアトラスの 3 番目のプールは CHANNEL プールです。法線マップには BC5、アトラスが持たない場合は 1 チャンネルマップ(`alpha`、`grayscale`、`displacementmap`)のもの。プールのすべてのチェーンが BC4 でデバイスが BC をサンプリングするなら BC4 で 1 テクセル半バイト、そうでなければ R8 で 1 テクセル 1 バイトとなり、BC4 ブロックはデコードされます(`channelPoolOf`)。エンジンは何も失いません。テクスチャはそのチェーンが保たれたレーンを取り、その選択は公開されます(`texturePoolFormat`)。"
   },
   "TextureFilter": {
     "summary": "テクスチャのサンプリング規則: 基本フィルターと、サンプラーが縮小するときのミップ規則。"
@@ -5637,7 +5666,8 @@
       "level": "どのレベルか。",
       "format": "どのフォーマットか。",
       "rgba": "RGBA8 にデコードされる — 保存ファミリーのブロックに対する lossless レーンの読み取り。",
-      "half": "ブロックではなく half-float テクセル: half-float レーンのファイル（`tileRecord`）。"
+      "half": "ハーフフロートのレーンがこれを読みます: ハーフフロートのファイルからでも、デコードされた BC6H ブロックからでも、テクセルです(`tileLevelBytes`)。",
+      "single": "8 ビットのテクセルの 1 チャンネルプールがこれを読みます: 1 テクセル 1 バイトで、BC4、`gray`、`displacement` のチェーンのブロックがデコードされます(`tileLevelBytes`)。"
     }
   },
   "TextureLevelFormat": {
@@ -5654,7 +5684,8 @@
       "level": "どのレベルか。",
       "format": "どのフォーマットか。",
       "rgba": "RGBA8 にデコードされる — 保存ファミリーのブロックに対する lossless レーンの読み取り。",
-      "half": "ブロックではなく half-float テクセル: half-float レーンのファイル（`tileRecord`）。"
+      "half": "ハーフフロートのレーンがこれを読みます: ハーフフロートのファイルからでも、デコードされた BC6H ブロックからでも、テクセルです(`tileLevelBytes`)。",
+      "single": "8 ビットのテクセルの 1 チャンネルプールがこれを読みます: 1 テクセル 1 バイトで、BC4、`gray`、`displacement` のチェーンのブロックがデコードされます(`tileLevelBytes`)。"
     }
   },
   "TextureLevelStore": {
@@ -6172,7 +6203,9 @@
       "model": "非物理ファミリーが対応づけられるサーフェスモデル（`../materials/surface/surfaceModel.ts`）。なければ物理。",
       "lineWidth": "ラスターがラインのクアッドを広げるCSSピクセル単位の幅（`shader/lineWgsl.ts`）。三角形を描く表面ではなしまたはゼロ。",
       "dashSize": "破線のダッシュとギャップ、線に沿って、ワールド単位（`shader/lineWgsl.ts`、`lineDash`）。他の表面ではなし。",
-      "sprite": "スプライトのクアッド。すべてのラスターがカメラの方を向かせる（`shader/spriteWgsl.ts`）: 画像内での回転（ラジアン）と、距離で縮むか。他の表面ではなし。"
+      "sprite": "スプライトのクアッド。すべてのラスターがカメラの方を向かせる（`shader/spriteWgsl.ts`）: 画像内での回転（ラジアン）と、距離で縮むか。他の表面ではなし。",
+      "subsurfaceOpacity": "そのサブサーフェスの不透明度、0 から 1。指定がなければ 1(`SUBSURFACE_OPACITY_MODEL_SHIFT`)。",
+      "specularIntensity": "誘電体のスペキュラ入力(`KHR_materials_specular`)。垂直入射での反射率はこの値の 0.08 倍(`surfaceF0`)で、サーフェスが宣言しないところでは 0.5 です。そのマップのアルファがこれをスケールします。宣言されていれば、サーフェスがほかに何を持っていてもレコードから読まれます。"
     }
   },
   "VolumeMaterial": {
@@ -6298,13 +6331,11 @@
       "autoForward": "フライトのみ: キーなしで`movementSpeed`で前進する。Wでさらに速く、Sで停止する。",
       "onLand": "キャラクターのみ: 着地時に、m/s単位の下向きの速度とともに呼ばれる; デフォルトは`null`。",
       "onJump": "キャラクターのみ: ジャンプでボディが地面を離れるときに呼ばれる; デフォルトは`null`。",
-      "walkSpeed": "キャラクター専用: 徒歩の秒速（メートル）。既定は3.5でジョギング。",
+      "walkSpeed": "キャラクターのみ: 徒歩の秒速(メートル)。既定は 6。",
       "sprintSpeed": "キャラクター専用: Shift を押したときの秒速（メートル）。既定は6.5で、訓練していない成人の最高速度。",
-      "jumpSpeed": "キャラクターのみ: ジャンプが始まる上向きの速度、m/s; `sqrt(2 g h)`は`h`に達する。デフォルトは0.5m、その場でのジャンプ。",
-      "gravityScale": "キャラクター専用: ボディが感じるワールドの重力（`world.physics.gravity`）の割合。上昇時、落下時、足裏の接地時にかかわらず。既定は1、0は無重力。",
-      "airControl": "キャラクターのみ: 空中でキーがどれだけ速く操縦できるか、地上での開始の割合として; デフォルトは0.05、0なら弾道的。",
-      "responseTime": "キャラクターのみ: 地上で望む速度の95%に達するまでに脚がかかる秒数; デフォルトは0.12。床の摩擦が先に出だしを制限する: 靴底が押せるのは最大`μ g`で、`μ`は床の`material.physics`に対するゴム底のグリップ(物理なしでは石)なので、ジョグに達するのは石で0.45秒、氷で2.2秒。",
-      "stopTime": "キャラクターのみ: キーが押されなくなってから、地上で速度の95%を失うまでに脚がかかる秒数; デフォルトは0.12。床の摩擦が先に停止を制限する: ジョグは`v² / (2 μ g)`滑り、石で0.8 m、氷で3.8 m; 長い時間ほど穏やかにブレーキをかける。",
+      "jumpSpeed": "キャラクターのみ: ジャンプが始まる上向きの速度、m/s。既定は 4.2(地球で頂点 0.9 m)。",
+      "gravityScale": "キャラクターのみ: 体が感じる世界の重力(`world.physics.gravity`)の割合。既定は 1、0 は無重力。",
+      "airControl": "キャラクターのみ: 空中の体が持つキーの押す力の割合。既定は 0.05、0 は弾道的。",
       "capsuleRadius": "キャラクターのみ: ボディの半径、メートル; デフォルトは肩幅の半分(0.23m)。",
       "capsuleHeight": "キャラクターのみ: ボディの高さ、メートル; デフォルトは1.75。",
       "eyeHeight": "キャラクターのみ: 足からのカメラの高さ、メートル; デフォルトは1.64。",
@@ -6326,10 +6357,23 @@
       "flying": "キャラクター専用: ボディが重力から解放されて飛ぶかどうか。既定は false。再び false にするとボディは落下する。",
       "buoyancy": "キャラクター専用: 完全に水没したボディを水が持ち上げる、その重さの割合。既定は1で、その場に浮くボディ。",
       "fluidFriction": "キャラクター専用: ボディが泳ぐ、または飛ぶ流体の摩擦（毎秒）。既定は0.3。",
-      "maxAcceleration": "キャラクター専用: 泳ぐ、飛ぶときにボディが速度を得る加速度（m/s²）。既定は20.48。",
+      "maxAcceleration": "キャラクターのみ: 体が床の上、空中、水泳中、飛行中に加速するメートル毎秒毎秒。既定は 20.48。",
       "swimBraking": "キャラクター専用: キーを押さずに泳ぐときに、水の摩擦に加えてボディが減速する加速度（m/s²）。既定は0。",
       "flyBraking": "キャラクター専用: 飛ぶときの同じもの。既定は0。",
-      "vehicle": "ビークル専用: `'vehicle'` コントロールが操縦するもの — `drive(input)` を持つ任意のもの。キーがスロットル、ブレーキ、ステア、ハンドブレーキを変えるたびにそれを受け取る。既定は `null`。`'vehicle'` コントロールはこれなしでは動かない: `null` の間、`kind = 'vehicle'` と `createWorld(…, { controls: 'vehicle' })` は `NO_VEHICLE` を投げ、操縦中に `null` に設定した場合も同様。"
+      "vehicle": "ビークル専用: `'vehicle'` コントロールが操縦するもの — `drive(input)` を持つ任意のもの。キーがスロットル、ブレーキ、ステア、ハンドブレーキを変えるたびにそれを受け取る。既定は `null`。`'vehicle'` コントロールはこれなしでは動かない: `null` の間、`kind = 'vehicle'` と `createWorld(…, { controls: 'vehicle' })` は `NO_VEHICLE` を投げ、操縦中に `null` に設定した場合も同様。",
+      "groundFriction": "キャラクターのみ: 1 秒あたり、速度が床の上で望む方向へどれだけ速く向きを変えるか、およびキーを押していないときの減速が速度をどれだけ奪うか。既定は 8。",
+      "brakingDecelerationWalking": "キャラクターのみ: キーを押していないとき、床の上の体が地面の摩擦に加えて減速するメートル毎秒毎秒。既定は 20.48(`maxAcceleration` のすべて)。",
+      "brakingDecelerationFalling": "キャラクターのみ: 空中での同じ値。既定は 0。",
+      "fallingLateralFriction": "キャラクターのみ: 空中の体の横方向の速度の向きを変え、減速させる摩擦、1 秒あたり。既定は 0 で、体は勢いを保ちます。",
+      "brakingFrictionFactor": "キャラクターのみ: 減速中の摩擦にかかる係数。既定は 2。",
+      "brakingSubStepTime": "キャラクターのみ: 減速が最大で分割される秒数。遅いフレームも速いフレームと同じように減速します。既定は 33 分の 1 秒で、1/75 から 1/20 の間に保たれます。",
+      "airControlBoostMultiplier": "キャラクターのみ: 横方向の速度が `airControlBoostVelocityThreshold` を下回っている間の `airControl` にかかる係数。制御は 1 を超えません。既定は 2、0 でオフ。",
+      "airControlBoostVelocityThreshold": "キャラクターのみ: これを下回ると `airControl` が強められる横方向の速度、メートル毎秒。既定は 0.25。",
+      "terminalVelocity": "キャラクターのみ: 体が落下する最大の速さ、メートル毎秒。既定は 40。",
+      "maxSimulationTimeStep": "キャラクターのみ: 1 ステップが最大で分割される秒数。既定は 0.05。",
+      "maxSimulationIterations": "キャラクターのみ: 1 ティックが最大で分割されるサブステップ数。既定は 8。",
+      "maxJumpApexAttemptsPerSimulation": "キャラクターのみ: ジャンプの頂点でちょうど終わらせるためにティックを短く切る回数。既定は 2。",
+      "minAnalogWalkSpeed": "キャラクターのみ: 最も弱いキー入力が到達する徒歩の速さ、メートル毎秒。既定は 0。"
     }
   },
   "world.camera": {
@@ -6431,7 +6475,7 @@
     "description": "書き込むと、名指しされた設定がプリセットの上に次のフレームから適用される — 1つの `null` はそれをプリセットに返し、省略した1つはそのまま —。設定が受け付けない値は拒否される。"
   },
   "world.hiz": {
-    "summary": "深度ピラミッドの設定、それぞれそのフィールド（`WorldOptions`）により、ページと品質プリセットの上で解決される: `hizTrace` は、リフレクションのトレースがピラミッドをどう読むか; `hizFoldTransparents` は、そのトレースレイヤーが透明な表面を保持するか; `hizTransparentTest` は、透明なクラスターがそれに対してどうテストされるか; `hizFullResDepth` は、スクリーンプローブのウォークがフル解像度の深度まで降りるか; `lightGridHizCull` は、ライトグリッドが、その列の最遠の深度の背後のセルを空にするか; `hizPrime`（`'off'`、`'whenMissing'`、`'always'`）と `hizPrimeSizeBias`、`hizPrimeDepthBias`、`hizPrimeErrorScale`、`hizPrimeFarFieldOnly` は、`farField` を設定したオブジェクトの小さく粗い描画から作られるピラミッド。",
+    "summary": "深度ピラミッドの設定、それぞれそのフィールド（`WorldOptions`）により、ページと品質プリセットの上で解決される: `hizTrace` は、リフレクションのトレースがピラミッドをどう読むか; `hizFoldTransparents` は、そのトレースレイヤーが透明な表面を保持するか; `hizTransparentTest` は、透明なクラスターがそれに対してどうテストされるか; `hizFullResDepth` は、スクリーンプローブのウォークがフル解像度の深度まで降りるか; `lightGridHizCull` は、ライトグリッドが、その列の最遠の深度の背後のセルを空にするか; `lightGridMaxCulledLightsPerCell` は、ビューのライトグリッドがセルごとに保持するライトのエントリー数; `hizPrime`（`'off'`、`'whenMissing'`、`'always'`）と `hizPrimeSizeBias`、`hizPrimeDepthBias`、`hizPrimeErrorScale`、`hizPrimeFarFieldOnly` は、`farField` を設定したオブジェクトの小さく粗い描画から作られるピラミッド。",
     "description": "書き込むと、名指しされた設定がプリセットの上に次のフレームから適用される — 1つの `null` はそれをプリセットに返し、省略した1つはそのまま —。設定が受け付けない値は拒否される。"
   },
   "world.lightFunction": {
@@ -6700,7 +6744,7 @@
       "shading": "シェーディングビンが各マテリアルクラスのピクセルをどう保持するか、各設定はそのフィールド（`WorldOptions`）により、ページと品質プリセットの上で解決される。 書き込むと、名指しされた設定がプリセットの上に次のフレームから適用される — 1つの `null` はそれをプリセットに返し、省略した1つはそのまま —。設定が受け付けない値は拒否される。",
       "exposureSettings": "自動露出の設定。`world.exposure` が `'auto'` の場合に使われ、それぞれそのフィールド（`WorldOptions`）により、ページと品質プリセットの上で解決される: バイアス、平均が保たれるEV100の範囲、ヒストグラムの幅、除外されるピクセルの割合、毎秒ストップ単位の速度、遷移距離、黒バケットの重み、そしてピクセルの輝度の読み方。 書き込むと、名指しされた設定がプリセットの上に次のフレームから適用される — 1つの `null` はそれをプリセットに返し、省略した1つはそのまま —。設定が受け付けない値は拒否される。",
       "temporal": "レベルの横にあるテンポラルアンチエイリアシングの設定、それぞれそのフィールド（`WorldOptions`）により、ページと品質プリセットの上で解決される: `temporalThinGeometry` は、パスが1ピクセルより薄いジオメトリを探し、そこで履歴を緩めるか; `temporalWaveOps`、`temporalWaveSize`、`temporalHalfPrecision` は、そのプログラムの実行方法（サブグループ、そのサイズ、16ビット浮動小数点。デバイスが許す場所で）、画像は同じ; 履歴のサンプル、フリッカー測定のもの、薄いジオメトリ検出のしきい値、棄却が測定する露出、そして `temporalDownsampleQuality`、露出とブルームが読む半分サイズ画像の品質。 書き込むと、名指しされた設定がプリセットの上に次のフレームから適用される — 1つの `null` はそれをプリセットに返し、省略した1つはそのまま —。設定が受け付けない値は拒否される。",
-      "hiz": "深度ピラミッドの設定、それぞれそのフィールド（`WorldOptions`）により、ページと品質プリセットの上で解決される: `hizTrace` は、リフレクションのトレースがピラミッドをどう読むか; `hizFoldTransparents` は、そのトレースレイヤーが透明な表面を保持するか; `hizTransparentTest` は、透明なクラスターがそれに対してどうテストされるか; `hizFullResDepth` は、スクリーンプローブのウォークがフル解像度の深度まで降りるか; `lightGridHizCull` は、ライトグリッドが、その列の最遠の深度の背後のセルを空にするか; `hizPrime`（`'off'`、`'whenMissing'`、`'always'`）と `hizPrimeSizeBias`、`hizPrimeDepthBias`、`hizPrimeErrorScale`、`hizPrimeFarFieldOnly` は、`farField` を設定したオブジェクトの小さく粗い描画から作られるピラミッド。 書き込むと、名指しされた設定がプリセットの上に次のフレームから適用される — 1つの `null` はそれをプリセットに返し、省略した1つはそのまま —。設定が受け付けない値は拒否される。",
+      "hiz": "深度ピラミッドの設定、それぞれそのフィールド（`WorldOptions`）により、ページと品質プリセットの上で解決される: `hizTrace` は、リフレクションのトレースがピラミッドをどう読むか; `hizFoldTransparents` は、そのトレースレイヤーが透明な表面を保持するか; `hizTransparentTest` は、透明なクラスターがそれに対してどうテストされるか; `hizFullResDepth` は、スクリーンプローブのウォークがフル解像度の深度まで降りるか; `lightGridHizCull` は、ライトグリッドが、その列の最遠の深度の背後のセルを空にするか; `lightGridMaxCulledLightsPerCell` は、ビューのライトグリッドがセルごとに保持するライトのエントリー数; `hizPrime`（`'off'`、`'whenMissing'`、`'always'`）と `hizPrimeSizeBias`、`hizPrimeDepthBias`、`hizPrimeErrorScale`、`hizPrimeFarFieldOnly` は、`farField` を設定したオブジェクトの小さく粗い描画から作られるピラミッド。 書き込むと、名指しされた設定がプリセットの上に次のフレームから適用される — 1つの `null` はそれをプリセットに返し、省略した1つはそのまま —。設定が受け付けない値は拒否される。",
       "lightFunction": "ライト関数の設定、それぞれそのフィールド（`WorldOptions`）により、ページと品質プリセットの上で解決される: `lightFunctionAtlas`（true） — アトラスを作るか —、`lightFunctionSlotResolution`（128）と `lightFunctionAtlasSize`（4） — スロットの1辺のテクセルと1辺のスロット数 —、`lightFunctionMaxLights`（-1、制限なし）、`lightFunctionFormat`（`'grey'` または `'colour'`）、そして消費者: `lightFunctionDeferred`（true）、`lightFunctionFog`（true）、`lightFunctionBounce`（true）、`lightFunctionTranslucent`（false）。 書き込むと、名指しされた設定がプリセットの上に次のフレームから適用される — 1つの `null` はそれをプリセットに返し、省略した1つはそのまま —。設定が受け付けない値は拒否される。",
       "volumetricLightmap": "ボリューメトリックライトマップの設定、そのフィールド（`WorldOptions`）により、ページと品質プリセットの上で解決される: `volumetricLightmap`、事前計算された光を読むか、既定ではオン。 書き込むと、名指しされた設定がプリセットの上に次のフレームから適用される — `null` はそれをプリセットに返し、省略したフィールドはそのまま —。設定が受け付けない値は拒否される。",
       "globalDistanceField": "グローバルディスタンスフィールドの設定、それぞれそのフィールド（`WorldOptions`）により、ページと品質プリセットの上で解決される: `globalDistanceField`（true） — クリップマップを作るか —、`globalDistanceFieldClipmaps`（4）、`globalDistanceFieldViewDistance`（20000 cm）、その解像度（128）、更新のリズム（1フレームに2つのクリップマップ、大きいものはより低頻度）、キャッシュ（スタティックメッシュを別に合成）、そしてメッシュのディスタンスフィールドがストリーミングされるアトラスの予算（`meshDistanceField…`）。 書き込むと、名指しされた設定がプリセットの上に次のフレームから適用される — 1つの `null` はそれをプリセットに返し、省略した1つはそのまま —。設定が受け付けない値は拒否される。",
@@ -6724,7 +6768,7 @@
   },
   "WorldOptions": {
     "summary": "ページが世界を作るときに設定できるもの; 何も指定しないのが通常のケース。",
-    "description": "以下のオプションに加えて、ビューがパーティション分割されたシーンのセルをどうストリーミングするかと、HLODの切り替えが待つウォームアップを、各設定をそのフィールドで、参照実装の既定とともに（`../../../../sdk-core/src/contracts/worldStreamingOptions.ts`）: `worldStreamingMaxLoadingCells` (4)、`worldStreamingAngleWeight` (0.4)、`worldStreamingSortByExtent` (true)、`worldStreamingSortByPriority` (true)、`worldStreamingUseGridRange` (true)、`worldStreamingRangeScale` (1)、`worldStreamingRadius` (100 m)、`worldStreamingSector` (false)、`worldStreamingSectorAngle` (360°)、`worldStreamingZCulling` (false)、`worldStreamingBlockOnSlowStreaming` (true)、`worldStreamingBlockOnSlowStreamingRatio` (0.25)、`worldStreamingUpdateOptimization` (true)、`worldStreamingLocationQuantization` (4 m)、`worldStreamingRotationQuantization` (10°)、`worldStreamingForceUpdateFrameCount` (0)、`worldStreamingForce2D` (false)、`worldStreamingExtraRadius` (0 m)、`worldStreamingExtraAngle` (0°)、`worldStreamingTargetState` (`'activated'`)、`worldStreamingPriority` (128)、`worldStreamingUseVelocity` (false)、`hlodEnabled` (true)、`hlodWarmup` (true)、`hlodWarmupFrames` (5)、`hlodWarmupGeometry` (true)、`hlodWarmupTextures` (true)、`hlodWarmupTextureScale` (2)、`hlodWarmupTextureClamp` (2048)。ここで名指した場合、各々は品質プリセットに優先する。後から `world.worldStreaming` で、次のフレームから変更される。カットの設定も同様に、各々そのフィールドで参照実装の既定とともに（`../../../../sdk-core/src/contracts/cutOptions.ts`）: `cutTwoPassOcclusion` (true)、`cutOcclusionCulling` (true)、`cutFrustumCulling` (true)、`cutMinLodCulling` (true)、`cutDrawDistanceCulling` (true: インスタンス化されたメッシュのインスタンスの描画距離でカリングされる。独立したオブジェクトは常にそれでカリングされる)、`cutDistanceCullToSphereEdge` (true: オブジェクトの描画距離はその境界球の縁まで測られ、そうでなければ中心まで)、`cutViewDistanceScale` (1; 視距離の品質レベルがこれを書き込む)、`cutViewDistanceApplySecondaryScale` (false) と `cutViewDistanceSecondaryScale` (1)、最初のスケールがオンのときにのみ描画距離に掛かる第二のスケール、`cutViewDistanceFovMinAngle` (45) と `cutViewDistanceFovMaxAngle` (90)（度）、および `cutViewDistanceFovMinAngleScale` と `cutViewDistanceFovMaxAngleScale` (どちらも1): 独立したオブジェクトの描画距離が、最初の角度以下で、2番目の角度以上で、その間で取るスケール、`cutClipPlane` (false: カメラの `clipPlane` はそれをオンにして作られたワールドでのみ適用される。セッションを開くときに一度だけ読まれる唯一の設定)、`cutClipPlaneCulling` (true)、`cutViewFiltering` (true: カメラの `hidden` と `showOnly` リストが適用される)、`cutLodBiasFollowsUpscale` (true)、`cutLodBiasOffset` (0)、`cutLodBiasMin` (-2)、`cutEdgeScaleBudgetMs` (0: なし。カットとそのラスターに与えられるGPU時間（ms）で、これを超えるとレンダースケールが `'auto'` の場所で画面誤差が粗くされる) と `cutEdgeScaleMinPercent` (30、1から100: それが到達する最低のスケール)、`cutMaxNodes` (2097152)、`cutMaxCandidateClusters` (16777216)、`cutMaxVisibleClusters` (4194304)。後から `world.cut` で変更される。動的解像度のヒューリスティックも同様に（`../../../../sdk-core/src/contracts/dynamicResolutionOptions.ts`、レンダースケールとカットのエッジスケールをGPU時間予算に合わせる）: `dynamicResolutionFrameTimeBudgetMs` (0: フレーム上限の間隔)、`dynamicResolutionThrottlingMaxPercent` (0: なし)、`dynamicResolutionHeadroomPercent` (10)、`dynamicResolutionOverBudgetHeadroomPercent` (0)、`dynamicResolutionHistorySize` (16)、`dynamicResolutionFrameWeightExponent` (0.9)、`dynamicResolutionChangePeriod` (8)、`dynamicResolutionIncreaseAmortization` (0.9)、`dynamicResolutionChangePercentThreshold` (2)、`dynamicResolutionMaxOverBudgetFrames` (2、2未満にならないよう読まれる)、`dynamicResolutionUseCpuTimeLogic` (false)。後から `world.dynamicResolution` で変更される。アニメーションの設定も同様に（`../../../../sdk-core/src/contracts/animationOptions.ts`）: `animationMinScreenSize` (0.1)、`animationBankInterpolation` (true)、`animationBankTimeScale` (1)。後から `world.animation` で変更される。シェーディングの設定も同様に（`../../../../sdk-core/src/contracts/shadingOptions.ts`）: `shadeBinningMode` (`'auto'`、または `'pixel'`、`'quad'`) と `materialClosures` (`'single'`: すべてのサーフェスをピクセルごとに1つのスラブとしてシェードし、クリアコートはベースに統合される。または `'layered'`: コートが独自のレイヤー)。後から `world.shading` で変更される。自動露出の設定も同様に（`../../../../sdk-core/src/contracts/exposureOptions.ts`）、既定の `world.exposure` が `'auto'` の場所で使われる: `exposureBias` (+1 ストップ)、`exposureMinBrightness` (−10) と `exposureMaxBrightness` (+20)（EV100）、`exposureHistogramLogMin` (−10) と `exposureHistogramLogMax` (+20)（輝度のストップ）、`exposureLowPercent` (10) と `exposureHighPercent` (90)、`exposureSpeedUp` (3) と `exposureSpeedDown` (1)（ストップ毎秒）、`exposureTransitionDistance` (1.5 ストップ)、`exposureBlackBucketWeight` (0) と `exposureLuminanceMethod` (`'uniform'`、または `'ntsc'`、`'workingSpace'`)、`exposureMethod` (`'histogram'`、または `'basic'`、`'manual'`: カメラの露出で、`exposureApplyPhysicalCamera` (true)、`exposureCameraShutterSpeed` (60)、`exposureCameraIso` (100) とバイアスから読まれる)、`exposureLensAttenuation` (0.78)、プリ露出の `preExposure` (true)、`preExposureOverride` (0)、`cachedLightingPreExposure` (4 ストップ、空の光のリアルタイムキャプチャのもの) は、露出にかかわらず照らされたビューに適用され、ローカル露出の `localExposureHighlightContrast` と `localExposureShadowContrast` (0.8、ローカル露出が動作中)、`localExposureDetailStrength` (1)、`localExposureBlurBlend` (0.6)、`localExposureBlurSize` (50 %)、`localExposureMiddleGreyBias` (0) と2つのしきい値とその強度は、露出にかかわらず照らされたビューに適用される。後から `world.exposureSettings` で変更される。露出の補正カーブ `exposureCurve` (なし) とそのメーターマスク `exposureMeterMask` (なし) は、オープン時にのみ読まれる。時間的パスの設定も同様に（`../../../../sdk-core/src/contracts/temporalOptions.ts`）: `temporalThinGeometry` (false) — 1ピクセルより細いジオメトリを探してそこで履歴を緩めるかどうか。`'off'` 以外のどのレベルでも —、`temporalWaveOps` (true)、`temporalWaveSize` (0)、`temporalHalfPrecision` (true) — プログラムの動作方法: サブグループを通して、どのサイズで、16ビット浮動小数点で。デバイスが許す場合で、画像は同じ —、履歴のサンプル（`temporalHistorySampleCount`、`temporalShadingRejectionSampleCount`、`temporalVelocityWeightClampingSampleCount`、`temporalVelocityWeightClampingPixelSpeed`）、ちらつき指標のもの（`temporalFlickering…`）、棄却が測定する露出（`temporalShadingExposureOffset`）、細いジオメトリ検出のしきい値（`temporalThinGeometry…`）、露出とブルームが読む半分のサイズの画像の品質（`temporalDownsampleQuality`）、各々参照実装の既定。後から `world.temporal` で変更される。太陽のシャドウも同様に（`../../../../sdk-core/src/contracts/shadowOptions.ts`）: `shadowDistanceScale` (1、0から2) — すべてのディレクショナルライトの `shadowDistance` への係数 —、`farShadowCulling` (true) — 太陽のシャドウマップが、深度から半径を引いた値がその距離の境界（もう少し先: 400で427メートル）を超えるキャスターを、そのオブジェクトが `castFarShadow` を設定しない限り除外するかどうか —、`farShadowCullsAllMeshes` (false) — そのテストがすべてのキャスターに届くか、より粗いレベルのワールドの統合シェルにのみ届くか —、`shadowNearLevels` (10、0から10、最大でライトの `shadowCascades`)、`shadowOverlapScale` (1、0から2)、`shadowFarField` (true: シーンにディスタンスフィールドがある場所で、ディスタンスフィールドのカスケードが近距離レベルに従うかどうか) — 境界を形作る3つ —、遠距離レベルとそのカスケード自身のもの（`../../../../sdk-core/src/contracts/sunShadowOptions.ts`: `shadowMaxFarCascades`、`shadowFarDistanceOverride` (遠距離レベルは描画されない: 目に見える効果なし)、`distanceFieldDistanceScale`、`distanceFieldFarTransitionScale`、`distanceFieldShadowQuality`、`distanceFieldShadowFullResolution`、`distanceFieldShadowTileSize`、`distanceFieldShadowTwoSidedBias`）、そしてシャドウマップ自身のもの（`../../../../sdk-core/src/contracts/shadowMapOptions.ts`: クリップマップのレベルと深度範囲、粗いページ、解像度バイアス、半径しきい値、トレースのレイとステップ、ページプール）。後から `world.shadows` で変更される。モーションブラーの描画も同様に（`../../../../sdk-core/src/contracts/motionBlurOptions.ts`）: `motionBlurQuality` (`'veryHigh'`、または `'off'`、`'low'`、`'medium'`、`'high'`: ピクセルあたり最大16サンプル、低いレベルではより少ない)、`motionBlurHalfResGather` (false)、`motionBlurHalfResInput` (true)、`motionBlurSeparable` (false)、`motionBlurScatter` (false)、`motionBlurDirections` (1、または2)。後から `world.motionBlur` で変更される。被写界深度の描画も同様に（`../../../../sdk-core/src/contracts/depthOfFieldRules.ts`）: `depthOfFieldQuality` (`'on'`、または `'off'`)、`depthOfFieldGatherDivisor` (2)、`depthOfFieldAccumulator` (`'high'`)、`depthOfFieldRingCount` (4)、`depthOfFieldPostfilter` (`'median'`)、スキャッターとリコンバインの設定とファイルが列挙する他のもの、各々参照実装の既定。後から `world.depthOfField` で変更される。ブルームの描画も同様に（`../../../../sdk-core/src/contracts/bloomRules.ts`）: `bloomQuality` (`'highest'`、または `'off'`、`'lowest'`、`'low'`、`'medium'`、`'high'`: 6つのガウスレベルのうちいくつを描画するか)、`bloomCross` (0)、`bloomScreenPercentage` (50: 畳み込みの解像度)、`bloomApplyLocalExposure` (true)、`bloomCacheKernel` (true)。後から `world.bloom` で変更される。ガウスぼかしのものも同様に（`../../../../sdk-core/src/contracts/gaussianBlurRules.ts`）: `gaussianFastBlurThreshold` (100: ぼかしの最初のパスが半分にされる半径)、`gaussianSampleScale` (1: カーネルの到達距離)、`gaussianLoopMode` (0: パスの最大読み取り数)。後から `world.gaussianBlur` で変更される。フィルムエフェクトのものも同様に（`../../../../sdk-core/src/contracts/filmOptions.ts`）: グレイン（`filmGrain…`、既定はオフ）、色収差のフリンジ（`chromaticAberration…`、オフ）、ビネットの見た目（`vignette…`、シーンの強度の隣）、`tonemapperQuality` (5)、`tonemapperSharpen` (−1: シーンのもの)、ティント（`sceneColorTint…`、1）、`quantizationDitheringBits` (0: ディスプレイ自身のステップ)。後から `world.film` で変更される。ボリューメトリックフォグのもの（`../../../../sdk-core/src/contracts/volumetricFogOptions.ts`）: `volumetricFogQuality` (`'high'`; `'off'` は何も描画せず、`'low'`、`'high'`、`'ultra'` はグリッドのセルサイズと深度と履歴のサンプルを設定する) と、それとともに読まれる11の設定。後から `world.volumetricFog` で変更される。フォグはフォグが `volumetric` を設定したシーンにのみ存在する。半透明ライティングボリュームのものも同様に（`../../../../sdk-core/src/contracts/translucencyVolumeOptions.ts`）: `translucencyVolume` (true)、`translucencyVolumeDim` (2つのカスケードそれぞれの一辺64セル)、`translucencyVolumeInnerDistance` (15 m)、`translucencyVolumeOuterDistance` (50 m)、`translucencyVolumeBlur` (true)、`translucencyVolumeTemporal` (false) と他のもの。後から `world.translucencyVolume` で変更される。マテリアルが `translucencyLighting` をボリュームモードに設定した透過サーフェスを照らす。反射のトレースも同様に（`../../../../sdk-core/src/contracts/reflectionOptions.ts`）: `reflectionScreenSteps` (50、反射レイの画面マーチの反復回数。シーンのマーチはグローバルディスタンスフィールドのもので、クリップマップあたり256ステップ)、`reflectionDistantScreenTraces` (true)、`reflectionDistantScreenSteps` (16)、`reflectionDistantScreenDistance` (2000 m)、遠方の画面トレース、`reflectionFrontLayer` (false)、透明物の前面レイヤーをトレースするかどうか、`reflectionSkylightLeaking` (0、そのティントと平均アルベドとともに)、ヒットに漏れる空の光の拡散光。後から `world.reflections` で変更される。`reflectionStatistics` (false)、レイのカウンターは、セッションを開くときに読まれる。サーフェスキャッシュのものも同様に（`../../../../sdk-core/src/contracts/surfaceCacheOptions.ts`）: `surfaceCacheAtlasSize` (4096、各メッシュのカードがキャプチャされるアトラスの一辺のテクセル数)、`surfaceCacheCardCapturesPerFrame` (300)、`surfaceCacheCardMaxResolution` (512)、`surfaceCacheAllowCardSharing` (true)、`surfaceCacheDilationMode` (0) と他のもの。後から `world.surfaceCache` で変更される。スクリーンスペースアンビエントオクルージョンのものも同様に（`../../../../sdk-core/src/contracts/ambientOcclusionOptions.ts`）: `ambientOcclusion` (true: マスタースイッチ)、`ambientOcclusionIntensity` (0.5; 0はオフ)、`ambientOcclusionRadius` (2 m) とその `ambientOcclusionRadiusInWorldSpace` (false)、`ambientOcclusionFadeDistance` (80 m) と `ambientOcclusionFadeRadius` (50 m)、`ambientOcclusionPower` (2)、`ambientOcclusionBias` (3)、品質（`ambientOcclusionQuality`、50）と `ambientOcclusionLevels` (-1) と `ambientOcclusionMaxQuality` (100)、`ambientOcclusionWithScreenProbes` (false)。後から `world.ambientOcclusion` で変更される。深度ピラミッドのものも同様に（`../../../../sdk-core/src/contracts/hizOptions.ts`）: `hizTrace` (`'reference'`、または `'planes'`) — 反射のトレースがそれをどう読むか —、`hizFoldTransparents` (false) — そのトレースレイヤーが透明サーフェスを保持するか —、`hizTransparentTest` (`'finer'`、または `'reference'`) — 透明クラスターがそれに対してどうテストされるか —、`hizFullResDepth` (true) — スクリーンプローブの探索がフル解像度の深度まで下りるか —、`lightGridHizCull` (true) — ライトグリッドが、その列の最も遠い深度の後ろのセルを空にするか —、続いて `hizPrime` (`'off'`、`'whenMissing'`、`'always'`) — ビューが `farField` を設定したオブジェクトの小さく粗い描画からピラミッドを構築するのはいつか。前の画像が何も残さなかったときにカットのメインパスがそれに対してテストするため — と `hizPrimeSizeBias` (2)、`hizPrimeDepthBias` (1.5 m)、`hizPrimeErrorScale` (32)、`hizPrimeFarFieldOnly` (true)。後から `world.hiz` で変更される。ライトファンクションのものも同様に（`../../../../sdk-core/src/contracts/lightFunctionOptions.ts`）: `lightFunctionAtlas` (true)、`lightFunctionSlotResolution` (128)、`lightFunctionAtlasSize` (4)、`lightFunctionMaxLights` (-1、上限なし)、`lightFunctionFormat` (`'grey'`)、`lightFunctionDeferred` (true)、`lightFunctionFog` (true)、`lightFunctionBounce` (true)、`lightFunctionTranslucent` (false)。後から `world.lightFunction` で変更される。クラスターラスターの分割も同様に（`../../../../sdk-core/src/contracts/rasterOptions.ts`）: `softwareRaster` (true) — 最長の辺が `hardwareRasterEdgePixels` 未満に投影され、そのボックスがどちらのクリップ平面もまたがないクラスターはコンピュートでラスタライズされ、他はすべてハードウェアラスタライザーで。`false` はすべてのクラスターをハードウェアに渡す — と `hardwareRasterEdgePixels` (32、ピクセル: ゼロより大きい有限の数)、クラスターがLOD球の最も近い点で見たときにハードウェアラスタライザーに渡される辺の長さ。`depthBucketing` (true) は、ソフトウェアラスターのカットアウトクラスターを、ボックスのビュー深度を対数で `depthBucketsMinZ` (10 m) から `depthBucketsMaxZ` (1000 m)（ゼロより大きい有限の数）にわたる256バケットに分けて、近いものから順に並べる — 参照実装と同様に、シーンがボクセルを持つ場所でのみ。後から `world.softwareRaster`、`world.hardwareRasterEdgePixels`、`world.depthBucketing`、`world.depthBucketsMinZ`、`world.depthBucketsMaxZ` で変更される。ジオメトリストリーミングのものも同様に（`../../../../sdk-core/src/contracts/streamingOptions.ts`）: `streamingMaxPendingPages` (128、同時に開始されたままにされるジオメトリページ、1以上の整数)、`streamingMaxInstallsPerFrame` (128、1フレームが最大でインストールするページ数。保留になり得る数を超えない)、`streamingQualityMinPoolPercent` (70) と `streamingQualityMaxPoolPercent` (85、下限より低くならないよう読まれる) — プールの負荷（ページに対する割合）で、これを下回ると品質が再び上がり、上回ると下がる。10から100 —、`streamingQualityMinScale` (0.3、0.1から1、1は決してスケールしない)、`streamingNumRetries` (3、失敗したページの読み取りがそのページを諦める前に再試行される回数。即座に、サーバーが求める待ち時間以外は待たずに。負の値は無限。ベイクされたテクスチャレベルは数えない: 永遠に再度要求される)、`streamingMinRequests` (65 536) と `streamingMaxRequests` (1 048 576)、カメラカットのリードアウトが保持するリクエストの最小数と最大数、4 096から1 048 576 — 最小から始まり、カットがそれに求めるものに従い、最大は最小より小さくならないよう読まれる — と `streamingBandwidthLimit` (-1: なし。ジオメトリの読み取りが持つとシミュレートされる毎秒のメガバイト数: 各ページがフレームの帯域の独自の取り分を取る)。設定が受け付けない値は拒否される。",
+    "description": "以下のオプションに加えて、ビューがパーティション分割されたシーンのセルをどうストリーミングするかと、HLODの切り替えが待つウォームアップを、各設定をそのフィールドで、参照実装の既定とともに（`../../../../sdk-core/src/contracts/worldStreamingOptions.ts`）: `worldStreamingMaxLoadingCells` (4)、`worldStreamingAngleWeight` (0.4)、`worldStreamingSortByExtent` (true)、`worldStreamingSortByPriority` (true)、`worldStreamingUseGridRange` (true)、`worldStreamingRangeScale` (1)、`worldStreamingRadius` (100 m)、`worldStreamingSector` (false)、`worldStreamingSectorAngle` (360°)、`worldStreamingZCulling` (false)、`worldStreamingBlockOnSlowStreaming` (true)、`worldStreamingBlockOnSlowStreamingRatio` (0.25)、`worldStreamingUpdateOptimization` (true)、`worldStreamingLocationQuantization` (4 m)、`worldStreamingRotationQuantization` (10°)、`worldStreamingForceUpdateFrameCount` (0)、`worldStreamingForce2D` (false)、`worldStreamingExtraRadius` (0 m)、`worldStreamingExtraAngle` (0°)、`worldStreamingTargetState` (`'activated'`)、`worldStreamingPriority` (128)、`worldStreamingUseVelocity` (false)、`hlodEnabled` (true)、`hlodWarmup` (true)、`hlodWarmupFrames` (5)、`hlodWarmupGeometry` (true)、`hlodWarmupTextures` (true)、`hlodWarmupTextureScale` (2)、`hlodWarmupTextureClamp` (2048)。ここで名指した場合、各々は品質プリセットに優先する。後から `world.worldStreaming` で、次のフレームから変更される。カットの設定も同様に、各々そのフィールドで参照実装の既定とともに（`../../../../sdk-core/src/contracts/cutOptions.ts`）: `cutTwoPassOcclusion` (true)、`cutOcclusionCulling` (true)、`cutFrustumCulling` (true)、`cutMinLodCulling` (true)、`cutDrawDistanceCulling` (true: インスタンス化されたメッシュのインスタンスの描画距離でカリングされる。独立したオブジェクトは常にそれでカリングされる)、`cutDistanceCullToSphereEdge` (true: オブジェクトの描画距離はその境界球の縁まで測られ、そうでなければ中心まで)、`cutViewDistanceScale` (1; 視距離の品質レベルがこれを書き込む)、`cutViewDistanceApplySecondaryScale` (false) と `cutViewDistanceSecondaryScale` (1)、最初のスケールがオンのときにのみ描画距離に掛かる第二のスケール、`cutViewDistanceFovMinAngle` (45) と `cutViewDistanceFovMaxAngle` (90)（度）、および `cutViewDistanceFovMinAngleScale` と `cutViewDistanceFovMaxAngleScale` (どちらも1): 独立したオブジェクトの描画距離が、最初の角度以下で、2番目の角度以上で、その間で取るスケール、`cutClipPlane` (false: カメラの `clipPlane` はそれをオンにして作られたワールドでのみ適用される。セッションを開くときに一度だけ読まれる唯一の設定)、`cutClipPlaneCulling` (true)、`cutViewFiltering` (true: カメラの `hidden` と `showOnly` リストが適用される)、`cutLodBiasFollowsUpscale` (true)、`cutLodBiasOffset` (0)、`cutLodBiasMin` (-2)、`cutEdgeScaleBudgetMs` (0: なし。カットとそのラスターに与えられるGPU時間（ms）で、これを超えるとレンダースケールが `'auto'` の場所で画面誤差が粗くされる) と `cutEdgeScaleMinPercent` (30、1から100: それが到達する最低のスケール)、`cutMaxNodes` (2097152)、`cutMaxCandidateClusters` (16777216)、`cutMaxVisibleClusters` (4194304)。後から `world.cut` で変更される。動的解像度のヒューリスティックも同様に（`../../../../sdk-core/src/contracts/dynamicResolutionOptions.ts`、レンダースケールとカットのエッジスケールをGPU時間予算に合わせる）: `dynamicResolutionFrameTimeBudgetMs` (0: フレーム上限の間隔)、`dynamicResolutionThrottlingMaxPercent` (0: なし)、`dynamicResolutionHeadroomPercent` (10)、`dynamicResolutionOverBudgetHeadroomPercent` (0)、`dynamicResolutionHistorySize` (16)、`dynamicResolutionFrameWeightExponent` (0.9)、`dynamicResolutionChangePeriod` (8)、`dynamicResolutionIncreaseAmortization` (0.9)、`dynamicResolutionChangePercentThreshold` (2)、`dynamicResolutionMaxOverBudgetFrames` (2、2未満にならないよう読まれる)、`dynamicResolutionUseCpuTimeLogic` (false)。後から `world.dynamicResolution` で変更される。アニメーションの設定も同様に（`../../../../sdk-core/src/contracts/animationOptions.ts`）: `animationMinScreenSize` (0.1)、`animationBankInterpolation` (true)、`animationBankTimeScale` (1)。後から `world.animation` で変更される。シェーディングの設定も同様に（`../../../../sdk-core/src/contracts/shadingOptions.ts`）: `shadeBinningMode` (`'auto'`、または `'pixel'`、`'quad'`) と `materialClosures` (`'single'`: すべてのサーフェスをピクセルごとに1つのスラブとしてシェードし、クリアコートはベースに統合される。または `'layered'`: コートが独自のレイヤー)。後から `world.shading` で変更される。自動露出の設定も同様に（`../../../../sdk-core/src/contracts/exposureOptions.ts`）、既定の `world.exposure` が `'auto'` の場所で使われる: `exposureBias` (+1 ストップ)、`exposureMinBrightness` (−10) と `exposureMaxBrightness` (+20)（EV100）、`exposureHistogramLogMin` (−10) と `exposureHistogramLogMax` (+20)（輝度のストップ）、`exposureLowPercent` (10) と `exposureHighPercent` (90)、`exposureSpeedUp` (3) と `exposureSpeedDown` (1)（ストップ毎秒）、`exposureTransitionDistance` (1.5 ストップ)、`exposureBlackBucketWeight` (0) と `exposureLuminanceMethod` (`'uniform'`、または `'ntsc'`、`'workingSpace'`)、`exposureMethod` (`'histogram'`、または `'basic'`、`'manual'`: カメラの露出で、`exposureApplyPhysicalCamera` (true)、`exposureCameraShutterSpeed` (60)、`exposureCameraIso` (100) とバイアスから読まれる)、`exposureLensAttenuation` (0.78)、プリ露出の `preExposure` (true)、`preExposureOverride` (0)、`cachedLightingPreExposure` (4 ストップ、空の光のリアルタイムキャプチャのもの) は、露出にかかわらず照らされたビューに適用され、ローカル露出の `localExposureHighlightContrast` と `localExposureShadowContrast` (0.8、ローカル露出が動作中)、`localExposureDetailStrength` (1)、`localExposureBlurBlend` (0.6)、`localExposureBlurSize` (50 %)、`localExposureMiddleGreyBias` (0) と2つのしきい値とその強度は、露出にかかわらず照らされたビューに適用される。後から `world.exposureSettings` で変更される。露出の補正カーブ `exposureCurve` (なし) とそのメーターマスク `exposureMeterMask` (なし) は、オープン時にのみ読まれる。時間的パスの設定も同様に（`../../../../sdk-core/src/contracts/temporalOptions.ts`）: `temporalThinGeometry` (false) — 1ピクセルより細いジオメトリを探してそこで履歴を緩めるかどうか。`'off'` 以外のどのレベルでも —、`temporalWaveOps` (true)、`temporalWaveSize` (0)、`temporalHalfPrecision` (true) — プログラムの動作方法: サブグループを通して、どのサイズで、16ビット浮動小数点で。デバイスが許す場合で、画像は同じ —、履歴のサンプル（`temporalHistorySampleCount`、`temporalShadingRejectionSampleCount`、`temporalVelocityWeightClampingSampleCount`、`temporalVelocityWeightClampingPixelSpeed`）、ちらつき指標のもの（`temporalFlickering…`）、棄却が測定する露出（`temporalShadingExposureOffset`）、細いジオメトリ検出のしきい値（`temporalThinGeometry…`）、露出とブルームが読む半分のサイズの画像の品質（`temporalDownsampleQuality`）、各々参照実装の既定。後から `world.temporal` で変更される。太陽のシャドウも同様に（`../../../../sdk-core/src/contracts/shadowOptions.ts`）: `shadowDistanceScale` (1、0から2) — すべてのディレクショナルライトの `shadowDistance` への係数 —、`farShadowCulling` (true) — 太陽のシャドウマップが、深度から半径を引いた値がその距離の境界（もう少し先: 400で427メートル）を超えるキャスターを、そのオブジェクトが `castFarShadow` を設定しない限り除外するかどうか —、`farShadowCullsAllMeshes` (false) — そのテストがすべてのキャスターに届くか、より粗いレベルのワールドの統合シェルにのみ届くか —、`shadowNearLevels` (10、0から10、最大でライトの `shadowCascades`)、`shadowOverlapScale` (1、0から2)、`shadowFarField` (true: シーンにディスタンスフィールドがある場所で、ディスタンスフィールドのカスケードが近距離レベルに従うかどうか) — 境界を形作る3つ —、遠距離レベルとそのカスケード自身のもの（`../../../../sdk-core/src/contracts/sunShadowOptions.ts`: `shadowMaxFarCascades`、`shadowFarDistanceOverride` (遠距離レベルは描画されない: 目に見える効果なし)、`distanceFieldDistanceScale`、`distanceFieldFarTransitionScale`、`distanceFieldShadowQuality`、`distanceFieldShadowFullResolution`、`distanceFieldShadowTileSize`、`distanceFieldShadowTwoSidedBias`）、そしてシャドウマップ自身のもの（`../../../../sdk-core/src/contracts/shadowMapOptions.ts`: クリップマップのレベルと深度範囲、粗いページ、解像度バイアス、半径しきい値、トレースのレイとステップ、ページプール）。後から `world.shadows` で変更される。モーションブラーの描画も同様に（`../../../../sdk-core/src/contracts/motionBlurOptions.ts`）: `motionBlurQuality` (`'veryHigh'`、または `'off'`、`'low'`、`'medium'`、`'high'`: ピクセルあたり最大16サンプル、低いレベルではより少ない)、`motionBlurHalfResGather` (false)、`motionBlurHalfResInput` (true)、`motionBlurSeparable` (false)、`motionBlurScatter` (false)、`motionBlurDirections` (1、または2)。後から `world.motionBlur` で変更される。被写界深度の描画も同様に（`../../../../sdk-core/src/contracts/depthOfFieldRules.ts`）: `depthOfFieldQuality` (`'on'`、または `'off'`)、`depthOfFieldGatherDivisor` (2)、`depthOfFieldAccumulator` (`'high'`)、`depthOfFieldRingCount` (4)、`depthOfFieldPostfilter` (`'median'`)、スキャッターとリコンバインの設定とファイルが列挙する他のもの、各々参照実装の既定。後から `world.depthOfField` で変更される。ブルームの描画も同様に（`../../../../sdk-core/src/contracts/bloomRules.ts`）: `bloomQuality` (`'highest'`、または `'off'`、`'lowest'`、`'low'`、`'medium'`、`'high'`: 6つのガウスレベルのうちいくつを描画するか)、`bloomCross` (0)、`bloomScreenPercentage` (50: 畳み込みの解像度)、`bloomApplyLocalExposure` (true)、`bloomCacheKernel` (true)。後から `world.bloom` で変更される。ガウスぼかしのものも同様に（`../../../../sdk-core/src/contracts/gaussianBlurRules.ts`）: `gaussianFastBlurThreshold` (100: ぼかしの最初のパスが半分にされる半径)、`gaussianSampleScale` (1: カーネルの到達距離)、`gaussianLoopMode` (0: パスの最大読み取り数)。後から `world.gaussianBlur` で変更される。フィルムエフェクトのものも同様に（`../../../../sdk-core/src/contracts/filmOptions.ts`）: グレイン（`filmGrain…`、既定はオフ）、色収差のフリンジ（`chromaticAberration…`、オフ）、ビネットの見た目（`vignette…`、シーンの強度の隣）、`tonemapperQuality` (5)、`tonemapperSharpen` (−1: シーンのもの)、ティント（`sceneColorTint…`、1）、`quantizationDitheringBits` (0: ディスプレイ自身のステップ)。後から `world.film` で変更される。ボリューメトリックフォグのもの（`../../../../sdk-core/src/contracts/volumetricFogOptions.ts`）: `volumetricFogQuality` (`'high'`; `'off'` は何も描画せず、`'low'`、`'high'`、`'ultra'` はグリッドのセルサイズと深度と履歴のサンプルを設定する) と、それとともに読まれる11の設定。後から `world.volumetricFog` で変更される。フォグはフォグが `volumetric` を設定したシーンにのみ存在する。半透明ライティングボリュームのものも同様に（`../../../../sdk-core/src/contracts/translucencyVolumeOptions.ts`）: `translucencyVolume` (true)、`translucencyVolumeDim` (2つのカスケードそれぞれの一辺64セル)、`translucencyVolumeInnerDistance` (15 m)、`translucencyVolumeOuterDistance` (50 m)、`translucencyVolumeBlur` (true)、`translucencyVolumeTemporal` (false) と他のもの。後から `world.translucencyVolume` で変更される。マテリアルが `translucencyLighting` をボリュームモードに設定した透過サーフェスを照らす。反射のトレースも同様に（`../../../../sdk-core/src/contracts/reflectionOptions.ts`）: `reflectionScreenSteps` (50、反射レイの画面マーチの反復回数。シーンのマーチはグローバルディスタンスフィールドのもので、クリップマップあたり256ステップ)、`reflectionDistantScreenTraces` (true)、`reflectionDistantScreenSteps` (16)、`reflectionDistantScreenDistance` (2000 m)、遠方の画面トレース、`reflectionFrontLayer` (false)、透明物の前面レイヤーをトレースするかどうか、`reflectionSkylightLeaking` (0、そのティントと平均アルベドとともに)、ヒットに漏れる空の光の拡散光。後から `world.reflections` で変更される。`reflectionStatistics` (false)、レイのカウンターは、セッションを開くときに読まれる。サーフェスキャッシュのものも同様に（`../../../../sdk-core/src/contracts/surfaceCacheOptions.ts`）: `surfaceCacheAtlasSize` (4096、各メッシュのカードがキャプチャされるアトラスの一辺のテクセル数)、`surfaceCacheCardCapturesPerFrame` (300)、`surfaceCacheCardMaxResolution` (512)、`surfaceCacheAllowCardSharing` (true)、`surfaceCacheDilationMode` (0) と他のもの。後から `world.surfaceCache` で変更される。スクリーンスペースアンビエントオクルージョンのものも同様に（`../../../../sdk-core/src/contracts/ambientOcclusionOptions.ts`）: `ambientOcclusion` (true: マスタースイッチ)、`ambientOcclusionIntensity` (0.5; 0はオフ)、`ambientOcclusionRadius` (2 m) とその `ambientOcclusionRadiusInWorldSpace` (false)、`ambientOcclusionFadeDistance` (80 m) と `ambientOcclusionFadeRadius` (50 m)、`ambientOcclusionPower` (2)、`ambientOcclusionBias` (3)、品質（`ambientOcclusionQuality`、50）と `ambientOcclusionLevels` (-1) と `ambientOcclusionMaxQuality` (100)、`ambientOcclusionWithScreenProbes` (false)。後から `world.ambientOcclusion` で変更される。深度ピラミッドのものも同様に（`../../../../sdk-core/src/contracts/hizOptions.ts`）: `hizTrace` (`'reference'`、または `'planes'`) — 反射のトレースがそれをどう読むか —、`hizFoldTransparents` (false) — そのトレースレイヤーが透明サーフェスを保持するか —、`hizTransparentTest` (`'finer'`、または `'reference'`) — 透明クラスターがそれに対してどうテストされるか —、`hizFullResDepth` (true) — スクリーンプローブの探索がフル解像度の深度まで下りるか —、`lightGridHizCull` (true) — ライトグリッドが、その列の最も遠い深度の後ろのセルを空にするか — および `lightGridMaxCulledLightsPerCell` (32) — ビューのライトグリッドがセルごとに保持するライトのエントリー数 —、続いて `hizPrime` (`'off'`、`'whenMissing'`、`'always'`) — ビューが `farField` を設定したオブジェクトの小さく粗い描画からピラミッドを構築するのはいつか。前の画像が何も残さなかったときにカットのメインパスがそれに対してテストするため — と `hizPrimeSizeBias` (2)、`hizPrimeDepthBias` (1.5 m)、`hizPrimeErrorScale` (32)、`hizPrimeFarFieldOnly` (true)。後から `world.hiz` で変更される。ライトファンクションのものも同様に（`../../../../sdk-core/src/contracts/lightFunctionOptions.ts`）: `lightFunctionAtlas` (true)、`lightFunctionSlotResolution` (128)、`lightFunctionAtlasSize` (4)、`lightFunctionMaxLights` (-1、上限なし)、`lightFunctionFormat` (`'grey'`)、`lightFunctionDeferred` (true)、`lightFunctionFog` (true)、`lightFunctionBounce` (true)、`lightFunctionTranslucent` (false)。後から `world.lightFunction` で変更される。クラスターラスターの分割も同様に（`../../../../sdk-core/src/contracts/rasterOptions.ts`）: `softwareRaster` (true) — 最長の辺が `hardwareRasterEdgePixels` 未満に投影され、そのボックスがどちらのクリップ平面もまたがないクラスターはコンピュートでラスタライズされ、他はすべてハードウェアラスタライザーで。`false` はすべてのクラスターをハードウェアに渡す — と `hardwareRasterEdgePixels` (32、ピクセル: ゼロより大きい有限の数)、クラスターがLOD球の最も近い点で見たときにハードウェアラスタライザーに渡される辺の長さ。`depthBucketing` (true) は、ソフトウェアラスターのカットアウトクラスターを、ボックスのビュー深度を対数で `depthBucketsMinZ` (10 m) から `depthBucketsMaxZ` (1000 m)（ゼロより大きい有限の数）にわたる256バケットに分けて、近いものから順に並べる — 参照実装と同様に、シーンがボクセルを持つ場所でのみ。後から `world.softwareRaster`、`world.hardwareRasterEdgePixels`、`world.depthBucketing`、`world.depthBucketsMinZ`、`world.depthBucketsMaxZ` で変更される。ジオメトリストリーミングのものも同様に（`../../../../sdk-core/src/contracts/streamingOptions.ts`）: `streamingMaxPendingPages` (128、同時に開始されたままにされるジオメトリページ、1以上の整数)、`streamingMaxInstallsPerFrame` (128、1フレームが最大でインストールするページ数。保留になり得る数を超えない)、`streamingQualityMinPoolPercent` (70) と `streamingQualityMaxPoolPercent` (85、下限より低くならないよう読まれる) — プールの負荷（ページに対する割合）で、これを下回ると品質が再び上がり、上回ると下がる。10から100 —、`streamingQualityMinScale` (0.3、0.1から1、1は決してスケールしない)、`streamingNumRetries` (3、失敗したページの読み取りがそのページを諦める前に再試行される回数。即座に、サーバーが求める待ち時間以外は待たずに。負の値は無限。ベイクされたテクスチャレベルは数えない: 永遠に再度要求される)、`streamingMinRequests` (65 536) と `streamingMaxRequests` (1 048 576)、カメラカットのリードアウトが保持するリクエストの最小数と最大数、4 096から1 048 576 — 最小から始まり、カットがそれに求めるものに従い、最大は最小より小さくならないよう読まれる — と `streamingBandwidthLimit` (-1: なし。ジオメトリの読み取りが持つとシミュレートされる毎秒のメガバイト数: 各ページがフレームの帯域の独自の取り分を取る)。設定が受け付けない値は拒否される。",
     "members": {
       "interactive": "世界が自身のループを実行するかどうか: 何かが変わったときに描画し、新しいものが何もない120フレームの後に休む。`false`にすると、ページ自身が`world.render()`を呼べる。",
       "pixelRatio": "画面ピクセル1つあたりの画像ピクセル数。",
@@ -7881,7 +7925,8 @@
       "p.cloudShadowExtentKm": "マップがカバーするカメラ周囲の半径（キロメートル）。1以上。既定は150。",
       "p.cloudShadowResolutionScale": "マップの一辺512テクセルへの係数。0.25以上。既定は1。",
       "p.cloudShadowRaySamplesScale": "マップのレイが取る16サンプルへの係数。0.25以上。既定は1。",
-      "p.cloudScatteredLuminanceScale": "雲の内部のライトへの係数（リニア）。既定は白。"
+      "p.cloudScatteredLuminanceScale": "雲の内部のライトへの係数（リニア）。既定は白。",
+      "p.mobility": "ライトがどう動き、どう照らされる想定か: `'static'`、`'stationary'`、`'movable'` のいずれか。既定は `'stationary'`。"
     }
   },
   "light.directional": {
@@ -7944,7 +7989,8 @@
       "p.cloudShadowExtentKm": "マップがカバーするカメラ周囲の半径（キロメートル）。1以上。既定は150。",
       "p.cloudShadowResolutionScale": "マップの一辺512テクセルへの係数。0.25以上。既定は1。",
       "p.cloudShadowRaySamplesScale": "マップのレイが取る16サンプルへの係数。0.25以上。既定は1。",
-      "p.cloudScatteredLuminanceScale": "雲の内部のライトへの係数（リニア）。既定は白。"
+      "p.cloudScatteredLuminanceScale": "雲の内部のライトへの係数（リニア）。既定は白。",
+      "p.mobility": "ライトがどう動き、どう照らされる想定か: `'static'`、`'stationary'`、`'movable'` のいずれか。既定は `'stationary'`。"
     }
   },
   "light.point": {
@@ -8007,7 +8053,8 @@
       "p.cloudShadowExtentKm": "マップがカバーするカメラ周囲の半径（キロメートル）。1以上。既定は150。",
       "p.cloudShadowResolutionScale": "マップの一辺512テクセルへの係数。0.25以上。既定は1。",
       "p.cloudShadowRaySamplesScale": "マップのレイが取る16サンプルへの係数。0.25以上。既定は1。",
-      "p.cloudScatteredLuminanceScale": "雲の内部のライトへの係数（リニア）。既定は白。"
+      "p.cloudScatteredLuminanceScale": "雲の内部のライトへの係数（リニア）。既定は白。",
+      "p.mobility": "ライトがどう動き、どう照らされる想定か: `'static'`、`'stationary'`、`'movable'` のいずれか。既定は `'stationary'`。"
     }
   },
   "light.spot": {
@@ -8070,7 +8117,8 @@
       "p.cloudShadowExtentKm": "マップがカバーするカメラ周囲の半径（キロメートル）。1以上。既定は150。",
       "p.cloudShadowResolutionScale": "マップの一辺512テクセルへの係数。0.25以上。既定は1。",
       "p.cloudShadowRaySamplesScale": "マップのレイが取る16サンプルへの係数。0.25以上。既定は1。",
-      "p.cloudScatteredLuminanceScale": "雲の内部のライトへの係数（リニア）。既定は白。"
+      "p.cloudScatteredLuminanceScale": "雲の内部のライトへの係数（リニア）。既定は白。",
+      "p.mobility": "ライトがどう動き、どう照らされる想定か: `'static'`、`'stationary'`、`'movable'` のいずれか。既定は `'stationary'`。"
     }
   },
   "light.hemisphere": {
@@ -8133,7 +8181,8 @@
       "p.cloudShadowExtentKm": "マップがカバーするカメラ周囲の半径（キロメートル）。1以上。既定は150。",
       "p.cloudShadowResolutionScale": "マップの一辺512テクセルへの係数。0.25以上。既定は1。",
       "p.cloudShadowRaySamplesScale": "マップのレイが取る16サンプルへの係数。0.25以上。既定は1。",
-      "p.cloudScatteredLuminanceScale": "雲の内部のライトへの係数（リニア）。既定は白。"
+      "p.cloudScatteredLuminanceScale": "雲の内部のライトへの係数（リニア）。既定は白。",
+      "p.mobility": "ライトがどう動き、どう照らされる想定か: `'static'`、`'stationary'`、`'movable'` のいずれか。既定は `'stationary'`。"
     }
   },
   "light.rectArea": {
@@ -8196,7 +8245,8 @@
       "p.cloudShadowExtentKm": "マップがカバーするカメラ周囲の半径（キロメートル）。1以上。既定は150。",
       "p.cloudShadowResolutionScale": "マップの一辺512テクセルへの係数。0.25以上。既定は1。",
       "p.cloudShadowRaySamplesScale": "マップのレイが取る16サンプルへの係数。0.25以上。既定は1。",
-      "p.cloudScatteredLuminanceScale": "雲の内部のライトへの係数（リニア）。既定は白。"
+      "p.cloudScatteredLuminanceScale": "雲の内部のライトへの係数（リニア）。既定は白。",
+      "p.mobility": "ライトがどう動き、どう照らされる想定か: `'static'`、`'stationary'`、`'movable'` のいずれか。既定は `'stationary'`。"
     }
   },
   "light.probe": {
@@ -8259,7 +8309,8 @@
       "p.cloudShadowExtentKm": "マップがカバーするカメラ周囲の半径（キロメートル）。1以上。既定は150。",
       "p.cloudShadowResolutionScale": "マップの一辺512テクセルへの係数。0.25以上。既定は1。",
       "p.cloudShadowRaySamplesScale": "マップのレイが取る16サンプルへの係数。0.25以上。既定は1。",
-      "p.cloudScatteredLuminanceScale": "雲の内部のライトへの係数（リニア）。既定は白。"
+      "p.cloudScatteredLuminanceScale": "雲の内部のライトへの係数（リニア）。既定は白。",
+      "p.mobility": "ライトがどう動き、どう照らされる想定か: `'static'`、`'stationary'`、`'movable'` のいずれか。既定は `'stationary'`。"
     }
   },
   "lightLattice": {
@@ -8361,7 +8412,13 @@
       "parameters.physics": "これをまとう物体の素材：密度、摩擦、反発。",
       "parameters.density": "kg/m³。体積を掛けると質量になる。",
       "parameters.friction": "物体のすべりにくさ。0 以上。",
-      "parameters.restitution": "物体の弾み具合。0 から 1。"
+      "parameters.restitution": "物体の弾み具合。0 から 1。",
+      "parameters.specularIntensity": "サーフェスの誘電体のスペキュラ入力、0 から 1。垂直入射での反射率はこの値の 0.08 倍なので、0.5(何も宣言しないサーフェスの値)で通常の 4%、1 で 8%、0 でハイライトなしになります。glTF マテリアルの `KHR_materials_specular` の係数は宣言どおりに書き込まれます。金属はこれを無視します。",
+      "parameters.specularIntensityMap": "`specularIntensity` に画像のアルファチャンネルを掛けます。",
+      "parameters.displacementMagnitude": "マテリアルのグラフの `displacement` 出力が、`displacementCenter` より 1 大きいところで、サーフェスをその法線に沿って何メートル動かすか。変位後の高さは `(出力 - displacementCenter) * displacementMagnitude` です。",
+      "parameters.displacementCenter": "サーフェスをそのままの位置に残す `displacement` 出力の値、0 から 1。",
+      "parameters.displacementFadeStart": "変位が距離とともに薄れていく位置。最大の変位の画面上のピクセルサイズで表し、`displacementFadeStart` より上では全体、`displacementFadeEnd` より下では消えます。後者は小さいほうでなければなりません。両方を省くと、薄れることはありません。",
+      "parameters.displacementFadeEnd": "`displacementFadeStart` を参照。"
     }
   },
   "material.meshPhysical": {
@@ -8424,7 +8481,13 @@
       "parameters.physics": "これをまとう物体の素材：密度、摩擦、反発。",
       "parameters.density": "kg/m³。体積を掛けると質量になる。",
       "parameters.friction": "物体のすべりにくさ。0 以上。",
-      "parameters.restitution": "物体の弾み具合。0 から 1。"
+      "parameters.restitution": "物体の弾み具合。0 から 1。",
+      "parameters.specularIntensity": "サーフェスの誘電体のスペキュラ入力、0 から 1。垂直入射での反射率はこの値の 0.08 倍なので、0.5(何も宣言しないサーフェスの値)で通常の 4%、1 で 8%、0 でハイライトなしになります。glTF マテリアルの `KHR_materials_specular` の係数は宣言どおりに書き込まれます。金属はこれを無視します。",
+      "parameters.specularIntensityMap": "`specularIntensity` に画像のアルファチャンネルを掛けます。",
+      "parameters.displacementMagnitude": "マテリアルのグラフの `displacement` 出力が、`displacementCenter` より 1 大きいところで、サーフェスをその法線に沿って何メートル動かすか。変位後の高さは `(出力 - displacementCenter) * displacementMagnitude` です。",
+      "parameters.displacementCenter": "サーフェスをそのままの位置に残す `displacement` 出力の値、0 から 1。",
+      "parameters.displacementFadeStart": "変位が距離とともに薄れていく位置。最大の変位の画面上のピクセルサイズで表し、`displacementFadeStart` より上では全体、`displacementFadeEnd` より下では消えます。後者は小さいほうでなければなりません。両方を省くと、薄れることはありません。",
+      "parameters.displacementFadeEnd": "`displacementFadeStart` を参照。"
     }
   },
   "material.meshBasic": {
@@ -8487,7 +8550,13 @@
       "parameters.physics": "これをまとう物体の素材：密度、摩擦、反発。",
       "parameters.density": "kg/m³。体積を掛けると質量になる。",
       "parameters.friction": "物体のすべりにくさ。0 以上。",
-      "parameters.restitution": "物体の弾み具合。0 から 1。"
+      "parameters.restitution": "物体の弾み具合。0 から 1。",
+      "parameters.specularIntensity": "サーフェスの誘電体のスペキュラ入力、0 から 1。垂直入射での反射率はこの値の 0.08 倍なので、0.5(何も宣言しないサーフェスの値)で通常の 4%、1 で 8%、0 でハイライトなしになります。glTF マテリアルの `KHR_materials_specular` の係数は宣言どおりに書き込まれます。金属はこれを無視します。",
+      "parameters.specularIntensityMap": "`specularIntensity` に画像のアルファチャンネルを掛けます。",
+      "parameters.displacementMagnitude": "マテリアルのグラフの `displacement` 出力が、`displacementCenter` より 1 大きいところで、サーフェスをその法線に沿って何メートル動かすか。変位後の高さは `(出力 - displacementCenter) * displacementMagnitude` です。",
+      "parameters.displacementCenter": "サーフェスをそのままの位置に残す `displacement` 出力の値、0 から 1。",
+      "parameters.displacementFadeStart": "変位が距離とともに薄れていく位置。最大の変位の画面上のピクセルサイズで表し、`displacementFadeStart` より上では全体、`displacementFadeEnd` より下では消えます。後者は小さいほうでなければなりません。両方を省くと、薄れることはありません。",
+      "parameters.displacementFadeEnd": "`displacementFadeStart` を参照。"
     }
   },
   "material.meshPhong": {
@@ -8550,7 +8619,13 @@
       "parameters.physics": "これをまとう物体の素材：密度、摩擦、反発。",
       "parameters.density": "kg/m³。体積を掛けると質量になる。",
       "parameters.friction": "物体のすべりにくさ。0 以上。",
-      "parameters.restitution": "物体の弾み具合。0 から 1。"
+      "parameters.restitution": "物体の弾み具合。0 から 1。",
+      "parameters.specularIntensity": "サーフェスの誘電体のスペキュラ入力、0 から 1。垂直入射での反射率はこの値の 0.08 倍なので、0.5(何も宣言しないサーフェスの値)で通常の 4%、1 で 8%、0 でハイライトなしになります。glTF マテリアルの `KHR_materials_specular` の係数は宣言どおりに書き込まれます。金属はこれを無視します。",
+      "parameters.specularIntensityMap": "`specularIntensity` に画像のアルファチャンネルを掛けます。",
+      "parameters.displacementMagnitude": "マテリアルのグラフの `displacement` 出力が、`displacementCenter` より 1 大きいところで、サーフェスをその法線に沿って何メートル動かすか。変位後の高さは `(出力 - displacementCenter) * displacementMagnitude` です。",
+      "parameters.displacementCenter": "サーフェスをそのままの位置に残す `displacement` 出力の値、0 から 1。",
+      "parameters.displacementFadeStart": "変位が距離とともに薄れていく位置。最大の変位の画面上のピクセルサイズで表し、`displacementFadeStart` より上では全体、`displacementFadeEnd` より下では消えます。後者は小さいほうでなければなりません。両方を省くと、薄れることはありません。",
+      "parameters.displacementFadeEnd": "`displacementFadeStart` を参照。"
     }
   },
   "material.meshLambert": {
@@ -8613,7 +8688,13 @@
       "parameters.physics": "これをまとう物体の素材：密度、摩擦、反発。",
       "parameters.density": "kg/m³。体積を掛けると質量になる。",
       "parameters.friction": "物体のすべりにくさ。0 以上。",
-      "parameters.restitution": "物体の弾み具合。0 から 1。"
+      "parameters.restitution": "物体の弾み具合。0 から 1。",
+      "parameters.specularIntensity": "サーフェスの誘電体のスペキュラ入力、0 から 1。垂直入射での反射率はこの値の 0.08 倍なので、0.5(何も宣言しないサーフェスの値)で通常の 4%、1 で 8%、0 でハイライトなしになります。glTF マテリアルの `KHR_materials_specular` の係数は宣言どおりに書き込まれます。金属はこれを無視します。",
+      "parameters.specularIntensityMap": "`specularIntensity` に画像のアルファチャンネルを掛けます。",
+      "parameters.displacementMagnitude": "マテリアルのグラフの `displacement` 出力が、`displacementCenter` より 1 大きいところで、サーフェスをその法線に沿って何メートル動かすか。変位後の高さは `(出力 - displacementCenter) * displacementMagnitude` です。",
+      "parameters.displacementCenter": "サーフェスをそのままの位置に残す `displacement` 出力の値、0 から 1。",
+      "parameters.displacementFadeStart": "変位が距離とともに薄れていく位置。最大の変位の画面上のピクセルサイズで表し、`displacementFadeStart` より上では全体、`displacementFadeEnd` より下では消えます。後者は小さいほうでなければなりません。両方を省くと、薄れることはありません。",
+      "parameters.displacementFadeEnd": "`displacementFadeStart` を参照。"
     }
   },
   "material.meshToon": {
@@ -8676,7 +8757,13 @@
       "parameters.physics": "これをまとう物体の素材：密度、摩擦、反発。",
       "parameters.density": "kg/m³。体積を掛けると質量になる。",
       "parameters.friction": "物体のすべりにくさ。0 以上。",
-      "parameters.restitution": "物体の弾み具合。0 から 1。"
+      "parameters.restitution": "物体の弾み具合。0 から 1。",
+      "parameters.specularIntensity": "サーフェスの誘電体のスペキュラ入力、0 から 1。垂直入射での反射率はこの値の 0.08 倍なので、0.5(何も宣言しないサーフェスの値)で通常の 4%、1 で 8%、0 でハイライトなしになります。glTF マテリアルの `KHR_materials_specular` の係数は宣言どおりに書き込まれます。金属はこれを無視します。",
+      "parameters.specularIntensityMap": "`specularIntensity` に画像のアルファチャンネルを掛けます。",
+      "parameters.displacementMagnitude": "マテリアルのグラフの `displacement` 出力が、`displacementCenter` より 1 大きいところで、サーフェスをその法線に沿って何メートル動かすか。変位後の高さは `(出力 - displacementCenter) * displacementMagnitude` です。",
+      "parameters.displacementCenter": "サーフェスをそのままの位置に残す `displacement` 出力の値、0 から 1。",
+      "parameters.displacementFadeStart": "変位が距離とともに薄れていく位置。最大の変位の画面上のピクセルサイズで表し、`displacementFadeStart` より上では全体、`displacementFadeEnd` より下では消えます。後者は小さいほうでなければなりません。両方を省くと、薄れることはありません。",
+      "parameters.displacementFadeEnd": "`displacementFadeStart` を参照。"
     }
   },
   "material.meshNormal": {
@@ -8739,7 +8826,13 @@
       "parameters.physics": "これをまとう物体の素材：密度、摩擦、反発。",
       "parameters.density": "kg/m³。体積を掛けると質量になる。",
       "parameters.friction": "物体のすべりにくさ。0 以上。",
-      "parameters.restitution": "物体の弾み具合。0 から 1。"
+      "parameters.restitution": "物体の弾み具合。0 から 1。",
+      "parameters.specularIntensity": "サーフェスの誘電体のスペキュラ入力、0 から 1。垂直入射での反射率はこの値の 0.08 倍なので、0.5(何も宣言しないサーフェスの値)で通常の 4%、1 で 8%、0 でハイライトなしになります。glTF マテリアルの `KHR_materials_specular` の係数は宣言どおりに書き込まれます。金属はこれを無視します。",
+      "parameters.specularIntensityMap": "`specularIntensity` に画像のアルファチャンネルを掛けます。",
+      "parameters.displacementMagnitude": "マテリアルのグラフの `displacement` 出力が、`displacementCenter` より 1 大きいところで、サーフェスをその法線に沿って何メートル動かすか。変位後の高さは `(出力 - displacementCenter) * displacementMagnitude` です。",
+      "parameters.displacementCenter": "サーフェスをそのままの位置に残す `displacement` 出力の値、0 から 1。",
+      "parameters.displacementFadeStart": "変位が距離とともに薄れていく位置。最大の変位の画面上のピクセルサイズで表し、`displacementFadeStart` より上では全体、`displacementFadeEnd` より下では消えます。後者は小さいほうでなければなりません。両方を省くと、薄れることはありません。",
+      "parameters.displacementFadeEnd": "`displacementFadeStart` を参照。"
     }
   },
   "material.meshMatcap": {
@@ -8802,7 +8895,13 @@
       "parameters.physics": "これをまとう物体の素材：密度、摩擦、反発。",
       "parameters.density": "kg/m³。体積を掛けると質量になる。",
       "parameters.friction": "物体のすべりにくさ。0 以上。",
-      "parameters.restitution": "物体の弾み具合。0 から 1。"
+      "parameters.restitution": "物体の弾み具合。0 から 1。",
+      "parameters.specularIntensity": "サーフェスの誘電体のスペキュラ入力、0 から 1。垂直入射での反射率はこの値の 0.08 倍なので、0.5(何も宣言しないサーフェスの値)で通常の 4%、1 で 8%、0 でハイライトなしになります。glTF マテリアルの `KHR_materials_specular` の係数は宣言どおりに書き込まれます。金属はこれを無視します。",
+      "parameters.specularIntensityMap": "`specularIntensity` に画像のアルファチャンネルを掛けます。",
+      "parameters.displacementMagnitude": "マテリアルのグラフの `displacement` 出力が、`displacementCenter` より 1 大きいところで、サーフェスをその法線に沿って何メートル動かすか。変位後の高さは `(出力 - displacementCenter) * displacementMagnitude` です。",
+      "parameters.displacementCenter": "サーフェスをそのままの位置に残す `displacement` 出力の値、0 から 1。",
+      "parameters.displacementFadeStart": "変位が距離とともに薄れていく位置。最大の変位の画面上のピクセルサイズで表し、`displacementFadeStart` より上では全体、`displacementFadeEnd` より下では消えます。後者は小さいほうでなければなりません。両方を省くと、薄れることはありません。",
+      "parameters.displacementFadeEnd": "`displacementFadeStart` を参照。"
     }
   },
   "material.meshDepth": {
@@ -8865,7 +8964,13 @@
       "parameters.physics": "これをまとう物体の素材：密度、摩擦、反発。",
       "parameters.density": "kg/m³。体積を掛けると質量になる。",
       "parameters.friction": "物体のすべりにくさ。0 以上。",
-      "parameters.restitution": "物体の弾み具合。0 から 1。"
+      "parameters.restitution": "物体の弾み具合。0 から 1。",
+      "parameters.specularIntensity": "サーフェスの誘電体のスペキュラ入力、0 から 1。垂直入射での反射率はこの値の 0.08 倍なので、0.5(何も宣言しないサーフェスの値)で通常の 4%、1 で 8%、0 でハイライトなしになります。glTF マテリアルの `KHR_materials_specular` の係数は宣言どおりに書き込まれます。金属はこれを無視します。",
+      "parameters.specularIntensityMap": "`specularIntensity` に画像のアルファチャンネルを掛けます。",
+      "parameters.displacementMagnitude": "マテリアルのグラフの `displacement` 出力が、`displacementCenter` より 1 大きいところで、サーフェスをその法線に沿って何メートル動かすか。変位後の高さは `(出力 - displacementCenter) * displacementMagnitude` です。",
+      "parameters.displacementCenter": "サーフェスをそのままの位置に残す `displacement` 出力の値、0 から 1。",
+      "parameters.displacementFadeStart": "変位が距離とともに薄れていく位置。最大の変位の画面上のピクセルサイズで表し、`displacementFadeStart` より上では全体、`displacementFadeEnd` より下では消えます。後者は小さいほうでなければなりません。両方を省くと、薄れることはありません。",
+      "parameters.displacementFadeEnd": "`displacementFadeStart` を参照。"
     }
   },
   "material.points": {
@@ -8928,7 +9033,13 @@
       "parameters.physics": "これをまとう物体の素材：密度、摩擦、反発。",
       "parameters.density": "kg/m³。体積を掛けると質量になる。",
       "parameters.friction": "物体のすべりにくさ。0 以上。",
-      "parameters.restitution": "物体の弾み具合。0 から 1。"
+      "parameters.restitution": "物体の弾み具合。0 から 1。",
+      "parameters.specularIntensity": "サーフェスの誘電体のスペキュラ入力、0 から 1。垂直入射での反射率はこの値の 0.08 倍なので、0.5(何も宣言しないサーフェスの値)で通常の 4%、1 で 8%、0 でハイライトなしになります。glTF マテリアルの `KHR_materials_specular` の係数は宣言どおりに書き込まれます。金属はこれを無視します。",
+      "parameters.specularIntensityMap": "`specularIntensity` に画像のアルファチャンネルを掛けます。",
+      "parameters.displacementMagnitude": "マテリアルのグラフの `displacement` 出力が、`displacementCenter` より 1 大きいところで、サーフェスをその法線に沿って何メートル動かすか。変位後の高さは `(出力 - displacementCenter) * displacementMagnitude` です。",
+      "parameters.displacementCenter": "サーフェスをそのままの位置に残す `displacement` 出力の値、0 から 1。",
+      "parameters.displacementFadeStart": "変位が距離とともに薄れていく位置。最大の変位の画面上のピクセルサイズで表し、`displacementFadeStart` より上では全体、`displacementFadeEnd` より下では消えます。後者は小さいほうでなければなりません。両方を省くと、薄れることはありません。",
+      "parameters.displacementFadeEnd": "`displacementFadeStart` を参照。"
     }
   },
   "material.line": {
@@ -8991,7 +9102,13 @@
       "parameters.physics": "これをまとう物体の素材：密度、摩擦、反発。",
       "parameters.density": "kg/m³。体積を掛けると質量になる。",
       "parameters.friction": "物体のすべりにくさ。0 以上。",
-      "parameters.restitution": "物体の弾み具合。0 から 1。"
+      "parameters.restitution": "物体の弾み具合。0 から 1。",
+      "parameters.specularIntensity": "サーフェスの誘電体のスペキュラ入力、0 から 1。垂直入射での反射率はこの値の 0.08 倍なので、0.5(何も宣言しないサーフェスの値)で通常の 4%、1 で 8%、0 でハイライトなしになります。glTF マテリアルの `KHR_materials_specular` の係数は宣言どおりに書き込まれます。金属はこれを無視します。",
+      "parameters.specularIntensityMap": "`specularIntensity` に画像のアルファチャンネルを掛けます。",
+      "parameters.displacementMagnitude": "マテリアルのグラフの `displacement` 出力が、`displacementCenter` より 1 大きいところで、サーフェスをその法線に沿って何メートル動かすか。変位後の高さは `(出力 - displacementCenter) * displacementMagnitude` です。",
+      "parameters.displacementCenter": "サーフェスをそのままの位置に残す `displacement` 出力の値、0 から 1。",
+      "parameters.displacementFadeStart": "変位が距離とともに薄れていく位置。最大の変位の画面上のピクセルサイズで表し、`displacementFadeStart` より上では全体、`displacementFadeEnd` より下では消えます。後者は小さいほうでなければなりません。両方を省くと、薄れることはありません。",
+      "parameters.displacementFadeEnd": "`displacementFadeStart` を参照。"
     }
   },
   "material.lineDashed": {
@@ -9054,7 +9171,13 @@
       "parameters.physics": "これをまとう物体の素材：密度、摩擦、反発。",
       "parameters.density": "kg/m³。体積を掛けると質量になる。",
       "parameters.friction": "物体のすべりにくさ。0 以上。",
-      "parameters.restitution": "物体の弾み具合。0 から 1。"
+      "parameters.restitution": "物体の弾み具合。0 から 1。",
+      "parameters.specularIntensity": "サーフェスの誘電体のスペキュラ入力、0 から 1。垂直入射での反射率はこの値の 0.08 倍なので、0.5(何も宣言しないサーフェスの値)で通常の 4%、1 で 8%、0 でハイライトなしになります。glTF マテリアルの `KHR_materials_specular` の係数は宣言どおりに書き込まれます。金属はこれを無視します。",
+      "parameters.specularIntensityMap": "`specularIntensity` に画像のアルファチャンネルを掛けます。",
+      "parameters.displacementMagnitude": "マテリアルのグラフの `displacement` 出力が、`displacementCenter` より 1 大きいところで、サーフェスをその法線に沿って何メートル動かすか。変位後の高さは `(出力 - displacementCenter) * displacementMagnitude` です。",
+      "parameters.displacementCenter": "サーフェスをそのままの位置に残す `displacement` 出力の値、0 から 1。",
+      "parameters.displacementFadeStart": "変位が距離とともに薄れていく位置。最大の変位の画面上のピクセルサイズで表し、`displacementFadeStart` より上では全体、`displacementFadeEnd` より下では消えます。後者は小さいほうでなければなりません。両方を省くと、薄れることはありません。",
+      "parameters.displacementFadeEnd": "`displacementFadeStart` を参照。"
     }
   },
   "material.sprite": {
@@ -9117,7 +9240,13 @@
       "parameters.physics": "これをまとう物体の素材：密度、摩擦、反発。",
       "parameters.density": "kg/m³。体積を掛けると質量になる。",
       "parameters.friction": "物体のすべりにくさ。0 以上。",
-      "parameters.restitution": "物体の弾み具合。0 から 1。"
+      "parameters.restitution": "物体の弾み具合。0 から 1。",
+      "parameters.specularIntensity": "サーフェスの誘電体のスペキュラ入力、0 から 1。垂直入射での反射率はこの値の 0.08 倍なので、0.5(何も宣言しないサーフェスの値)で通常の 4%、1 で 8%、0 でハイライトなしになります。glTF マテリアルの `KHR_materials_specular` の係数は宣言どおりに書き込まれます。金属はこれを無視します。",
+      "parameters.specularIntensityMap": "`specularIntensity` に画像のアルファチャンネルを掛けます。",
+      "parameters.displacementMagnitude": "マテリアルのグラフの `displacement` 出力が、`displacementCenter` より 1 大きいところで、サーフェスをその法線に沿って何メートル動かすか。変位後の高さは `(出力 - displacementCenter) * displacementMagnitude` です。",
+      "parameters.displacementCenter": "サーフェスをそのままの位置に残す `displacement` 出力の値、0 から 1。",
+      "parameters.displacementFadeStart": "変位が距離とともに薄れていく位置。最大の変位の画面上のピクセルサイズで表し、`displacementFadeStart` より上では全体、`displacementFadeEnd` より下では消えます。後者は小さいほうでなければなりません。両方を省くと、薄れることはありません。",
+      "parameters.displacementFadeEnd": "`displacementFadeStart` を参照。"
     }
   },
   "material.volume": {
@@ -9181,7 +9310,13 @@
       "parameters.physics": "それをまとうボディの物質: 密度、摩擦、反発。",
       "parameters.density": "kg/m³、体積を掛けると質量。",
       "parameters.friction": "ボディがどれだけ掴むか、0以上。",
-      "parameters.restitution": "ボディがどれだけ跳ねるか、0から1。"
+      "parameters.restitution": "ボディがどれだけ跳ねるか、0から1。",
+      "parameters.specularIntensity": "サーフェスの誘電体のスペキュラ入力、0 から 1。垂直入射での反射率はこの値の 0.08 倍なので、0.5(何も宣言しないサーフェスの値)で通常の 4%、1 で 8%、0 でハイライトなしになります。glTF マテリアルの `KHR_materials_specular` の係数は宣言どおりに書き込まれます。金属はこれを無視します。",
+      "parameters.specularIntensityMap": "`specularIntensity` に画像のアルファチャンネルを掛けます。",
+      "parameters.displacementMagnitude": "マテリアルのグラフの `displacement` 出力が、`displacementCenter` より 1 大きいところで、サーフェスをその法線に沿って何メートル動かすか。変位後の高さは `(出力 - displacementCenter) * displacementMagnitude` です。",
+      "parameters.displacementCenter": "サーフェスをそのままの位置に残す `displacement` 出力の値、0 から 1。",
+      "parameters.displacementFadeStart": "変位が距離とともに薄れていく位置。最大の変位の画面上のピクセルサイズで表し、`displacementFadeStart` より上では全体、`displacementFadeEnd` より下では消えます。後者は小さいほうでなければなりません。両方を省くと、薄れることはありません。",
+      "parameters.displacementFadeEnd": "`displacementFadeStart` を参照。"
     }
   },
   "material.lightFunction": {
@@ -9245,7 +9380,13 @@
       "parameters.physics": "それをまとうボディの物質: 密度、摩擦、反発。",
       "parameters.density": "kg/m³、体積を掛けると質量。",
       "parameters.friction": "ボディがどれだけ掴むか、0以上。",
-      "parameters.restitution": "ボディがどれだけ跳ねるか、0から1。"
+      "parameters.restitution": "ボディがどれだけ跳ねるか、0から1。",
+      "parameters.specularIntensity": "サーフェスの誘電体のスペキュラ入力、0 から 1。垂直入射での反射率はこの値の 0.08 倍なので、0.5(何も宣言しないサーフェスの値)で通常の 4%、1 で 8%、0 でハイライトなしになります。glTF マテリアルの `KHR_materials_specular` の係数は宣言どおりに書き込まれます。金属はこれを無視します。",
+      "parameters.specularIntensityMap": "`specularIntensity` に画像のアルファチャンネルを掛けます。",
+      "parameters.displacementMagnitude": "マテリアルのグラフの `displacement` 出力が、`displacementCenter` より 1 大きいところで、サーフェスをその法線に沿って何メートル動かすか。変位後の高さは `(出力 - displacementCenter) * displacementMagnitude` です。",
+      "parameters.displacementCenter": "サーフェスをそのままの位置に残す `displacement` 出力の値、0 から 1。",
+      "parameters.displacementFadeStart": "変位が距離とともに薄れていく位置。最大の変位の画面上のピクセルサイズで表し、`displacementFadeStart` より上では全体、`displacementFadeEnd` より下では消えます。後者は小さいほうでなければなりません。両方を省くと、薄れることはありません。",
+      "parameters.displacementFadeEnd": "`displacementFadeStart` を参照。"
     }
   },
   "material.graph": {
@@ -9315,7 +9456,13 @@
       "parameters.physics": "これをまとう物体の素材：密度、摩擦、反発。",
       "parameters.density": "kg/m³。体積を掛けると質量になる。",
       "parameters.friction": "物体のすべりにくさ。0 以上。",
-      "parameters.restitution": "物体の弾み具合。0 から 1。"
+      "parameters.restitution": "物体の弾み具合。0 から 1。",
+      "parameters.specularIntensity": "サーフェスの誘電体のスペキュラ入力、0 から 1。垂直入射での反射率はこの値の 0.08 倍なので、0.5(何も宣言しないサーフェスの値)で通常の 4%、1 で 8%、0 でハイライトなしになります。glTF マテリアルの `KHR_materials_specular` の係数は宣言どおりに書き込まれます。金属はこれを無視します。",
+      "parameters.specularIntensityMap": "`specularIntensity` に画像のアルファチャンネルを掛けます。",
+      "parameters.displacementMagnitude": "マテリアルのグラフの `displacement` 出力が、`displacementCenter` より 1 大きいところで、サーフェスをその法線に沿って何メートル動かすか。変位後の高さは `(出力 - displacementCenter) * displacementMagnitude` です。",
+      "parameters.displacementCenter": "サーフェスをそのままの位置に残す `displacement` 出力の値、0 から 1。",
+      "parameters.displacementFadeStart": "変位が距離とともに薄れていく位置。最大の変位の画面上のピクセルサイズで表し、`displacementFadeStart` より上では全体、`displacementFadeEnd` より下では消えます。後者は小さいほうでなければなりません。両方を省くと、薄れることはありません。",
+      "parameters.displacementFadeEnd": "`displacementFadeStart` を参照。"
     }
   },
   "material.createShader": {
@@ -9980,5 +10127,80 @@
   },
   "writeEngineCamera": {
     "summary": "すでに設定された`into.world`と、宣言された光学系から、1フレームが読むすべてを導出する: エンジンの深度規約による投影、続いてビュー、ビュー射影、6つのフラスタム平面(`updateCameraFrame`)、描画フレーム(`renderOrigin.ts`)、そして目。"
+  },
+  "COLLISION_CHANNELS": {
+    "summary": "コリジョンチャンネルとレスポンス。",
+    "description": "ボディにはオブジェクトタイプ(64 のチャンネルのひとつ)と、各チャンネルへのレスポンス — `ignore`、`overlap`、`block` — があります。2 つのボディは、それぞれが相手のチャンネルに返す答えによって出会い、2 つの答えのうち弱いほうが決めます。両方が `block` なら衝突し、弱いほうが `overlap` なら互いにすり抜けて重なっていると報告し、どちらかが `ignore` なら互いを認識しません。シーンクエリは自分のチャンネルとレスポンスを持ち、同じ規則でボディと出会います(`channelsMeet`)。最初の 8 チャンネルはエンジン自身のもの、さらに 6 つは予約済みで、50 はゲームのもので、好きに名前を付けられます。名前付きの PROFILE は、オブジェクトタイプ、どのボディが動き、あるいは感知するか、そしてすべてのチャンネルへのレスポンスを 1 語で設定します。以下のプロファイルはエンジンの既定値です。"
+  },
+  "COLLISION_PROFILES": {
+    "summary": "エンジンのコリジョンプロファイル。",
+    "description": "名前の挙がっていないチャンネルはすべて `block` を返します。"
+  },
+  "CharacterMode": {
+    "summary": "体の動き方: 床の上、空中、水中、あるいは重力から離れた飛行。"
+  },
+  "CollisionChannel": {
+    "summary": "名前で指定するチャンネル。"
+  },
+  "CollisionProfileName": {
+    "summary": "名前で指定するプロファイル。"
+  },
+  "CollisionResponse": {
+    "summary": "名前で指定するレスポンス。"
+  },
+  "OverlapHit": {
+    "summary": "形状が出会ったボディ: そのオブジェクト、クエリをブロックするか(そうでなければクエリと重なる)、出会ったベイク済み三角形の glTF マテリアル(ボディ自身の形状なら `-1`)。"
+  },
+  "OverlapOptions": {
+    "summary": "`world.physics.overlap` が形状のほかに尋ねること。",
+    "members": {
+      "at": "形状の中心、ワールド座標系。",
+      "rotation": "単位クォータニオン `[x, y, z, w]`。",
+      "channel": "クエリが属するチャンネルと、ボディが持つのと同じ、チャンネルへの答え(`CollisionOptions`)。クエリは、それぞれが相手のチャンネルに返す答えのうち弱いほうでボディと出会います。両方が `block` ならボディはクエリをブロックし、どちらかが `overlap` ならクエリと重なり、どちらかが `ignore` なら出会いません。どのクエリにも参加しないボディには決して出会いません。",
+      "objectTypes": "答えがどうであれ、これらのオブジェクトタイプのボディを探します。出会ったものはすべてブロックします。`channel` の代わりになります。",
+      "mode": "`multi` は出会ったボディをすべて列挙し、`any` は最初に出会ったところで止まり、`blocking` は最初にブロックするものところで止まります。",
+      "ignore": "クエリがすり抜けるボディ: 尋ねた側自身のもの。"
+    }
+  },
+  "OverlapResult": {
+    "summary": "形状が出会ったもの: エンジン id の順に並んだボディと、いずれかがブロックするかどうか。",
+    "members": {
+      "blocking": "出会ったボディのいずれかがクエリをブロックするかどうか。"
+    }
+  },
+  "OverlapShape": {
+    "summary": "ある場所でテストする形状: 球、ボックス、カプセル(直立し、`rotation` で回転)。"
+  },
+  "RESPONSE": {
+    "summary": "ボディがチャンネルに返す答え。弱いものから強いものへ: 存在を知らない、すり抜けて報告する、ぶつかって止まる。"
+  },
+  "ResolvedCollision": {
+    "summary": "ボディの確定したコリジョン: そのチャンネルと、ブロックおよびオーバーラップするチャンネルをビットマスクで(ビット `i` がチャンネル `i`)。",
+    "members": {
+      "objectType": "チャンネル、0 から。",
+      "block": "ビット `i` が立っている: ボディはチャンネル `i` をブロックする。",
+      "overlap": "ビット `i` が立っている: ボディはチャンネル `i` と重なる。",
+      "query": "シーンクエリとオーバーラップに参加する。",
+      "physics": "シミュレーションに参加する。"
+    }
+  },
+  "channelIndex": {
+    "summary": "名前または番号で与えられたチャンネルの番号。どちらでもないものは拒否します。"
+  },
+  "channelsMeet": {
+    "summary": "`a` と `b` が出会うときのレスポンス: それぞれが相手のチャンネルに答え、弱いほうが決めます。"
+  },
+  "defaultProfile": {
+    "summary": "ボディがプロファイルを指定しないときに作られるプロファイル(`CollisionOptions.profile`)。"
+  },
+  "resolveCollision": {
+    "summary": "`options` と、ボディがプロファイルを指定しないときの出発点となる `fallback` プロファイルから確定したボディのコリジョン: プロファイルのレスポンス(名前の挙がっていないチャンネルはすべて `block`)、その上に `responses`、プロファイルのものの上にチャンネル `objectType` と `enabled` スイッチ。",
+    "parameters": {
+      "options": "`obj.physics` が受け取るボディのコリジョン: プロファイルと、それと異なる部分。",
+      "options.profile": "出発点となるプロファイル。",
+      "options.objectType": "ボディが属するチャンネル: 他のものが答える相手。",
+      "options.responses": "プロファイルのものの上に重ねる、ボディがチャンネルに返す答え。チャンネルは名前またはその番号です。",
+      "options.enabled": "ボディがシミュレーションに参加するか、クエリに参加するか、両方か、どちらにも参加しないか。"
+    }
   }
 }

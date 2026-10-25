@@ -28,6 +28,13 @@ export const GUIDES: EntryFrame[] = [
     ...GUIDE,
     id: 'responsive-antialiasing',
   },
+  // Shadow and light-grid overflows: `shadowVsmOverflowFlags` (and the option that silences it),
+  // `tileLightPoolOverflowed`, and the capacities `shadowOnePassProjectionMaxLightsPerPixel` and
+  // `lightGridMaxCulledLightsPerCell`.
+  {
+    ...GUIDE,
+    id: 'shadow-overflows',
+  },
   {
     ...GUIDE,
     id: 'three-migration',

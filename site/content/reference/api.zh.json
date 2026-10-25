@@ -619,14 +619,16 @@
   },
   "CharacterCameraControls": {
     "summary": "透过其眼睛所见的角色：一个有质量的身体，会行走、奔跑、跳跃和坠落，并作为直立的胶囊与世界物理的物体碰撞。",
-    "description": "指针像第一人称那样转动头部(`look.ts`)。按键按 `KeyboardEvent.code` 识别,使每种键盘布局都使用相同的键:W/S 或上下方向键前进和后退,A/D 或左右方向键侧移,Shift 冲刺,空格跳跃,C 蹲下(`canCrouch`);在水中身体朝头部所看的方向游动,空格上浮、蹲下键下沉,设置了 `flying` 时则这样飞行。身体不会立刻起步或停下:它在 `responseTime` 内积累速度,在 `stopTime` 内刹车,绝不快于地面摩擦允许鞋底推动的速度,所以停下时在石头上滑一点、在冰上滑得远;它在空中保持动量,在世界重力乘以 `gravityScale` 下上升和下落,攀上高达 `stepHeight` 的台阶,沿墙滑行,并站在高达 `maxSlope` 的斜坡上(`sdk-browser/src/physics/character/characterDriver.ts`、`sdk-core/src/collision/characterDrive.ts`)。摄像机就是眼睛,在脚上方 `eyeHeight` 处,随步幅以 `headBob` 起伏,落地时以 `landingDip` 下沉(`sdk-core/src/collision/characterEye.ts`);二者都在身体的这一步之后作用于眼睛,从不移动身体。自己移动摄像机的宿主会把身体静止地传送到那里。静止的角色——在地上、无速度、无按键、没有剩余的下沉——不发出任何东西,所以场景保持静止。",
+    "description": "指针像第一人称那样转动头部(`look.ts`)。按键按 `KeyboardEvent.code` 识别,使每种键盘布局都用同样的键:W/S 或上下方向键前进后退,A/D 或左右方向键横移,Shift 冲刺,空格跳跃,C 下蹲(`canCrouch`);在水中身体朝头部所看的方向游动,空格上浮,下蹲键下沉,设置了 `flying` 时同样这样飞行。身体不会瞬间起步或停下:在地面上按 `maxAcceleration` 加速,按 `groundFriction` 和 `brakingDecelerationWalking` 刹车;在空中保持动量,在世界重力乘以 `gravityScale` 下上升和下落,可爬上最高 `stepHeight` 的台阶,贴墙滑行,并能站在不超过 `maxSlope` 的斜坡上(`sdk-browser/src/physics/character/characterDriver.ts`、`sdk-core/src/collision/characterDrive.ts`)。相机就是眼睛,位于脚上方 `eyeHeight` 处,随步幅按 `headBob` 起伏,落地时按 `landingDip` 下沉(`sdk-core/src/collision/characterEye.ts`);两者都在身体迈步之后作用于眼睛,从不移动身体。自行移动相机的宿主会把身体传送到那里,并使其静止。静止的角色——在地面、无速度、无按键、无剩余下沉——不发出任何东西,因此场景保持静止。",
     "members": {
       "velocity": "身体的速度,单位为米每秒。实时值:`[x, y, z]`,y 朝上。",
       "onGround": "双脚是否在地面上。",
       "stride": "步态相位,弧度,范围 [0, 2π):一只脚在 0 处落地,另一只在 π 处落地。",
       "onLand": "落地时调用,参数是向下的速度(米每秒):用于音效、震动。",
       "onJump": "身体因跳跃离开地面时调用。",
-      "update": "推进 `delta` 秒的生命;返回摄像机是否发生了变化,变化时会发出 `change`。"
+      "update": "推进 `delta` 秒的生命;返回摄像机是否发生了变化,变化时会发出 `change`。",
+      "mode": "身体现在如何移动:`walking`、`falling`、`swimming` 或 `flying`。",
+      "crouched": "身体是否处于下蹲状态。"
     }
   },
   "CharacterSettings": {
@@ -1957,7 +1959,7 @@
       "emptyTexels": "`approximate` 或 `simplify` 层的图集在没有任何图表的值之处存放什么(`HLOD_EMPTY_TEXELS`):`nearestChart`,每张贴图上最近图表的值,或 `black`;`true` 为默认,`false` 为 `black`。",
       "clusterDag": "`approximate`、`merge` 或 `simplify` 层所构建的每个角色的网格是否获得一个簇 DAG,其更粗的层级在像素误差之内绘制;`false`(默认)时,一个层级在每个距离都整体绘制,如同参考实现默认构建合并、近似或简化的网格那样。",
       "allowDistanceField": "`approximate`、`merge` 或 `simplify` 层所构建的每个角色的网格是否获得一个距离场(参考实现各构建器的一项设置):编译器根据角色自己的三角形,在世界空间中,按场景网格的设置(`meshBuild` 的 `distanceField…`)构建它,存入 `distanceFields.bin`,太阳的距离场阴影在角色被绘制处绘制它 —— 即最后一张阴影图之外的合并层级的阴影。`approximate` 层默认为 `true`,`merge` 或 `simplify` 层为 `false`,如同参考实现的构建器的默认值。`instanced` 层的对象绘制它们自己的网格,这些网格有各自的场;`voxel` 层不构建三角形。",
-      "disallowClusterDag": "`instanced` 层是否不带簇 DAG 地绘制它所接收的对象:`false`(默认)时,每个对象保留自己的 DAG,放置其源网格,该层不构建网格;`true` 时,每个对象以其网格的最后一级 LOD,即其回退网格(`lodSelection: 'lowest'`)绘制,如同参考实现绘制一个不允许簇 DAG 的实例化网格那样。该层随后像保留材质的 `merge` 层那样构建这些回退网格 —— 每个单元和材质一个网格,整体绘制,穿着源的材质,绝不是对象自己 DAG 的副本 —— 并且每条 `merge` 规则都适用于它(`parent`、`spatiallyLoaded`、其单元的网格);标记为 `hlodInstance` 的对象仍然以自身存在。",
+      "disallowClusterDag": "`instanced` 层是否在不使用其簇 DAG 的情况下绘制它所接纳的对象:`false`(默认)时,每个对象保留自己的 DAG,其源网格被放置,该层不构建网格;`true` 时,每个对象以其网格的最后一级 LOD(即其回退网格,`lodSelection: 'lowest'`)绘制,如同参考实现绘制簇 DAG 被禁用的实例化网格。该层仍是实例化的:编译器为每个源网格只生成一次回退网格,该层的对象是它在各自矩阵处的行——不按对象或按单元复制任何东西——在任何距离都完整绘制。带蒙皮、变形或模拟的对象以及装配体的对象保留自己的网格。",
       "meshBuild": "`merge` 或 `simplify` 层如何构建它所生成的每个角色的网格(`HLOD_MESH_BUILD_SETTINGS`),如参考实现仅从这些层读取的:其最精细的层级保留什么(`keptTriangles`、`trimmedError`)、是否丢弃近乎塌缩的三角形(`dropNearCollapsed`)、角色加载期间其中多少保持驻留(`alwaysResidentKib`,其单元的根页),以及如何保持其形状(`shapePreservation`、`edgeLengthBound`、`holdTextureCoordinates`)。`voxel` 层的则改为指明其单元的体素如何采样 —— `voxelRays`、`voxelLevel`、`voxelBackUp`、`voxelSeparable`、`voxelNdf`、`voxelOpacity`,如网格的 `meshBuild` 所指明的。",
       "sizeFilter": "`instanced` 层按世界包围盒的大小接收哪些对象:`none`;`extent`,其最大半尺寸至少 `minExtent` 米;`area`,其表面积至少 `minArea` 平方米;`volume`,其体积至少 `minVolume` 立方米。被拒绝的对象不进入 HLOD。",
       "minExtent": "`extent` 过滤器的最小半尺寸,以米计。",
@@ -2392,7 +2394,7 @@
     "description": "这些是命名清楚的产品级选择,而不是隐藏起来的常量:每一处运行时的边界都会重新读取它们,诊断信息也会原样公开它们。",
     "members": {
       "sunAngularRadius": "太阳圆盘的角半径,单位弧度;零表示明确要求硬阴影。这是平行光自己的默认值(0.5357 度的圆盘);天空模块的太阳部分会在它生成的光上设置关卡的值(0.7357 度,`modules/sky/sunPart.ts`),因此单独放置的光与天空的太阳在此不同,正如它们各自来源的组件与关卡不同。",
-      "tileLights": "运动图像从中抽样的光源网格单元列表的最大长度 (X2)：超过它，单元的光源将被完整求和。光源数不超过此值的场景使用这一长度的光源数组照明。单元的列表把到达它的每个光源（无论多少）保存在与视图等大的池中；池中已无空间的单元会遍历场景的所有光源——未到达它的光源只加上精确的零——因此不会丢失任何光源。",
+      "tileLights": "光源网格单元列表的最大长度,运动图像从中抽样 (X2):超过它,单元的光源将被完整求和。光源数不超过此值的场景使用这一长度的光源数组照明。单元的列表把到达它的光源保存在固定大小的池中,其大小为单元数乘以 `lightGridMaxCulledLightsPerCell`(`hizOptions.ts`,32):超出它的列不会丢弃已得到的光源,按顺序保留,并丢弃其余部分,与参考实现一致。",
       "tileSize": "光源网格单元的边长（像素）。",
       "gridSlices": "光源网格的深度切片数:最后一个起始于最远光源的影响范围,它的单元延伸到无穷远。",
       "gridDepthDistribution": "网格切片的分布,`slice = log2(depth · B + O) · S`(`lighting/tiles/gridMap.ts`):`S` 是深度每翻一倍所跨的切片数,第一个切片的起点所偏移的深度。",
@@ -2501,7 +2503,8 @@
       "p.cloudShadowExtentKm": "贴图覆盖的、围绕摄像机的半径,单位为千米,从 1 起;默认为 150。",
       "p.cloudShadowResolutionScale": "贴图每边 512 个纹素的系数,从 0.25 起;默认为 1。",
       "p.cloudShadowRaySamplesScale": "贴图的一条光线所取 16 个采样的系数,从 0.25 起;默认为 1。",
-      "p.cloudScatteredLuminanceScale": "云内部光的系数,线性;默认为白色。"
+      "p.cloudScatteredLuminanceScale": "云内部光的系数,线性;默认为白色。",
+      "p.mobility": "光源预期如何移动和被照亮:`'static'`、`'stationary'` 或 `'movable'`;默认为 `'stationary'`。"
     },
     "members": {
       "isLight": "始终为 `true`:用来把光源和其他任何对象区分开来。",
@@ -2574,7 +2577,8 @@
       "cloudShadowExtentKm": "贴图覆盖的、围绕摄像机的半径,单位为千米,从 1 起;150。",
       "cloudShadowResolutionScale": "贴图每边 512 个纹素的系数,从 0.25 起;1。",
       "cloudShadowRaySamplesScale": "贴图的一条光线所取 16 个采样的系数,从 0.25 起;1。",
-      "cloudScatteredLuminanceScale": "云内部光的系数,线性;白色。用 `set` 就地修改。"
+      "cloudScatteredLuminanceScale": "云内部光的系数,线性;白色。用 `set` 就地修改。",
+      "mobility": "光源预期如何移动和被照亮:`'static'`(已烘焙,不投射动态阴影)、`'stationary'`(不移动;其颜色和强度可以改变)或 `'movable'`(完全动态);默认为 `'stationary'`,各类光源皆然。其他任何值都会被拒绝(`INVALID_SCENE_LIGHT`)。写入会立即作用于世界。"
     }
   },
   "LightCloudShadowParameters": {
@@ -2630,7 +2634,8 @@
       "shadowsAir": "仅限平行光:该光的阴影是否同时遮蔽空气(薄雾和天空的步进沿其光线读取它);默认关闭。",
       "transmittancePerPixel": "仅限平行光:朝向该光的空气透射率是否对每个表面点分别读取,而不是只在地面读取一次;默认关闭。",
       "sunDiskTint": "仅限平行光:天空中的太阳圆盘所乘的颜色,线性;默认为白色。",
-      "sh": "探针的辐照度:27 个数字,即辐射亮度的九个 RGB 球谐系数,按频段顺序为常数、`y`、`z`、`x`、`xy`、`yz`、`3z² − 1`、`xz`、`x² − y²`,按 `intensity` 缩放;由 `emptyIrradiance` 和 `add…Irradiance` 辅助函数构建。缺省时,该探针为均匀光照。"
+      "sh": "探针的辐照度:27 个数字,即辐射亮度的九个 RGB 球谐系数,按频段顺序为常数、`y`、`z`、`x`、`xy`、`yz`、`3z² − 1`、`xz`、`x² − y²`,按 `intensity` 缩放;由 `emptyIrradiance` 和 `add…Irradiance` 辅助函数构建。缺省时,该探针为均匀光照。",
+      "mobility": "光源预期如何移动和被照亮:`'static'`、`'stationary'` 或 `'movable'`;默认为 `'stationary'`。"
     }
   },
   "LightShadowOptions": {
@@ -2811,7 +2816,13 @@
       "parameters.physics": "穿戴它的物体的材质：密度、摩擦、回弹。",
       "parameters.density": "kg/m³，乘以体积得到质量。",
       "parameters.friction": "物体的抓地程度，0 及以上。",
-      "parameters.restitution": "物体的弹跳程度，0 到 1。"
+      "parameters.restitution": "物体的弹跳程度，0 到 1。",
+      "parameters.specularIntensity": "表面电介质的高光输入,0 到 1:其垂直入射时的反射率是它的 0.08 倍,因此 0.5(未声明该值的表面的取值)给出通常的 4%,1 给出 8%,0 则没有高光。glTF 材质的 `KHR_materials_specular` 系数按其声明原样写入。金属忽略它。",
+      "parameters.specularIntensityMap": "用图像的 alpha 通道乘以 `specularIntensity`。",
+      "parameters.displacementMagnitude": "在比 `displacementCenter` 大 1 的位置,材质图的 `displacement` 输出沿表面法线把表面移动多远,单位为米:位移后的高度为 `(输出 - displacementCenter) * displacementMagnitude`。",
+      "parameters.displacementCenter": "使表面保持原位的 `displacement` 输出值,0 到 1。",
+      "parameters.displacementFadeStart": "位移随距离淡出的位置,以其最大位移在屏幕上的像素大小表示:高于 `displacementFadeStart` 时完整,低于 `displacementFadeEnd` 时消失,后者必须更小;两者都省略则永不淡出。",
+      "parameters.displacementFadeEnd": "见 `displacementFadeStart`。"
     },
     "members": {
       "isMaterial": "始终为 `true`:用来把材质和其他对象区分开来。",
@@ -2852,7 +2863,11 @@
       "volumeOutputs": "体积域材质的输出,限制在各自的范围内:其反照率、消光和自发光(`emissive` 乘以 `emissiveIntensity`)。",
       "surface": "该材质对应的、引擎自身的物理表面记录(`contracts/material.ts`)。不属于物理材质家族的类型,会通过与其同名的宿主材质家族来绘制,引擎会把它映射到自己唯一的光照模型上(`surfaceModel.ts`)。",
       "clone": "一个类型相同、数值也相同的新材质。",
-      "dispose": "忘记所有使用者:一个已释放的材质不会再为任何东西重绘。"
+      "dispose": "忘记所有使用者:一个已释放的材质不会再为任何东西重绘。",
+      "displacementMagnitude": "在比 `displacementCenter` 大 1 的位置,材质图的 `displacement` 输出沿表面法线把表面移动多远,单位为米:位移后的高度为 `(输出 - displacementCenter) * displacementMagnitude`。",
+      "displacementCenter": "使表面保持原位的 `displacement` 输出值,0 到 1。",
+      "displacementFadeStart": "表面位移随距离淡出的位置,以其最大位移在屏幕上的像素大小表示:高于 `displacementFadeStart` 时完整,低于 `displacementFadeEnd`(较小者)时消失。两者都未设置则永不淡出。",
+      "displacementFadeEnd": "见 `displacementFadeStart`。"
     }
   },
   "MaterialGraph": {
@@ -2923,7 +2938,13 @@
       "physics": "穿戴它的物体的材质：密度、摩擦、回弹。",
       "density": "kg/m³，乘以体积得到质量。",
       "friction": "物体的抓地程度，0 及以上。",
-      "restitution": "物体的弹跳程度，0 到 1。"
+      "restitution": "物体的弹跳程度，0 到 1。",
+      "specularIntensity": "表面电介质的高光输入,0 到 1:其垂直入射时的反射率是它的 0.08 倍,因此 0.5(未声明该值的表面的取值)给出通常的 4%,1 给出 8%,0 则没有高光。glTF 材质的 `KHR_materials_specular` 系数按其声明原样写入。金属忽略它。",
+      "specularIntensityMap": "用图像的 alpha 通道乘以 `specularIntensity`。",
+      "displacementMagnitude": "在比 `displacementCenter` 大 1 的位置,材质图的 `displacement` 输出沿表面法线把表面移动多远,单位为米:位移后的高度为 `(输出 - displacementCenter) * displacementMagnitude`。",
+      "displacementCenter": "使表面保持原位的 `displacement` 输出值,0 到 1。",
+      "displacementFadeStart": "位移随距离淡出的位置,以其最大位移在屏幕上的像素大小表示:高于 `displacementFadeStart` 时完整,低于 `displacementFadeEnd` 时消失,后者必须更小;两者都省略则永不淡出。",
+      "displacementFadeEnd": "见 `displacementFadeStart`。"
     }
   },
   "MaterialSettings": {
@@ -3376,7 +3397,10 @@
       "rotateZ": "把该节点绕自己的 z 轴旋转。",
       "translateOnAxis": "沿该节点自己的 `axis` 移动它。",
       "getWorldDirection": "该节点在世界中所朝向的方向。",
-      "localBounds": "该节点自身内容所占据的包围盒,局部坐标系;一个普通节点不含任何内容。"
+      "localBounds": "该节点自身内容所占据的包围盒,局部坐标系;一个普通节点不含任何内容。",
+      "firstPerson": "对象是否作为第一人称对象绘制(玩家的双手和武器):它不投射自己的动态阴影,其像素带有阴影另行处理的第一人称标记;默认为 `false`,且绝不与 `firstPersonWorldSpaceRepresentation` 同时使用。",
+      "firstPersonWorldSpaceRepresentation": "对象是否在世界中代表一个第一人称对象(玩家的身体):其所有者的视图看不到它,它把阴影投射到太阳的第一人称 clipmap(`shadowFirstPersonClipmap`)中,与常规贴图分开,且拥有它的视图(主相机的视图)不绘制它;默认为 `false`,且绝不与 `firstPerson` 同时使用。",
+      "castHiddenShadow": "对象被隐藏时(`visible = false`,或位于被隐藏的节点之下)是否继续投射阴影:没有视图绘制它,阴影贴图仍会绘制;默认为 `false`,且仅对投射阴影且不是 `firstPersonWorldSpaceRepresentation` 的对象读取。"
     }
   },
   "ObjectPhysics": {
@@ -3772,7 +3796,9 @@
       "forVertexTangents": "它的法线系数是否是为顶点切线而写的;未说明则未知。",
       "shininess": "Phong 表面的指数和高光颜色,按声明。",
       "released": "当资源被归还时调用:引擎自己对它的副本所监听的内容。",
-      "dispose": "归还资源。"
+      "dispose": "归还资源。",
+      "subsurfaceOpacity": "其次表面的不透明度,0 到 1,未指定时为 1(`SUBSURFACE_OPACITY_MODEL_SHIFT`)。",
+      "specularIntensity": "电介质的高光输入(`KHR_materials_specular`):其垂直入射时的反射率是它的 0.08 倍(`surfaceF0`),表面未声明时为 0.5。其贴图的 alpha 对它进行缩放。一旦声明,无论表面还带有什么,都会从记录中读取。"
     }
   },
   "PageUnit": {
@@ -4693,7 +4719,8 @@
       "shaftBloomScale": "配合泛光:所添加颜色的系数;缺省时为 0.2。",
       "shaftBloomThreshold": "配合泛光:图像在曝光之后必须超过多少亮度才会泛光;缺省时为 0。",
       "shaftBloomMaxBrightness": "配合泛光:曝光之后高于它的亮度会被压低到它;缺省时为 100。",
-      "shaftBloomTint": "配合泛光:泛光颜色的系数,线性,三个不小于 0 的数;缺省时为白色。"
+      "shaftBloomTint": "配合泛光:泛光颜色的系数,线性,三个不小于 0 的数;缺省时为白色。",
+      "mobility": "光源预期如何移动和被照亮:`static`(烘焙进光照贴图,既不移动也不改变,不投射动态阴影)、`stationary`(不移动,颜色和强度可以改变:它对静态表面的直接光被烘焙,动态阴影则会投射)或 `movable`(完全动态);缺省时为 `stationary`,即参考实现对各类光源的默认值。体积光照贴图会读取它(`mobilityOf`)。"
     }
   },
   "SceneLightStore": {
@@ -4931,7 +4958,7 @@
   },
   "ShadowCacheInvalidation": {
     "summary": "场景节点如何持有其世界位置偏移:其表面材质通过 `worldPositionOffset` 输出(`Material.graph`)移动顶点的对象的四个开关,由引擎的光栅读取。",
-    "description": "`evaluateWorldPositionOffset`(true)为该对象开启偏移,`worldPositionOffsetDisableDistance`(0,永不)在距离相机到对象包围盒中心超过那么多米时停止它,`worldPositionOffsetWritesVelocity`(true)使该运动成为时间抗锯齿和运动模糊所用的运动,`shadowCacheInvalidation` 说明其阴影如何保持:`auto`(默认)在其偏移被求值或对象移动期间重新绘制,`always` 每幅图像,`rigid` 不因其偏移,`static` 既不因其偏移也不因其移动。材质自己的 `alwaysEvaluateWorldPositionOffset` 覆盖前两项,其 `maxWorldPositionOffset` 限制顶点最多走多远。存放在它们自己的表中,因此什么都不设置的节点没有任何代价:开关通过节点的属性写入(`defineOffsetSwitches`),并作为没有任何姿态钩子能听到的节点字段被记录(`noteNodeWrite`)。"
+    "description": "`evaluateWorldPositionOffset`(true)为该对象开启偏移,`worldPositionOffsetDisableDistance`(0,永不)在相机到对象包围范围中心的距离超过这么多米时停止偏移,`worldPositionOffsetWritesVelocity`(true)使该运动成为时间性抗锯齿和运动模糊所用的运动,`shadowCacheInvalidation` 说明其阴影如何保存:`auto`(默认)在其偏移被计算或对象移动时重新绘制,`always` 每一帧都绘制,`rigid` 不因其偏移而绘制,`static` 既不因其偏移也不因其移动而绘制。材质自己的 `alwaysEvaluateWorldPositionOffset` 覆盖前两项,其 `maxWorldPositionOffset` 限制顶点移动的范围。对象的另外两个开关因很少设置而放在一旁:`firstPerson`(false),作为第一人称对象绘制的对象——在视图空间中,靠近相机,如玩家的双手和武器——它不投射自己的动态阴影;以及 `firstPersonWorldSpaceRepresentation`(false),在世界中代表第一人称对象的对象——玩家的身体——其所有者的视图看不到它,它把阴影投射到与常规贴图分开的位置(`shadowFirstPersonClipmap`)。一个节点只能是其一,不能两者兼有。最后一个,`castHiddenShadow`(false),让被隐藏的对象(`visible = false`,或位于被隐藏的节点之下)继续投射阴影;没有视图绘制它。世界空间表示对拥有它的视图隐藏,并且无论此项如何设置都会投射阴影。它们存放在单独的表中,因此不设置任何开关的节点不产生开销:开关通过节点的属性写入(`defineOffsetSwitches`),并像任何没有姿态钩子监听的节点字段一样被记录(`noteNodeWrite`)。"
   },
   "ShadowDistanceOption": {
     "summary": "宿主所写的阴影距离:米,`true` 为默认,`false` 为无。"
@@ -4948,7 +4975,7 @@
       "shadowVsmPagesRendered": "本帧先清除再渲染的页;晚几帧回读。",
       "shadowVsmFreePages": "池的最近一条状态消息中的空闲物理页。",
       "shadowVsmLodBias": "由池的负载设定的全局分辨率 LOD 偏置。",
-      "shadowVsmProjectionPasses": "本帧的投影 pass,每个四个光源。",
+      "shadowVsmProjectionPasses": "这一帧的投影通道:太阳的和局部光源的。",
       "shadowVsmInvalidationMs": "页面失效的 GPU 时间,单位毫秒,取自各 pass 的计时。",
       "shadowVsmMarkingMs": "页面标记的 GPU 时间,单位毫秒,取自各 pass 的计时。",
       "shadowVsmPageManagementMs": "页面管理的 GPU 时间,单位毫秒,取自各 pass 的计时。",
@@ -4960,15 +4987,15 @@
       "gpuLightListsMs": "光源列表的 GPU 耗时。",
       "tileLightPoolReserved": "在光源多于一个列表的场景的最后一个采样帧上,超出其列表的图块在光源索引池中预留的字数;否则为 `null`。",
       "tileLightPoolCapacity": "该采样帧上光源索引池持有的字数;同样为 `null`。",
-      "tileLightPoolOverflowed": "该采样帧上是否有图块在池中找不到空间而遍历了每一盏灯。",
-      "tileLightPoolGrowths": "自浏览器打开以来,池增长到溢出帧所需大小的次数。",
+      "tileLightPoolOverflowed": "在该采样帧中,某一列是否发现池中已无空间并丢弃了超出的光源(`lightGridMaxCulledLightsPerCell`)。",
       "gpuShadowsMs": "阴影阶段的 GPU 时间:虚拟阴影贴图的每个通道,不含其他通道。",
       "gpuLightingMs": "光照的 GPU 耗时。",
       "bounce": "反弹光的探针:它们是否存在、持有什么、它们的更新做了什么。",
       "reflections": "上一张图像的反射光线计数:每条光线在哪里结束、它们穿过全局距离场的步进如何结束以及所走的步数。视图不生成反射时为 `null`。",
       "surfaceCache": "上一张图像的表面缓存:其图集的填充情况、所捕获的页面、它为何关闭。未生成时为 `null`。",
       "ambientOcclusion": "上一张图像的屏幕空间环境光遮蔽。视图没有时为 `null`。",
-      "toneTable": "调色把显示器的颜色烘焙进的立方体。视图没有时为 `null`。"
+      "toneTable": "调色把显示器的颜色烘焙进的立方体。视图没有时为 `null`。",
+      "shadowVsmOverflowFlags": "阴影在最近 10 秒内遇到的溢出,每种一位:1 非簇标记的作业队列,2 单通道投影超出其掩码的光源,4 页池,8 投射者列表超出其容量。无溢出,或 `shadowAllowScreenOverflowMessages` 为 false 时为 0。"
     }
   },
   "ShadowOptions": {
@@ -5333,7 +5360,9 @@
       "translucencyLighting": "光源如何照亮混合表面(`VisMaterial.translucencyLighting`)。",
       "translucencyPass": "混合表面在图像的哪个 pass 中绘制(`VisMaterial.translucencyPass`)。",
       "responsive": "在表面被绘制之处,时间抗锯齿在多大程度上信任历史(`RESPONSIVE_SHIFT`):`'medium'` 把其像素当作像素动画读取,`'full'` 每幅图像都重新开始其历史。",
-      "graph": "取代参数和贴图来计算输出的图;由绘制材质颜色的族读取(`GRAPH_FAMILIES`,`surfaceRecord.ts`)。"
+      "graph": "取代参数和贴图来计算输出的图;由绘制材质颜色的族读取(`GRAPH_FAMILIES`,`surfaceRecord.ts`)。",
+      "subsurfaceOpacity": "其次表面有多不透明,0 到 1。",
+      "specularIntensity": "物理表面电介质的高光输入,由 glTF 的 `KHR_materials_specular` 系数声明,以及用其 alpha 对它缩放的贴图;未指定时,表面保持 0.5。"
     }
   },
   "SurfaceDisplacement": {
@@ -5591,7 +5620,7 @@
   },
   "TextureCompression": {
     "summary": "一次会话的各个池采用哪种数据块族,以及由此引出的一切。",
-    "description": "缓存以 BC 存储每条链(`PREVIEW_STORED_FORMAT`),并且只在质量闸门保留它之处,把它烘焙成制作时所要求的其他格式族——默认是全部;设备会说明它采样哪个族——桌面显卡用 BC,移动设备用 ASTC 或 ETC2,有些支持多个,软件适配器则一个也没有。图集于是每个 LANE 有一个池,这些布局由旁挂文件命名:`lossless`(RGBA8,每纹素四字节——会话的族所不持有的链、其 BC 文件解码后(`blockDecode.ts`)所读取的内容,以及宿主图像所读取的内容)、`rgba`(BC7、ASTC 或 ETC2 RGBA8,每纹素一字节)和 `two-channel`(BC5、ASTC 亮度-透明度或 EAC RG11,每纹素一字节,即法线贴图的 X 和 Y,Z 由着色器重建)。引擎不会损失任何东西:纹理取其链被保留时所在的 lane,并且这一选择会被公布(`texturePoolFormat`)。"
+    "description": "缓存把每条链以 BC 存储(`PREVIEW_STORED_FORMAT`),并仅在质量关卡保留它的地方,按烘焙所要求的其他格式族(默认为全部)进行烘焙;设备会说明它采样哪个格式族——桌面显卡为 BC,移动设备为 ASTC 或 ETC2,有些支持多个,软件适配器则一个也没有。此时图集为每个 LANE 设一个池,即附属文件所指明的布局:`lossless`(RGBA8,每个纹素四个字节——会话的格式族不持有的链所读取的内容,其 BC 文件经解码(`blockDecode.ts`),也是宿主图像所读取的内容)、`rgba`(BC7、ASTC 或 ETC2 RGBA8,每个纹素一个字节)、`two-channel`(BC5、ASTC 亮度-alpha 或 EAC RG11,每个纹素一个字节,法线贴图的 X 和 Y,Z 由着色器重建)。数据图集的第三个池是 CHANNEL 池:法线贴图用 BC5,或者——图集中没有法线贴图时——单通道贴图(`alpha`、`grayscale`、`displacementmap`)的:当该池的每条链都是 BC4 且设备采样 BC 时用 BC4,每个纹素半个字节;否则用 R8,每个纹素一个字节,BC4 块经解码(`channelPoolOf`)。引擎不会丢失任何东西:纹理取其链所保存的 lane,并公布该选择(`texturePoolFormat`)。"
   },
   "TextureFilter": {
     "summary": "一个纹理的采样规则:基础过滤方式,以及采样器缩小时所用的 mip 规则。"
@@ -5637,7 +5666,8 @@
       "level": "哪个级别。",
       "format": "哪种格式。",
       "rgba": "解码为 RGBA8——无损 lane 对所存储族的块的读取。",
-      "half": "半精度浮点纹素,不是块:半精度浮点 lane 的文件(`tileRecord`)。"
+      "half": "半精度浮点 lane 读取这个:纹素,无论来自半精度浮点文件还是经解码的 BC6H 块(`tileLevelBytes`)。",
+      "single": "八位纹素的单通道池读取这个:每个纹素一个字节,BC4、`gray` 或 `displacement` 链的块经解码(`tileLevelBytes`)。"
     }
   },
   "TextureLevelFormat": {
@@ -5654,7 +5684,8 @@
       "level": "对应哪个层级。",
       "format": "对应哪种格式。",
       "rgba": "解码为 RGBA8——无损 lane 对所存储族的块的读取。",
-      "half": "半精度浮点纹素,不是块:半精度浮点 lane 的文件(`tileRecord`)。"
+      "half": "半精度浮点 lane 读取这个:纹素,无论来自半精度浮点文件还是经解码的 BC6H 块(`tileLevelBytes`)。",
+      "single": "八位纹素的单通道池读取这个:每个纹素一个字节,BC4、`gray` 或 `displacement` 链的块经解码(`tileLevelBytes`)。"
     }
   },
   "TextureLevelStore": {
@@ -6172,7 +6203,9 @@
       "model": "非物理族所映射到的表面模型(`../materials/surface/surfaceModel.ts`);没有则为物理。",
       "lineWidth": "光栅把线四边形加宽到的 CSS 像素宽度(`shader/lineWgsl.ts`);绘制三角形的表面上没有或为零。",
       "dashSize": "虚线的线段和间隙,沿线,以世界单位计(`shader/lineWgsl.ts`,`lineDash`);其他表面上没有。",
-      "sprite": "精灵的四边形,每个光栅都把它转向相机(`shader/spriteWgsl.ts`):它在图像中的旋转(弧度),以及它是否随距离缩小;其他表面上没有。"
+      "sprite": "精灵的四边形,每个光栅都把它转向相机(`shader/spriteWgsl.ts`):它在图像中的旋转(弧度),以及它是否随距离缩小;其他表面上没有。",
+      "subsurfaceOpacity": "其次表面的不透明度,0 到 1,未指定时为 1(`SUBSURFACE_OPACITY_MODEL_SHIFT`)。",
+      "specularIntensity": "电介质的高光输入(`KHR_materials_specular`):其垂直入射时的反射率是它的 0.08 倍(`surfaceF0`),表面未声明时为 0.5。其贴图的 alpha 对它进行缩放。一旦声明,无论表面还带有什么,都会从记录中读取。"
     }
   },
   "VolumeMaterial": {
@@ -6298,13 +6331,11 @@
       "autoForward": "仅限飞行模式:不按任何键时以 `movementSpeed` 向前飞行,按 W 加速,按 S 减速至停止。",
       "onLand": "仅角色模式:落地时调用,参数是向下的速度,单位 m/s;默认值为 `null`。",
       "onJump": "仅角色模式:身体因跳跃离开地面时调用;默认值为 `null`。",
-      "walkSpeed": "仅角色模式:步行时的米每秒;默认值为 3.5,相当于慢跑。",
+      "walkSpeed": "仅角色模式:步行时的米每秒;默认值为 6。",
       "sprintSpeed": "仅角色模式:按住 Shift 时的米每秒;默认值为 6.5,相当于未经训练的成年人的最高速度。",
-      "jumpSpeed": "仅角色模式:跳跃开始时向上的速度,单位 m/s;`sqrt(2 g h)` 可以到达高度 `h`。默认值对应 0.5 米,原地小跳。",
-      "gravityScale": "仅限角色:身体所感受到的世界重力(`world.physics.gravity`)的份额,包括上升、下落和脚底受力时;默认为 1,0 为失重。",
-      "airControl": "仅角色模式:在空中按键能操纵身体的程度,相对于地面起步的比例;默认值为 0.05,为 0 时则呈抛物线弹道。",
-      "responseTime": "仅角色模式:脚在地面上达到期望速度 95% 所需的秒数;默认值为 0.12。地面摩擦先限制起步:鞋底最多以 `μ g` 推动,`μ` 是橡胶鞋底在地面 `material.physics` 上的抓地力(无物理时为石头),因此在石头上 0.45 秒、在冰上 2.2 秒达到慢跑速度。",
-      "stopTime": "仅角色模式:松开按键后,脚在地面上失去 95% 速度所需的秒数;默认值为 0.12。地面摩擦先限制停止:慢跑会滑行 `v² / (2 μ g)`,石头上 0.8 m,冰上 3.8 m;时间越长,刹车越柔和。",
+      "jumpSpeed": "仅角色模式:起跳时的向上速度,单位 m/s;默认值为 4.2(在地球上顶点高 0.9 米)。",
+      "gravityScale": "仅角色模式:身体所感受到的世界重力(`world.physics.gravity`)的比例;默认值为 1,0 为失重。",
+      "airControl": "仅角色模式:身体在空中拥有的按键推力的比例;默认值为 0.05,0 为抛物线弹道。",
       "capsuleRadius": "仅角色模式:身体的半径,单位为米;默认值为肩宽的一半(0.23 米)。",
       "capsuleHeight": "仅角色模式:身体的高度,单位为米;默认值为 1.75。",
       "eyeHeight": "仅角色模式:摄像机距双脚的高度,单位为米;默认值为 1.64。",
@@ -6326,10 +6357,23 @@
       "flying": "仅限角色:身体是否飞行,不受重力影响;默认为 false。再次设为 false 会让身体下落。",
       "buoyancy": "仅限角色:水对完全浸没的身体所托起的体重份额;默认为 1,即原地漂浮的身体。",
       "fluidFriction": "仅限角色:身体游泳或飞行所穿过的流体的摩擦,每秒;默认为 0.3。",
-      "maxAcceleration": "仅限角色:身体在游泳和飞行时积累速度的加速度,单位为米每二次方秒;默认为 20.48。",
+      "maxAcceleration": "仅角色模式:身体在地面、空中、游泳和飞行时加速所用的米每二次方秒;默认值为 20.48。",
       "swimBraking": "仅限角色:在没有按下任何键游泳时,除水的摩擦之外,身体刹车的加速度,单位为米每二次方秒;默认为 0。",
       "flyBraking": "仅限角色:飞行时同上;默认为 0。",
-      "vehicle": "仅限载具:`'vehicle'` 控制所驾驶的对象——任何带有 `drive(input)` 的对象,按键每次变化时它都会收到油门、刹车、转向和手刹。默认 `null`;`'vehicle'` 控制没有它就从不运行:当它为 `null` 时,`kind = 'vehicle'` 和 `createWorld(…, { controls: 'vehicle' })` 会抛出 `NO_VEHICLE`,在它们驾驶期间将其设为 `null` 也一样。"
+      "vehicle": "仅限载具:`'vehicle'` 控制所驾驶的对象——任何带有 `drive(input)` 的对象,按键每次变化时它都会收到油门、刹车、转向和手刹。默认 `null`;`'vehicle'` 控制没有它就从不运行:当它为 `null` 时,`kind = 'vehicle'` 和 `createWorld(…, { controls: 'vehicle' })` 会抛出 `NO_VEHICLE`,在它们驾驶期间将其设为 `null` 也一样。",
+      "groundFriction": "仅角色模式:每秒,速度在地面上转向期望方向的快慢,以及不按键时刹车带走多少速度;默认值为 8。",
+      "brakingDecelerationWalking": "仅角色模式:地面上的身体不按键时除地面摩擦之外的刹车米每二次方秒;默认值为 20.48(整个 `maxAcceleration`)。",
+      "brakingDecelerationFalling": "仅角色模式:在空中同样如此;默认值为 0。",
+      "fallingLateralFriction": "仅角色模式:使空中身体的横向速度转向并减速的摩擦,每秒;默认值为 0,身体保持动量。",
+      "brakingFrictionFactor": "仅角色模式:刹车时摩擦的系数;默认值为 2。",
+      "brakingSubStepTime": "仅角色模式:刹车最多被切分成的秒数,使慢帧与快帧刹车一致;默认值为三十三分之一秒,限制在 1/75 到 1/20 之间。",
+      "airControlBoostMultiplier": "仅角色模式:横向速度低于 `airControlBoostVelocityThreshold` 时 `airControl` 的系数,控制量不会超过 1;默认值为 2,0 则关闭。",
+      "airControlBoostVelocityThreshold": "仅角色模式:低于它时 `airControl` 会被增强的横向速度,单位米每秒;默认值为 0.25。",
+      "terminalVelocity": "仅角色模式:身体下落的最快速度,单位米每秒;默认值为 40。",
+      "maxSimulationTimeStep": "仅角色模式:一步最多被切分成的秒数;默认值为 0.05。",
+      "maxSimulationIterations": "仅角色模式:一个 tick 最多被切分成的子步数;默认值为 8。",
+      "maxJumpApexAttemptsPerSimulation": "仅角色模式:为恰好在跳跃顶点结束而缩短一个 tick 的次数;默认值为 2。",
+      "minAnalogWalkSpeed": "仅角色模式:最轻的按键推力所达到的步行速度,单位米每秒;默认值为 0。"
     }
   },
   "world.camera": {
@@ -6431,7 +6475,7 @@
     "description": "写入后,所指明的设置自下一帧起在预设之上生效 —— 一个 `null` 把它还给预设,省略的一个保持不变 ——;设置不接受的值被拒绝。"
   },
   "world.hiz": {
-    "summary": "深度金字塔的设置,各按其字段(`WorldOptions`),在页面和质量预设之上解析:`hizTrace`,反射的追踪如何读取金字塔;`hizFoldTransparents`,其追踪层是否持有透明表面;`hizTransparentTest`,透明簇如何对照它测试;`hizFullResDepth`,屏幕探针的遍历是否下探到全分辨率深度;`lightGridHizCull`,光照网格是否将位于其列最远深度之后的单元留空;`hizPrime`(`'off'`、`'whenMissing'`、`'always'`)连同 `hizPrimeSizeBias`、`hizPrimeDepthBias`、`hizPrimeErrorScale` 和 `hizPrimeFarFieldOnly`,由设置了 `farField` 的对象的小型粗略绘制所构建的金字塔。",
+    "summary": "深度金字塔的设置,各按其字段(`WorldOptions`),在页面和质量预设之上解析:`hizTrace`,反射的追踪如何读取金字塔;`hizFoldTransparents`,其追踪层是否持有透明表面;`hizTransparentTest`,透明簇如何对照它测试;`hizFullResDepth`,屏幕探针的遍历是否下探到全分辨率深度;`lightGridHizCull`,光照网格是否将位于其列最远深度之后的单元留空;`lightGridMaxCulledLightsPerCell`,视图的光源网格每个单元所持有的光源条目;`hizPrime`(`'off'`、`'whenMissing'`、`'always'`)连同 `hizPrimeSizeBias`、`hizPrimeDepthBias`、`hizPrimeErrorScale` 和 `hizPrimeFarFieldOnly`,由设置了 `farField` 的对象的小型粗略绘制所构建的金字塔。",
     "description": "写入后,所指明的设置自下一帧起在预设之上生效 —— 一个 `null` 把它还给预设,省略的一个保持不变 ——;设置不接受的值被拒绝。"
   },
   "world.lightFunction": {
@@ -6700,7 +6744,7 @@
       "shading": "着色分箱如何持有每个材质类别的像素,每项设置按其字段(`WorldOptions`),在页面和质量预设之上解析。 写入后,所指明的设置自下一帧起在预设之上生效 —— 一个 `null` 把它还给预设,省略的一个保持不变 ——;设置不接受的值被拒绝。",
       "exposureSettings": "自动曝光的设置,在 `world.exposure` 为 `'auto'` 之处使用,各按其字段(`WorldOptions`),在页面和质量预设之上解析:偏置、平均值被保持在其内的 EV100 范围、直方图的跨度、被略去的像素占比、以档每秒计的速度、过渡距离、黑色桶的权重,以及如何读取像素的亮度。 写入后,所指明的设置自下一帧起在预设之上生效 —— 一个 `null` 把它还给预设,省略的一个保持不变 ——;设置不接受的值被拒绝。",
       "temporal": "层级之外的时间抗锯齿设置,各按其字段(`WorldOptions`),在页面和质量预设之上解析:`temporalThinGeometry`,该 pass 是否寻找比一个像素更细的几何体并在那里放松其历史;`temporalWaveOps`、`temporalWaveSize` 和 `temporalHalfPrecision`,其程序如何运行(子组、其大小、16 位浮点数,在设备允许之处),图像相同;历史的样本、闪烁度量的、细几何检测的阈值、拒绝所度量的曝光,以及 `temporalDownsampleQuality`,曝光和泛光所读取的半尺寸图像的质量。 写入后,所指明的设置自下一帧起在预设之上生效 —— 一个 `null` 把它还给预设,省略的一个保持不变 ——;设置不接受的值被拒绝。",
-      "hiz": "深度金字塔的设置,各按其字段(`WorldOptions`),在页面和质量预设之上解析:`hizTrace`,反射的追踪如何读取金字塔;`hizFoldTransparents`,其追踪层是否持有透明表面;`hizTransparentTest`,透明簇如何对照它测试;`hizFullResDepth`,屏幕探针的遍历是否下探到全分辨率深度;`lightGridHizCull`,光照网格是否将位于其列最远深度之后的单元留空;`hizPrime`(`'off'`、`'whenMissing'`、`'always'`)连同 `hizPrimeSizeBias`、`hizPrimeDepthBias`、`hizPrimeErrorScale` 和 `hizPrimeFarFieldOnly`,由设置了 `farField` 的对象的小型粗略绘制所构建的金字塔。 写入后,所指明的设置自下一帧起在预设之上生效 —— 一个 `null` 把它还给预设,省略的一个保持不变 ——;设置不接受的值被拒绝。",
+      "hiz": "深度金字塔的设置,各按其字段(`WorldOptions`),在页面和质量预设之上解析:`hizTrace`,反射的追踪如何读取金字塔;`hizFoldTransparents`,其追踪层是否持有透明表面;`hizTransparentTest`,透明簇如何对照它测试;`hizFullResDepth`,屏幕探针的遍历是否下探到全分辨率深度;`lightGridHizCull`,光照网格是否将位于其列最远深度之后的单元留空;`lightGridMaxCulledLightsPerCell`,视图的光源网格每个单元所持有的光源条目;`hizPrime`(`'off'`、`'whenMissing'`、`'always'`)连同 `hizPrimeSizeBias`、`hizPrimeDepthBias`、`hizPrimeErrorScale` 和 `hizPrimeFarFieldOnly`,由设置了 `farField` 的对象的小型粗略绘制所构建的金字塔。 写入后,所指明的设置自下一帧起在预设之上生效 —— 一个 `null` 把它还给预设,省略的一个保持不变 ——;设置不接受的值被拒绝。",
       "lightFunction": "光源函数的设置,各按其字段(`WorldOptions`),在页面和质量预设之上解析:`lightFunctionAtlas`(true)—— 是否创建图集 ——,`lightFunctionSlotResolution`(128)和 `lightFunctionAtlasSize`(4)—— 槽位每边的纹素数和每边的槽位数 ——,`lightFunctionMaxLights`(-1,无限制),`lightFunctionFormat`(`'grey'` 或 `'colour'`),以及使用方:`lightFunctionDeferred`(true)、`lightFunctionFog`(true)、`lightFunctionBounce`(true)、`lightFunctionTranslucent`(false)。 写入后,所指明的设置自下一帧起在预设之上生效 —— 一个 `null` 把它还给预设,省略的一个保持不变 ——;设置不接受的值被拒绝。",
       "volumetricLightmap": "体积光照贴图的设置,按其字段(`WorldOptions`),在页面和质量预设之上解析:`volumetricLightmap`,是否读取预计算的光,默认开启。 写入后,所指明的设置自下一帧起在预设之上生效 —— `null` 把它还给预设,省略的字段保持不变 ——;设置不接受的值被拒绝。",
       "globalDistanceField": "全局距离场的设置,各按其字段(`WorldOptions`),在页面和质量预设之上解析:`globalDistanceField`(true)—— 是否创建 clipmap ——,`globalDistanceFieldClipmaps`(4),`globalDistanceFieldViewDistance`(20000 cm),它们的分辨率(128)、更新节奏(每帧两个 clipmap,更大的更不频繁)、缓存(静态网格单独合成),以及网格的距离场被流入的图集的预算(`meshDistanceField…`)。 写入后,所指明的设置自下一帧起在预设之上生效 —— 一个 `null` 把它还给预设,省略的一个保持不变 ——;设置不接受的值被拒绝。",
@@ -6724,7 +6768,7 @@
   },
   "WorldOptions": {
     "summary": "页面创建一个世界时可以设置的内容;通常情况下什么都不需要设置。",
-    "description": "除下列选项之外,视图如何流式加载分区场景的单元,以及 HLOD 切换所等待的预热,每项设置按其字段给出,默认值取参照的默认值(`../../../../sdk-core/src/contracts/worldStreamingOptions.ts`):`worldStreamingMaxLoadingCells`(4)、`worldStreamingAngleWeight`(0.4)、`worldStreamingSortByExtent`(true)、`worldStreamingSortByPriority`(true)、`worldStreamingUseGridRange`(true)、`worldStreamingRangeScale`(1)、`worldStreamingRadius`(100 米)、`worldStreamingSector`(false)、`worldStreamingSectorAngle`(360°)、`worldStreamingZCulling`(false)、`worldStreamingBlockOnSlowStreaming`(true)、`worldStreamingBlockOnSlowStreamingRatio`(0.25)、`worldStreamingUpdateOptimization`(true)、`worldStreamingLocationQuantization`(4 米)、`worldStreamingRotationQuantization`(10°)、`worldStreamingForceUpdateFrameCount`(0)、`worldStreamingForce2D`(false)、`worldStreamingExtraRadius`(0 米)、`worldStreamingExtraAngle`(0°)、`worldStreamingTargetState`(`'activated'`)、`worldStreamingPriority`(128)、`worldStreamingUseVelocity`(false)、`hlodEnabled`(true)、`hlodWarmup`(true)、`hlodWarmupFrames`(5)、`hlodWarmupGeometry`(true)、`hlodWarmupTextures`(true)、`hlodWarmupTextureScale`(2)、`hlodWarmupTextureClamp`(2048)。在此指名的每一项都优先于画质预设;之后由 `world.worldStreaming` 修改,从下一帧起生效。裁切的设置同样如此,每项按其字段给出,默认值取参照的默认值(`../../../../sdk-core/src/contracts/cutOptions.ts`):`cutTwoPassOcclusion`(true)、`cutOcclusionCulling`(true)、`cutFrustumCulling`(true)、`cutMinLodCulling`(true)、`cutDrawDistanceCulling`(true:实例化网格的实例的绘制距离会剔除;自成一体的对象始终按它们剔除)、`cutDistanceCullToSphereEdge`(true:对象的绘制距离量到其包围球的边缘,否则量到其中心)、`cutViewDistanceScale`(1;视距的画质级别写入它)、`cutViewDistanceApplySecondaryScale`(false)和 `cutViewDistanceSecondaryScale`(1),即绘制距离的第二个比例,仅当第一个开启后才乘上它们,`cutViewDistanceFovMinAngle`(45)和 `cutViewDistanceFovMaxAngle`(90),单位为度,以及 `cutViewDistanceFovMinAngleScale` 和 `cutViewDistanceFovMaxAngleScale`(均为 1):自成一体的对象的绘制距离在第一个角度及以下、第二个角度及以上、以及两者之间所取的比例,`cutClipPlane`(false:摄像机的 `clipPlane` 仅在以它开启创建的世界中生效,这是会话打开时只读取一次的设置)、`cutClipPlaneCulling`(true)、`cutViewFiltering`(true:摄像机的 `hidden` 和 `showOnly` 列表生效)、`cutLodBiasFollowsUpscale`(true)、`cutLodBiasOffset`(0)、`cutLodBiasMin`(-2)、`cutEdgeScaleBudgetMs`(0:无,给予裁切及其光栅的 GPU 时间,单位毫秒,超过它时在渲染比例为 `'auto'` 处放粗屏幕误差)和 `cutEdgeScaleMinPercent`(30,从 1 到 100:它所降到的最低比例)、`cutMaxNodes`(2097152)、`cutMaxCandidateClusters`(16777216)、`cutMaxVisibleClusters`(4194304);之后由 `world.cut` 修改。动态分辨率的启发式同样如此(`../../../../sdk-core/src/contracts/dynamicResolutionOptions.ts`,使渲染比例和裁切的边缘比例适应其 GPU 时间预算):`dynamicResolutionFrameTimeBudgetMs`(0:帧上限的间隔)、`dynamicResolutionThrottlingMaxPercent`(0:无)、`dynamicResolutionHeadroomPercent`(10)、`dynamicResolutionOverBudgetHeadroomPercent`(0)、`dynamicResolutionHistorySize`(16)、`dynamicResolutionFrameWeightExponent`(0.9)、`dynamicResolutionChangePeriod`(8)、`dynamicResolutionIncreaseAmortization`(0.9)、`dynamicResolutionChangePercentThreshold`(2)、`dynamicResolutionMaxOverBudgetFrames`(2,读取时不低于 2)和 `dynamicResolutionUseCpuTimeLogic`(false);之后由 `world.dynamicResolution` 修改。动画的设置同样如此(`../../../../sdk-core/src/contracts/animationOptions.ts`):`animationMinScreenSize`(0.1)、`animationBankInterpolation`(true)、`animationBankTimeScale`(1);之后由 `world.animation` 修改。着色的设置同样如此(`../../../../sdk-core/src/contracts/shadingOptions.ts`):`shadeBinningMode`(`'auto'`,或 `'pixel'`、`'quad'`)和 `materialClosures`(`'single'`:每个表面作为每像素一个板层着色,透明涂层并入其基底;或 `'layered'`:涂层自成一层);之后由 `world.shading` 修改。自动曝光的设置同样如此(`../../../../sdk-core/src/contracts/exposureOptions.ts`),在 `world.exposure` 为 `'auto'`(默认)处使用:`exposureBias`(+1 档)、`exposureMinBrightness`(−10)和 `exposureMaxBrightness`(+20),单位 EV100,`exposureHistogramLogMin`(−10)和 `exposureHistogramLogMax`(+20),单位为亮度的档数,`exposureLowPercent`(10)和 `exposureHighPercent`(90),`exposureSpeedUp`(3)和 `exposureSpeedDown`(1),单位为档每秒,`exposureTransitionDistance`(1.5 档)、`exposureBlackBucketWeight`(0)和 `exposureLuminanceMethod`(`'uniform'`,或 `'ntsc'`、`'workingSpace'`)、`exposureMethod`(`'histogram'`,或 `'basic'`、`'manual'`:摄像机的曝光,由 `exposureApplyPhysicalCamera`(true)、`exposureCameraShutterSpeed`(60)和 `exposureCameraIso`(100)以及偏置读取)、`exposureLensAttenuation`(0.78)、预曝光的 `preExposure`(true)、`preExposureOverride`(0)和 `cachedLightingPreExposure`(4 档,天空光实时捕获的),它们适用于已打光的视图,无论其曝光如何,以及局部曝光的 `localExposureHighlightContrast` 和 `localExposureShadowContrast`(0.8,局部曝光运行时)、`localExposureDetailStrength`(1)、`localExposureBlurBlend`(0.6)、`localExposureBlurSize`(50 %)、`localExposureMiddleGreyBias`(0)以及两个阈值和它们的强度,它们适用于已打光的视图,无论其曝光如何;之后由 `world.exposureSettings` 修改。曝光的补偿曲线 `exposureCurve`(无)和其测光遮罩 `exposureMeterMask`(无)仅在打开时读取。时间通道的设置同样如此(`../../../../sdk-core/src/contracts/temporalOptions.ts`):`temporalThinGeometry`(false)——它是否寻找比像素更细的几何体并在那里放宽其历史,在除 `'off'` 之外的任何级别下——、`temporalWaveOps`(true)、`temporalWaveSize`(0)和 `temporalHalfPrecision`(true)——其程序如何运行:通过子组、以何种大小、以 16 位浮点,在设备允许之处,图像相同——、历史的采样(`temporalHistorySampleCount`、`temporalShadingRejectionSampleCount`、`temporalVelocityWeightClampingSampleCount`、`temporalVelocityWeightClampingPixelSpeed`)、闪烁度量的(`temporalFlickering…`)、拒绝所测量的曝光(`temporalShadingExposureOffset`)、细薄几何检测的阈值(`temporalThinGeometry…`)以及曝光和泛光所读取的半尺寸图像的质量(`temporalDownsampleQuality`),各取参照的默认值;之后由 `world.temporal` 修改。太阳阴影同样如此(`../../../../sdk-core/src/contracts/shadowOptions.ts`):`shadowDistanceScale`(1,从 0 到 2)——每盏平行光的 `shadowDistance` 的系数——、`farShadowCulling`(true)——太阳的阴影贴图是否排除那些深度减去半径后超过该距离边界(稍远一些:400 时为 427 米)的投射体,除非其对象设置了 `castFarShadow`——、`farShadowCullsAllMeshes`(false)——该测试是触及每个投射体,还是只触及世界较粗层级的合并外壳——、`shadowNearLevels`(10,从 0 到 10,至多为该光的 `shadowCascades`)、`shadowOverlapScale`(1,从 0 到 2)和 `shadowFarField`(true:在场景有距离场处,距离场级联是否跟随近景层级)——决定边界形状的三项——、远景层级和该级联自己的(`../../../../sdk-core/src/contracts/sunShadowOptions.ts`:`shadowMaxFarCascades`、`shadowFarDistanceOverride`(不绘制远景层级:没有可见效果)、`distanceFieldDistanceScale`、`distanceFieldFarTransitionScale`、`distanceFieldShadowQuality`、`distanceFieldShadowFullResolution`、`distanceFieldShadowTileSize` 和 `distanceFieldShadowTwoSidedBias`),以及阴影贴图自己的(`../../../../sdk-core/src/contracts/shadowMapOptions.ts`:clipmap 的层级和深度范围、粗糙页面、分辨率偏置、半径阈值、追踪的光线和步数以及页面池);之后由 `world.shadows` 修改。运动模糊的绘制同样如此(`../../../../sdk-core/src/contracts/motionBlurOptions.ts`):`motionBlurQuality`(`'veryHigh'`,或 `'off'`、`'low'`、`'medium'`、`'high'`:每像素最多 16 个采样,较低级别更少)、`motionBlurHalfResGather`(false)、`motionBlurHalfResInput`(true)、`motionBlurSeparable`(false)、`motionBlurScatter`(false)和 `motionBlurDirections`(1,或 2);之后由 `world.motionBlur` 修改。景深的绘制同样如此(`../../../../sdk-core/src/contracts/depthOfFieldRules.ts`):`depthOfFieldQuality`(`'on'`,或 `'off'`)、`depthOfFieldGatherDivisor`(2)、`depthOfFieldAccumulator`(`'high'`)、`depthOfFieldRingCount`(4)、`depthOfFieldPostfilter`(`'median'`)、散射和重组的设置以及该文件列出的其他设置,各取参照的默认值;之后由 `world.depthOfField` 修改。泛光的绘制同样如此(`../../../../sdk-core/src/contracts/bloomRules.ts`):`bloomQuality`(`'highest'`,或 `'off'`、`'lowest'`、`'low'`、`'medium'`、`'high'`:六个高斯层级中绘制多少个)、`bloomCross`(0)、`bloomScreenPercentage`(50:卷积的分辨率)、`bloomApplyLocalExposure`(true)和 `bloomCacheKernel`(true);之后由 `world.bloom` 修改。高斯模糊的设置同样如此(`../../../../sdk-core/src/contracts/gaussianBlurRules.ts`):`gaussianFastBlurThreshold`(100:模糊的第一遍从该半径起减半)、`gaussianSampleScale`(1:卷积核的范围)和 `gaussianLoopMode`(0:一遍的最大读取次数);之后由 `world.gaussianBlur` 修改。胶片效果同样如此(`../../../../sdk-core/src/contracts/filmOptions.ts`):颗粒(`filmGrain…`,默认关闭)、色彩边缘(`chromaticAberration…`,关闭)、暗角的外观(`vignette…`,与场景的强度并列)、`tonemapperQuality`(5)、`tonemapperSharpen`(−1:取场景的)、色调(`sceneColorTint…`,1)和 `quantizationDitheringBits`(0:显示器自己的步长);之后由 `world.film` 修改。体积雾的(`../../../../sdk-core/src/contracts/volumetricFogOptions.ts`):`volumetricFogQuality`(`'high'`;`'off'` 不绘制,`'low'`、`'high'` 和 `'ultra'` 设定网格的单元大小和深度以及历史的采样数)以及与之一同读取的十一项设置,之后由 `world.volumetricFog` 修改;雾仅存在于其雾设置了 `volumetric` 的场景中。半透明光照体积同样如此(`../../../../sdk-core/src/contracts/translucencyVolumeOptions.ts`):`translucencyVolume`(true)、`translucencyVolumeDim`(其两个级联中每个每边 64 个单元)、`translucencyVolumeInnerDistance`(15 米)、`translucencyVolumeOuterDistance`(50 米)、`translucencyVolumeBlur`(true)、`translucencyVolumeTemporal`(false)以及其他设置,之后由 `world.translucencyVolume` 修改;它照亮其材质把 `translucencyLighting` 设为体积模式的透视表面。反射的追踪同样如此(`../../../../sdk-core/src/contracts/reflectionOptions.ts`):`reflectionScreenSteps`(50,反射光线在屏幕上步进的迭代数;它在场景中的步进属于全局距离场,每个 clipmap 256 步),以及 `reflectionDistantScreenTraces`(true)、`reflectionDistantScreenSteps`(16)和 `reflectionDistantScreenDistance`(2000 米),即远距屏幕追踪,还有 `reflectionFrontLayer`(false),即是否追踪透明物体的前层,`reflectionSkylightLeaking`(0,连同其色调和平均反照率),即漏到命中点上的天空光的漫反射光,之后由 `world.reflections` 修改;`reflectionStatistics`(false),即光线的计数器,在会话打开时读取。表面缓存的同样如此(`../../../../sdk-core/src/contracts/surfaceCacheOptions.ts`):`surfaceCacheAtlasSize`(4096,每个网格的卡片被捕获进的图集的边长,单位为纹素)、`surfaceCacheCardCapturesPerFrame`(300)、`surfaceCacheCardMaxResolution`(512)、`surfaceCacheAllowCardSharing`(true)、`surfaceCacheDilationMode`(0)以及其他设置,之后由 `world.surfaceCache` 修改。屏幕空间环境光遮蔽同样如此(`../../../../sdk-core/src/contracts/ambientOcclusionOptions.ts`):`ambientOcclusion`(true:总开关)、`ambientOcclusionIntensity`(0.5;0 为关闭)、`ambientOcclusionRadius`(2 米)及其 `ambientOcclusionRadiusInWorldSpace`(false)、`ambientOcclusionFadeDistance`(80 米)和 `ambientOcclusionFadeRadius`(50 米)、`ambientOcclusionPower`(2)、`ambientOcclusionBias`(3)、画质(`ambientOcclusionQuality`,50)连同 `ambientOcclusionLevels`(-1)和 `ambientOcclusionMaxQuality`(100),以及 `ambientOcclusionWithScreenProbes`(false);之后由 `world.ambientOcclusion` 修改。深度金字塔同样如此(`../../../../sdk-core/src/contracts/hizOptions.ts`):`hizTrace`(`'reference'`,或 `'planes'`)——反射的追踪如何读取它——、`hizFoldTransparents`(false)——其追踪层是否容纳透明表面——、`hizTransparentTest`(`'finer'`,或 `'reference'`)——透明簇如何对照它测试——、`hizFullResDepth`(true)——屏幕探针的遍历是否下降到全分辨率深度——和 `lightGridHizCull`(true)——光照网格是否把位于其列最远深度之后的单元留空——,然后是 `hizPrime`(`'off'`、`'whenMissing'` 或 `'always'`)——视图何时用对设置了 `farField` 的对象所做的小而粗的绘制来构建金字塔,供其裁切的主遍在上一张图像没有留下金字塔时用来测试——以及 `hizPrimeSizeBias`(2)、`hizPrimeDepthBias`(1.5 米)、`hizPrimeErrorScale`(32)和 `hizPrimeFarFieldOnly`(true);之后由 `world.hiz` 修改。光函数同样如此(`../../../../sdk-core/src/contracts/lightFunctionOptions.ts`):`lightFunctionAtlas`(true)、`lightFunctionSlotResolution`(128)、`lightFunctionAtlasSize`(4)、`lightFunctionMaxLights`(-1,无限制)、`lightFunctionFormat`(`'grey'`)、`lightFunctionDeferred`(true)、`lightFunctionFog`(true)、`lightFunctionBounce`(true)和 `lightFunctionTranslucent`(false);之后由 `world.lightFunction` 修改。簇光栅的划分同样如此(`../../../../sdk-core/src/contracts/rasterOptions.ts`):`softwareRaster`(true)——最长边投影小于 `hardwareRasterEdgePixels` 且其包围盒不跨越任一裁剪平面的簇在计算着色器中光栅化,其他每个簇由硬件光栅化器处理;`false` 则把每个簇交给硬件——以及 `hardwareRasterEdgePixels`(32,单位为像素:大于零的有限数),即在其细节层级球的最近点处看到的簇从该边长起交给硬件光栅化器;`depthBucketing`(true)把软件光栅的镂空簇按最近优先排序,依据其包围盒的视图深度,取对数后从 `depthBucketsMinZ`(10 米)到 `depthBucketsMaxZ`(1000 米),均为大于零的有限数,分布在 256 个桶中——与参照一样,仅在场景含有体素处;之后由 `world.softwareRaster`、`world.hardwareRasterEdgePixels`、`world.depthBucketing`、`world.depthBucketsMinZ` 和 `world.depthBucketsMaxZ` 修改。几何体流式加载同样如此(`../../../../sdk-core/src/contracts/streamingOptions.ts`):`streamingMaxPendingPages`(128,同时保持已启动的几何体页面数,从 1 起的整数)、`streamingMaxInstallsPerFrame`(128,一帧最多安装的页面数,绝不多于可挂起的页面数)、`streamingQualityMinPoolPercent`(70)和 `streamingQualityMaxPoolPercent`(85,读取时不低于低水位)——池的负载,以其页面的百分比计,低于它时画质重新上升,高于它时下降,从 10 到 100——、`streamingQualityMinScale`(0.3,从 0.1 到 1,1 则从不缩放)、`streamingNumRetries`(3,页面读取失败后在放弃其页面之前重试的次数,立即进行,除服务器要求的等待外不等待,负值为无限次;已烘焙的纹理级别不计入:它会被无限次地重新请求)、`streamingMinRequests`(65 536)和 `streamingMaxRequests`(1 048 576),即摄像机裁切的回读所容纳的最少和最多请求数,从 4 096 到 1 048 576——它从最少开始并跟随裁切对它的要求,最多读取时不低于最少——以及 `streamingBandwidthLimit`(-1:无,模拟几何体读取所拥有的每秒兆字节数:每个页面占用帧带宽中属于自己的一份)。设置不接受的值会被拒绝。",
+    "description": "除下列选项之外,视图如何流式加载分区场景的单元,以及 HLOD 切换所等待的预热,每项设置按其字段给出,默认值取参照的默认值(`../../../../sdk-core/src/contracts/worldStreamingOptions.ts`):`worldStreamingMaxLoadingCells`(4)、`worldStreamingAngleWeight`(0.4)、`worldStreamingSortByExtent`(true)、`worldStreamingSortByPriority`(true)、`worldStreamingUseGridRange`(true)、`worldStreamingRangeScale`(1)、`worldStreamingRadius`(100 米)、`worldStreamingSector`(false)、`worldStreamingSectorAngle`(360°)、`worldStreamingZCulling`(false)、`worldStreamingBlockOnSlowStreaming`(true)、`worldStreamingBlockOnSlowStreamingRatio`(0.25)、`worldStreamingUpdateOptimization`(true)、`worldStreamingLocationQuantization`(4 米)、`worldStreamingRotationQuantization`(10°)、`worldStreamingForceUpdateFrameCount`(0)、`worldStreamingForce2D`(false)、`worldStreamingExtraRadius`(0 米)、`worldStreamingExtraAngle`(0°)、`worldStreamingTargetState`(`'activated'`)、`worldStreamingPriority`(128)、`worldStreamingUseVelocity`(false)、`hlodEnabled`(true)、`hlodWarmup`(true)、`hlodWarmupFrames`(5)、`hlodWarmupGeometry`(true)、`hlodWarmupTextures`(true)、`hlodWarmupTextureScale`(2)、`hlodWarmupTextureClamp`(2048)。在此指名的每一项都优先于画质预设;之后由 `world.worldStreaming` 修改,从下一帧起生效。裁切的设置同样如此,每项按其字段给出,默认值取参照的默认值(`../../../../sdk-core/src/contracts/cutOptions.ts`):`cutTwoPassOcclusion`(true)、`cutOcclusionCulling`(true)、`cutFrustumCulling`(true)、`cutMinLodCulling`(true)、`cutDrawDistanceCulling`(true:实例化网格的实例的绘制距离会剔除;自成一体的对象始终按它们剔除)、`cutDistanceCullToSphereEdge`(true:对象的绘制距离量到其包围球的边缘,否则量到其中心)、`cutViewDistanceScale`(1;视距的画质级别写入它)、`cutViewDistanceApplySecondaryScale`(false)和 `cutViewDistanceSecondaryScale`(1),即绘制距离的第二个比例,仅当第一个开启后才乘上它们,`cutViewDistanceFovMinAngle`(45)和 `cutViewDistanceFovMaxAngle`(90),单位为度,以及 `cutViewDistanceFovMinAngleScale` 和 `cutViewDistanceFovMaxAngleScale`(均为 1):自成一体的对象的绘制距离在第一个角度及以下、第二个角度及以上、以及两者之间所取的比例,`cutClipPlane`(false:摄像机的 `clipPlane` 仅在以它开启创建的世界中生效,这是会话打开时只读取一次的设置)、`cutClipPlaneCulling`(true)、`cutViewFiltering`(true:摄像机的 `hidden` 和 `showOnly` 列表生效)、`cutLodBiasFollowsUpscale`(true)、`cutLodBiasOffset`(0)、`cutLodBiasMin`(-2)、`cutEdgeScaleBudgetMs`(0:无,给予裁切及其光栅的 GPU 时间,单位毫秒,超过它时在渲染比例为 `'auto'` 处放粗屏幕误差)和 `cutEdgeScaleMinPercent`(30,从 1 到 100:它所降到的最低比例)、`cutMaxNodes`(2097152)、`cutMaxCandidateClusters`(16777216)、`cutMaxVisibleClusters`(4194304);之后由 `world.cut` 修改。动态分辨率的启发式同样如此(`../../../../sdk-core/src/contracts/dynamicResolutionOptions.ts`,使渲染比例和裁切的边缘比例适应其 GPU 时间预算):`dynamicResolutionFrameTimeBudgetMs`(0:帧上限的间隔)、`dynamicResolutionThrottlingMaxPercent`(0:无)、`dynamicResolutionHeadroomPercent`(10)、`dynamicResolutionOverBudgetHeadroomPercent`(0)、`dynamicResolutionHistorySize`(16)、`dynamicResolutionFrameWeightExponent`(0.9)、`dynamicResolutionChangePeriod`(8)、`dynamicResolutionIncreaseAmortization`(0.9)、`dynamicResolutionChangePercentThreshold`(2)、`dynamicResolutionMaxOverBudgetFrames`(2,读取时不低于 2)和 `dynamicResolutionUseCpuTimeLogic`(false);之后由 `world.dynamicResolution` 修改。动画的设置同样如此(`../../../../sdk-core/src/contracts/animationOptions.ts`):`animationMinScreenSize`(0.1)、`animationBankInterpolation`(true)、`animationBankTimeScale`(1);之后由 `world.animation` 修改。着色的设置同样如此(`../../../../sdk-core/src/contracts/shadingOptions.ts`):`shadeBinningMode`(`'auto'`,或 `'pixel'`、`'quad'`)和 `materialClosures`(`'single'`:每个表面作为每像素一个板层着色,透明涂层并入其基底;或 `'layered'`:涂层自成一层);之后由 `world.shading` 修改。自动曝光的设置同样如此(`../../../../sdk-core/src/contracts/exposureOptions.ts`),在 `world.exposure` 为 `'auto'`(默认)处使用:`exposureBias`(+1 档)、`exposureMinBrightness`(−10)和 `exposureMaxBrightness`(+20),单位 EV100,`exposureHistogramLogMin`(−10)和 `exposureHistogramLogMax`(+20),单位为亮度的档数,`exposureLowPercent`(10)和 `exposureHighPercent`(90),`exposureSpeedUp`(3)和 `exposureSpeedDown`(1),单位为档每秒,`exposureTransitionDistance`(1.5 档)、`exposureBlackBucketWeight`(0)和 `exposureLuminanceMethod`(`'uniform'`,或 `'ntsc'`、`'workingSpace'`)、`exposureMethod`(`'histogram'`,或 `'basic'`、`'manual'`:摄像机的曝光,由 `exposureApplyPhysicalCamera`(true)、`exposureCameraShutterSpeed`(60)和 `exposureCameraIso`(100)以及偏置读取)、`exposureLensAttenuation`(0.78)、预曝光的 `preExposure`(true)、`preExposureOverride`(0)和 `cachedLightingPreExposure`(4 档,天空光实时捕获的),它们适用于已打光的视图,无论其曝光如何,以及局部曝光的 `localExposureHighlightContrast` 和 `localExposureShadowContrast`(0.8,局部曝光运行时)、`localExposureDetailStrength`(1)、`localExposureBlurBlend`(0.6)、`localExposureBlurSize`(50 %)、`localExposureMiddleGreyBias`(0)以及两个阈值和它们的强度,它们适用于已打光的视图,无论其曝光如何;之后由 `world.exposureSettings` 修改。曝光的补偿曲线 `exposureCurve`(无)和其测光遮罩 `exposureMeterMask`(无)仅在打开时读取。时间通道的设置同样如此(`../../../../sdk-core/src/contracts/temporalOptions.ts`):`temporalThinGeometry`(false)——它是否寻找比像素更细的几何体并在那里放宽其历史,在除 `'off'` 之外的任何级别下——、`temporalWaveOps`(true)、`temporalWaveSize`(0)和 `temporalHalfPrecision`(true)——其程序如何运行:通过子组、以何种大小、以 16 位浮点,在设备允许之处,图像相同——、历史的采样(`temporalHistorySampleCount`、`temporalShadingRejectionSampleCount`、`temporalVelocityWeightClampingSampleCount`、`temporalVelocityWeightClampingPixelSpeed`)、闪烁度量的(`temporalFlickering…`)、拒绝所测量的曝光(`temporalShadingExposureOffset`)、细薄几何检测的阈值(`temporalThinGeometry…`)以及曝光和泛光所读取的半尺寸图像的质量(`temporalDownsampleQuality`),各取参照的默认值;之后由 `world.temporal` 修改。太阳阴影同样如此(`../../../../sdk-core/src/contracts/shadowOptions.ts`):`shadowDistanceScale`(1,从 0 到 2)——每盏平行光的 `shadowDistance` 的系数——、`farShadowCulling`(true)——太阳的阴影贴图是否排除那些深度减去半径后超过该距离边界(稍远一些:400 时为 427 米)的投射体,除非其对象设置了 `castFarShadow`——、`farShadowCullsAllMeshes`(false)——该测试是触及每个投射体,还是只触及世界较粗层级的合并外壳——、`shadowNearLevels`(10,从 0 到 10,至多为该光的 `shadowCascades`)、`shadowOverlapScale`(1,从 0 到 2)和 `shadowFarField`(true:在场景有距离场处,距离场级联是否跟随近景层级)——决定边界形状的三项——、远景层级和该级联自己的(`../../../../sdk-core/src/contracts/sunShadowOptions.ts`:`shadowMaxFarCascades`、`shadowFarDistanceOverride`(不绘制远景层级:没有可见效果)、`distanceFieldDistanceScale`、`distanceFieldFarTransitionScale`、`distanceFieldShadowQuality`、`distanceFieldShadowFullResolution`、`distanceFieldShadowTileSize` 和 `distanceFieldShadowTwoSidedBias`),以及阴影贴图自己的(`../../../../sdk-core/src/contracts/shadowMapOptions.ts`:clipmap 的层级和深度范围、粗糙页面、分辨率偏置、半径阈值、追踪的光线和步数以及页面池);之后由 `world.shadows` 修改。运动模糊的绘制同样如此(`../../../../sdk-core/src/contracts/motionBlurOptions.ts`):`motionBlurQuality`(`'veryHigh'`,或 `'off'`、`'low'`、`'medium'`、`'high'`:每像素最多 16 个采样,较低级别更少)、`motionBlurHalfResGather`(false)、`motionBlurHalfResInput`(true)、`motionBlurSeparable`(false)、`motionBlurScatter`(false)和 `motionBlurDirections`(1,或 2);之后由 `world.motionBlur` 修改。景深的绘制同样如此(`../../../../sdk-core/src/contracts/depthOfFieldRules.ts`):`depthOfFieldQuality`(`'on'`,或 `'off'`)、`depthOfFieldGatherDivisor`(2)、`depthOfFieldAccumulator`(`'high'`)、`depthOfFieldRingCount`(4)、`depthOfFieldPostfilter`(`'median'`)、散射和重组的设置以及该文件列出的其他设置,各取参照的默认值;之后由 `world.depthOfField` 修改。泛光的绘制同样如此(`../../../../sdk-core/src/contracts/bloomRules.ts`):`bloomQuality`(`'highest'`,或 `'off'`、`'lowest'`、`'low'`、`'medium'`、`'high'`:六个高斯层级中绘制多少个)、`bloomCross`(0)、`bloomScreenPercentage`(50:卷积的分辨率)、`bloomApplyLocalExposure`(true)和 `bloomCacheKernel`(true);之后由 `world.bloom` 修改。高斯模糊的设置同样如此(`../../../../sdk-core/src/contracts/gaussianBlurRules.ts`):`gaussianFastBlurThreshold`(100:模糊的第一遍从该半径起减半)、`gaussianSampleScale`(1:卷积核的范围)和 `gaussianLoopMode`(0:一遍的最大读取次数);之后由 `world.gaussianBlur` 修改。胶片效果同样如此(`../../../../sdk-core/src/contracts/filmOptions.ts`):颗粒(`filmGrain…`,默认关闭)、色彩边缘(`chromaticAberration…`,关闭)、暗角的外观(`vignette…`,与场景的强度并列)、`tonemapperQuality`(5)、`tonemapperSharpen`(−1:取场景的)、色调(`sceneColorTint…`,1)和 `quantizationDitheringBits`(0:显示器自己的步长);之后由 `world.film` 修改。体积雾的(`../../../../sdk-core/src/contracts/volumetricFogOptions.ts`):`volumetricFogQuality`(`'high'`;`'off'` 不绘制,`'low'`、`'high'` 和 `'ultra'` 设定网格的单元大小和深度以及历史的采样数)以及与之一同读取的十一项设置,之后由 `world.volumetricFog` 修改;雾仅存在于其雾设置了 `volumetric` 的场景中。半透明光照体积同样如此(`../../../../sdk-core/src/contracts/translucencyVolumeOptions.ts`):`translucencyVolume`(true)、`translucencyVolumeDim`(其两个级联中每个每边 64 个单元)、`translucencyVolumeInnerDistance`(15 米)、`translucencyVolumeOuterDistance`(50 米)、`translucencyVolumeBlur`(true)、`translucencyVolumeTemporal`(false)以及其他设置,之后由 `world.translucencyVolume` 修改;它照亮其材质把 `translucencyLighting` 设为体积模式的透视表面。反射的追踪同样如此(`../../../../sdk-core/src/contracts/reflectionOptions.ts`):`reflectionScreenSteps`(50,反射光线在屏幕上步进的迭代数;它在场景中的步进属于全局距离场,每个 clipmap 256 步),以及 `reflectionDistantScreenTraces`(true)、`reflectionDistantScreenSteps`(16)和 `reflectionDistantScreenDistance`(2000 米),即远距屏幕追踪,还有 `reflectionFrontLayer`(false),即是否追踪透明物体的前层,`reflectionSkylightLeaking`(0,连同其色调和平均反照率),即漏到命中点上的天空光的漫反射光,之后由 `world.reflections` 修改;`reflectionStatistics`(false),即光线的计数器,在会话打开时读取。表面缓存的同样如此(`../../../../sdk-core/src/contracts/surfaceCacheOptions.ts`):`surfaceCacheAtlasSize`(4096,每个网格的卡片被捕获进的图集的边长,单位为纹素)、`surfaceCacheCardCapturesPerFrame`(300)、`surfaceCacheCardMaxResolution`(512)、`surfaceCacheAllowCardSharing`(true)、`surfaceCacheDilationMode`(0)以及其他设置,之后由 `world.surfaceCache` 修改。屏幕空间环境光遮蔽同样如此(`../../../../sdk-core/src/contracts/ambientOcclusionOptions.ts`):`ambientOcclusion`(true:总开关)、`ambientOcclusionIntensity`(0.5;0 为关闭)、`ambientOcclusionRadius`(2 米)及其 `ambientOcclusionRadiusInWorldSpace`(false)、`ambientOcclusionFadeDistance`(80 米)和 `ambientOcclusionFadeRadius`(50 米)、`ambientOcclusionPower`(2)、`ambientOcclusionBias`(3)、画质(`ambientOcclusionQuality`,50)连同 `ambientOcclusionLevels`(-1)和 `ambientOcclusionMaxQuality`(100),以及 `ambientOcclusionWithScreenProbes`(false);之后由 `world.ambientOcclusion` 修改。深度金字塔同样如此(`../../../../sdk-core/src/contracts/hizOptions.ts`):`hizTrace`(`'reference'`,或 `'planes'`)——反射的追踪如何读取它——、`hizFoldTransparents`(false)——其追踪层是否容纳透明表面——、`hizTransparentTest`(`'finer'`,或 `'reference'`)——透明簇如何对照它测试——、`hizFullResDepth`(true)——屏幕探针的遍历是否下降到全分辨率深度——,`lightGridHizCull`(true)——光照网格是否把位于其列最远深度之后的单元留空——和 `lightGridMaxCulledLightsPerCell`(32)——视图的光源网格每个单元所持有的光源条目——,然后是 `hizPrime`(`'off'`、`'whenMissing'` 或 `'always'`)——视图何时用对设置了 `farField` 的对象所做的小而粗的绘制来构建金字塔,供其裁切的主遍在上一张图像没有留下金字塔时用来测试——以及 `hizPrimeSizeBias`(2)、`hizPrimeDepthBias`(1.5 米)、`hizPrimeErrorScale`(32)和 `hizPrimeFarFieldOnly`(true);之后由 `world.hiz` 修改。光函数同样如此(`../../../../sdk-core/src/contracts/lightFunctionOptions.ts`):`lightFunctionAtlas`(true)、`lightFunctionSlotResolution`(128)、`lightFunctionAtlasSize`(4)、`lightFunctionMaxLights`(-1,无限制)、`lightFunctionFormat`(`'grey'`)、`lightFunctionDeferred`(true)、`lightFunctionFog`(true)、`lightFunctionBounce`(true)和 `lightFunctionTranslucent`(false);之后由 `world.lightFunction` 修改。簇光栅的划分同样如此(`../../../../sdk-core/src/contracts/rasterOptions.ts`):`softwareRaster`(true)——最长边投影小于 `hardwareRasterEdgePixels` 且其包围盒不跨越任一裁剪平面的簇在计算着色器中光栅化,其他每个簇由硬件光栅化器处理;`false` 则把每个簇交给硬件——以及 `hardwareRasterEdgePixels`(32,单位为像素:大于零的有限数),即在其细节层级球的最近点处看到的簇从该边长起交给硬件光栅化器;`depthBucketing`(true)把软件光栅的镂空簇按最近优先排序,依据其包围盒的视图深度,取对数后从 `depthBucketsMinZ`(10 米)到 `depthBucketsMaxZ`(1000 米),均为大于零的有限数,分布在 256 个桶中——与参照一样,仅在场景含有体素处;之后由 `world.softwareRaster`、`world.hardwareRasterEdgePixels`、`world.depthBucketing`、`world.depthBucketsMinZ` 和 `world.depthBucketsMaxZ` 修改。几何体流式加载同样如此(`../../../../sdk-core/src/contracts/streamingOptions.ts`):`streamingMaxPendingPages`(128,同时保持已启动的几何体页面数,从 1 起的整数)、`streamingMaxInstallsPerFrame`(128,一帧最多安装的页面数,绝不多于可挂起的页面数)、`streamingQualityMinPoolPercent`(70)和 `streamingQualityMaxPoolPercent`(85,读取时不低于低水位)——池的负载,以其页面的百分比计,低于它时画质重新上升,高于它时下降,从 10 到 100——、`streamingQualityMinScale`(0.3,从 0.1 到 1,1 则从不缩放)、`streamingNumRetries`(3,页面读取失败后在放弃其页面之前重试的次数,立即进行,除服务器要求的等待外不等待,负值为无限次;已烘焙的纹理级别不计入:它会被无限次地重新请求)、`streamingMinRequests`(65 536)和 `streamingMaxRequests`(1 048 576),即摄像机裁切的回读所容纳的最少和最多请求数,从 4 096 到 1 048 576——它从最少开始并跟随裁切对它的要求,最多读取时不低于最少——以及 `streamingBandwidthLimit`(-1:无,模拟几何体读取所拥有的每秒兆字节数:每个页面占用帧带宽中属于自己的一份)。设置不接受的值会被拒绝。",
     "members": {
       "interactive": "世界是否运行自己的循环:有变化时就绘制,连续 120 帧没有新内容后就休息。设为 `false` 则由页面自己调用 `world.render()`。",
       "pixelRatio": "每个屏幕像素对应多少个图像像素。",
@@ -7881,7 +7925,8 @@
       "p.cloudShadowExtentKm": "贴图覆盖的、围绕摄像机的半径,单位为千米,从 1 起;默认为 150。",
       "p.cloudShadowResolutionScale": "贴图每边 512 个纹素的系数,从 0.25 起;默认为 1。",
       "p.cloudShadowRaySamplesScale": "贴图的一条光线所取 16 个采样的系数,从 0.25 起;默认为 1。",
-      "p.cloudScatteredLuminanceScale": "云内部光的系数,线性;默认为白色。"
+      "p.cloudScatteredLuminanceScale": "云内部光的系数,线性;默认为白色。",
+      "p.mobility": "光源预期如何移动和被照亮:`'static'`、`'stationary'` 或 `'movable'`;默认为 `'stationary'`。"
     }
   },
   "light.directional": {
@@ -7944,7 +7989,8 @@
       "p.cloudShadowExtentKm": "贴图覆盖的、围绕摄像机的半径,单位为千米,从 1 起;默认为 150。",
       "p.cloudShadowResolutionScale": "贴图每边 512 个纹素的系数,从 0.25 起;默认为 1。",
       "p.cloudShadowRaySamplesScale": "贴图的一条光线所取 16 个采样的系数,从 0.25 起;默认为 1。",
-      "p.cloudScatteredLuminanceScale": "云内部光的系数,线性;默认为白色。"
+      "p.cloudScatteredLuminanceScale": "云内部光的系数,线性;默认为白色。",
+      "p.mobility": "光源预期如何移动和被照亮:`'static'`、`'stationary'` 或 `'movable'`;默认为 `'stationary'`。"
     }
   },
   "light.point": {
@@ -8007,7 +8053,8 @@
       "p.cloudShadowExtentKm": "贴图覆盖的、围绕摄像机的半径,单位为千米,从 1 起;默认为 150。",
       "p.cloudShadowResolutionScale": "贴图每边 512 个纹素的系数,从 0.25 起;默认为 1。",
       "p.cloudShadowRaySamplesScale": "贴图的一条光线所取 16 个采样的系数,从 0.25 起;默认为 1。",
-      "p.cloudScatteredLuminanceScale": "云内部光的系数,线性;默认为白色。"
+      "p.cloudScatteredLuminanceScale": "云内部光的系数,线性;默认为白色。",
+      "p.mobility": "光源预期如何移动和被照亮:`'static'`、`'stationary'` 或 `'movable'`;默认为 `'stationary'`。"
     }
   },
   "light.spot": {
@@ -8070,7 +8117,8 @@
       "p.cloudShadowExtentKm": "贴图覆盖的、围绕摄像机的半径,单位为千米,从 1 起;默认为 150。",
       "p.cloudShadowResolutionScale": "贴图每边 512 个纹素的系数,从 0.25 起;默认为 1。",
       "p.cloudShadowRaySamplesScale": "贴图的一条光线所取 16 个采样的系数,从 0.25 起;默认为 1。",
-      "p.cloudScatteredLuminanceScale": "云内部光的系数,线性;默认为白色。"
+      "p.cloudScatteredLuminanceScale": "云内部光的系数,线性;默认为白色。",
+      "p.mobility": "光源预期如何移动和被照亮:`'static'`、`'stationary'` 或 `'movable'`;默认为 `'stationary'`。"
     }
   },
   "light.hemisphere": {
@@ -8133,7 +8181,8 @@
       "p.cloudShadowExtentKm": "贴图覆盖的、围绕摄像机的半径,单位为千米,从 1 起;默认为 150。",
       "p.cloudShadowResolutionScale": "贴图每边 512 个纹素的系数,从 0.25 起;默认为 1。",
       "p.cloudShadowRaySamplesScale": "贴图的一条光线所取 16 个采样的系数,从 0.25 起;默认为 1。",
-      "p.cloudScatteredLuminanceScale": "云内部光的系数,线性;默认为白色。"
+      "p.cloudScatteredLuminanceScale": "云内部光的系数,线性;默认为白色。",
+      "p.mobility": "光源预期如何移动和被照亮:`'static'`、`'stationary'` 或 `'movable'`;默认为 `'stationary'`。"
     }
   },
   "light.rectArea": {
@@ -8196,7 +8245,8 @@
       "p.cloudShadowExtentKm": "贴图覆盖的、围绕摄像机的半径,单位为千米,从 1 起;默认为 150。",
       "p.cloudShadowResolutionScale": "贴图每边 512 个纹素的系数,从 0.25 起;默认为 1。",
       "p.cloudShadowRaySamplesScale": "贴图的一条光线所取 16 个采样的系数,从 0.25 起;默认为 1。",
-      "p.cloudScatteredLuminanceScale": "云内部光的系数,线性;默认为白色。"
+      "p.cloudScatteredLuminanceScale": "云内部光的系数,线性;默认为白色。",
+      "p.mobility": "光源预期如何移动和被照亮:`'static'`、`'stationary'` 或 `'movable'`;默认为 `'stationary'`。"
     }
   },
   "light.probe": {
@@ -8259,7 +8309,8 @@
       "p.cloudShadowExtentKm": "贴图覆盖的、围绕摄像机的半径,单位为千米,从 1 起;默认为 150。",
       "p.cloudShadowResolutionScale": "贴图每边 512 个纹素的系数,从 0.25 起;默认为 1。",
       "p.cloudShadowRaySamplesScale": "贴图的一条光线所取 16 个采样的系数,从 0.25 起;默认为 1。",
-      "p.cloudScatteredLuminanceScale": "云内部光的系数,线性;默认为白色。"
+      "p.cloudScatteredLuminanceScale": "云内部光的系数,线性;默认为白色。",
+      "p.mobility": "光源预期如何移动和被照亮:`'static'`、`'stationary'` 或 `'movable'`;默认为 `'stationary'`。"
     }
   },
   "lightLattice": {
@@ -8361,7 +8412,13 @@
       "parameters.physics": "穿戴它的物体的材质：密度、摩擦、回弹。",
       "parameters.density": "kg/m³，乘以体积得到质量。",
       "parameters.friction": "物体的抓地程度，0 及以上。",
-      "parameters.restitution": "物体的弹跳程度，0 到 1。"
+      "parameters.restitution": "物体的弹跳程度，0 到 1。",
+      "parameters.specularIntensity": "表面电介质的高光输入,0 到 1:其垂直入射时的反射率是它的 0.08 倍,因此 0.5(未声明该值的表面的取值)给出通常的 4%,1 给出 8%,0 则没有高光。glTF 材质的 `KHR_materials_specular` 系数按其声明原样写入。金属忽略它。",
+      "parameters.specularIntensityMap": "用图像的 alpha 通道乘以 `specularIntensity`。",
+      "parameters.displacementMagnitude": "在比 `displacementCenter` 大 1 的位置,材质图的 `displacement` 输出沿表面法线把表面移动多远,单位为米:位移后的高度为 `(输出 - displacementCenter) * displacementMagnitude`。",
+      "parameters.displacementCenter": "使表面保持原位的 `displacement` 输出值,0 到 1。",
+      "parameters.displacementFadeStart": "位移随距离淡出的位置,以其最大位移在屏幕上的像素大小表示:高于 `displacementFadeStart` 时完整,低于 `displacementFadeEnd` 时消失,后者必须更小;两者都省略则永不淡出。",
+      "parameters.displacementFadeEnd": "见 `displacementFadeStart`。"
     }
   },
   "material.meshPhysical": {
@@ -8424,7 +8481,13 @@
       "parameters.physics": "穿戴它的物体的材质：密度、摩擦、回弹。",
       "parameters.density": "kg/m³，乘以体积得到质量。",
       "parameters.friction": "物体的抓地程度，0 及以上。",
-      "parameters.restitution": "物体的弹跳程度，0 到 1。"
+      "parameters.restitution": "物体的弹跳程度，0 到 1。",
+      "parameters.specularIntensity": "表面电介质的高光输入,0 到 1:其垂直入射时的反射率是它的 0.08 倍,因此 0.5(未声明该值的表面的取值)给出通常的 4%,1 给出 8%,0 则没有高光。glTF 材质的 `KHR_materials_specular` 系数按其声明原样写入。金属忽略它。",
+      "parameters.specularIntensityMap": "用图像的 alpha 通道乘以 `specularIntensity`。",
+      "parameters.displacementMagnitude": "在比 `displacementCenter` 大 1 的位置,材质图的 `displacement` 输出沿表面法线把表面移动多远,单位为米:位移后的高度为 `(输出 - displacementCenter) * displacementMagnitude`。",
+      "parameters.displacementCenter": "使表面保持原位的 `displacement` 输出值,0 到 1。",
+      "parameters.displacementFadeStart": "位移随距离淡出的位置,以其最大位移在屏幕上的像素大小表示:高于 `displacementFadeStart` 时完整,低于 `displacementFadeEnd` 时消失,后者必须更小;两者都省略则永不淡出。",
+      "parameters.displacementFadeEnd": "见 `displacementFadeStart`。"
     }
   },
   "material.meshBasic": {
@@ -8487,7 +8550,13 @@
       "parameters.physics": "穿戴它的物体的材质：密度、摩擦、回弹。",
       "parameters.density": "kg/m³，乘以体积得到质量。",
       "parameters.friction": "物体的抓地程度，0 及以上。",
-      "parameters.restitution": "物体的弹跳程度，0 到 1。"
+      "parameters.restitution": "物体的弹跳程度，0 到 1。",
+      "parameters.specularIntensity": "表面电介质的高光输入,0 到 1:其垂直入射时的反射率是它的 0.08 倍,因此 0.5(未声明该值的表面的取值)给出通常的 4%,1 给出 8%,0 则没有高光。glTF 材质的 `KHR_materials_specular` 系数按其声明原样写入。金属忽略它。",
+      "parameters.specularIntensityMap": "用图像的 alpha 通道乘以 `specularIntensity`。",
+      "parameters.displacementMagnitude": "在比 `displacementCenter` 大 1 的位置,材质图的 `displacement` 输出沿表面法线把表面移动多远,单位为米:位移后的高度为 `(输出 - displacementCenter) * displacementMagnitude`。",
+      "parameters.displacementCenter": "使表面保持原位的 `displacement` 输出值,0 到 1。",
+      "parameters.displacementFadeStart": "位移随距离淡出的位置,以其最大位移在屏幕上的像素大小表示:高于 `displacementFadeStart` 时完整,低于 `displacementFadeEnd` 时消失,后者必须更小;两者都省略则永不淡出。",
+      "parameters.displacementFadeEnd": "见 `displacementFadeStart`。"
     }
   },
   "material.meshPhong": {
@@ -8550,7 +8619,13 @@
       "parameters.physics": "穿戴它的物体的材质：密度、摩擦、回弹。",
       "parameters.density": "kg/m³，乘以体积得到质量。",
       "parameters.friction": "物体的抓地程度，0 及以上。",
-      "parameters.restitution": "物体的弹跳程度，0 到 1。"
+      "parameters.restitution": "物体的弹跳程度，0 到 1。",
+      "parameters.specularIntensity": "表面电介质的高光输入,0 到 1:其垂直入射时的反射率是它的 0.08 倍,因此 0.5(未声明该值的表面的取值)给出通常的 4%,1 给出 8%,0 则没有高光。glTF 材质的 `KHR_materials_specular` 系数按其声明原样写入。金属忽略它。",
+      "parameters.specularIntensityMap": "用图像的 alpha 通道乘以 `specularIntensity`。",
+      "parameters.displacementMagnitude": "在比 `displacementCenter` 大 1 的位置,材质图的 `displacement` 输出沿表面法线把表面移动多远,单位为米:位移后的高度为 `(输出 - displacementCenter) * displacementMagnitude`。",
+      "parameters.displacementCenter": "使表面保持原位的 `displacement` 输出值,0 到 1。",
+      "parameters.displacementFadeStart": "位移随距离淡出的位置,以其最大位移在屏幕上的像素大小表示:高于 `displacementFadeStart` 时完整,低于 `displacementFadeEnd` 时消失,后者必须更小;两者都省略则永不淡出。",
+      "parameters.displacementFadeEnd": "见 `displacementFadeStart`。"
     }
   },
   "material.meshLambert": {
@@ -8613,7 +8688,13 @@
       "parameters.physics": "穿戴它的物体的材质：密度、摩擦、回弹。",
       "parameters.density": "kg/m³，乘以体积得到质量。",
       "parameters.friction": "物体的抓地程度，0 及以上。",
-      "parameters.restitution": "物体的弹跳程度，0 到 1。"
+      "parameters.restitution": "物体的弹跳程度，0 到 1。",
+      "parameters.specularIntensity": "表面电介质的高光输入,0 到 1:其垂直入射时的反射率是它的 0.08 倍,因此 0.5(未声明该值的表面的取值)给出通常的 4%,1 给出 8%,0 则没有高光。glTF 材质的 `KHR_materials_specular` 系数按其声明原样写入。金属忽略它。",
+      "parameters.specularIntensityMap": "用图像的 alpha 通道乘以 `specularIntensity`。",
+      "parameters.displacementMagnitude": "在比 `displacementCenter` 大 1 的位置,材质图的 `displacement` 输出沿表面法线把表面移动多远,单位为米:位移后的高度为 `(输出 - displacementCenter) * displacementMagnitude`。",
+      "parameters.displacementCenter": "使表面保持原位的 `displacement` 输出值,0 到 1。",
+      "parameters.displacementFadeStart": "位移随距离淡出的位置,以其最大位移在屏幕上的像素大小表示:高于 `displacementFadeStart` 时完整,低于 `displacementFadeEnd` 时消失,后者必须更小;两者都省略则永不淡出。",
+      "parameters.displacementFadeEnd": "见 `displacementFadeStart`。"
     }
   },
   "material.meshToon": {
@@ -8676,7 +8757,13 @@
       "parameters.physics": "穿戴它的物体的材质：密度、摩擦、回弹。",
       "parameters.density": "kg/m³，乘以体积得到质量。",
       "parameters.friction": "物体的抓地程度，0 及以上。",
-      "parameters.restitution": "物体的弹跳程度，0 到 1。"
+      "parameters.restitution": "物体的弹跳程度，0 到 1。",
+      "parameters.specularIntensity": "表面电介质的高光输入,0 到 1:其垂直入射时的反射率是它的 0.08 倍,因此 0.5(未声明该值的表面的取值)给出通常的 4%,1 给出 8%,0 则没有高光。glTF 材质的 `KHR_materials_specular` 系数按其声明原样写入。金属忽略它。",
+      "parameters.specularIntensityMap": "用图像的 alpha 通道乘以 `specularIntensity`。",
+      "parameters.displacementMagnitude": "在比 `displacementCenter` 大 1 的位置,材质图的 `displacement` 输出沿表面法线把表面移动多远,单位为米:位移后的高度为 `(输出 - displacementCenter) * displacementMagnitude`。",
+      "parameters.displacementCenter": "使表面保持原位的 `displacement` 输出值,0 到 1。",
+      "parameters.displacementFadeStart": "位移随距离淡出的位置,以其最大位移在屏幕上的像素大小表示:高于 `displacementFadeStart` 时完整,低于 `displacementFadeEnd` 时消失,后者必须更小;两者都省略则永不淡出。",
+      "parameters.displacementFadeEnd": "见 `displacementFadeStart`。"
     }
   },
   "material.meshNormal": {
@@ -8739,7 +8826,13 @@
       "parameters.physics": "穿戴它的物体的材质：密度、摩擦、回弹。",
       "parameters.density": "kg/m³，乘以体积得到质量。",
       "parameters.friction": "物体的抓地程度，0 及以上。",
-      "parameters.restitution": "物体的弹跳程度，0 到 1。"
+      "parameters.restitution": "物体的弹跳程度，0 到 1。",
+      "parameters.specularIntensity": "表面电介质的高光输入,0 到 1:其垂直入射时的反射率是它的 0.08 倍,因此 0.5(未声明该值的表面的取值)给出通常的 4%,1 给出 8%,0 则没有高光。glTF 材质的 `KHR_materials_specular` 系数按其声明原样写入。金属忽略它。",
+      "parameters.specularIntensityMap": "用图像的 alpha 通道乘以 `specularIntensity`。",
+      "parameters.displacementMagnitude": "在比 `displacementCenter` 大 1 的位置,材质图的 `displacement` 输出沿表面法线把表面移动多远,单位为米:位移后的高度为 `(输出 - displacementCenter) * displacementMagnitude`。",
+      "parameters.displacementCenter": "使表面保持原位的 `displacement` 输出值,0 到 1。",
+      "parameters.displacementFadeStart": "位移随距离淡出的位置,以其最大位移在屏幕上的像素大小表示:高于 `displacementFadeStart` 时完整,低于 `displacementFadeEnd` 时消失,后者必须更小;两者都省略则永不淡出。",
+      "parameters.displacementFadeEnd": "见 `displacementFadeStart`。"
     }
   },
   "material.meshMatcap": {
@@ -8802,7 +8895,13 @@
       "parameters.physics": "穿戴它的物体的材质：密度、摩擦、回弹。",
       "parameters.density": "kg/m³，乘以体积得到质量。",
       "parameters.friction": "物体的抓地程度，0 及以上。",
-      "parameters.restitution": "物体的弹跳程度，0 到 1。"
+      "parameters.restitution": "物体的弹跳程度，0 到 1。",
+      "parameters.specularIntensity": "表面电介质的高光输入,0 到 1:其垂直入射时的反射率是它的 0.08 倍,因此 0.5(未声明该值的表面的取值)给出通常的 4%,1 给出 8%,0 则没有高光。glTF 材质的 `KHR_materials_specular` 系数按其声明原样写入。金属忽略它。",
+      "parameters.specularIntensityMap": "用图像的 alpha 通道乘以 `specularIntensity`。",
+      "parameters.displacementMagnitude": "在比 `displacementCenter` 大 1 的位置,材质图的 `displacement` 输出沿表面法线把表面移动多远,单位为米:位移后的高度为 `(输出 - displacementCenter) * displacementMagnitude`。",
+      "parameters.displacementCenter": "使表面保持原位的 `displacement` 输出值,0 到 1。",
+      "parameters.displacementFadeStart": "位移随距离淡出的位置,以其最大位移在屏幕上的像素大小表示:高于 `displacementFadeStart` 时完整,低于 `displacementFadeEnd` 时消失,后者必须更小;两者都省略则永不淡出。",
+      "parameters.displacementFadeEnd": "见 `displacementFadeStart`。"
     }
   },
   "material.meshDepth": {
@@ -8865,7 +8964,13 @@
       "parameters.physics": "穿戴它的物体的材质：密度、摩擦、回弹。",
       "parameters.density": "kg/m³，乘以体积得到质量。",
       "parameters.friction": "物体的抓地程度，0 及以上。",
-      "parameters.restitution": "物体的弹跳程度，0 到 1。"
+      "parameters.restitution": "物体的弹跳程度，0 到 1。",
+      "parameters.specularIntensity": "表面电介质的高光输入,0 到 1:其垂直入射时的反射率是它的 0.08 倍,因此 0.5(未声明该值的表面的取值)给出通常的 4%,1 给出 8%,0 则没有高光。glTF 材质的 `KHR_materials_specular` 系数按其声明原样写入。金属忽略它。",
+      "parameters.specularIntensityMap": "用图像的 alpha 通道乘以 `specularIntensity`。",
+      "parameters.displacementMagnitude": "在比 `displacementCenter` 大 1 的位置,材质图的 `displacement` 输出沿表面法线把表面移动多远,单位为米:位移后的高度为 `(输出 - displacementCenter) * displacementMagnitude`。",
+      "parameters.displacementCenter": "使表面保持原位的 `displacement` 输出值,0 到 1。",
+      "parameters.displacementFadeStart": "位移随距离淡出的位置,以其最大位移在屏幕上的像素大小表示:高于 `displacementFadeStart` 时完整,低于 `displacementFadeEnd` 时消失,后者必须更小;两者都省略则永不淡出。",
+      "parameters.displacementFadeEnd": "见 `displacementFadeStart`。"
     }
   },
   "material.points": {
@@ -8928,7 +9033,13 @@
       "parameters.physics": "穿戴它的物体的材质：密度、摩擦、回弹。",
       "parameters.density": "kg/m³，乘以体积得到质量。",
       "parameters.friction": "物体的抓地程度，0 及以上。",
-      "parameters.restitution": "物体的弹跳程度，0 到 1。"
+      "parameters.restitution": "物体的弹跳程度，0 到 1。",
+      "parameters.specularIntensity": "表面电介质的高光输入,0 到 1:其垂直入射时的反射率是它的 0.08 倍,因此 0.5(未声明该值的表面的取值)给出通常的 4%,1 给出 8%,0 则没有高光。glTF 材质的 `KHR_materials_specular` 系数按其声明原样写入。金属忽略它。",
+      "parameters.specularIntensityMap": "用图像的 alpha 通道乘以 `specularIntensity`。",
+      "parameters.displacementMagnitude": "在比 `displacementCenter` 大 1 的位置,材质图的 `displacement` 输出沿表面法线把表面移动多远,单位为米:位移后的高度为 `(输出 - displacementCenter) * displacementMagnitude`。",
+      "parameters.displacementCenter": "使表面保持原位的 `displacement` 输出值,0 到 1。",
+      "parameters.displacementFadeStart": "位移随距离淡出的位置,以其最大位移在屏幕上的像素大小表示:高于 `displacementFadeStart` 时完整,低于 `displacementFadeEnd` 时消失,后者必须更小;两者都省略则永不淡出。",
+      "parameters.displacementFadeEnd": "见 `displacementFadeStart`。"
     }
   },
   "material.line": {
@@ -8991,7 +9102,13 @@
       "parameters.physics": "穿戴它的物体的材质：密度、摩擦、回弹。",
       "parameters.density": "kg/m³，乘以体积得到质量。",
       "parameters.friction": "物体的抓地程度，0 及以上。",
-      "parameters.restitution": "物体的弹跳程度，0 到 1。"
+      "parameters.restitution": "物体的弹跳程度，0 到 1。",
+      "parameters.specularIntensity": "表面电介质的高光输入,0 到 1:其垂直入射时的反射率是它的 0.08 倍,因此 0.5(未声明该值的表面的取值)给出通常的 4%,1 给出 8%,0 则没有高光。glTF 材质的 `KHR_materials_specular` 系数按其声明原样写入。金属忽略它。",
+      "parameters.specularIntensityMap": "用图像的 alpha 通道乘以 `specularIntensity`。",
+      "parameters.displacementMagnitude": "在比 `displacementCenter` 大 1 的位置,材质图的 `displacement` 输出沿表面法线把表面移动多远,单位为米:位移后的高度为 `(输出 - displacementCenter) * displacementMagnitude`。",
+      "parameters.displacementCenter": "使表面保持原位的 `displacement` 输出值,0 到 1。",
+      "parameters.displacementFadeStart": "位移随距离淡出的位置,以其最大位移在屏幕上的像素大小表示:高于 `displacementFadeStart` 时完整,低于 `displacementFadeEnd` 时消失,后者必须更小;两者都省略则永不淡出。",
+      "parameters.displacementFadeEnd": "见 `displacementFadeStart`。"
     }
   },
   "material.lineDashed": {
@@ -9054,7 +9171,13 @@
       "parameters.physics": "穿戴它的物体的材质：密度、摩擦、回弹。",
       "parameters.density": "kg/m³，乘以体积得到质量。",
       "parameters.friction": "物体的抓地程度，0 及以上。",
-      "parameters.restitution": "物体的弹跳程度，0 到 1。"
+      "parameters.restitution": "物体的弹跳程度，0 到 1。",
+      "parameters.specularIntensity": "表面电介质的高光输入,0 到 1:其垂直入射时的反射率是它的 0.08 倍,因此 0.5(未声明该值的表面的取值)给出通常的 4%,1 给出 8%,0 则没有高光。glTF 材质的 `KHR_materials_specular` 系数按其声明原样写入。金属忽略它。",
+      "parameters.specularIntensityMap": "用图像的 alpha 通道乘以 `specularIntensity`。",
+      "parameters.displacementMagnitude": "在比 `displacementCenter` 大 1 的位置,材质图的 `displacement` 输出沿表面法线把表面移动多远,单位为米:位移后的高度为 `(输出 - displacementCenter) * displacementMagnitude`。",
+      "parameters.displacementCenter": "使表面保持原位的 `displacement` 输出值,0 到 1。",
+      "parameters.displacementFadeStart": "位移随距离淡出的位置,以其最大位移在屏幕上的像素大小表示:高于 `displacementFadeStart` 时完整,低于 `displacementFadeEnd` 时消失,后者必须更小;两者都省略则永不淡出。",
+      "parameters.displacementFadeEnd": "见 `displacementFadeStart`。"
     }
   },
   "material.sprite": {
@@ -9117,7 +9240,13 @@
       "parameters.physics": "穿戴它的物体的材质：密度、摩擦、回弹。",
       "parameters.density": "kg/m³，乘以体积得到质量。",
       "parameters.friction": "物体的抓地程度，0 及以上。",
-      "parameters.restitution": "物体的弹跳程度，0 到 1。"
+      "parameters.restitution": "物体的弹跳程度，0 到 1。",
+      "parameters.specularIntensity": "表面电介质的高光输入,0 到 1:其垂直入射时的反射率是它的 0.08 倍,因此 0.5(未声明该值的表面的取值)给出通常的 4%,1 给出 8%,0 则没有高光。glTF 材质的 `KHR_materials_specular` 系数按其声明原样写入。金属忽略它。",
+      "parameters.specularIntensityMap": "用图像的 alpha 通道乘以 `specularIntensity`。",
+      "parameters.displacementMagnitude": "在比 `displacementCenter` 大 1 的位置,材质图的 `displacement` 输出沿表面法线把表面移动多远,单位为米:位移后的高度为 `(输出 - displacementCenter) * displacementMagnitude`。",
+      "parameters.displacementCenter": "使表面保持原位的 `displacement` 输出值,0 到 1。",
+      "parameters.displacementFadeStart": "位移随距离淡出的位置,以其最大位移在屏幕上的像素大小表示:高于 `displacementFadeStart` 时完整,低于 `displacementFadeEnd` 时消失,后者必须更小;两者都省略则永不淡出。",
+      "parameters.displacementFadeEnd": "见 `displacementFadeStart`。"
     }
   },
   "material.volume": {
@@ -9181,7 +9310,13 @@
       "parameters.physics": "穿着它的物体的物质:密度、摩擦、恢复。",
       "parameters.density": "kg/m³,乘以体积得质量。",
       "parameters.friction": "物体抓得多紧,0 及以上。",
-      "parameters.restitution": "物体弹得多高,0 到 1。"
+      "parameters.restitution": "物体弹得多高,0 到 1。",
+      "parameters.specularIntensity": "表面电介质的高光输入,0 到 1:其垂直入射时的反射率是它的 0.08 倍,因此 0.5(未声明该值的表面的取值)给出通常的 4%,1 给出 8%,0 则没有高光。glTF 材质的 `KHR_materials_specular` 系数按其声明原样写入。金属忽略它。",
+      "parameters.specularIntensityMap": "用图像的 alpha 通道乘以 `specularIntensity`。",
+      "parameters.displacementMagnitude": "在比 `displacementCenter` 大 1 的位置,材质图的 `displacement` 输出沿表面法线把表面移动多远,单位为米:位移后的高度为 `(输出 - displacementCenter) * displacementMagnitude`。",
+      "parameters.displacementCenter": "使表面保持原位的 `displacement` 输出值,0 到 1。",
+      "parameters.displacementFadeStart": "位移随距离淡出的位置,以其最大位移在屏幕上的像素大小表示:高于 `displacementFadeStart` 时完整,低于 `displacementFadeEnd` 时消失,后者必须更小;两者都省略则永不淡出。",
+      "parameters.displacementFadeEnd": "见 `displacementFadeStart`。"
     }
   },
   "material.lightFunction": {
@@ -9245,7 +9380,13 @@
       "parameters.physics": "穿着它的物体的物质:密度、摩擦、恢复。",
       "parameters.density": "kg/m³,乘以体积得质量。",
       "parameters.friction": "物体抓得多紧,0 及以上。",
-      "parameters.restitution": "物体弹得多高,0 到 1。"
+      "parameters.restitution": "物体弹得多高,0 到 1。",
+      "parameters.specularIntensity": "表面电介质的高光输入,0 到 1:其垂直入射时的反射率是它的 0.08 倍,因此 0.5(未声明该值的表面的取值)给出通常的 4%,1 给出 8%,0 则没有高光。glTF 材质的 `KHR_materials_specular` 系数按其声明原样写入。金属忽略它。",
+      "parameters.specularIntensityMap": "用图像的 alpha 通道乘以 `specularIntensity`。",
+      "parameters.displacementMagnitude": "在比 `displacementCenter` 大 1 的位置,材质图的 `displacement` 输出沿表面法线把表面移动多远,单位为米:位移后的高度为 `(输出 - displacementCenter) * displacementMagnitude`。",
+      "parameters.displacementCenter": "使表面保持原位的 `displacement` 输出值,0 到 1。",
+      "parameters.displacementFadeStart": "位移随距离淡出的位置,以其最大位移在屏幕上的像素大小表示:高于 `displacementFadeStart` 时完整,低于 `displacementFadeEnd` 时消失,后者必须更小;两者都省略则永不淡出。",
+      "parameters.displacementFadeEnd": "见 `displacementFadeStart`。"
     }
   },
   "material.graph": {
@@ -9315,7 +9456,13 @@
       "parameters.physics": "穿戴它的物体的材质：密度、摩擦、回弹。",
       "parameters.density": "kg/m³，乘以体积得到质量。",
       "parameters.friction": "物体的抓地程度，0 及以上。",
-      "parameters.restitution": "物体的弹跳程度，0 到 1。"
+      "parameters.restitution": "物体的弹跳程度，0 到 1。",
+      "parameters.specularIntensity": "表面电介质的高光输入,0 到 1:其垂直入射时的反射率是它的 0.08 倍,因此 0.5(未声明该值的表面的取值)给出通常的 4%,1 给出 8%,0 则没有高光。glTF 材质的 `KHR_materials_specular` 系数按其声明原样写入。金属忽略它。",
+      "parameters.specularIntensityMap": "用图像的 alpha 通道乘以 `specularIntensity`。",
+      "parameters.displacementMagnitude": "在比 `displacementCenter` 大 1 的位置,材质图的 `displacement` 输出沿表面法线把表面移动多远,单位为米:位移后的高度为 `(输出 - displacementCenter) * displacementMagnitude`。",
+      "parameters.displacementCenter": "使表面保持原位的 `displacement` 输出值,0 到 1。",
+      "parameters.displacementFadeStart": "位移随距离淡出的位置,以其最大位移在屏幕上的像素大小表示:高于 `displacementFadeStart` 时完整,低于 `displacementFadeEnd` 时消失,后者必须更小;两者都省略则永不淡出。",
+      "parameters.displacementFadeEnd": "见 `displacementFadeStart`。"
     }
   },
   "material.createShader": {
@@ -9980,5 +10127,80 @@
   },
   "writeEngineCamera": {
     "summary": "根据已经设置好的 `into.world` 和声明的光学参数,推导出一帧所需读取的一切:采用引擎深度约定的投影,然后是视图矩阵、视图投影矩阵和六个视锥体平面(`updateCameraFrame`)、渲染帧(`renderOrigin.ts`),以及视点位置。"
+  },
+  "COLLISION_CHANNELS": {
+    "summary": "碰撞通道与响应。",
+    "description": "物体有一个对象类型(64 个通道之一),以及对每个通道的响应——`ignore`、`overlap` 或 `block`。两个物体相遇时,取决于各自对对方通道的回答,以较弱的那个回答为准:都是 `block` 则相撞;较弱的是 `overlap` 则互相穿过并报告二者重叠;任一方 `ignore` 则彼此互不相识。场景查询有自己的通道和响应,并按同一规则与物体相遇(`channelsMeet`)。前八个通道属于引擎;另有六个保留,五十个属于游戏,可随意命名。具名的 PROFILE(配置)用一个词设定对象类型、物体移动或感知什么,以及对每个通道的响应;下面的配置是引擎的默认值。"
+  },
+  "COLLISION_PROFILES": {
+    "summary": "引擎的碰撞配置。",
+    "description": "未列出的每个通道都回答 `block`。"
+  },
+  "CharacterMode": {
+    "summary": "身体如何移动:在地面、在空中、在水中,或不受重力约束地飞行。"
+  },
+  "CollisionChannel": {
+    "summary": "按名称指定的通道。"
+  },
+  "CollisionProfileName": {
+    "summary": "按名称指定的配置。"
+  },
+  "CollisionResponse": {
+    "summary": "按名称指定的响应。"
+  },
+  "OverlapHit": {
+    "summary": "形状遇到的物体:其对象、它是否阻挡查询(否则与之重叠),以及遇到的已烘焙三角形的 glTF 材质(物体自身形状为 `-1`)。"
+  },
+  "OverlapOptions": {
+    "summary": "`world.physics.overlap` 除形状之外还要询问什么。",
+    "members": {
+      "at": "形状的中心,世界坐标系。",
+      "rotation": "单位四元数 `[x, y, z, w]`。",
+      "channel": "查询所在的通道以及它对各通道给出的回答,与物体所具有的一样(`CollisionOptions`):查询与物体相遇时,取各自对对方通道回答中较弱的那个——都是 `block`,物体阻挡查询;任一方 `overlap`,它与查询重叠;任一方 `ignore`,则不会遇到。不参与任何查询的物体永远不会被遇到。",
+      "objectTypes": "查找这些对象类型的物体,无论它们如何回答:遇到的每个都会阻挡。取代 `channel`。",
+      "mode": "`multi` 列出遇到的每个物体;`any` 在遇到第一个时停止;`blocking` 在第一个阻挡的物体处停止。",
+      "ignore": "查询穿过的物体:询问者自己的物体。"
+    }
+  },
+  "OverlapResult": {
+    "summary": "形状遇到的结果:按引擎 id 顺序排列的物体,以及是否有物体阻挡。",
+    "members": {
+      "blocking": "遇到的物体中是否有任何一个阻挡查询。"
+    }
+  },
+  "OverlapShape": {
+    "summary": "要在某处测试的形状:球体、盒体或胶囊体(直立,由 `rotation` 旋转)。"
+  },
+  "RESPONSE": {
+    "summary": "物体对通道的回答,由弱到强:不认识它,穿过它并报告,被它挡住。"
+  },
+  "ResolvedCollision": {
+    "summary": "物体已确定的碰撞:其通道,以及它阻挡和重叠的通道(以位掩码表示,位 `i` 对应通道 `i`)。",
+    "members": {
+      "objectType": "通道,从 0 起。",
+      "block": "位 `i` 置位:物体阻挡通道 `i`。",
+      "overlap": "位 `i` 置位:物体与通道 `i` 重叠。",
+      "query": "参与场景查询和重叠检测。",
+      "physics": "参与模拟。"
+    }
+  },
+  "channelIndex": {
+    "summary": "按名称或编号给出的通道的编号;对两者都不是的内容予以拒绝。"
+  },
+  "channelsMeet": {
+    "summary": "`a` 和 `b` 相遇时所用的响应:各自回答对方的通道,以较弱者为准。"
+  },
+  "defaultProfile": {
+    "summary": "物体未指定配置时所用的配置(`CollisionOptions.profile`)。"
+  },
+  "resolveCollision": {
+    "summary": "根据 `options` 和 `fallback` 配置(物体未指定配置时的起点)确定的物体碰撞:配置的响应(未列出的每个通道为 `block`),然后在其上叠加 `responses`,再以通道 `objectType` 和 `enabled` 开关覆盖配置中的。",
+    "parameters": {
+      "options": "物体的碰撞,按 `obj.physics` 接受的方式:一个配置,再加上与之不同的部分。",
+      "options.profile": "作为起点的配置。",
+      "options.objectType": "物体所属的通道:其他物体回答的对象。",
+      "options.responses": "物体对各通道的回答,叠加在配置之上;通道是一个名称或其编号。",
+      "options.enabled": "物体是否参与模拟、查询、两者皆参与或皆不参与。"
+    }
   }
 }
