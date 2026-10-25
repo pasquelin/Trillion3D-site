@@ -65,8 +65,8 @@
         floor,
         light.directional({ color: '#fff0e0', intensity: 2.4, position: [8, 18, 10], castShadow: true }),
         light.hemisphere({ color: '#9fb0ff', groundColor: '#3a2440', intensity: 0.9 }),
-        light.point({ color: '#ff4f9a', intensity: 60, position: [-9, 5, -6] }),
-        light.point({ color: '#3fd0ff', intensity: 60, position: [9, 5, -6] }),
+        light.point({ color: '#ff4f9a', intensity: 60, intensityUnits: 'candelas', position: [-9, 5, -6] }),
+        light.point({ color: '#3fd0ff', intensity: 60, intensityUnits: 'candelas', position: [9, 5, -6] }),
       );
       // A soft glow round the brightest bars, so the loud bands light the dark around them.
       world.effects.add(effect.bloom({ intensity: 0.08 }));

@@ -101,7 +101,7 @@
       const lamps = [[4.5, -5.5], [-4, 8.5]].map(([x, z]) => {
         add(geometry.cylinder(0.08, 0.12, 4, 16), paint('#2d3035', 0.6), x, 2, z);
         add(geometry.sphere(0.18, 24, 12), glass, x, 4.2, z);
-        const lamp = light.point({ color: '#ffd9a8', intensity: 0, distance: 40, radius: 0.18, position: [x, 3.95, z], castShadow: true });
+        const lamp = light.point({ color: '#ffd9a8', intensity: 0, intensityUnits: 'candelas', distance: 40, radius: 0.18, position: [x, 3.95, z], castShadow: true });
         world.scene.add(lamp);
         return lamp;
       });

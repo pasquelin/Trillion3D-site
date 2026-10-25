@@ -95,7 +95,7 @@
       // The beam: a spot light in the lantern room, lighting the sea where it lands, 30 m out.
       // It turns every frame, so it casts no shadow — a moving shadow would be redrawn each frame.
       const REACH = 30, TILT = Math.atan2(7.5, REACH), LENGTH = Math.hypot(7.5, REACH);
-      const beam = light.spot({ position: [0, 7.1, 0], intensity: 6000, distance: 60, penumbra: 0.3 });
+      const beam = light.spot({ position: [0, 7.1, 0], intensity: 6000, intensityUnits: 'candelas', distance: 60 });
       world.scene.add(beam);
       // What makes a beam visible at night is the air it lights. Two see-through cones stand for
       // that air, apex in the lamp: a brighter narrow core and a fainter halo.
@@ -124,7 +124,9 @@
       world.effects.add(effect.bloom({ intensity: 0.08 }));
 
       const ui = controls({ turnsPerMinute: [0, 30, 10, 1], beamWidth: [0.05, 0.4, 0.12], colour: '#fff2cc' }, (values) => {
-        beam.angle = values.beamWidth;
+        // The light is whole across the inner 70 % of the beam and fades out over the rest.
+        beam.outerConeAngle = values.beamWidth;
+        beam.innerConeAngle = values.beamWidth * 0.7;
         beam.color.set(values.colour);
         for (const { cone, air, share } of cones) {
           const radius = Math.tan(values.beamWidth * share);

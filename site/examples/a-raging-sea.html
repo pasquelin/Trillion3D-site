@@ -116,7 +116,7 @@
       );
       // Its beam: a spot light in the lantern, sweeping the sea as far out as the ship — over it once a
       // turn. It turns every frame, so it casts no shadow: a moving shadow is redrawn each frame.
-      const beam = light.spot({ position: LAMP, color: '#fff1c4', intensity: 30000, distance: 240, angle: 0.13, penumbra: 0.4 });
+      const beam = light.spot({ position: LAMP, color: '#fff1c4', intensity: 30000, intensityUnits: 'candelas', distance: 240, outerConeAngle: 0.13, innerConeAngle: 0.078 });
 
       // What little light the clouds let through, and lightning: a flash from above that also
       // lights the sky, now and then — more often the stronger the wind.

@@ -89,11 +89,11 @@
       sofa.position.set(0, 0, 2.6);
       world.scene.add(floor, wall, cabinet, set, screen, sofa);
       // The screen's glow on the room, a lamp in the corner, and the night outside.
-      const glow = light.rectArea({ color: '#bcd4ff', intensity: 4, width: 2.4, height: 1.35, position: [0, 1.45, -1.8] });
+      const glow = light.rectArea({ color: '#bcd4ff', intensity: 4, intensityUnits: 'candelas', width: 2.4, height: 1.35, position: [0, 1.45, -1.8] });
       glow.lookAt(0, 1.45, 5);
       world.scene.add(
         glow,
-        light.point({ color: '#ffb66b', intensity: 14, distance: 9, position: [-4.5, 2.2, -1], castShadow: true }),
+        light.point({ color: '#ffb66b', intensity: 14, intensityUnits: 'candelas', distance: 9, position: [-4.5, 2.2, -1], castShadow: true }),
         light.hemisphere({ color: '#3b4a7a', groundColor: '#1a1310', intensity: 0.35 }),
       );
 

@@ -69,8 +69,8 @@
       // panel washing the striped wall, so what the glass bends is the brightest thing behind it.
       // A touch of bloom lets the brightest edges spill a little.
       world.scene.add(light.directional({ intensity: 1.6, color: '#fff4e6', position: [3, 8, 5], castShadow: true }));
-      world.scene.add(light.point({ intensity: 20, color: '#9ec2ff', position: [-3, 3, 2], distance: 12 }));
-      const wash = light.rectArea({ intensity: 4, color: '#ffd9b0', width: 6, height: 0.5, position: [0, 3.4, -1.4] });
+      world.scene.add(light.point({ intensity: 20, intensityUnits: 'candelas', color: '#9ec2ff', position: [-3, 3, 2], distance: 12 }));
+      const wash = light.rectArea({ intensity: 4, intensityUnits: 'candelas', color: '#ffd9b0', width: 6, height: 0.5, position: [0, 3.4, -1.4] });
       wash.lookAt(0, 1.4, -3);
       world.scene.add(wash);
       world.effects.add(effect.bloom({ intensity: 0.06 }));

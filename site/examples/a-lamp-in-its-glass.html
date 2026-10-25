@@ -71,7 +71,7 @@
       lantern.add(chain, bulb, globe);
       const plate = object.mesh(geometry.box(0.24, 0.06, 0.24), iron);
       plate.position.set(HOOK[0], HOOK[1] - 0.03, HOOK[2]);
-      const lamp = light.point({ intensity: 24, distance: 10, radius: bulbRadius, castShadow: true });
+      const lamp = light.point({ intensity: 24, intensityUnits: 'candelas', distance: 10, radius: bulbRadius, castShadow: true });
       world.scene.add(plate, lantern, lamp, light.ambient({ intensity: 0.2, color: '#8fb4ff' }));
       // The filament is far brighter than anything it lights: a light bloom lets it shine.
       world.effects.add(effect.bloom({ intensity: 0.1 }));

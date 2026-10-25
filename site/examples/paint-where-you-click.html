@@ -86,9 +86,9 @@
       world.scene.add(
         light.directional({ color: '#fff0dc', intensity: 2.4, position: [4, 7, 5], castShadow: true }),
         light.hemisphere({ color: '#c9d6ff', groundColor: '#2a1d16', intensity: 0.55 }),
-        light.point({ color: '#ff9a5c', intensity: 40, position: [-1.5, 3, -3.5], distance: 12 }),
+        light.point({ color: '#ff9a5c', intensity: 40, intensityUnits: 'candelas', position: [-1.5, 3, -3.5], distance: 12 }),
       );
-      const softbox = light.rectArea({ color: '#dfe9ff', intensity: 6, width: 1.4, height: 2.6, position: [-3.6, 2.2, 2.4] });
+      const softbox = light.rectArea({ color: '#dfe9ff', intensity: 6, intensityUnits: 'candelas', width: 1.4, height: 2.6, position: [-3.6, 2.2, 2.4] });
       softbox.lookAt(0, 1.2, 0);
       world.scene.add(softbox);
       world.effects.add(effect.bloom({ intensity: 0.05 }));

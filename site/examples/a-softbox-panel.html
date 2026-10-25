@@ -79,7 +79,7 @@
       const faceGlow = material.meshBasic({ color: '#fff1e0' });
       const face = object.mesh(geometry.plane(1, 1), faceGlow);
       face.position.z = 0.065;
-      const softbox = light.rectArea({ color: '#fff1e0' });
+      const softbox = light.rectArea({ color: '#fff1e0', intensityUnits: 'candelas' });
       softbox.position.z = 0.07;
       softbox.rotation.set(0, Math.PI, 0);
       arm.add(frame, face, softbox);

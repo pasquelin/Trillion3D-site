@@ -112,7 +112,7 @@
       // light (`rectArea`) facing down, and a white panel drawn where it hangs.
       const panel = material.meshBasic({ color: '#fff6ea' }), panelShape = geometry.plane(5.5, 0.7);
       for (const z of [-1.6, 0, 1.6]) {
-        const softbox = light.rectArea({ color: '#fff6ea', intensity: 5, width: 5.5, height: 0.7 });
+        const softbox = light.rectArea({ color: '#fff6ea', intensity: 5, intensityUnits: 'candelas', width: 5.5, height: 0.7 });
         softbox.position.set(0, 4.4, z);
         softbox.rotation.x = -Math.PI / 2;
         const face = object.mesh(panelShape, panel);

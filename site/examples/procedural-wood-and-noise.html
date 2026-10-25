@@ -269,8 +269,8 @@
 
       // Light: a warm lamp over the bench from the left, its pool fading into the dark workshop,
       // a softbox behind whose reflection the varnish catches, and a dim cool fill.
-      world.scene.add(light.spot({ color: '#ffdcb0', intensity: 9, distance: 6, angle: 0.62, penumbra: 0.7, position: [-0.9, 1.7, 0.9], target: [0, 0, 0], castShadow: true }));
-      const softbox = light.rectArea({ color: '#fff3e2', intensity: 4, width: 1.4, height: 0.5, position: [0.6, 0.9, -1.3] });
+      world.scene.add(light.spot({ color: '#ffdcb0', intensity: 9, intensityUnits: 'candelas', distance: 6, outerConeAngle: 0.62, innerConeAngle: 0.186, position: [-0.9, 1.7, 0.9], target: [0, 0, 0], castShadow: true }));
+      const softbox = light.rectArea({ color: '#fff3e2', intensity: 4, intensityUnits: 'candelas', width: 1.4, height: 0.5, position: [0.6, 0.9, -1.3] });
       softbox.lookAt(0, 0.1, 0);
       world.scene.add(softbox, light.hemisphere({ color: '#9fb4e6', groundColor: '#3a2214', intensity: 0.25 }));
       world.effects.add(effect.bloom({ intensity: 0.04 }));

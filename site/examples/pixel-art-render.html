@@ -131,7 +131,7 @@
       add(geometry.box(0.5, 0.45, 0.08), lit, -0.6, 1, 1.02, cottage);
       add(geometry.box(0.08, 0.45, 0.5), lit, 1.32, 1, 0.2, cottage);
       add(geometry.box(0.08, 0.45, 0.5), lit, -1.32, 1, -0.3, cottage);
-      const hearth = light.point({ color: '#ffb347', intensity: 6, distance: 5, position: [0, 1, 1.6] });
+      const hearth = light.point({ color: '#ffb347', intensity: 6, intensityUnits: 'candelas', distance: 5, position: [0, 1, 1.6] });
       cottage.add(hearth);
 
       // Pines in stacked cones, a trunk each, two greens.
@@ -155,7 +155,7 @@
       // A lantern on a post, the path's last light: a warm bulb and a point light that flickers.
       add(geometry.box(0.14, 1.6, 0.14), flat('#45283c'), 0.6, 0.8, 0.6);
       add(geometry.box(0.32, 0.32, 0.32), glow('#ffd27a', 6), 0.6, 1.75, 0.6);
-      const lantern = light.point({ color: '#ffc066', intensity: 6, distance: 5, position: [0.6, 1.75, 0.6] });
+      const lantern = light.point({ color: '#ffc066', intensity: 6, intensityUnits: 'candelas', distance: 5, position: [0.6, 1.75, 0.6] });
       island.add(lantern);
       const path = flat('#d9a066');
       for (let k = 0; k < 5; k++) add(geometry.box(0.5, 0.06, 0.5), path, -0.6 + k * 0.6, 0.03, 0.9 + k * 0.25).rotation.set(0, k * 0.4, 0);

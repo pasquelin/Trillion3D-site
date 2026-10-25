@@ -64,7 +64,7 @@
       galaxy.add(object.points(haze, material.points({ color: '#7d86b8', size: 0.025 })));
       // The core: a glowing ball and the lamp inside it.
       const core = object.mesh(geometry.sphere(0.45, 48, 24), material.meshStandard({ color: '#000000', emissive: '#ffd27a', emissiveIntensity: 6 }));
-      world.scene.add(core, light.point({ intensity: 60, color: '#ffd9a0', distance: 14 }));
+      world.scene.add(core, light.point({ intensity: 60, intensityUnits: 'candelas', color: '#ffd9a0', distance: 14 }));
       world.scene.add(light.ambient({ intensity: 0.3, color: '#8090ff' }));
       world.camera.position.set(0, 5.5, 8.5);
       world.camera.lookAt(0, 0, 0);

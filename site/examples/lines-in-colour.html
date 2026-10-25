@@ -85,7 +85,7 @@
       const floor = object.mesh(geometry.cylinder(9, 9, 0.2, 96), material.meshStandard({ color: '#14151d', roughness: 0.28, metalness: 0.3 }));
       floor.position.y = -3.4;
       const pen = object.mesh(geometry.sphere(0.07, 24, 12), material.meshStandard({ color: '#000000', emissive: '#ffffff', emissiveIntensity: 5 }));
-      const glow = light.point({ color: '#fff4e0', intensity: 14, distance: 9 });
+      const glow = light.point({ color: '#fff4e0', intensity: 14, intensityUnits: 'candelas', distance: 9 });
       figure.add(pen, glow);
       world.scene.add(floor, light.hemisphere({ color: '#4a5a8a', groundColor: '#140f18', intensity: 0.35 }));
 

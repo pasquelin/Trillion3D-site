@@ -292,9 +292,9 @@
       for (let x = -20; x <= -8; x += 3) block(stone, [x, 2, -17.9], [0.45, 4, 0.45]);
       const bulb = glowing('#ffd59a', 8), bulbShape = geometry.sphere(0.12, 16, 12);
       const lamps = [
-        light.point({ position: [-14, 3.6, -20], color: '#ffd59a', intensity: 40, distance: 14, radius: 0.25, castShadow: true }),
-        light.spot({ position: [-18.5, 3.8, -19.6], target: [-18.5, 0, -18], color: '#ffe6c4', intensity: 120, distance: 12, angle: 0.5, penumbra: 0.35, castShadow: true }),
-        light.spot({ position: [-14, 3.8, -22.9], target: [-14, 0, -27], color: '#ffe6c4', intensity: 120, distance: 12, angle: 0.6, penumbra: 0.35, castShadow: true }),
+        light.point({ position: [-14, 3.6, -20], color: '#ffd59a', intensity: 40, intensityUnits: 'candelas', distance: 14, radius: 0.25, castShadow: true }),
+        light.spot({ position: [-18.5, 3.8, -19.6], target: [-18.5, 0, -18], color: '#ffe6c4', intensity: 120, intensityUnits: 'candelas', distance: 12, outerConeAngle: 0.5, innerConeAngle: 0.325, castShadow: true }),
+        light.spot({ position: [-14, 3.8, -22.9], target: [-14, 0, -27], color: '#ffe6c4', intensity: 120, intensityUnits: 'candelas', distance: 12, outerConeAngle: 0.6, innerConeAngle: 0.39, castShadow: true }),
       ];
       for (const lamp of lamps) {
         world.scene.add(lamp);

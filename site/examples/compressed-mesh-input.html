@@ -93,9 +93,10 @@
           const spot = light.spot({
             color: '#ffe7c7',
             intensity: 26,
+            intensityUnits: 'candelas',
             distance: 7,
-            angle: 0.32,
-            penumbra: 0.65,
+            outerConeAngle: 0.32,
+            innerConeAngle: 0.112,
             position: [x + 0.5, 3.4, 1.4],
             target: [x, HEIGHT + 0.2, 0],
             castShadow: true,
@@ -106,7 +107,7 @@
       );
       world.scene.add(
         light.hemisphere({ intensity: 0.8, color: '#ffe9d0', groundColor: '#2a2018' }),
-        light.point({ color: '#ffb36b', intensity: 4, distance: 6, position: [-2.6, 1.8, 1.6] }),
+        light.point({ color: '#ffb36b', intensity: 4, intensityUnits: 'candelas', distance: 6, position: [-2.6, 1.8, 1.6] }),
       );
       world.effects.add(effect.bloom({ intensity: 0.05 }));
 

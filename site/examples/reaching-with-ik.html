@@ -64,7 +64,7 @@
         geometry.torus(0.46, 0.01, 8, 96),
         material.meshStandard({ color: '#000000', emissive: '#ffd59a', emissiveIntensity: 5 }),
       );
-      const glow = light.point({ color: '#ffb45e', intensity: 26, distance: 12, castShadow: true });
+      const glow = light.point({ color: '#ffb45e', intensity: 26, intensityUnits: 'candelas', distance: 12, castShadow: true });
       world.scene.add(orb, halo, glow);
 
       // Shared shapes and paints: every arm draws with the same few, whatever their number.

@@ -99,7 +99,7 @@
       });
       const comet = object.mesh(geometry.sphere(0.08, 16, 8), material.meshBasic({ color: '#e8ffff' }));
       const sun = object.mesh(geometry.sphere(0.9, 64, 32), material.meshStandard({ color: '#000000', emissive: '#ffb347', emissiveIntensity: 4 }));
-      world.scene.add(comet, sun, light.point({ color: '#fff0d8', intensity: 90, distance: 40 }), light.ambient({ color: '#3a4460', intensity: 0.25 }));
+      world.scene.add(comet, sun, light.point({ color: '#fff0d8', intensity: 90, intensityUnits: 'candelas', distance: 40 }), light.ambient({ color: '#3a4460', intensity: 0.25 }));
       // Far stars round the chart, a shell of points in one object, and a soft glow round the sun.
       const sky = [], next = seeded(3);
       for (let k = 0; k < 1200; k++) {

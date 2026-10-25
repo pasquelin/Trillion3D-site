@@ -77,7 +77,7 @@
         light.directional({ color: '#ffb36b', intensity: 5, position: [-6, 3.2, -14], target: [0.5, 0, 0], castShadow: true }),
         light.hemisphere({ color: '#8a7aa8', groundColor: '#3a2a24', intensity: 0.4 }),
       );
-      const skyPanel = light.rectArea({ color: '#ff9a72', intensity: 5, width: 3, height: 2, position: [-0.3, 1.6, -3.95] });
+      const skyPanel = light.rectArea({ color: '#ff9a72', intensity: 5, intensityUnits: 'candelas', width: 3, height: 2, position: [-0.3, 1.6, -3.95] });
       skyPanel.rotation.set(0, Math.PI, 0);
       world.scene.add(skyPanel);
 
@@ -108,7 +108,7 @@
         const globe = object.mesh(globeShape, bulb);
         globe.position.set(x, y, z);
         globe.castShadow = false;
-        const lamp = light.point({ position: [x, y, z], color: '#ffc27a', intensity: LAMP, distance: 7 });
+        const lamp = light.point({ position: [x, y, z], color: '#ffc27a', intensity: LAMP, intensityUnits: 'candelas', distance: 7 });
         world.scene.add(globe, lamp);
         return lamp;
       });

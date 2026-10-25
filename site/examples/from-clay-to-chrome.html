@@ -49,7 +49,7 @@
       world.scene.add(light.directional({ intensity: 3, color: '#fff1dd', position: [9, 5, 3], castShadow: true }));
       const lamps = ['#ffb070', '#70b8ff'].map((colour) => {
         // They cast no shadow: a moving shadow caster redraws its whole shadow map every frame.
-        const lamp = light.point({ color: colour, intensity: 40, distance: 16, radius: 0.1 });
+        const lamp = light.point({ color: colour, intensity: 40, intensityUnits: 'candelas', distance: 16, radius: 0.1 });
         world.scene.add(lamp);
         return lamp;
       });
@@ -61,7 +61,7 @@
       // streaks; the clay only takes their light.
       const glow = material.meshBasic({ color: '#fff6ea' }), pane = geometry.plane(1, 1);
       for (const [width, height, at] of [[6, 1.4, [0, 5.2, 2.2]], [1, 4, [-6, 2.4, 0.6]], [1, 4, [6, 2.4, 0.6]]]) {
-        const softbox = light.rectArea({ color: '#fff6ea', intensity: 5, width, height, position: at });
+        const softbox = light.rectArea({ color: '#fff6ea', intensity: 5, intensityUnits: 'candelas', width, height, position: at });
         softbox.lookAt(0, 0.5, 0);
         // A mesh turns its +z to what it looks at, a light its −z: both face the spheres.
         const face = object.mesh(pane, glow);

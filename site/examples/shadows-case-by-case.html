@@ -63,7 +63,7 @@
       world.scene.add(pebble, ball);
       // (f) A pergola above the far end, lit by a spot above it, both out of frame.
       for (const z of [-57, -58, -59]) box([4, 0.2, 0.3], [0, 4.5, z], chalk);
-      const spot = light.spot({ position: [0, 6.5, -58], intensity: 300, distance: 14, angle: 0.6, penumbra: 0.3, castShadow: true, color: '#ffd9a0' });
+      const spot = light.spot({ position: [0, 6.5, -58], intensity: 300, intensityUnits: 'candelas', distance: 14, outerConeAngle: 0.6, innerConeAngle: 0.42, castShadow: true, color: '#ffd9a0' });
       spot.target.position.set(0, 0, -58);
       const sun = light.directional({ intensity: 3.2, color: '#ffe2c0', castShadow: true });
       const sky = light.hemisphere({ intensity: 0.45, color: '#9fc0ff', groundColor: '#6b5a48' });

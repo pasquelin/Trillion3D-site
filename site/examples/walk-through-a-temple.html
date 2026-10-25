@@ -240,7 +240,7 @@
         part(seam, crack, [u * 25 - 12.5, PIT + 0.01, v * 57 - 43.5], world.scene, [0.6 + w * 0.6, 0.8 + w * 1.6, 1.4]).rotation.set(0, w * 6, Math.PI / 2);
       }
       for (const [x, z] of [[-3, 6], [3, -6], [-3, -18], [3, -30], [-3, -40]])
-        world.scene.add(light.point({ position: [x, PIT + 1.8, z], color: '#ff6a2a', intensity: 45, distance: 27 }));
+        world.scene.add(light.point({ position: [x, PIT + 1.8, z], color: '#ff6a2a', intensity: 45, intensityUnits: 'candelas', distance: 27 }));
       // Embers climbing out of the lava: small glowing beads, moved every frame.
       const ember = glowing('#ff8a2a', 5), bead = geometry.sphere(0.05, 8, 6);
       const embers = Array.from({ length: 40 }, (_, index) => ({
@@ -291,7 +291,7 @@
       const checkpoints = [0, 4, 8, 12].map((index) => {
         const p = COURSE[index], [x, z] = [p.x1 - 0.3, p.z1 - 0.3];
         put(geometry.cylinder(0.05, 0.07, 1.6, 12), bronze, [x, p.top + 0.8, z]);
-        const lamp = light.point({ position: [x, p.top + 2, z], color: '#7cf0ff', intensity: 0, distance: 8 });
+        const lamp = light.point({ position: [x, p.top + 2, z], color: '#7cf0ff', intensity: 0, intensityUnits: 'candelas', distance: 8 });
         world.scene.add(lamp);
         return { platform: p, off: put(gem, gemOff, [x, p.top + 1.75, z]), on: put(gem, gemOn, [x, p.top + 1.75, z]), lamp };
       });
@@ -309,7 +309,7 @@
       const IDOL = math.vector3(0, FINISH.top + 2.05, -41.4);
       const gold = material.meshStandard({ color: '#d4a24c', metalness: 0.9, roughness: 0.25, emissive: '#ff9d2a', emissiveIntensity: 0.6 });
       const idol = put(geometry.torusKnot(0.5, 0.15, 220, 28), gold, [IDOL.x, IDOL.y, IDOL.z]);
-      world.scene.add(light.point({ position: [0, IDOL.y, -40.2], color: '#ffc45a', intensity: 30, distance: 14 }));
+      world.scene.add(light.point({ position: [0, IDOL.y, -40.2], color: '#ffc45a', intensity: 30, intensityUnits: 'candelas', distance: 14 }));
       // Everything solid now stands, and never moves: static bodies of the physics.
       for (const mesh of solid.children) mesh.physics = 'static';
       // Braziers at the start and the finish: a bowl of coals on a stand, a flame over it, a lamp
@@ -319,7 +319,7 @@
         put(geometry.cylinder(0.09, 0.18, 0.78, 12), bronze, [x, y + 0.39, z]);
         put(geometry.cylinder(0.39, 0.21, 0.24, 24), bronze, [x, y + 0.9, z]);
         put(geometry.cylinder(0.33, 0.33, 0.06, 24), coals, [x, y + 1.02, z]);
-        const lamp = light.point({ position: [x, y + 1.5, z], color: '#ff9a3c', intensity: 27, distance: 12, radius: 0.24 });
+        const lamp = light.point({ position: [x, y + 1.5, z], color: '#ff9a3c', intensity: 27, intensityUnits: 'candelas', distance: 12, radius: 0.24 });
         world.scene.add(lamp);
         return { fire: put(geometry.sphere(0.21, 16, 12), flame, [x, y + 1.26, z]), lamp };
       });

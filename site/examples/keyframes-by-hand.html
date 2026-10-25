@@ -124,7 +124,7 @@
       // The bulb lights the desk: a spot in the head, aimed out of the shade's mouth. Both ride
       // on the head, so the pool of light follows every look and every hop. It casts no shadow:
       // it sits inside the bulb.
-      const beam = light.spot({ color: '#fff1c8', intensity: 40, distance: 8, angle: 0.7, penumbra: 0.6, position: [0.38, 0, 0], target: [2, 0, 0] });
+      const beam = light.spot({ color: '#fff1c8', intensity: 40, intensityUnits: 'candelas', distance: 8, outerConeAngle: 0.7, innerConeAngle: 0.28, position: [0.38, 0, 0], target: [2, 0, 0] });
       hero.getObjectByName('head').add(beam, beam.target);
       const mixer = animation.createMixer(hero);
       const waking = mixer.clipAction(wake), plain = mixer.clipAction(linear), soft = mixer.clipAction(smooth);
@@ -165,7 +165,7 @@
       // A warm spot from high on the left throws the lamp's shadow across the desk and wall; a
       // cool hemisphere keeps the far sides from going black.
       world.scene.add(
-        light.spot({ color: '#ffd4a3', intensity: 650, distance: 30, angle: 0.62, penumbra: 0.55, position: [-7, 10, 8], castShadow: true }),
+        light.spot({ color: '#ffd4a3', intensity: 650, intensityUnits: 'candelas', distance: 30, outerConeAngle: 0.62, innerConeAngle: 0.279, position: [-7, 10, 8], castShadow: true }),
         light.hemisphere({ color: '#8aa4ff', groundColor: '#3b2c22', intensity: 0.7 }),
       );
       world.camera.position.set(1.2, 3.3, 8.6);

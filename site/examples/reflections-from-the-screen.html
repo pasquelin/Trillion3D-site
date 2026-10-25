@@ -63,7 +63,7 @@
       const globe = geometry.sphere(0.28, 24, 12), sodium = material.meshStandard({ color: '#000000', emissive: '#ffb04a', emissiveIntensity: 12 });
       for (let x = -30; x <= 30; x += 12) {
         put(object.mesh(post, iron), x, 2.5, -5.6);
-        put(object.mesh(globe, sodium), x, 4.9, -5.6).add(light.point({ color: '#ffb04a', intensity: 16, distance: 13 }));
+        put(object.mesh(globe, sodium), x, 4.9, -5.6).add(light.point({ color: '#ffb04a', intensity: 16, intensityUnits: 'candelas', distance: 13 }));
       }
 
       // Cars, two lanes each way, with headlights that pool on the road ahead of them and red
@@ -76,7 +76,7 @@
         const car = object.group();
         put(object.mesh(body, paint), 0, 0.5, 0, car);
         put(object.mesh(cabin, paint), -0.3, 1.2, 0, car);
-        car.add(light.point({ position: [3.4, 0.6, 0], color: '#fff3e0', intensity: 6, distance: 9 }));
+        car.add(light.point({ position: [3.4, 0.6, 0], color: '#fff3e0', intensity: 6, intensityUnits: 'candelas', distance: 9 }));
         for (const side of [-0.6, 0.6]) {
           put(object.mesh(lamp, head), 2.11, 0.6, side, car);
           put(object.mesh(lamp, tail), -2.11, 0.65, side, car);

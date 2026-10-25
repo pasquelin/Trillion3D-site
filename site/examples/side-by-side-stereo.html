@@ -97,7 +97,7 @@
         add(geometry.sphere(1, 48, 32), material.meshStandard({ color: '#000000', emissive: '#ffb347', emissiveIntensity: 5 }), [0, 3.9, 0]);
         // The sun's own light, and no shadow from it; a still warm key casts the shadows.
         world.scene.add(
-          light.point({ color: '#ffc27a', intensity: 90, distance: 24, position: [0, 3.9, 0] }),
+          light.point({ color: '#ffc27a', intensity: 90, intensityUnits: 'candelas', distance: 24, position: [0, 3.9, 0] }),
           light.directional({ color: '#ffd6a8', intensity: 1.6, position: [-9, 14, 7], castShadow: true }),
           light.hemisphere({ color: '#7f9cff', groundColor: '#3a2a20', intensity: 0.6 }),
         );

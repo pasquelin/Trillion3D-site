@@ -59,7 +59,7 @@
       // frame —; the still sun draws the balusters' shadows on the column and the floor, and the
       // sky lights the sides it misses.
       const bulb = object.mesh(geometry.sphere(0.07, 16, 12), material.meshStandard({ color: '#000000', emissive: '#ffb45e', emissiveIntensity: 8 }));
-      const lantern = light.point({ color: '#ffb45e', intensity: 10, distance: 8, radius: 0.07 });
+      const lantern = light.point({ color: '#ffb45e', intensity: 10, intensityUnits: 'candelas', distance: 8, radius: 0.07 });
       world.scene.add(bulb, lantern);
       world.scene.add(light.directional({ intensity: 2.6, color: '#fff0dc', position: [6, 12, 5], castShadow: true }));
       world.scene.add(light.hemisphere({ intensity: 1.2, color: '#bcd4ff', groundColor: '#6b5a48' }));

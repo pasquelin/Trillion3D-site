@@ -38,7 +38,7 @@
       const bust = await world.scene.load('../assets/examples/bust/cache/native/full/manifest.json');
 
       // A warm lamp that walks around the head, and a cool fill from the far side.
-      const lamp = light.point({ intensity: 3, distance: 6, radius: 0.05, castShadow: true });
+      const lamp = light.point({ intensity: 3, intensityUnits: 'candelas', distance: 6, radius: 0.05, castShadow: true });
       world.scene.add(lamp, light.directional({ intensity: 0.5, color: '#8ca6e6', position: [-14, 4, 10] }));
       world.camera.position.set(0.45, 0.4, 0.66);
       world.camera.lookAt(0, 0.22, 0);

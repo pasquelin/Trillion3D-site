@@ -156,10 +156,10 @@
       // A warm key from above right throws the wheels' shadows on the board; a cool rim from
       // behind outlines their edges. The softbox, a glowing rectangle off to the left, is what the
       // flat brass faces mirror: turning round the clock slides its highlight across them.
-      world.scene.add(light.spot({ position: [3, 6, 5], intensity: 300, distance: 18, angle: 0.55, penumbra: 0.4, castShadow: true, color: '#ffe2b8' }));
-      world.scene.add(light.point({ position: [-3.2, 5, -1.6], intensity: 45, distance: 14, color: '#7fa8ff' }));
+      world.scene.add(light.spot({ position: [3, 6, 5], intensity: 300, intensityUnits: 'candelas', distance: 18, outerConeAngle: 0.55, innerConeAngle: 0.33, castShadow: true, color: '#ffe2b8' }));
+      world.scene.add(light.point({ position: [-3.2, 5, -1.6], intensity: 45, intensityUnits: 'candelas', distance: 14, color: '#7fa8ff' }));
       world.scene.add(light.hemisphere({ color: '#ffe9d0', groundColor: '#2a1c14', intensity: 0.3 }));
-      const softbox = light.rectArea({ position: [-2.4, 2.4, 5.8], width: 2.4, height: 1.4, intensity: 6, color: '#fff3e2' });
+      const softbox = light.rectArea({ position: [-2.4, 2.4, 5.8], width: 2.4, height: 1.4, intensity: 6, intensityUnits: 'candelas', color: '#fff3e2' });
       world.scene.add(softbox);
       softbox.lookAt(0.2, 2.2, 0);
       // A showroom plinth under the piece.

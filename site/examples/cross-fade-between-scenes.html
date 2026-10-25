@@ -115,7 +115,7 @@
         }
         scene.add(object.points(geometry.createBuffer({ position: buffer.float32(stars, 3) }), material.meshStandard({ color: '#000000', emissive: '#ffffff', emissiveIntensity: 3, size: 0.35 })));
         const [, glow] = gate(scene, material.meshStandard({ color: '#8d99ad', roughness: 0.6 }), material.meshStandard({ color: '#000000', emissive: '#58e0ff', emissiveIntensity: 5 }));
-        const portal = light.point({ color: '#58e0ff', intensity: 40, distance: 14, position: [0, 3.7, 1] });
+        const portal = light.point({ color: '#58e0ff', intensity: 40, intensityUnits: 'candelas', distance: 14, position: [0, 3.7, 1] });
         scene.add(
           portal,
           light.directional({ color: '#9fb8ff', intensity: 1.2, position: [30, 26, -40], castShadow: true }),
