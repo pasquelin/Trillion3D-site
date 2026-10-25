@@ -127,7 +127,7 @@
       const domes = Object.fromEntries(Object.entries(SKIES).map(([name, sky]) => {
         const dome = object.mesh(geometry.sphere(300, 96, 48), material.meshBasic({ map: texture.canvas(paint(sky)), side: side.double }));
         dome.visible = name === 'dawn';
-        dome.castShadow = dome.receiveShadow = false;
+        dome.castShadow = false;
         world.scene.add(dome);
         return [name, dome];
       }));
@@ -150,12 +150,12 @@
         const piece = object.mesh(shape, matter);
         piece.position.set(x, y, z);
         piece.rotation.x = tilt;
-        piece.castShadow = piece.receiveShadow = true;
+        piece.castShadow = true;
         world.scene.add(piece);
       }
       const knot = object.mesh(geometry.torusKnot(1, 0.32, 220, 28), material.meshStandard({ color: '#b87333', metalness: 1, roughness: 0.3 }));
       knot.position.y = 3;
-      knot.castShadow = knot.receiveShadow = true;
+      knot.castShadow = true;
       world.scene.add(knot);
 
       // The sun where the picture has it, the fill in the sky's and the ground's colours.

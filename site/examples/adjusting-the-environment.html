@@ -144,7 +144,7 @@
       world.scene.background = math.color('#000000');
       world.camera.far = 200;
       const backdrop = object.mesh(geometry.sphere(80, 128, 64), material.meshLambert({ color: '#000000', emissive: '#ffffff', emissiveMap: backgroundMap, side: side.back }));
-      backdrop.castShadow = backdrop.receiveShadow = false;
+      backdrop.castShadow = false;
       world.scene.add(backdrop);
 
       // THE SET: a round dark platform; the look-development pair, a matte grey ball and a chrome
@@ -152,11 +152,9 @@
       // and a colour chart of 24 patches, whose whites and skins show the white balance at a glance.
       const floor = object.mesh(geometry.cylinder(2.7, 2.74, 0.12, 160), material.meshLambert({ color: '#3a3b3f' }));
       floor.position.y = -0.06;
-      floor.receiveShadow = true;
       world.scene.add(floor);
       const put = (mesh, x, y, z) => {
         mesh.position.set(x, y, z);
-        mesh.receiveShadow = true;
         world.scene.add(mesh);
         return mesh;
       };
@@ -171,13 +169,11 @@
       const CHART = ['#735244', '#c29682', '#627a9d', '#576c43', '#8580b1', '#67bdaa', '#d67e2c', '#505ba6', '#c15a63', '#5e3c6c', '#9dbc40', '#e0a32e', '#383d96', '#469449', '#af363c', '#e7c71f', '#bb5695', '#0885a1', '#f3f3f2', '#c8c8c8', '#a0a0a0', '#7a7a79', '#555555', '#343434'];
       const chart = object.group();
       const board = object.mesh(geometry.box(1.04, 0.72, 0.03), material.meshLambert({ color: '#141414' }));
-      board.receiveShadow = true;
       chart.add(board);
       const patch = geometry.box(0.15, 0.15, 0.01);
       CHART.forEach((colour, k) => {
         const tile = object.mesh(patch, material.meshLambert({ color: colour }));
         tile.position.set(-0.4 + (k % 6) * 0.16, 0.24 - Math.floor(k / 6) * 0.16, 0.02);
-        tile.receiveShadow = true;
         chart.add(tile);
       });
       chart.position.set(1.75, 0.5, 0.35);

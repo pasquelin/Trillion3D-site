@@ -35,7 +35,7 @@
       const part = (parent, shape, paint, at) => {
         const mesh = object.mesh(shape, paint);
         mesh.position.set(...at);
-        mesh.castShadow = mesh.receiveShadow = true;
+        mesh.castShadow = true;
         parent.add(mesh);
         return mesh;
       };
@@ -71,7 +71,6 @@
         material.meshStandard({ color: '#2b3440', roughness: 0.95 }),
       );
       ground.position.y = -0.1;
-      ground.receiveShadow = true;
       ground.castShadow = false;
       world.scene.add(
         ground,

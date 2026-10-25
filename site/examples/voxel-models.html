@@ -174,7 +174,6 @@
       // A round plinth of pale stone under the model.
       const plinth = object.mesh(geometry.cylinder(4.4, 4.6, 0.4, 96), material.meshStandard({ color: '#f1ece2', roughness: 0.7 }));
       plinth.position.y = -0.2;
-      plinth.receiveShadow = true;
       world.scene.add(plinth);
 
       const sun = light.directional({ color: '#fff1da', intensity: 3, position: [6, 10, 5], castShadow: true, angularRadius: 0.03 });
@@ -182,7 +181,6 @@
 
       const placed = (piece) => {
         piece.mesh = object.mesh(piece.shape, paint);
-        piece.mesh.receiveShadow = true;
         return piece.mesh;
       };
       // Each file is fetched, read and meshed once, the first time it is picked.

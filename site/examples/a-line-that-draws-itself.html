@@ -67,7 +67,6 @@
       const plastic = (colour) => material.meshPhysical({ color: colour, roughness: 0.15, clearcoat: 1, transparent: true, opacity: 0.72 });
       const ring = object.mesh(plate(ringShape), plastic('#8fd0ff'));
       ring.position.y = 0.006;
-      ring.receiveShadow = true;
       world.scene.add(ring);
 
       // The wheel: toothed outside, with a spiral of pen holes from near its middle to near its
@@ -97,7 +96,6 @@
       const paper = object.mesh(geometry.box(4.6, 0.004, 4.6), material.meshStandard({ color: '#f4efe4', roughness: 0.92 }));
       paper.position.y = -0.002;
       paper.rotation.y = 0.06;
-      paper.receiveShadow = desk.receiveShadow = true;
       world.scene.add(desk, paper);
 
       // The pen: a slim body and a cone tip, standing in the hole; its cap takes the ink's colour.

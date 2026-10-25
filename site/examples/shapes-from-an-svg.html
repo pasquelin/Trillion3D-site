@@ -311,7 +311,6 @@
             });
             triangles += (solid.index ? solid.index.count : solid.attributes.position.count) / 3;
             const mesh = object.mesh(solid, card);
-            mesh.receiveShadow = true;
             group.add(mesh);
           }
           diorama.add(group);
@@ -335,10 +334,8 @@
       // throws its shadow on the one behind, and a cool fill.
       const table = object.mesh(geometry.box(30, 0.4, 14), material.meshStandard({ color: '#3b2a20', roughness: 0.6 }));
       table.position.y = -3.2;
-      table.receiveShadow = true;
       const wall = object.mesh(geometry.box(30, 16, 0.4), material.meshStandard({ color: '#262a36', roughness: 0.95 }));
       wall.position.set(0, 4, -4);
-      wall.receiveShadow = true;
       world.scene.add(table, wall);
       world.scene.add(
         light.directional({ color: '#ffe2bf', intensity: 3.6, position: [-7, 6, 8], castShadow: true }),

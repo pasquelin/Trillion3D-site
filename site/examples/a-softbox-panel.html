@@ -63,7 +63,7 @@
       const ring = put(object.mesh(geometry.torus(0.36, 0.09, 32, 96), material.meshStandard({ color: '#e0b04a', roughness: 0.22, metalness: 1 })), 0.35, 0.69, 0.95);
       ring.rotation.set(0, 0.6, 0);
       put(object.mesh(geometry.torusKnot(0.3, 0.1, 160, 24), material.meshStandard({ color: '#e9eef2', roughness: 0.45 })), -0.55, 0.78, 0.85);
-      for (const mesh of table.children) mesh.castShadow = mesh.receiveShadow = true;
+      for (const mesh of table.children) mesh.castShadow = true;
 
       // THE SOFTBOX: a rectangle light (`rectArea`), in a frame on an arm that swings round the
       // table. The light looks down its own −z, so it is turned to face the subject; the glowing

@@ -177,7 +177,7 @@
       const EYE = 1.7, RADIUS = 80;
       const dome = object.mesh(geometry.sphere(RADIUS, 160, 80), material.meshLambert({ color: '#000000', emissive: '#ffffff', side: side.back }));
       dome.position.y = EYE;
-      dome.castShadow = dome.receiveShadow = false;
+      dome.castShadow = false;
 
       // THE GROUND: the picture's lower half pressed flat. Each direction under the horizon is
       // followed from the eye down to the plane y = 0 (out to the sphere, near the horizon), so the
@@ -202,7 +202,6 @@
         geometry.createBuffer({ position: buffer.float32(at, 3), uv: buffer.float32(uv, 2), normal: buffer.float32(up, 3), index: buffer.uint32(index, 1) }),
         material.meshLambert({ color: '#ffffff' }),
       );
-      ground.receiveShadow = true;
       ground.castShadow = false;
       // The ground turns with the sky: both hang from one pivot at the foot of the eye.
       const pivot = object.group();
@@ -214,7 +213,6 @@
       // sky and the ground around them.
       const put = (mesh, x, y, z) => {
         mesh.position.set(x, y, z);
-        mesh.receiveShadow = true;
         world.scene.add(mesh);
         return mesh;
       };

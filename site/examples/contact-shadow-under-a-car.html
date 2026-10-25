@@ -55,7 +55,6 @@
         }),
         material.meshStandard({ color: '#e4e0da', roughness: 0.75 }),
       );
-      studio.receiveShadow = true;
       studio.castShadow = false;
       world.scene.add(studio);
 
@@ -174,9 +173,6 @@
           car.add(wheel);
           wheels.push({ spin, side });
         }
-      car.traverse((part) => {
-        if (part.isMesh) part.receiveShadow = true;
-      });
       world.scene.add(car);
 
       // THE LIGHT: one wide lamp straight over the car, a glowing sphere (`radius`) whose shadow

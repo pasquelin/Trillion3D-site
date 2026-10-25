@@ -34,7 +34,6 @@
         material.meshStandard({ color: '#d9d1c3', roughness: 0.9 }),
       );
       floor.position.y = -0.15;
-      floor.receiveShadow = true;
       world.scene.add(floor);
 
       const clay = material.meshStandard({ color: '#bd664f', roughness: 0.62 });
@@ -48,7 +47,7 @@
       const ball = object.mesh(geometry.sphere(0.52, 48, 24), clay);
       ball.position.set(0, 1.48, 0);
       for (const mesh of [pedestal, arch, ball]) {
-        mesh.castShadow = mesh.receiveShadow = true;
+        mesh.castShadow = true;
         subject.add(mesh);
       }
       world.scene.add(subject);

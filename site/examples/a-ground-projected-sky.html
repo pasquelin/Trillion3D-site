@@ -270,7 +270,7 @@
       // The sky keeps the picture as it is: unlit.
       const skyMaterial = material.meshBasic({ map: paint('plaza'), side: side.double });
       const skyMesh = object.mesh(geometry.box(1, 1, 1), skyMaterial);
-      skyMesh.castShadow = skyMesh.receiveShadow = false;
+      skyMesh.castShadow = false;
       // THE FLOOR IS LIT. The picture's floor already holds the light that fell on it: its
       // sunlit pixels are the stone's colour times the sun and the sky together. Worn by a matte
       // surface lit by the same sun and the same probe, divided back by that sum (`color`), a
@@ -279,7 +279,6 @@
       const floorMaterial = material.meshLambert({ map: skyMaterial.map });
       const floorMesh = object.mesh(geometry.box(1, 1, 1), floorMaterial);
       floorMesh.castShadow = false;
-      floorMesh.receiveShadow = true;
       world.scene.add(skyMesh, floorMesh);
 
       // ─── What stands on it ─────────────────────────────────────────────────────────────────
@@ -290,7 +289,6 @@
       const verdigris = material.meshStandard({ color: '#5f9a88', metalness: 0.6, roughness: 0.45 });
       const place = (mesh, x, y, z) => {
         mesh.position.set(x, y, z);
-        mesh.receiveShadow = true;
         world.scene.add(mesh);
         return mesh;
       };
@@ -302,7 +300,6 @@
       world.scene.add(armillary);
       const ring = (radius, tube, matter) => {
         const piece = object.mesh(geometry.torus(radius, tube, 16, 160), matter);
-        piece.receiveShadow = true;
         return piece;
       };
       // The outer meridian holds the tilted axis; the equator and the ecliptic turn within it.

@@ -83,7 +83,6 @@
       for (const [shape, colour, at] of still) {
         const thing = object.mesh(shape, material.meshStandard({ color: colour, roughness: 0.35 }));
         thing.position.set(...at);
-        thing.receiveShadow = true;
         world.scene.add(thing);
       }
 

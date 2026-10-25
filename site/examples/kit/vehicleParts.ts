@@ -46,7 +46,7 @@ export function vehicleParts({
   const halves = (size: Vec3) => size.map((side) => side / 2) as Vec3
   const chassis = (size: Vec3, color: string): Hulled => {
     const body = object.mesh(geometry.box(...size), paint(color))
-    body.castShadow = body.receiveShadow = true
+    body.castShadow = true
     return { body, hull: [{ type: 'box', halfExtents: halves(size) }] }
   }
   const drawn = (shape: Solid) => {

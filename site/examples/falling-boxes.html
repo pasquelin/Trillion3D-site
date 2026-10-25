@@ -71,7 +71,7 @@
           const box = object.mesh(sizes[kind], matters[matter][kind]);
           box.position.set((next() - 0.5) * 6, 6 + boxes.length * 0.35, (next() - 0.5) * 6);
           box.rotation.set(next() * 3, next() * 3, next() * 3);
-          box.castShadow = box.receiveShadow = true;
+          box.castShadow = true;
           // A dynamic body: the shape is read from the geometry (a box), the mass from the matter.
           box.physics = 'dynamic';
           world.scene.add(box);

@@ -237,7 +237,6 @@
           metalness: 0.05,
         });
         const mesh = object.mesh(shape, surface);
-        mesh.receiveShadow = true;
         return { mesh, surface, triangles: corners.length / 9 };
       }
 
@@ -248,7 +247,6 @@
       frame.position.y = -0.2;
       const sheet = object.mesh(geometry.box(14, 0.06, 14), material.meshStandard({ color: '#8a6a34', roughness: 0.8, metalness: 0.35 }));
       sheet.position.y = -0.03;
-      for (const part of [frame, sheet]) part.receiveShadow = true;
       bed.add(frame, sheet);
 
       const FILES = {

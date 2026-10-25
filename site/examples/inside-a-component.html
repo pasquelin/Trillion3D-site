@@ -42,10 +42,8 @@
           const dark = material.meshStandard({ color: '#263746', roughness: 0.75 });
           const knot = object.mesh(geometry.torusKnot(1.7, 0.5, 160, 24), gold);
           knot.castShadow = true;
-          knot.receiveShadow = true;
           const floor = object.mesh(geometry.cylinder(4.5, 5, 0.35, 64), dark);
           floor.position.y = -2.25;
-          floor.receiveShadow = true;
           world.scene.add(
             knot,
             floor,

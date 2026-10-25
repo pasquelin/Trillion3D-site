@@ -39,7 +39,7 @@
         const paint = paints.get(key), piece = object.mesh(shape, paint.lit);
         piece.position.set(x, y, z);
         piece.rotation.set(...rotation);
-        piece.castShadow = piece.receiveShadow = true;
+        piece.castShadow = true;
         world.scene.add(piece);
         meshes.push({ piece, ...paint });
         return piece;

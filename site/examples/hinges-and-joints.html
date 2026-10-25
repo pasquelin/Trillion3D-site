@@ -45,7 +45,7 @@
       const block = (size, at, color, type, physics) => {
         const mesh = object.mesh(once(String(size), () => geometry.box(...size)), paint(color, physics));
         mesh.position.set(...at);
-        mesh.castShadow = mesh.receiveShadow = true;
+        mesh.castShadow = true;
         mesh.physics = type;
         world.scene.add(mesh);
         return mesh;

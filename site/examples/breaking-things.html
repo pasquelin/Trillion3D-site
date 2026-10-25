@@ -143,7 +143,6 @@
         const shape = geometry.createBuffer({ position: buffer.float32(positions, 3), normal: buffer.float32(normals, 3), color: buffer.float32(colours, 3) });
         const mesh = object.mesh(shape, glaze);
         mesh.position.set(...middle);
-        mesh.receiveShadow = true;
         return mesh;
       }
 
@@ -202,10 +201,8 @@
       const floor = object.mesh(geometry.box(60, 1, 60), material.meshStandard({ color: '#4a4048', roughness: 0.8, physics: 'stone' }));
       floor.position.y = -0.5;
       floor.physics = 'static';
-      floor.receiveShadow = true;
       const ring = object.mesh(geometry.cylinder(9, 9, 0.06, 96), material.meshStandard({ color: '#5d5058', roughness: 0.85 }));
       ring.position.y = 0.03;
-      ring.receiveShadow = true;
       world.scene.add(floor, ring);
       const sun = light.directional({ intensity: 3.6, color: '#ffc896', castShadow: true });
       sun.position.set(-9, 11, 8);

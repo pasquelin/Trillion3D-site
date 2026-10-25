@@ -195,11 +195,11 @@
       world.camera.far = 1200;
       const skyMap = texture.canvas(paper);
       const dome = object.mesh(geometry.sphere(500, 128, 64), material.meshStandard({ color: '#000000', roughness: 1, emissive: '#ffffff', emissiveMap: skyMap, side: side.back }));
-      dome.castShadow = dome.receiveShadow = false;
+      dome.castShadow = false;
       // The sun's disc, a little over half a degree wide, in the colour the air leaves it; the
       // bloom spreads some of it into a glare.
       const disc = object.mesh(geometry.sphere(5, 32, 16), material.meshStandard({ color: '#000000', roughness: 1, emissive: '#ffffff' }));
-      disc.castShadow = disc.receiveShadow = false;
+      disc.castShadow = false;
       world.scene.add(dome, disc);
       world.effects.add(effect.bloom({ intensity: 0.05, sizeScale: 4.8 }));
 
@@ -214,7 +214,7 @@
           at.set([ring * Math.cos(around) * 450, y * 450, ring * Math.sin(around) * 450], k * 3);
         }
         const stars = object.points(geometry.createBuffer({ position: buffer.float32(at, 3) }), material.points({ color: '#000000', size, sizeAttenuation: false, transparent: true, blending: 'additive', depthWrite: false }));
-        stars.castShadow = stars.receiveShadow = false;
+        stars.castShadow = false;
         stars.userData.glow = glow;
         spin.add(stars);
       }
@@ -242,11 +242,9 @@
       const stone = material.meshLambert({ color: '#b9ad98' });
       const plain = object.mesh(geometry.circle(480, 96), material.meshLambert({ color: '#95876b' }));
       plain.rotation.x = -Math.PI / 2;
-      plain.receiveShadow = true;
       world.scene.add(plain);
       const place = (mesh, x, y, z) => {
         mesh.position.set(x, y, z);
-        mesh.receiveShadow = true;
         world.scene.add(mesh);
         return mesh;
       };
@@ -284,7 +282,7 @@
         hill.position.set(Math.cos(angle) * reach, -size * 0.86, Math.sin(angle) * reach);
         hill.scale.set(1.6, 1, 1);
         hill.rotation.y = ring() * 3;
-        hill.castShadow = hill.receiveShadow = false;
+        hill.castShadow = false;
         world.scene.add(hill);
       }
 

@@ -59,7 +59,7 @@
         geometry.sphere(350, 48, 24),
         material.meshBasic({ map: texture.canvas(sky), side: side.double }),
       );
-      dome.castShadow = dome.receiveShadow = false;
+      dome.castShadow = false;
       world.scene.add(dome);
       world.beforeFrame(() => dome.position.copy(world.camera.position));
       // Kept on one line so the shared example proof checks this published manifest and its credit.

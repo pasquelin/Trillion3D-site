@@ -32,7 +32,6 @@
       const SIDE = 20, HALF = SIDE / 2, TALLEST = 14;
       const board = object.mesh(geometry.box(SIDE + 0.6, 0.4, SIDE + 0.6), material.meshStandard({ color: '#e2cba6', roughness: 0.85 }));
       board.position.y = -0.2;
-      board.receiveShadow = true;
       const grid = helper.grid(SIDE, SIDE, '#b99b74', '#cdb38f');
       grid.position.y = 0.003;
       const voxels = object.group();
@@ -54,7 +53,6 @@
         if (cells.has(cell) || !onBoard(x, y, z)) return;
         const voxel = object.mesh(cube, paint(hex));
         voxel.position.set(x + 0.5, y + 0.5, z + 0.5);
-        voxel.receiveShadow = true;
         voxel.userData.cell = cell;
         cells.set(cell, voxel);
         voxels.add(voxel);

@@ -217,7 +217,6 @@
         const maps = pictures(width, height);
         const finish = material.meshPhysical({ map: maps.colour, roughnessMap: maps.roughness, normalMap: maps.relief, roughness: 1, clearcoat: 0.8, clearcoatRoughness: 0.12 });
         const mesh = object.mesh(shape, finish);
-        mesh.receiveShadow = true;
         place(mesh);
         world.scene.add(mesh);
         // Its texels are found when its first bake reaches it: `texels`.

@@ -45,7 +45,7 @@
         const block = object.mesh(geometry.box(...size), typeof matter === 'string' ? matte(matter) : matter);
         block.position.set(...at);
         block.rotation.set(...turn);
-        block.receiveShadow = block.castShadow = true;
+        block.castShadow = true;
         block.physics = 'static';
         world.scene.add(block);
         return block;
@@ -77,7 +77,7 @@
       // The platform is kinematic: the page moves it, and it carries what stands on it.
       const platform = object.mesh(geometry.box(3, 0.3, 3), matte('#d9824b'));
       platform.position.set(0, 0.15, -8);
-      platform.castShadow = platform.receiveShadow = true;
+      platform.castShadow = true;
       platform.physics = 'kinematic';
       world.scene.add(platform);
 
@@ -91,7 +91,7 @@
           for (let k = 0; k < 3 - row; k++) {
             const box = object.mesh(crate, cardboard);
             box.position.set(-0.62 + k * 0.62 + row * 0.31, 0.3 + row * 0.61, -3);
-            box.castShadow = box.receiveShadow = true;
+            box.castShadow = true;
             box.physics = { type: 'dynamic', mass: 12 };
             world.scene.add(box);
             boxes.push(box);
