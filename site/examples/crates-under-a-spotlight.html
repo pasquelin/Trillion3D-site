@@ -35,8 +35,9 @@
       const world = createWorld('view', { controls: 'orbit' });
       world.exposure = 1;
       await world.scene.load('../assets/examples/crates/cache/native/full/manifest.json');
-      // One spot light, high above: `outerConeAngle` is the cone's half-angle in radians, `innerConeAngle`
-      // the half-angle inside which the light is whole, `radius` the lamp's size, which softens the shadows.
+      // One spot light, high above: `outerConeAngle` is the cone's half-angle in radians,
+      // `innerConeAngle` the half-angle inside which the light is whole, `radius` the lamp's size,
+      // which softens the shadows.
       const spot = light.spot({ position: [0, 6, 2], intensity: 400, intensityUnits: 'candelas', distance: 16, castShadow: true, radius: 0.1 });
       world.scene.add(spot, light.hemisphere({ intensity: 0.9, color: '#8fb4ff', groundColor: '#5a4a3c' }));
       world.camera.position.set(3, 2.3, 4.3);

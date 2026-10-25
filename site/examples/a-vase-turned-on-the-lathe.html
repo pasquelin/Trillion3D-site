@@ -54,8 +54,8 @@
       // A tall softbox at the front left and a long strip low behind the bench, as a potter's
       // photographer would light them: on a glaze each shows as a soft window and a bright rim
       // down the vase's edge. A softbox is a rectangle light (`rectArea`) aimed at the vases.
-      for (const [width, height, position, intensity] of [[1.6, 2.4, [-4.2, 2.6, 3.6], 9], [8, 0.4, [0, 1.6, -3], 10]]) {
-        const softbox = light.rectArea({ color: '#fff4e6', intensity, intensityUnits: 'candelas', width, height, position });
+      for (const [width, height, position, intensity] of [[1.6, 2.4, [-4.2, 2.6, 3.6], 4.5], [8, 0.4, [0, 1.6, -3], 5]]) {
+        const softbox = light.rectArea({ color: '#fff4e6', intensity, intensityUnits: 'nits', width, height, position });
         softbox.lookAt(0, 1, 0);
         world.scene.add(softbox);
       }

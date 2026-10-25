@@ -44,7 +44,7 @@
       // reaches is dark, not black.
       const sun = light.directional({ intensity: 3.5, color: '#fff3e2', castShadow: true });
       const lamp = light.point({ position: [-0.55, 3.95, -1.9], intensity: 24, intensityUnits: 'candelas', distance: 12, castShadow: true, radius: 0.25 });
-      const shopLight = light.rectArea({ position: [2.4, 1.4, -2.89], width: 1.8, height: 1.4, intensity: 6, intensityUnits: 'candelas', color: '#ffc27a' });
+      const shopLight = light.rectArea({ position: [2.4, 1.4, -2.89], width: 1.8, height: 1.4, intensity: 3, intensityUnits: 'nits', color: '#ffc27a' });
       shopLight.lookAt(2.4, 1.4, 5);
       const sky = light.hemisphere({ color: '#bcd4ff', groundColor: '#6b5a48' });
       world.scene.add(sun, lamp, shopLight, sky);

@@ -58,8 +58,8 @@
       // Two long softboxes, as in a product studio: one over the bench, one low behind it, which
       // draws a bright rim along the discs' edges. A softbox is a rectangle light (`rectArea`)
       // aimed at the bench; a sky and floor fill (`hemisphere`) gives the steel a world to mirror.
-      for (const [width, height, position, intensity] of [[9, 0.8, [0, 4.6, 2.6], 4], [9, 0.4, [0, 2.2, -3.2], 5]]) {
-        const softbox = light.rectArea({ color: '#f2f5ff', intensity, intensityUnits: 'candelas', width, height, position });
+      for (const [width, height, position, intensity] of [[9, 0.8, [0, 4.6, 2.6], 2], [9, 0.4, [0, 2.2, -3.2], 2.5]]) {
+        const softbox = light.rectArea({ color: '#f2f5ff', intensity, intensityUnits: 'nits', width, height, position });
         softbox.lookAt(0, 0.9, 0);
         world.scene.add(softbox);
       }

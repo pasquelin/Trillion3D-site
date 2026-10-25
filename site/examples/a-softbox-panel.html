@@ -79,7 +79,7 @@
       const faceGlow = material.meshBasic({ color: '#fff1e0' });
       const face = object.mesh(geometry.plane(1, 1), faceGlow);
       face.position.z = 0.065;
-      const softbox = light.rectArea({ color: '#fff1e0', intensityUnits: 'candelas' });
+      const softbox = light.rectArea({ color: '#fff1e0', intensity: 15, intensityUnits: 'candelas' });
       softbox.position.z = 0.07;
       softbox.rotation.set(0, Math.PI, 0);
       arm.add(frame, face, softbox);
@@ -109,7 +109,8 @@
         const w = values.panelWidth, h = (values.panelWidth * 2) / 3;
         softbox.width = w;
         softbox.height = h;
-        softbox.intensity = values.power / (w * h);
+        // The panel's candelas: its radiance is candelas over half its area, power / (w × h).
+        softbox.intensity = values.power / 2;
         frame.scale.set(w + 0.16, h + 0.16, 1);
         face.scale.set(w, h, 1);
         if (key === undefined || key === 'colour') {
@@ -117,13 +118,13 @@
           faceGlow.color.set(values.colour);
         }
         size?.(`${w.toFixed(2)} × ${h.toFixed(2)} m`);
-        radiance?.(softbox.intensity.toFixed(1));
+        radiance?.((values.power / (w * h)).toFixed(1));
         world.invalidate();
       });
       size = readout('panel');
       radiance = readout('radiance');
       size(`${softbox.width.toFixed(2)} × ${softbox.height.toFixed(2)} m`);
-      radiance(softbox.intensity.toFixed(1));
+      radiance((softbox.intensity / (0.5 * softbox.width * softbox.height)).toFixed(1));
 
       // The opening: the panel swings in from behind the set, its face to the camera, to the
       // right of the table; then it sways there, and the table turns.
