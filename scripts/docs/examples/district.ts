@@ -925,12 +925,16 @@ const spin = (axis: Vec3, phase: number, turns: number, step: number) =>
  *  on a merged layer, as the reference's builder has it): the sun's distance-field shadow then
  *  reaches the merged levels past the last shadow map. No object carries a mark: every placed
  *  object enters the first layer, `hlod0`. What moves — the driving cars, the tram, the wheel, the
- *  rotors, the flags, the lift — is never placed in a cell, so it enters no HLOD. */
+ *  rotors, the flags, the lift — is never placed in a cell, so it enters no HLOD. The last level is
+ *  always loaded (`spatiallyLoaded: false`, on by choice here, streamed by default): the district is
+ *  seen whole to the horizon, never cut at a loading range. */
 const { layers, default: fallback } = resolveHlod({ levels: 4 })!
 export const DISTRICT_HLOD: HlodOptions = {
-  layers: layers.map((layer) =>
-    layer.builder === 'merge' ? { ...layer, allowDistanceField: true } : layer,
-  ),
+  layers: layers.map((layer, i) => ({
+    ...layer,
+    ...(layer.builder === 'merge' ? { allowDistanceField: true } : {}),
+    ...(i === layers.length - 1 ? { spatiallyLoaded: false } : {}),
+  })),
   ...(fallback === undefined ? {} : { default: fallback }),
 }
 
