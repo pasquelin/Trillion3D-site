@@ -70,8 +70,9 @@ jobs:
           count=$(find dist/site -type f | wc -l)
           echo "$count files, floor $floor"
           test "$count" -ge "$floor" || { echo "::error::$count files, fewer than $floor"; exit 1; }
-      # The scene caches' objects, geometry pages among them, are the exception to the gzip below:
-      # brotli takes 11 to 24 % off them. Sent beside each original with `Content-Encoding: br` to
+      # The scene caches' objects, geometry pages among them, and the sidecars the engine reads
+      # whole are the exception to the gzip below: brotli takes 11 to 24 % off the objects, three
+      # quarters or more off the sidecars. Sent beside each original with `Content-Encoding: br` to
       # a browser that accepts it; `isCacheObject` picks them, as the docs server does locally, and
       # the engine reads the decoded bytes its fingerprints check.
       - if: steps.plan.outputs.deploy == 'true'
