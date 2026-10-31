@@ -17,7 +17,7 @@ import {
   resolveHlod,
 } from '#engine/packages/sdk-core/src/contracts/hlodOptions.ts'
 import {
-  materialFlags,
+  materialJob,
   type MaterialsOption,
   type ResponsiveOption,
   type TemporalAntialiasingOption,
@@ -85,7 +85,7 @@ export function compileFullCache({
     executable,
     [
       ...(hlod === undefined ? [] : [`${HLOD_OPTION}${JSON.stringify(resolveHlod(hlod))}`]),
-      ...materialFlags({ temporalAntialiasing, responsive, materials }),
+      ...materialJob.flags({ temporalAntialiasing, responsive, materials }),
       source,
       cache,
       'full',

@@ -19,7 +19,7 @@ import {
 import { basename, resolve } from 'node:path'
 import { firstNewer } from '#engine/packages/sdk-node/src/compiler/freshness.mts'
 import { resolveHlod } from '#engine/packages/sdk-core/src/contracts/hlodOptions.ts'
-import { materialJobFields } from '#engine/packages/sdk-core/src/contracts/materialOptions.ts'
+import { materialJob } from '#engine/packages/sdk-core/src/contracts/materialOptions.ts'
 import { DISTRICT_HLOD } from './docs/examples/district.ts'
 import { SPARKS_MATERIALS, SPARKS_RESPONSIVE } from './docs/examples/sparks.ts'
 import { MODEL_LIBRARY, placeLibraryFiles } from './docs/examples/library.ts'
@@ -167,7 +167,7 @@ const stampOf = (scene: CookedScene, root = ROOT) => {
   // The HLOD as the compiler reads it, absent for a scene naming none: its stamp is unchanged.
   const wire = hlod === undefined ? undefined : resolveHlod(hlod)
   // The temporal anti-aliasing options likewise, each absent for a scene naming none.
-  const named = materialJobFields({ temporalAntialiasing, responsive, materials })
+  const named = materialJob.fields({ temporalAntialiasing, responsive, materials })
   return JSON.stringify({
     source,
     simplification,
@@ -175,6 +175,7 @@ const stampOf = (scene: CookedScene, root = ROOT) => {
     files,
     hlod: wire,
     ...named,
+    implementation: compilerIdentity(),
   })
 }
 
@@ -214,14 +215,23 @@ export function fetchDownload(download: Download, root = ROOT, release = DOWNLOA
   renameSync(partial, path)
 }
 
-/** When the compiler was built, or null when there is none to compare with; a compiler older than
- *  its sources makes every cache stale, so the run refuses it instead of keeping its output. */
-function compilerTime(): number | null {
+/** The compiler's implementation hash (`--version`): a cache keeps it in its stamp, so a compiler
+ *  built again from the same sources, a newer file with the same hash, leaves every cache fresh.
+ *  Null where there is no compiler to ask, or one older than its sources (`COMPILER_STALE`), which
+ *  a cook refuses: every cache is stale then. Asked once a process. */
+let identity: { hash: string | null } | undefined
+function compilerIdentity(): string | null {
+  if (identity) return identity.hash
+  let hash: string | null = null
   try {
-    return statSync(nativeCompiler()).mtimeMs
-  } catch (error) {
-    return String(error).includes('COMPILER_STALE') ? Infinity : null
+    const compiler = nativeCompiler()
+    const run = spawnSync(compiler, ['--version'], { encoding: 'utf8', timeout: 30_000 })
+    if (run.status === 0) hash = (JSON.parse(run.stdout) as { implementationHash?: string }).implementationHash ?? null
+  } catch {
+    hash = null
   }
+  identity = { hash }
+  return hash
 }
 
 /** Compiles the cache of `scene` again, from nothing, and stamps it. */
@@ -239,13 +249,25 @@ export function compileCache(scene: CookedScene): void {
   writeFileSync(stampPath(scene), stampOf(scene))
 }
 
-/** Whether the cache of `scene` is missing, compiled with other options, or older than a file of
- *  its source or than the compiler built at `compiled`. */
-export function isStale(scene: CookedScene, root = ROOT, compiled = compilerTime()): boolean {
+/** A stamp without the compiler's hash: what a checkout with no compiler compares. */
+const withoutImplementation = (stamp: string) => {
+  const { implementation: _, ...rest } = JSON.parse(stamp) as Record<string, unknown>
+  return JSON.stringify(rest)
+}
+
+/** Whether the cache of `scene` is missing, compiled with other options or by another
+ *  implementation of the compiler, or older than a file of its source. A checkout with no compiler
+ *  (a documentation-only run) cannot tell the implementation, and compares the rest. */
+export function isStale(scene: CookedScene, root = ROOT): boolean {
   const stamp = stampPath(scene, root)
-  if (!existsSync(stamp) || readFileSync(stamp, 'utf8') !== stampOf(scene, root)) return true
+  if (!existsSync(stamp)) return true
+  const recorded = readFileSync(stamp, 'utf8'),
+    current = stampOf(scene, root)
+  if (recorded !== current) {
+    if (existsSync(nativeCompiler())) return true
+    if (withoutImplementation(recorded) !== withoutImplementation(current)) return true
+  }
   const since = statSync(stamp).mtimeMs
-  if ((compiled ?? 0) > since) return true
   return !scene.download && firstNewer(sourceOf(scene, root), since) !== null
 }
 
@@ -253,8 +275,7 @@ export function isStale(scene: CookedScene, root = ROOT, compiled = compilerTime
  *  names what it left and goes on, for a caller that may read none of them. */
 export function compileSiteCaches(required = true, scenes = Object.values(COOKED_SCENES)): void {
   for (const scene of scenes) placeLibrary(scene)
-  const compiled = compilerTime()
-  const stale = scenes.filter((scene) => isStale(scene, ROOT, compiled))
+  const stale = scenes.filter((scene) => isStale(scene, ROOT))
   if (!stale.length) return
   try {
     requireNativeCompiler()
