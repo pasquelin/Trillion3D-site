@@ -22,7 +22,7 @@
     <canvas id="view"></canvas>
     <script type="module">
       import { createWorld, geometry, material, object, light, math } from '../runtime/engine.js';
-      import { controls, seeded } from '../runtime/kit.js';
+      import { controls, seeded, viewModes } from '../runtime/kit.js';
 
       const world = createWorld('view', { controls: 'orbit' });
       world.exposure = 1;
@@ -62,6 +62,8 @@
         stones.forEach((stone, index) => stone.color.copy(math.color(first)).lerp(math.color(last), index / 5));
         world.invalidate();
       });
+      // The engine's views — wireframe among them — show the triangles each pebble draws at its distance.
+      viewModes(world);
     </script>
   </body>
 </html>

@@ -175,10 +175,6 @@ interface ViewWorld {
   invalidate(): void
 }
 
-/** The view modes `world` offers, `triangles` left out: the page's alias of `wireframe`. */
-const offeredModes = (world: ViewWorld) =>
-  world.diagnostic.modes.filter((mode) => mode !== 'triangles')
-
 /**
  * A `View` row at the foot of the controls panel, declared after `controls` like a readout: one
  * choice for each view mode the world offers (`world.diagnostic.modes`), the normal image
@@ -224,7 +220,7 @@ export function viewModes(world: ViewWorld) {
     next.querySelector('select')?.addEventListener('pointerdown', paint)
     return next
   }
-  let modes = offeredModes(world)
+  let modes = world.diagnostic.modes
   let line = row(modes)
   values.freeze = world.diagnostic.freeze
   const freeze = field(
@@ -240,7 +236,7 @@ export function viewModes(world: ViewWorld) {
   // Before the session publishes its modes, the world offers `beauty` alone, its first frame
   // included: the hook waits for the list, then removes itself.
   const unhook = world.onFrame(() => {
-    const now = offeredModes(world)
+    const now = world.diagnostic.modes
     if (now.join() === modes.join()) return
     if (typeof unhook === 'function') unhook()
     modes = now
