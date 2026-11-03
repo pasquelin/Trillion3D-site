@@ -20,7 +20,10 @@ import { parseArgs } from 'node:util'
 import { launchChrome } from './chrome.ts'
 import { drawnShare } from './docs/examples/capture.ts'
 import { currentCompilerExecutable } from '#engine/packages/sdk-node/src/compiler/executable.mts'
-import { createInstalledFixture, packArchive } from '#engine/scripts/release/installed-package/fixture.ts'
+import {
+  createInstalledFixture,
+  packArchive,
+} from '#engine/scripts/release/installed-package/fixture.ts'
 import { packPlatformPackages } from '#engine/scripts/release/installed-package/platforms.ts'
 import { ENGINE, ROOT } from './engine.ts'
 import { codeBlocks, installPageHtml, walkthrough } from './install-page.ts'

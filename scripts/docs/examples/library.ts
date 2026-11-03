@@ -12,7 +12,7 @@ export const MODEL_LIBRARY = 'site/assets/examples/models'
  * the same path. Placed there before a cook or a build reads the folder (`placeLibraryFiles`), so
  * the compiler reads them and the published site serves them at the same addresses as before.
  */
-export const LIBRARY_FILES: Readonly<Record<string, string | Readonly<Record<string, string>>>> = {
+const LIBRARY_FILES: Readonly<Record<string, string | Readonly<Record<string, string>>>> = {
   bust: {
     'marble_bust_01.bin': 'marble-bust/marble_bust_01.bin',
     'textures/marble_bust_01_diff_1k.jpg': 'marble-bust/textures/marble_bust_01_diff_1k.jpg',

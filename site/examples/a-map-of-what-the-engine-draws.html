@@ -260,9 +260,10 @@
         shown.rays(reflections ? `${reflections.missed} / ${reflections.count}` : '—');
       }
 
+      // The cut's freeze is the stats panel's (`world.diagnostic.freeze`): while it holds, the map
+      // draws the frozen cut's frustum, dashed, beside the camera's.
       controls(
         {
-          freeze: false,
           frustum: true,
           clusters: true,
           shadows: true,
@@ -272,7 +273,6 @@
         },
         (values, key) => {
           layers = values;
-          if (key === undefined || key === 'freeze') world.diagnostic.freeze = values.freeze;
           if (key === undefined || key === 'mapSize') {
             lens.top = values.mapSize / 2;
             lens.bottom = -values.mapSize / 2;

@@ -1,5 +1,6 @@
 /** Every code an engine `EngineError` may carry, by family: the words a page may test, as the
- *  pinned engine's `packages/sdk-core/src/contracts/errorCodes.ts` lists them. */
+ *  pinned engine's `packages/sdk-core/src/contracts/errorCodes.ts` lists them, then the codes it
+ *  throws that its list does not name. */
 export const ENGINE_ERROR_CODES: readonly (readonly string[])[] = [
   [
     'CANVAS_NOT_FOUND',
@@ -21,6 +22,17 @@ export const ENGINE_ERROR_CODES: readonly (readonly string[])[] = [
     'SCENE_LIGHTS_UNAVAILABLE',
   ],
   ['INVALID_SCENE_ENVIRONMENT'],
+  ['INVALID_SCENE_FOG_VOLUME', 'DUPLICATE_SCENE_FOG_VOLUME', 'UNKNOWN_SCENE_FOG_VOLUME'],
+  [
+    'INVALID_SCENE_HETEROGENEOUS_VOLUME',
+    'DUPLICATE_SCENE_HETEROGENEOUS_VOLUME',
+    'UNKNOWN_SCENE_HETEROGENEOUS_VOLUME',
+  ],
+  [
+    'INVALID_SCENE_LOCAL_FOG_VOLUME',
+    'DUPLICATE_SCENE_LOCAL_FOG_VOLUME',
+    'UNKNOWN_SCENE_LOCAL_FOG_VOLUME',
+  ],
   ['INVALID_MATERIAL', 'UNKNOWN_MATERIAL', 'MATERIAL_CLASS_CHANGE', 'MATERIAL_TEXTURE_SHARED'],
   ['MATERIAL_CEILING'],
   ['TEXTURE_BUDGET'],
@@ -46,6 +58,12 @@ export const ENGINE_ERROR_CODES: readonly (readonly string[])[] = [
   ['NO_VEHICLE'],
   ['GUIDE_CEILING'],
   ['REFERENCE_SHADOWS_REDUCED', 'REFERENCE_INTERACTIVE'],
+  ['INVALID_MODULE_OPTION', 'MODULE_MISSING'],
+  // Thrown by the engine, not named by its list.
+  ['INVALID_VIEW'],
+  ['COLLISION_CHANNEL', 'COLLISION_RESPONSE', 'COLLISION_PROFILE'],
+  ['PHYSICS_FILTERS'],
+  ['INTERNAL'],
 ]
 
 /**
@@ -73,6 +91,9 @@ export const ENGINE_ERROR_MEANINGS: Readonly<Record<string, string>> = {
   TEXTURE_BUDGET:
     'A texture added after the scene opened would take the texture pool past `texturePoolBytes` or past the layers the device holds; nothing was added.',
   INVALID_SCENE_ENVIRONMENT: "The scene's exposure or surroundings are not valid numbers.",
+  INVALID_SCENE_FOG_VOLUME: 'A fog volume is malformed, doubled or unknown.',
+  INVALID_SCENE_HETEROGENEOUS_VOLUME: 'A heterogeneous volume is malformed, doubled or unknown.',
+  INVALID_SCENE_LOCAL_FOG_VOLUME: 'A local fog volume is malformed, doubled or unknown.',
   INVALID_TRANSFORM:
     "A node's placement is not a usable matrix, or a node would be its own ancestor.",
   UNKNOWN_SCENE_NODE:
@@ -102,4 +123,14 @@ export const ENGINE_ERROR_MEANINGS: Readonly<Record<string, string>> = {
     'A `world.guides` call would hold more vertices than `GUIDE_VERTEX_CEILING`; nothing of it was added.',
   REFERENCE_SHADOWS_REDUCED:
     'The reference image was refused: its shadows draw coarser than they ask, their page pool short (`REFERENCE_SHADOWS_REDUCED`). Reference mode was asked on an interactive session, whose resize would drop its supersampling (`REFERENCE_INTERACTIVE`).',
+  INVALID_MODULE_OPTION:
+    'A module was set to what it does not take: `true`, `false` or an object of its parts (`INVALID_MODULE_OPTION`). A module needs another that is not registered (`MODULE_MISSING`).',
+  INVALID_VIEW:
+    'A view was added with both `canvas` and `viewport`, or with neither (`world.addView`): it takes one of them.',
+  COLLISION_CHANNEL:
+    "A body's collision (`CollisionOptions`) names a channel, a response or a profile that does not exist.",
+  PHYSICS_FILTERS:
+    'A body would make the physics hold more kinds of collision than it can; it was refused.',
+  INTERNAL:
+    "A part of the engine another needs was not loaded (the view renderer): the fault is the engine's, not the page's.",
 }

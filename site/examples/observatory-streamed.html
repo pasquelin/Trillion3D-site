@@ -46,9 +46,10 @@
       world.controls.target.set(...framing.target);
       world.camera.position.lerp(world.controls.target, 0.4);
 
-      // `world.diagnostic.mode` swaps the image for a view of the engine's own work.
-      controls({ view: ['clusters', 'beauty', 'pages', 'lod', 'triangles'], pixelError: [0, 16, 0, 0.5] }, (values) => {
-        world.diagnostic.mode = values.view;
+      // The page opens on the clusters, one colour each: `world.diagnostic.mode` swaps the image
+      // for a view of the engine's own work, and the stats panel's View menu follows it.
+      world.diagnostic.mode = 'clusters';
+      controls({ pixelError: [0, 16, 0, 0.5] }, (values) => {
         world.pixelError = values.pixelError;
       });
       world.invalidate();

@@ -10,15 +10,18 @@
  * frame for the line of what to do and the news the example gives (`banner.ts`). Its words, and the page's own, are read in
  * the reader's language before the example runs (`words.ts`). And the pieces several examples
  * build, made with the engine families the page hands them: vehicles to drive (`vehicles.ts`), a
- * robot and its clips (`robot.ts`), and pictures painted pixel by pixel (`painted.ts`).
+ * robot and its clips (`robot.ts`), and pictures painted pixel by pixel (`painted.ts`). The
+ * engine's instruments are the stats panel's (`stats.ts`): its `why` tab, opened on the engine
+ * workbench page (`workbench`) and on any example asked `?workbench`.
  */
 import { announceWhatToDo } from './banner.ts'
 import { watchFailures } from './failure.ts'
-import { statsOnPageWorlds } from './stats.ts'
+import { statsOnPageWorlds, workbenchOnPageWorlds } from './stats.ts'
 import { loadWords } from './words.ts'
 
 watchFailures()
 statsOnPageWorlds()
+workbenchOnPageWorlds()
 await loadWords(document)
 announceWhatToDo()
 
@@ -52,7 +55,7 @@ export { readout } from './readout.ts'
 export { walkingRobot } from './robot.ts'
 export { vehicles } from './vehicles.ts'
 export { brownNoise, whiteNoise } from './sound.ts'
-export { stats } from './stats.ts'
+export { stats, workbench } from './stats.ts'
 export { tour } from './tour.ts'
 export { healthCheck, showVerdict } from './verdict.ts'
 export { language, words } from './words.ts'

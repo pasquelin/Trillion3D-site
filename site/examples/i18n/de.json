@@ -17,9 +17,7 @@
   },
   "kit": {
     "panel": {
-      "controls": "Einstellungen",
-      "view": "Ansicht",
-      "freeze": "Culling einfrieren"
+      "controls": "Einstellungen"
     },
     "menu": {
       "play": "Spielen",
@@ -53,11 +51,11 @@
       },
       "tab.cpu": {
         "label": "CPU",
-        "hint": "Wo die Engine die CPU-Zeit eines Bildes verbringt, als Mediane der letzten Sekunde; der CPU-Wert der Kopfzeile ist das ganze Bild des Hauptthreads. Mehr Arbeit pro Bild erhöht ihn."
+        "hint": "Wo die Engine die CPU-Zeit eines Bildes verbringt, als Mittelwerte der letzten Sekunde; der CPU-Wert der Kopfzeile ist das ganze Bild des Hauptthreads. Mehr Arbeit pro Bild erhöht ihn."
       },
       "tab.shadows": {
         "label": "Schatten",
-        "hint": "Die Schattenpässe und ihre Seitenzähler; ihre Zeit ist Teil der GPU-Zeit."
+        "hint": "Die Schattenpässe und ihre Seitenzähler, die des letzten Bildes; ihre Zeit ist Teil der GPU-Zeit."
       },
       "tab.memory": {
         "label": "Speicher",
@@ -101,7 +99,7 @@
       },
       "summary.frame": {
         "label": "Bild",
-        "hint": "Zeit zwischen zwei angezeigten Bildern; steigt, wenn ein Prozessor länger als ein Refresh braucht."
+        "hint": "Mittlere Zeit zwischen zwei angezeigten Bildern in der letzten Sekunde, der Kehrwert der Rate; steigt, wenn ein Prozessor länger als ein Refresh braucht."
       },
       "summary.gpu": {
         "label": "GPU",
@@ -109,15 +107,19 @@
       },
       "summary.cpu": {
         "label": "CPU",
-        "hint": "Mediane Hauptthread-Zeit eines Bildes in der letzten Sekunde; steigt mit der an die GPU gesendeten Arbeit."
+        "hint": "Mittlere Hauptthread-Zeit eines Bildes in der letzten Sekunde; steigt mit der an die GPU gesendeten Arbeit."
       },
       "summary.wait": {
         "label": "Warten",
-        "hint": "Zeit, die das Bild auf die Anzeige wartet, nachdem der langsamere Prozessor fertig war."
+        "hint": "Das mittlere Bild abzüglich des stärker ausgelasteten Prozessors: die Zeit, die auf den nächsten Refresh gewartet wird, während beide Prozessoren nebeneinander arbeiten."
       },
-      "summary.bottleneck": {
+      "summary.toNext": {
+        "label": "Eine Aktualisierung früher",
+        "hint": "Die Zeit, die der Prozessor, der das Bild aufhält, abgeben muss, damit seine Bilder eine Aktualisierung früher ankommen, und die Rate, die sie dann erreichen."
+      },
+      "summary.bound": {
         "label": "Begrenzt durch",
-        "hint": "Das Urteil der Engine, was das Bild hält: die erste Grenze, die das Fenster erreicht."
+        "hint": "Was das Bild in der letzten Sekunde aufgehalten hat: der Prozessor, dessen Zeit bestimmt hat, wie viele Bildwiederholungen ein typisches Bild auf dem Bildschirm blieb, oder der Bildschirmtakt, wenn keiner von beiden es tat."
       },
       "summary.screen": {
         "label": "Bildschirm {hz} Hz",
@@ -137,7 +139,7 @@
       },
       "summary.gpuIdle": {
         "label": "GPU im Leerlauf",
-        "hint": "Zeit, die die GPU vor ihrem letzten gemessenen Bild untätig war; steigt, wenn die CPU sie zu spät versorgt."
+        "hint": "Mittlere Zeit, die die GPU in der letzten Sekunde vor einem Bild untätig war, höchstens: die zwischen den Bildern gemessene Arbeit herausgerechnet, ungemessene Arbeit mitgezählt; steigt, wenn die CPU sie zu spät versorgt."
       },
       "summary.mainView": {
         "label": "Hauptansicht",
@@ -150,30 +152,6 @@
       "summary.budget": {
         "label": "Budget",
         "hint": "Die Zeit, die ein Anzeige-Refresh einem Bild erlaubt; die gestrichelte Linie der Grafik."
-      },
-      "bottleneck.healthy": {
-        "label": "Anzeige",
-        "hint": "Das Bild passt in einen Refresh: die Bildrate ist die der Anzeige."
-      },
-      "bottleneck.memory_pressure": {
-        "label": "Ruckeln",
-        "hint": "Bilder dauerten länger als die Ruckelgrenze: Speicher freigeben oder Streaming senken."
-      },
-      "bottleneck.gpu_bound": {
-        "label": "GPU",
-        "hint": "Die GPU braucht länger als ein Refresh und hält das Bild: Auflösung oder Beleuchtung senken."
-      },
-      "bottleneck.cpu_bound": {
-        "label": "CPU",
-        "hint": "Der Hauptthread braucht länger als ein Refresh und hält das Bild: Arbeit pro Bild senken."
-      },
-      "bottleneck.gpu_submit_bound": {
-        "label": "GPU-Übergabe",
-        "hint": "Das Senden der Befehle an die GPU dauert über einen halben Refresh: Draw Calls und Pässe senken."
-      },
-      "bottleneck.streaming_bound": {
-        "label": "Streaming",
-        "hint": "Mehr Seiten sind unterwegs, als die Fetch-Worker liefern können: Netz oder Platte halten die Szene."
       },
       "panel.label": {
         "label": "Statistik",
@@ -246,10 +224,6 @@
       "gpu.textures": {
         "label": "Texturen",
         "hint": "Streaming und Dekodieren von Texturstufen; steigt, solange neue Texturen laden."
-      },
-      "gpu.partition": {
-        "label": "Partition",
-        "hint": "Sortieren der gezeichneten Cluster in Zeichenstapel; steigt mit den gezeichneten Clustern."
       },
       "gpu.encode": {
         "label": "Encode",
@@ -379,10 +353,6 @@
         "label": "Projektion",
         "hint": "Projizieren der Schattenkarten aufs Bild; steigt mit Schattenlichtern und Auflösung."
       },
-      "shadows.transmission": {
-        "label": "Transmission",
-        "hint": "Der Atlas der durchsichtigen Schattenwerfer; steigt mit transluzenten Werfern."
-      },
       "shadows.lights": {
         "label": "Lichter mit Schatten",
         "hint": "Lichter, die in diesem Bild virtuelle Schattenkarten werfen; die Zahl in Szene zählt alle aktiven Lichter."
@@ -507,37 +477,25 @@
         "label": "DAG-Auswahl",
         "hint": "Durchläuft den Geometriegraphen und wählt das Detail, das jede Ansicht braucht; steigt mit dem Detail im Bild."
       },
-      "pass.DAG mask swap": {
-        "label": "DAG-Maskentausch",
-        "hint": "Tauscht die Auswahlmasken zwischen den Bildern; klein und fest."
-      },
-      "pass.partition": {
-        "label": "Partition",
-        "hint": "Verdichtet die gewählten Cluster zu den Zeichenaufrufen des Bildes; steigt mit den gewählten Clustern."
-      },
       "pass.HiZ": {
         "label": "HiZ",
         "hint": "Baut die Tiefenpyramide, mit der Verdecktes ausgeblendet wird; steigt mit der Rendergröße."
       },
       "pass.visibility primary": {
-        "label": "Sichtbarkeit primär",
+        "label": "Sichtbarkeit: primär",
         "hint": "Zeichnet die Tiefe der Verdecker, damit der Rest dagegen getestet werden kann; steigt mit den Verdeckern im Bild."
       },
       "pass.visibility secondary": {
-        "label": "Sichtbarkeit sekundär",
+        "label": "Sichtbarkeit: sekundär",
         "hint": "Zeichnet die getestete Hälfte der Geometrie gegen die Tiefe der Verdecker; steigt mit der Geometrie, die den Test bestanden hat."
-      },
-      "pass.visibility identifiers": {
-        "label": "Sichtbarkeits-Kennungen",
-        "hint": "Zeichnet die Kennung der Oberfläche unter jedem Pixel; steigt mit der Rendergröße und der gezeichneten Geometrie."
       },
       "pass.raster binning": {
         "label": "Raster-Binning",
-        "hint": "Sortiert die kleinen Dreiecke des Software-Rasters in Bildschirmkacheln; steigt mit den kleinen Dreiecken im Bild."
+        "hint": "Dekodiert die sichtbaren Cluster, sortiert sie in die Zeichenstapel des Hardware-Rasters und listet die des Software-Rasters; steigt mit den Clustern im Bild."
       },
       "pass.raster occluder depth": {
         "label": "Raster-Verdeckertiefe",
-        "hint": "Software-Raster der Tiefe der Verdecker; steigt mit den kleinen verdeckenden Dreiecken."
+        "hint": "Software-Raster der Tiefe der Verdecker, eine Gruppe von Lanes pro Cluster; steigt mit den kleinen verdeckenden Dreiecken."
       },
       "pass.raster tested depth": {
         "label": "Raster-Testtiefe",
@@ -545,23 +503,19 @@
       },
       "pass.raster identifiers": {
         "label": "Raster-Kennungen",
-        "hint": "Software-Raster der Oberflächenkennungen; steigt mit den gezeichneten kleinen Dreiecken."
+        "hint": "Software-Raster der Oberflächenkennungen, auf einem Gerät ohne das atomare 64-Bit-Maximum; steigt mit den gezeichneten kleinen Dreiecken."
       },
       "pass.raster occluder hiz": {
         "label": "Raster-Verdecker-HiZ",
-        "hint": "Baut die Tiefenpyramide aus den Verdeckern des Software-Rasters; steigt mit der Rendergröße."
+        "hint": "Schreibt die Verdeckertiefe des Sichtbarkeitspuffers in die erste Ebene der Tiefenpyramide; steigt mit der Rendergröße."
       },
       "pass.raster resolve": {
         "label": "Raster-Auflösung",
-        "hint": "Führt die Pixel des Software-Rasters im Sichtbarkeitspuffer zusammen; steigt mit der Rendergröße."
+        "hint": "Schreibt die Oberflächenkennungen des Sichtbarkeitspuffers in das Bild, das die Materialien lesen; steigt mit der Rendergröße."
       },
       "pass.empty surfaces": {
         "label": "leere Oberflächen",
         "hint": "Löscht die Oberflächenbilder, wenn das Bild kein Material zeichnet; klein und fest."
-      },
-      "pass.material cache, bins and shading": {
-        "label": "Materialcache, Bins und Shading",
-        "hint": "Stellt zusammen, was das Bild teilt, sortiert Pixel nach Material und schattiert den Bin jedes Materials; steigt mit den Materialien und Pixeln im Bild."
       },
       "pass.material surfaces": {
         "label": "Materialoberflächen",
@@ -627,10 +581,6 @@
         "label": "Bounce",
         "hint": "Aktualisiert das gestreute Licht: markiert die sichtbaren Zellen, schreibt die Tabelle und frischt die Sonden auf; steigt mit den beleuchteten Zellen im Bild."
       },
-      "pass.bounce light lists": {
-        "label": "Bounce-Lichtlisten",
-        "hint": "Baut die Lichtlisten über dem Weltgitter des Bounce; steigt mit den Lichtern nahe den beleuchteten Zellen."
-      },
       "pass.proxy pose": {
         "label": "Proxy-Pose",
         "hint": "Posiert die Proxys der verformten Platzierungen für die Reflexionen und den Bounce; steigt mit den verformten Platzierungen."
@@ -647,29 +597,13 @@
         "label": "Reflexionen der Szene",
         "hint": "Traced die Strahlen, die der Bildschirm nicht beantworten konnte, durch die Szene; steigt mit den reflektierenden Pixeln, die der Bildschirm verfehlt hat."
       },
-      "pass.reflection denoise": {
-        "label": "Reflexions-Entrauschen",
-        "hint": "Nutzt benachbarte und frühere Reflexionen, um das Bild zu säubern; steigt mit der Rendergröße."
-      },
-      "pass.reflection radiance": {
-        "label": "Reflexions-Radianz",
-        "hint": "Baut die Radianzpyramide des beleuchteten Bildes für die Reflexionen des nächsten Bildes; steigt mit der Rendergröße."
-      },
       "pass.particles": {
         "label": "Partikel",
         "hint": "Simuliert den Schritt der Partikel; steigt mit den lebenden Partikeln."
       },
-      "pass.deferred lighting": {
-        "label": "verzögerte Beleuchtung",
-        "hint": "Beleuchtet jeden Pixel aus den Oberflächen, den Lichtern und den Schatten; steigt mit der Rendergröße und den Lichtern."
-      },
       "pass.as is share seed": {
         "label": "Anteil-unverändert-Startwert",
         "hint": "Setzt den Anteil des Bildes, den die zeitliche Auflösung unverändert behält; steigt mit der Rendergröße."
-      },
-      "pass.temporal antialiasing": {
-        "label": "temporales Antialiasing",
-        "hint": "Mischt das Bild mit den früheren, um die Kanten zu glätten; steigt mit der Rendergröße."
       },
       "pass.exposure": {
         "label": "Belichtung",
@@ -742,6 +676,1978 @@
       "pass.vsm": {
         "label": "VSM",
         "hint": "Jeder Durchgang der virtuellen Schattenkarten: Rendern, Löschen, Projektion und Zusammenführen der Schattenseiten; steigt mit den schattenwerfenden Lichtern und den Seiten, die sie brauchen."
+      },
+      "pass.vsm castDiff": {
+        "label": "VSM-Werferänderungen",
+        "hint": "Findet die Schattenwerfer, die sich seit dem letzten Bild bewegt haben, hinzugekommen oder verschwunden sind, damit nur ihre Seiten neu gezeichnet werden; steigt mit den Werfern."
+      },
+      "pass.vsm marking": {
+        "label": "VSM-Seitenmarkierung",
+        "hint": "Markiert die Schattenseiten, die die sichtbaren Pixel brauchen, Licht für Licht; steigt mit der Rendergröße und den schattenwerfenden Lichtern."
+      },
+      "pass.vsm pageMapping": {
+        "label": "VSM-Seitenzuordnung",
+        "hint": "Gibt jeder markierten Schattenseite einen Platz im Seitenpool und behält die gecachten; steigt mit den markierten Seiten."
+      },
+      "pass.vsm afterRaster": {
+        "label": "VSM nach dem Raster",
+        "hint": "Aktualisiert die Seitentabellen, sobald die Seiten gezeichnet sind: was gecacht, was gezeichnet ist; steigt mit den Seiten."
+      },
+      "pass.vsm filterable": {
+        "label": "VSM-filterbare Seiten",
+        "hint": "Bereitet die gezeichneten Seiten für die gefilterten Lesezugriffe der weichen Schatten vor; steigt mit den gezeichneten Seiten."
+      },
+      "pass.vsm invalidateCastPages": {
+        "label": "VSM-Seiteninvalidierung",
+        "hint": "Markiert die gecachten Seiten, die die bewegten Werfer berühren, als veraltet, damit sie neu gezeichnet werden; steigt mit den bewegten Werfern."
+      },
+      "pass.vsm occlusion build": {
+        "label": "VSM-Verdeckungspyramide",
+        "hint": "Baut die Tiefenpyramide der gezeichneten Seiten, gegen die das zweite Culling die Werfer testet; steigt mit den Seiten."
+      },
+      "pass.vsm projection": {
+        "label": "VSM-Projektion",
+        "hint": "Projiziert die Schattenseiten auf das Bild: die Schattenmaske jedes Lichts; steigt mit der Rendergröße und den schattenwerfenden Lichtern."
+      },
+      "pass.vsm projection hair": {
+        "label": "VSM-Haarprojektion",
+        "hint": "Projiziert die Schattenseiten auf die Haarsträhnen; steigt mit den Strähnen auf dem Bildschirm."
+      },
+      "pass.vsm projection perLight clear": {
+        "label": "VSM-Masken je Licht löschen",
+        "hint": "Löscht die Schattenmasken je Licht, bevor sie projiziert werden; steigt mit der Rendergröße und den Lichtern."
+      },
+      "pass.vsm projection perLight project": {
+        "label": "VSM-Projektion je Licht",
+        "hint": "Projiziert die Schattenseiten jedes Lichts in seine eigene Maske; steigt mit der Rendergröße und den schattenwerfenden Lichtern."
+      },
+      "pass.vsm accumulateStats": {
+        "label": "VSM-Seitenstatistik",
+        "hint": "Zählt die angeforderten, zugewiesenen und gecachten Schattenseiten für die Instrumente zusammen; geringe feste Kosten."
+      },
+      "pass.vsm visualize": {
+        "label": "VSM-Seitenansicht",
+        "hint": "Zeichnet die Debug-Ansicht der Seiten der virtuellen Schattenkarten; nur solange diese Ansicht gezeigt wird."
+      },
+      "pass.vsm render cull": {
+        "label": "VSM-Culling",
+        "hint": "Verwirft die Werfer außerhalb der markierten Seiten, bevor sie in diese gezeichnet werden; steigt mit den Werfern und den Seiten."
+      },
+      "pass.vsm render raster": {
+        "label": "VSM-Raster",
+        "hint": "Zeichnet die Werfer mit dem Hardware-Raster in die markierten Schattenseiten; steigt mit den gezeichneten Dreiecken."
+      },
+      "pass.vsm render software": {
+        "label": "VSM-Software-Raster",
+        "hint": "Zeichnet die kleinen Dreiecke der Werfer mit dem Compute-Raster in die Seiten; steigt mit den kleinen Dreiecken."
+      },
+      "pass.vsm render cullSecond": {
+        "label": "VSM: zweites Culling",
+        "hint": "Prüft die Werfer, die der erste Durchgang ausgelassen hat, erneut gegen die Verdeckungspyramide; steigt mit den Werfern."
+      },
+      "pass.vsm render rasterSecond": {
+        "label": "VSM: zweites Raster",
+        "hint": "Zeichnet die Werfer, die das zweite Culling behalten hat, mit dem Hardware-Raster; steigt mit ihren Dreiecken."
+      },
+      "pass.vsm render softwareSecond": {
+        "label": "VSM: zweites Software-Raster",
+        "hint": "Zeichnet die kleinen Dreiecke, die das zweite Culling behalten hat, mit dem Compute-Raster; steigt mit ihnen."
+      },
+      "pass.vsm render atlas clear": {
+        "label": "Schattenatlas löschen",
+        "hint": "Löscht die Schichten des klassischen Schattenatlas, bevor die Werfer hineingezeichnet werden; steigt mit der Größe des Atlas."
+      },
+      "pass.vsm render atlas raster": {
+        "label": "Schattenatlas-Raster",
+        "hint": "Zeichnet die Werfer in den klassischen Schattenatlas, Schicht für Schicht; steigt mit den gezeichneten Dreiecken."
+      },
+      "pass.vsm render atlas sort": {
+        "label": "Schattenatlas sortieren",
+        "hint": "Sortiert die Zeichenaufrufe der Werfer nach Atlaskachel, bevor der Atlas gezeichnet wird; steigt mit den Zeichenaufrufen."
+      },
+      "pass.vsm render atlas out": {
+        "label": "Schattenatlas kopieren",
+        "hint": "Kopiert die Kacheln des klassischen Schattenatlas in den Seitenpool; steigt mit den Kacheln."
+      },
+      "pass.vsm denoise": {
+        "label": "VSM-Entrauschen",
+        "hint": "Filtert das Rauschen der Schattenmasken, geleitet von Tiefe und Normalen; steigt mit der Rendergröße und den weichen Schatten."
+      },
+      "pass.vsm denoise tiles": {
+        "label": "VSM-Entrauschkacheln",
+        "hint": "Findet die Kacheln des Bildes, in denen die Schatten weich sind, die einzigen, die das Entrauschen filtert; steigt mit den Halbschatten auf dem Bildschirm."
+      },
+      "pass.vsm firstPersonSelfShadow": {
+        "label": "Eigenschatten in Ich-Perspektive",
+        "hint": "Verfolgt den Schatten des Körpers in der Ich-Perspektive auf sich selbst; nur mit einer Ich-Perspektive."
+      },
+      "pass.vsm firstPersonSelfShadow merge": {
+        "label": "Ich-Perspektive-Schatten zusammenführen",
+        "hint": "Führt den Eigenschatten der Ich-Perspektive in die Masken der lokalen Lichter zusammen; nur mit einer Ich-Perspektive."
+      },
+      "pass.vsm rayTracedShadow": {
+        "label": "Raytracing-Schatten",
+        "hint": "Verfolgt die Schatten der Lichter, für die Raytracing verlangt ist, gegen die Distanzfelder; steigt mit der Rendergröße und diesen Lichtern."
+      },
+      "pass.vsm rayTracedShadow merge": {
+        "label": "Raytracing-Schatten zusammenführen",
+        "hint": "Führt die Raytracing-Schatten in die Masken der lokalen Lichter zusammen; steigt mit der Rendergröße."
+      },
+      "pass.hair strands bounds and tangents": {
+        "label": "Haar-Hüllen und Tangenten",
+        "hint": "Berechnet die Tangenten der Strähnen und die Hüllen ihrer Gruppen; steigt mit den Strähnen."
+      },
+      "pass.hair strands voxelization": {
+        "label": "Haar-Voxelisierung",
+        "hint": "Schreibt die Dichte der Strähnen in das Voxelvolumen, das Beleuchtung und Schatten lesen; steigt mit den Strähnen und dem Volumen."
+      },
+      "pass.hair strands scattering table": {
+        "label": "Haar-Streutabelle",
+        "hint": "Baut die Tabelle, wie Licht in einer Haarfaser gestreut wird; einmal, wenn sich die Haareinstellungen ändern."
+      },
+      "pass.hair strands visibility": {
+        "label": "Haar-Sichtbarkeit",
+        "hint": "Rastert die Sichtbarkeits-Samples der Strähnen und verdichtet sie pro Pixel; steigt mit den Strähnen auf dem Bildschirm."
+      },
+      "pass.hair strands visibility draw": {
+        "label": "Haar-Sichtbarkeit zeichnen",
+        "hint": "Zeichnet die Strähnen in das Multisample-Sichtbarkeitsziel; steigt mit den Strähnen auf dem Bildschirm."
+      },
+      "pass.hair strands visibility resolve": {
+        "label": "Haar-Sichtbarkeit auflösen",
+        "hint": "Löst die Multisample-Sichtbarkeit in die Samples der Strähnen pro Pixel auf; steigt mit der Rendergröße."
+      },
+      "pass.hair strands depth under full coverage": {
+        "label": "Haar-Tiefe bei voller Abdeckung",
+        "hint": "Schreibt die Tiefe der Pixel, die die Strähnen ganz bedecken, damit die Oberflächen dahinter nicht schattiert werden; steigt mit den Strähnen auf dem Bildschirm."
+      },
+      "pass.hair strands coverage count": {
+        "label": "Haar-Abdeckung zählen",
+        "hint": "Zählt die Strähnen, die jedes Pixel bedecken; steigt mit den Strähnen auf dem Bildschirm."
+      },
+      "pass.hair strands coverage mapping": {
+        "label": "Haar-Abdeckungsabbildung",
+        "hint": "Macht aus den Zählungen die Abdeckung, mit der die Komposition mischt; steigt mit der Rendergröße."
+      },
+      "pass.hair strands forward visibility": {
+        "label": "Haar-Forward-Sichtbarkeit",
+        "hint": "Sortiert die Strähnen des Forward-Pfads in Bins und rastert sie in sein Tiefengitter; steigt mit den Strähnen auf dem Bildschirm."
+      },
+      "pass.hair strands forward colour raster": {
+        "label": "Haar-Forward-Farbe",
+        "hint": "Rastert die Strähnen des Forward-Pfads mit ihren beleuchteten Farben; steigt mit den Strähnen auf dem Bildschirm."
+      },
+      "pass.hair strands curve raster clear output": {
+        "label": "Haar-Kurvenraster löschen",
+        "hint": "Löscht die Ausgabe des Kurvenrasters, bevor die Strähnen gezeichnet werden; steigt mit der Rendergröße."
+      },
+      "pass.hair strands curve raster pipeline": {
+        "label": "Haar-Kurvenraster",
+        "hint": "Rastert die Strähnen als Kurven in Kacheln; steigt mit den Strähnen auf dem Bildschirm."
+      },
+      "pass.hair strands curve raster compose": {
+        "label": "Haar-Kurvenkomposition",
+        "hint": "Legt die Ausgabe des Kurvenrasters auf das Bild; steigt mit der Rendergröße."
+      },
+      "pass.hair strands transmittance": {
+        "label": "Haar-Transmission",
+        "hint": "Zeichnet, wie viel Licht durch die Strähnen zu jedem Licht hin durchgeht; steigt mit den Strähnen und den Lichtern."
+      },
+      "pass.hair strands transmittance resolve": {
+        "label": "Haar-Transmission auflösen",
+        "hint": "Löst die Multisample-Transmission pro Pixel auf; steigt mit der Rendergröße."
+      },
+      "pass.hair strands deep shadow allocate": {
+        "label": "Haar-Tiefschatten: Zuweisung",
+        "hint": "Gibt der Tiefschattenkarte jedes Lichts ihren Platz im Atlas; steigt mit den schattenwerfenden Lichtern."
+      },
+      "pass.hair strands deep shadow front depth": {
+        "label": "Haar-Tiefschatten: Front",
+        "hint": "Zeichnet die Tiefe der nächsten Strähne in die Tiefschattenkarte jedes Lichts; steigt mit den Strähnen und den Lichtern."
+      },
+      "pass.hair strands deep shadow layers": {
+        "label": "Haar-Tiefschatten: Schichten",
+        "hint": "Zeichnet die Dichte der Strähnen in Schichten hinter dieser Front; steigt mit den Strähnen und den Lichtern."
+      },
+      "pass.hair strands light": {
+        "label": "Haar-Beleuchtung",
+        "hint": "Beleuchtet die Samples der Strähnen mit den Lichtern der Szene; steigt mit den Strähnen auf dem Bildschirm und den Lichtern."
+      },
+      "pass.hair strands light transmittance": {
+        "label": "Haar-Lichttransmission",
+        "hint": "Liest die Transmission jedes Lichts durch die Strähnen in ihre Beleuchtung ein; steigt mit den Strähnen und den Lichtern."
+      },
+      "pass.hair strands sampled lights": {
+        "label": "Haar: abgetastete Lichter",
+        "hint": "Beleuchtet die Strähnen mit den Lichtern, die die Abtastung vieler Lichter wählt; steigt mit den Strähnen auf dem Bildschirm."
+      },
+      "pass.hair strands static light": {
+        "label": "Haar: statisches Licht",
+        "hint": "Sammelt die statische Beleuchtung der Strähnen aus den Lightmaps und Volumen; steigt mit den Strähnen."
+      },
+      "pass.hair strands environment sh sky": {
+        "label": "Haar-Himmel (Harmonische)",
+        "hint": "Beleuchtet die Strähnen mit dem Himmel über seine sphärischen Harmonischen; steigt mit den Strähnen."
+      },
+      "pass.hair strands environment adhoc sky": {
+        "label": "Haar-Himmel (genähert)",
+        "hint": "Beleuchtet die Strähnen mit dem Himmel über die genäherte Integration; steigt mit den Strähnen."
+      },
+      "pass.hair strands environment uniform sky": {
+        "label": "Haar-Himmel (abgetastet)",
+        "hint": "Beleuchtet die Strähnen mit dem Himmel durch gleichmäßiges Abtasten über die Voxel; steigt mit den Strähnen."
+      },
+      "pass.hair strands sky occlusion": {
+        "label": "Haar-Himmelsverdeckung",
+        "hint": "Verdunkelt das Himmelslicht der Oberflächen unter den Strähnen; steigt mit der Rendergröße."
+      },
+      "pass.hair strands shadow on the surfaces": {
+        "label": "Haarschatten auf Oberflächen",
+        "hint": "Wirft den Schatten der Strähnen auf die Oberflächen; steigt mit der Rendergröße und den schattenwerfenden Lichtern."
+      },
+      "pass.hair strands g buffer override": {
+        "label": "Haar-Oberflächenersatz",
+        "hint": "Schreibt die Strähnen in die Puffer der Oberflächen, damit die Beleuchtung sie wie Oberflächen behandelt; steigt mit den Strähnen auf dem Bildschirm."
+      },
+      "pass.hair strands g buffer override depth": {
+        "label": "Haar-Oberflächenersatz: Tiefe",
+        "hint": "Schreibt die Tiefe der in die Oberflächenpuffer geschriebenen Strähnen; steigt mit den Strähnen auf dem Bildschirm."
+      },
+      "pass.hair strands composition": {
+        "label": "Haar-Komposition",
+        "hint": "Legt die beleuchteten Strähnen mit ihrer Abdeckung auf das Bild; steigt mit der Rendergröße."
+      },
+      "pass.hair strands custom depth": {
+        "label": "Haar: eigene Tiefe",
+        "hint": "Schreibt die Strähnen in die eigene Tiefe, die der Umriss und die Post-Process-Materialien lesen; nur, wo angefordert."
+      },
+      "pass.hair strands debug lines": {
+        "label": "Haar-Debug-Linien",
+        "hint": "Zeichnet die Linien der Haar-Debug-Ansicht; nur solange sie gezeigt wird."
+      },
+      "pass.hair strands debug lines frusta": {
+        "label": "Haar-Debug-Frusta",
+        "hint": "Schreibt die Linien der Lichtfrusta der Haar-Debug-Ansicht; nur solange sie gezeigt wird."
+      },
+      "pass.hair strands debug lines macro": {
+        "label": "Haar-Debug-Gruppen",
+        "hint": "Schreibt die Linien der Gruppenboxen der Strähnen in der Haar-Debug-Ansicht; nur solange sie gezeigt wird."
+      },
+      "pass.hair strands debug lines nodes": {
+        "label": "Haar-Debug-Knoten",
+        "hint": "Schreibt die Linien der Baumknoten der Strähnen in der Haar-Debug-Ansicht; nur solange sie gezeigt wird."
+      },
+      "pass.hair strands debug panels atlas": {
+        "label": "Haar-Debug-Atlas",
+        "hint": "Zeichnet das Haar-Debug-Panel des Tiefschattenatlas; nur solange es gezeigt wird."
+      },
+      "pass.hair strands debug panels voxels": {
+        "label": "Haar-Debug-Voxel",
+        "hint": "Zeichnet das Haar-Debug-Panel des Voxelvolumens; nur solange es gezeigt wird."
+      },
+      "pass.sun distance field shadow cull": {
+        "label": "Sonnen-Feldschatten: Culling",
+        "hint": "Verwirft die Distanzfelder der Meshes außerhalb der Schattenkacheln der Sonne; steigt mit den Meshes."
+      },
+      "pass.sun distance field shadow offsets": {
+        "label": "Sonnen-Feldschatten: Offsets",
+        "hint": "Legt für jede Kachel die Liste der Meshes an, die sie beschatten; steigt mit den Kacheln."
+      },
+      "pass.sun distance field shadow count tiles": {
+        "label": "Sonnen-Feldschatten: Kacheln zählen",
+        "hint": "Zählt die Meshes, die jede Schattenkachel enthält; steigt mit den Meshes."
+      },
+      "pass.sun distance field shadow write tiles": {
+        "label": "Sonnen-Feldschatten: Kacheln schreiben",
+        "hint": "Schreibt die Meshes in die Liste jeder Schattenkachel; steigt mit den Meshes."
+      },
+      "pass.distance field occlusion grid": {
+        "label": "Feldverdeckung: Gitter",
+        "hint": "Baut das Gitter der Meshes, die die Distanzfeld-Verdeckung verfolgt; steigt mit den Meshes."
+      },
+      "pass.distance field occlusion cull": {
+        "label": "Feldverdeckung: Culling",
+        "hint": "Verwirft die Distanzfelder der Meshes außerhalb der Bildschirmkacheln; steigt mit den Meshes."
+      },
+      "pass.distance field occlusion offsets": {
+        "label": "Feldverdeckung: Offsets",
+        "hint": "Legt für jede Bildschirmkachel ihre Mesh-Liste an; steigt mit den Kacheln."
+      },
+      "pass.distance field occlusion count tiles": {
+        "label": "Feldverdeckung: Kacheln zählen",
+        "hint": "Zählt die Meshes, die jede Bildschirmkachel enthält; steigt mit den Meshes."
+      },
+      "pass.distance field occlusion write tiles": {
+        "label": "Feldverdeckung: Kacheln schreiben",
+        "hint": "Schreibt die Meshes in die Liste jeder Bildschirmkachel; steigt mit den Meshes."
+      },
+      "pass.distance field occlusion cones": {
+        "label": "Feldverdeckung: Kegel",
+        "hint": "Verfolgt die Verdeckungskegel durch die Distanzfelder; steigt mit der Rendergröße."
+      },
+      "pass.distance field occlusion history": {
+        "label": "Feldverdeckung: Historie",
+        "hint": "Mischt die Verdeckung mit der der letzten Bilder; steigt mit der Rendergröße."
+      },
+      "pass.distance field occlusion pack": {
+        "label": "Feldverdeckung: Packen",
+        "hint": "Packt die Verdeckung, damit die Beleuchtung sie liest; steigt mit der Rendergröße."
+      },
+      "pass.global distance field reset": {
+        "label": "Globales Feld: Zurücksetzen",
+        "hint": "Löscht die Seiten des globalen Distanzfelds, bevor es neu gebaut wird; wenn das Feld zurückgesetzt wird."
+      },
+      "pass.global distance field update, static": {
+        "label": "Globales Feld: Aktualisierung (statisch)",
+        "hint": "Baut die Seiten des globalen Distanzfelds neu, die die unbewegten Meshes geändert haben; steigt mit den aktualisierten Seiten."
+      },
+      "pass.global distance field update, movable": {
+        "label": "Globales Feld: Aktualisierung (beweglich)",
+        "hint": "Baut die Seiten des globalen Distanzfelds neu, die die sich bewegenden Meshes berühren; steigt mit ihnen."
+      },
+      "pass.global distance field page statistics": {
+        "label": "Globales Feld: Statistik",
+        "hint": "Zählt die Seiten des globalen Distanzfelds für seine Debug-Ansicht; nur solange sie gezeigt wird."
+      },
+      "pass.mesh distance field streaming": {
+        "label": "Mesh-Feld-Streaming",
+        "hint": "Lädt die Distanzfelder der Meshes in den Atlas und entfernt sie daraus; steigt mit den gestreamten Feldern."
+      },
+      "pass.sky light face": {
+        "label": "Himmelslicht: Würfelfläche",
+        "hint": "Zeichnet eine Fläche der Würfelerfassung des Himmelslichts; steigt mit der Größe der Erfassung."
+      },
+      "pass.sky light clouds": {
+        "label": "Himmelslicht: Wolken",
+        "hint": "Verfolgt die Wolken in die Erfassung des Himmelslichts; steigt mit der Größe der Erfassung."
+      },
+      "pass.sky light sky table": {
+        "label": "Himmelslicht: Himmelstabelle",
+        "hint": "Baut die Himmelstabelle, die die Erfassung des Himmelslichts liest; steigt mit der Größe der Tabelle."
+      },
+      "pass.sky light copy": {
+        "label": "Himmelslicht: Kopie",
+        "hint": "Kopiert den erfassten Würfel für seine Filterung; steigt mit der Größe der Erfassung."
+      },
+      "pass.sky light mips": {
+        "label": "Himmelslicht: Mips",
+        "hint": "Baut die kleineren Stufen des erfassten Würfels; steigt mit seiner Größe."
+      },
+      "pass.sky light filter": {
+        "label": "Himmelslicht: Filter",
+        "hint": "Filtert den erfassten Würfel für die rauen Reflexionen; steigt mit seiner Größe."
+      },
+      "pass.sky light harmonics": {
+        "label": "Himmelslicht: Harmonische",
+        "hint": "Summiert den erfassten Würfel in sphärische Harmonische für das diffuse Himmelslicht; geringe feste Kosten."
+      },
+      "pass.sky light table": {
+        "label": "Verfolgtes Himmelslicht: Tabelle",
+        "hint": "Baut die Himmelstabelle, die das verfolgte Himmelslicht liest; steigt mit der Größe der Tabelle."
+      },
+      "pass.sky light directions": {
+        "label": "Verfolgtes Himmelslicht: Richtungen",
+        "hint": "Wählt die Richtungen, die das verfolgte Himmelslicht abtastet; steigt mit der Rendergröße."
+      },
+      "pass.sky light trace": {
+        "label": "Verfolgtes Himmelslicht",
+        "hint": "Verfolgt die Verdeckung des Himmelslichts durch die Szene; steigt mit der Rendergröße."
+      },
+      "pass.sky light composite": {
+        "label": "Verfolgtes Himmelslicht: Komposition",
+        "hint": "Legt das verfolgte Himmelslicht auf das Bild; steigt mit der Rendergröße."
+      },
+      "pass.sky meshes face": {
+        "label": "Himmels-Meshes: Würfelfläche",
+        "hint": "Zeichnet die Himmels-Meshes in eine Fläche der Himmelserfassung; steigt mit den Himmels-Meshes."
+      },
+      "pass.sky meshes copy": {
+        "label": "Himmels-Meshes: Kopie",
+        "hint": "Kopiert die Erfassung der Himmels-Meshes, damit der Himmel sie liest; steigt mit ihrer Größe."
+      },
+      "pass.cloud depth range": {
+        "label": "Wolken: Tiefenbereich",
+        "hint": "Findet den Tiefenbereich, über den die Wolken verfolgt werden; steigt mit der Rendergröße."
+      },
+      "pass.cloud empty space": {
+        "label": "Wolken: leerer Raum",
+        "hint": "Findet den leeren Raum, den die Wolkenverfolgung überspringen kann; steigt mit der Rendergröße."
+      },
+      "pass.cloud trace": {
+        "label": "Wolken-Trace",
+        "hint": "Führt die Strahlen schrittweise durch die Wolkenschicht; steigt mit der Rendergröße und der Wolkenqualität."
+      },
+      "pass.cloud haze": {
+        "label": "Wolkendunst",
+        "hint": "Verfolgt den Dunst in und unter den Wolken; steigt mit der Rendergröße."
+      },
+      "pass.cloud reconstruction": {
+        "label": "Wolken-Rekonstruktion",
+        "hint": "Baut die vollständigen Wolken aus den verfolgten Pixeln und den letzten Bildern neu auf; steigt mit der Rendergröße."
+      },
+      "pass.cloud composition": {
+        "label": "Wolken-Komposition",
+        "hint": "Legt die Wolken auf das Bild; steigt mit der Rendergröße."
+      },
+      "pass.cloud composition behind water": {
+        "label": "Wolken hinter Wasser",
+        "hint": "Legt die Wolken auf das durch das Wasser gesehene Bild; steigt mit dem Wasser auf dem Bildschirm."
+      },
+      "pass.cloud holdout": {
+        "label": "Wolken-Holdout",
+        "hint": "Schneidet die Wolken aus, wo das Alpha des Bildes ausgespart ist; steigt mit der Rendergröße."
+      },
+      "pass.cloud shadow": {
+        "label": "Wolkenschatten",
+        "hint": "Verfolgt die Schattenkarte der Wolken für die Sonne; steigt mit der Größe der Karte."
+      },
+      "pass.cloud sky occlusion": {
+        "label": "Wolken-Himmelsverdeckung",
+        "hint": "Verfolgt für das Himmelslicht, wie viel des Himmels die Wolken verdecken; steigt mit der Größe der Karte."
+      },
+      "pass.cloud lightning volume": {
+        "label": "Wolken-Blitzvolumen",
+        "hint": "Baut das Volumen, mit dem die Blitze die Wolken beleuchten; wenn sich die Wolken ändern."
+      },
+      "pass.cloud layout pattern": {
+        "label": "Wolken-Layoutmuster",
+        "hint": "Baut das Muster, das das Layout der Wolken liest; wenn sich die Wolken ändern."
+      },
+      "pass.fog local volumes cull": {
+        "label": "Nebelvolumen: Culling",
+        "hint": "Verwirft die lokalen Nebelvolumen außerhalb der Froxel-Kacheln; steigt mit den Volumen."
+      },
+      "pass.fog local volumes sky": {
+        "label": "Nebelvolumen: Himmel",
+        "hint": "Beleuchtet die lokalen Nebelvolumen mit dem Himmel; steigt mit den Volumen."
+      },
+      "pass.path tracer light grid": {
+        "label": "Pathtracer: Lichtgitter",
+        "hint": "Baut das Gitter der Lichter, die der Pathtracer abtastet; wenn sich die Lichter ändern."
+      },
+      "pass.path tracer air optical depth": {
+        "label": "Pathtracer: Lufttiefe",
+        "hint": "Baut die Tabelle der optischen Tiefe der Luft, die der Pathtracer liest; wenn sich die Atmosphäre ändert."
+      },
+      "pass.path tracer cloud acceleration map": {
+        "label": "Pathtracer: Wolkenkarte",
+        "hint": "Baut die Karte, mit der der Pathtracer die leeren Wolken überspringt; wenn sich die Wolken ändern."
+      },
+      "pass.path tracer sky table": {
+        "label": "Pathtracer: Himmelstabelle",
+        "hint": "Baut die Himmelstabelle, die der Pathtracer abtastet; wenn sich der Himmel ändert."
+      },
+      "pass.path tracer sample": {
+        "label": "Pathtracer: Samples",
+        "hint": "Verfolgt die Samples des Pathtracers für das Bild; steigt mit der Rendergröße und den Bounces."
+      },
+      "pass.path tracer error mips": {
+        "label": "Pathtracer: Fehler-Mips",
+        "hint": "Baut die Stufen des Fehlers der Samples, die das adaptive Sampling liest; steigt mit der Rendergröße."
+      },
+      "pass.path tracer normal space": {
+        "label": "Pathtracer: Normalenraum",
+        "hint": "Schreibt die Normalen und die Tiefe, von denen der Entrauscher geleitet wird; steigt mit der Rendergröße."
+      },
+      "pass.path tracer denoiser": {
+        "label": "Pathtracer: Entrauscher",
+        "hint": "Entrauscht das Bild des Pathtracers; steigt mit der Rendergröße."
+      },
+      "pass.path tracer denoiser motion view": {
+        "label": "Pathtracer: Bewegungsansicht",
+        "hint": "Zeichnet die Bewegungs-Debug-Ansicht des Entrauschers; nur solange sie gezeigt wird."
+      },
+      "pass.path tracer denoiser warp view": {
+        "label": "Pathtracer: Warp-Ansicht",
+        "hint": "Zeichnet die Warp-Debug-Ansicht des Entrauschers; nur solange sie gezeigt wird."
+      },
+      "pass.path tracer display": {
+        "label": "Pathtracer: Anzeige",
+        "hint": "Zeigt das Bild des Pathtracers auf dem Bildschirm; steigt mit der Rendergröße."
+      },
+      "pass.card capture clear": {
+        "label": "Kartenerfassung: Löschen",
+        "hint": "Löscht die Karten des Oberflächen-Caches, die gleich erfasst werden; steigt mit den erfassten Karten."
+      },
+      "pass.card capture cull": {
+        "label": "Kartenerfassung: Culling",
+        "hint": "Verwirft die Meshes außerhalb der Karten, die gleich erfasst werden; steigt mit den Karten und den Meshes."
+      },
+      "pass.card capture raster": {
+        "label": "Kartenerfassung: Raster",
+        "hint": "Zeichnet die Meshes in die Erfassungen der Karten; steigt mit den erfassten Dreiecken."
+      },
+      "pass.card capture export": {
+        "label": "Kartenerfassung: Export",
+        "hint": "Schreibt die erfassten Karten in den Atlas des Oberflächen-Caches; steigt mit den erfassten Karten."
+      },
+      "pass.surface cache atlas clear": {
+        "label": "Oberflächen-Cache: Atlas löschen",
+        "hint": "Löscht die Schichten des Atlas des Oberflächen-Caches; wenn der Atlas angelegt oder zurückgesetzt wird."
+      },
+      "pass.surface cache feedback table arguments": {
+        "label": "Oberflächen-Cache: Feedback-Argumente",
+        "hint": "Bereitet den Dispatch der Feedback-Tabelle des Oberflächen-Caches vor; geringe feste Kosten."
+      },
+      "pass.surface cache feedback table": {
+        "label": "Oberflächen-Cache: Feedback-Tabelle",
+        "hint": "Baut die Tabelle der Karten, die das Bild angefordert hat; steigt mit den gesehenen Karten."
+      },
+      "pass.surface cache feedback compaction": {
+        "label": "Oberflächen-Cache: Feedback-Verdichtung",
+        "hint": "Verdichtet die Karten, die das Bild angefordert hat, zu einer Liste; steigt mit den gesehenen Karten."
+      },
+      "pass.surface cache atlas view": {
+        "label": "Oberflächen-Cache: Atlas-Ansicht",
+        "hint": "Zeichnet die Atlas-Debug-Ansicht des Oberflächen-Caches; nur solange sie gezeigt wird."
+      },
+      "pass.inspection reflections": {
+        "label": "Inspektions-Reflexionen",
+        "hint": "Verfolgt die Reflexionsstrahlen, die die Inspektion zeichnet; nur solange sie gezeigt wird."
+      },
+      "tab.why": {
+        "label": "Warum",
+        "hint": "Warum jedes Bild gezeichnet oder gehalten wurde, was sich bewegt hat, wie weit sich die Hauptansicht beruhigt hat, und was die Instrumente kosten; die Engine zeichnet es auf, solange das Panel offen ist."
+      },
+      "summary.still": {
+        "label": "Stille Ansicht",
+        "hint": "Jeder Durchlauf der letzten Sekunde hielt sein Bild: nichts wurde gezeichnet, also nichts gemessen."
+      },
+      "summary.stillValue": {
+        "label": "nichts gezeichnet",
+        "hint": "„Die stille Pose messen“ zeichnet jedes stille Bild erneut, solange es an ist, damit seine Kosten gemessen werden."
+      },
+      "summary.stillMeasured": {
+        "label": "still gemessen",
+        "hint": "Die stille Pose wird gemessen: jedes Bild, das die Ansicht halten würde, wird erneut gezeichnet (Grund forced)."
+      },
+      "summary.paused": {
+        "label": "pausiert",
+        "hint": "Die Anzeige ist pausiert: die Zahlen bleiben, wie sie waren, die Instrumente lesen weiter."
+      },
+      "detail.median": {
+        "label": "p50 {p50} ms = {n} × {refresh} ms",
+        "hint": "Das mittlere Intervall im Raster der Anzeige: ganze Aktualisierungen mal die Aktualisierung."
+      },
+      "detail.held": {
+        "label": "gehalten {n}",
+        "hint": "Durchläufe des Fensters, die kein Bild zeichneten."
+      },
+      "detail.stutters": {
+        "label": "Ruckler {n}",
+        "hint": "Intervalle über 50 ms und über dem Doppelten des Medians."
+      },
+      "detail.samples": {
+        "label": "gemessen {n} · verworfen {d}",
+        "hint": "Die Bilder, die der GPU-Timer im Fenster gemessen hat, und die ungelesen verworfenen Messungen."
+      },
+      "detail.gpuClock": {
+        "label": "GPU-Timer {us} µs",
+        "hint": "Der Schritt des GPU-Timers, aus seinen Zeitstempeln ermittelt."
+      },
+      "detail.cpuClock": {
+        "label": "CPU-Uhr {us} µs",
+        "hint": "Der Schritt der CPU-Uhr: 5 µs bei Cross-Origin-Isolation, sonst 100 µs."
+      },
+      "why.strip": {
+        "label": "Bilder",
+        "hint": "Ein Feld pro Bild der Hauptansicht auf der Zeitachse des Graphen, jedes unter dem Punkt seiner Viertelsekunde, gefärbt nach seinem Urteil; eine Marke oben bei einem Bild, das die Messung der stillen Pose erzwungen hat, eine Marke unten bei einem, das eine Ursache nennt. Zeige auf ein Feld, um dieses Bild zu benennen und ein jüngeres im Tab Warum zu lesen."
+      },
+      "why.forced": {
+        "label": "erzwungen",
+        "hint": "Ein Bild, das die Messung der stillen Pose erneut zeichnete."
+      },
+      "why.caused": {
+        "label": "Ursachen",
+        "hint": "Ein Bild, das nennt, was sich bewegte, seit die Ansicht eines behielt."
+      },
+      "why.roles": {
+        "label": "Bilder je Ansicht",
+        "hint": "Die seit dem Zurücksetzen des Fensters gelesenen Bilder, nach Rolle der Ansicht: die Hauptansicht, die Ansichten der Seite, die eigenen der Engine (ein Spiegel, die eigene Tiefe, eine Himmelsseite), eine Aufnahme."
+      },
+      "why.frames": {
+        "label": "Gelesene Durchläufe",
+        "hint": "Das erste und letzte Bild, das der Leser seit dem Zurücksetzen des Fensters aufzeichnete, nach den eigenen Nummern der Aufzeichnung."
+      },
+      "why.verdicts": {
+        "label": "Urteile",
+        "hint": "Was aus den Bildern der gewählten Ansicht wurde: gezeichnet oder gehalten, und warum; ein Urteil, das kein Bild hatte, ist ausgegraut."
+      },
+      "why.reasons": {
+        "label": "Unruhig",
+        "hint": "Die Arbeit, die noch nicht zur Ruhe gekommen war, als das Halten entschieden wurde, über die Bilder (ein Bild kann mehrere nennen); ein Name, den kein Bild hatte, ist ausgegraut."
+      },
+      "why.terms": {
+        "label": "Terme jedes Bildes",
+        "hint": "Der Term, der eine ruhige Ansicht erneut zeichnete, über die Bilder, die er zeichnete; ein Term, den kein Bild hatte, ist ausgegraut."
+      },
+      "why.causes": {
+        "label": "Ursachen",
+        "hint": "Was eine Revision bewegte oder ein Bild anforderte, über die Bilder (ein Bild kann mehrere nennen); eine Ursache, die kein Bild hatte, ist ausgegraut."
+      },
+      "why.sinceChange": {
+        "label": "Seit der Änderung",
+        "hint": "Bilder seit der letzten Änderung der Hauptansicht, gegenüber den Bildern, die ihre zeitliche Historie braucht, um die Ansicht davor zu vergessen; ausgegraut, wenn das letzte Fenster keines verglich (eine Ansicht in Bewegung oder gehalten)."
+      },
+      "why.history": {
+        "label": "Historie",
+        "hint": "Bilder, die die zeitliche Historie angesammelt hat, gegenüber den Bildern, mit denen sie sich am Ende des Jitter-Zyklus füllt; ausgegraut, wenn das letzte Fenster keines verglich."
+      },
+      "why.panelCost": {
+        "label": "Panel, ms je Sekunde",
+        "hint": "Die eigene Hauptthread-Zeit des Panels zum Lesen und Zeichnen in der letzten Sekunde, ms je Sekunde."
+      },
+      "why.instrumentCpu": {
+        "label": "Instrumente, CPU",
+        "hint": "Die eigene Hauptthread-Zeit des Zeitinstruments je Durchlauf (seine Zeilen, seine Messungen, seine Lesevorgänge): die Instrumente-Zeile des CPU-Tabs."
+      },
+      "why.instrumentGpu": {
+        "label": "Instrumente, GPU",
+        "hint": "Die GPU-Passes, die die Instrumente je Durchlauf hinzufügen (die Diagnose-Stufe): die Instrumente-Zeile des GPU-Tabs."
+      },
+      "verdict.drawn": {
+        "label": "gezeichnet",
+        "hint": "Ein neues Bild wurde gezeichnet und gezeigt."
+      },
+      "verdict.still": {
+        "label": "still",
+        "hint": "Gehalten: das Bild davor, bitgenau erneut gezeigt."
+      },
+      "verdict.heldOnAnswer": {
+        "label": "auf Antwort gehalten",
+        "hint": "Gehalten auf eine Antwort, die das Gerät noch schuldet: ein Programm, das kompiliert, ein Puffer."
+      },
+      "verdict.targetsAwaited": {
+        "label": "Ziele erwartet",
+        "hint": "Gehalten auf Ziele, die das Gerät noch nicht gewährt hat."
+      },
+      "verdict.swapped": {
+        "label": "getauscht",
+        "hint": "In nebenbei angelegte Ziele gezeichnet und eingetauscht."
+      },
+      "verdict.noiseFinal": {
+        "label": "Rauschen final",
+        "hint": "Das letzte Bild beim Aufbau einer Ansicht, in der kanonischen Phase des Rauschens gezeichnet, bevor die Ansicht hält."
+      },
+      "verdict.withheld": {
+        "label": "zurückgehalten",
+        "hint": "Gezeichnet und nicht gezeigt: bevor die Ansicht geladen ist, oder während ein Ladevorgang auf langsames Streaming wartet."
+      },
+      "image.frame": {
+        "label": "Bild",
+        "hint": "Das Bild, das die Zeilen unten lesen: das unter dem Zeiger auf dem Streifen, sonst das letzte; seine Bildnummer in der Sitzung."
+      },
+      "image.view": {
+        "label": "Ansicht",
+        "hint": "Die Rolle der Ansicht und ihr Platz unter den Ansichten dieser Rolle."
+      },
+      "image.verdict": {
+        "label": "Urteil",
+        "hint": "Was aus dem Bild wurde."
+      },
+      "image.because": {
+        "label": "Gezeichnet, weil",
+        "hint": "Der eine Grund, aus dem das Halten es zeichnete; keiner bei einem gehaltenen Bild."
+      },
+      "image.reasons": {
+        "label": "Unruhig",
+        "hint": "Die Arbeit, die noch nicht zur Ruhe gekommen war, als das Halten entschieden wurde."
+      },
+      "image.term": {
+        "label": "Term",
+        "hint": "Der Term, der eine ruhige Ansicht bei jedem Bild zeichnet und dieses zeichnete."
+      },
+      "image.causes": {
+        "label": "Ursachen",
+        "hint": "Was sich bewegte, seit die Ansicht ein Bild behielt, nach Herkunft."
+      },
+      "image.answer": {
+        "label": "Gehalten auf",
+        "hint": "Die Antwort, auf die das Bild gehalten wurde; keine bei einem gezeichneten Bild."
+      },
+      "image.retryInMs": {
+        "label": "Neuer Versuch in",
+        "hint": "Auf abgelehnte Ziele gehalten: die Millisekunden, bevor die abgelehnte Größe erneut angefragt wird."
+      },
+      "image.intervalMs": {
+        "label": "Intervall",
+        "hint": "Die Zeit, die das Bild auf dem Bildschirm blieb."
+      },
+      "image.refreshes": {
+        "label": "Aktualisierungen",
+        "hint": "Die ganzen Aktualisierungen der Anzeige, die das Bild auf dem Bildschirm blieb."
+      },
+      "image.bound": {
+        "label": "Begrenzt durch",
+        "hint": "Was seine Bildwiederholungen bestimmt hat: die GPU, die CPU oder der Takt des Bildschirms."
+      },
+      "bound.gpu": {
+        "label": "GPU",
+        "hint": "Die Zeit des Grafikprozessors hat es bestimmt."
+      },
+      "bound.cpu": {
+        "label": "CPU",
+        "hint": "Die Zeit des Hauptthreads hat es bestimmt."
+      },
+      "bound.pacing": {
+        "label": "Bildschirmtakt",
+        "hint": "Keiner der Prozessoren: die Bildwiederholung des Bildschirms, die Seite oder eine Bildratengrenze hat es bestimmt."
+      },
+      "image.cpuMs": {
+        "label": "CPU",
+        "hint": "Die Hauptthread-Zeit des Durchlaufs."
+      },
+      "image.gpuMs": {
+        "label": "GPU",
+        "hint": "Die GPU-Zeit des Bildes; keine, wenn der Timer es nicht gemessen hat."
+      },
+      "image.outsideMs": {
+        "label": "Außerhalb des Bildes",
+        "hint": "Die GPU-Arbeit, die neben dem Bild in seinem Durchlauf abgeschickt wurde."
+      },
+      "image.waitMs": {
+        "label": "Warten",
+        "hint": "Das Intervall abzüglich des stärker ausgelasteten Prozessors: Zeit des Wartens auf eine Aktualisierung."
+      },
+      "image.toNextRefreshMs": {
+        "label": "Eine Aktualisierung früher",
+        "hint": "Die Zeit, die der begrenzende Prozessor abgeben muss, damit das Bild eine Aktualisierung früher ankommt."
+      },
+      "control.every": {
+        "label": "GPU gemessen",
+        "hint": "Wie oft der GPU-Timer ein Bild liest: standardmäßig 1 von {every}, das Leichteste; 1 von 3 oder jedes Bild misst mehr davon, jedes für eine Timer-Abfrage und ein Zurücklesen."
+      },
+      "control.everyImage": {
+        "label": "jedes Bild",
+        "hint": "Jedes Bild wird auf der GPU gemessen: die meisten Stichproben, für eine Timer-Abfrage und ein Zurücklesen pro Bild."
+      },
+      "control.still": {
+        "label": "Die stille Pose messen",
+        "hint": "Solange an, wird jedes Bild, das die Ansicht halten würde, erneut gezeichnet, damit die stille Pose gemessen wird; jedes solche Bild ist eine neue TAA-Probe (Grund forced). Es kostet ein ganzes Bild pro Frame."
+      },
+      "control.pause": {
+        "label": "Anzeige pausieren",
+        "hint": "Friert die gezeigten Zahlen ein; die Instrumente lesen weiter, und der Streifen antwortet weiter auf den Zeiger."
+      },
+      "control.reset": {
+        "label": "Fenster zurücksetzen",
+        "hint": "Vergisst die bisher gelesenen Bilder und Zählungen: das Fenster beginnt jetzt neu."
+      },
+      "control.export": {
+        "label": "JSON herunterladen",
+        "hint": "Die Fenster der letzten Minute der Warum- und Zeitinstrumente, wie die Engine sie gab, jedes Zeitfenster mit den Optionen, mit denen sein Leser geöffnet wurde; die Adresse der Seite, die gelesene Welt, der Zustand der Leser und was angefragt wurde."
+      },
+      "control.role": {
+        "label": "Gezählte Ansicht",
+        "hint": "Wessen Ansicht Bilder dieser Tab zählt: die Hauptansicht, die Ansichten der Seite, die der Engine (ein Spiegel, eine Himmelsfläche), eine Aufnahme; unter den gelesenen Rollen."
+      },
+      "control.world": {
+        "label": "Welt",
+        "hint": "Die Welt der Seite, die das Panel liest, nach ihrem Platz unter den Welten der Seite (die zuerst erstellte ist die Hauptansicht); jedes Fenster beginnt bei der gewählten neu."
+      },
+      "control.view": {
+        "label": "Ansicht",
+        "hint": "Was die Welt zeichnet: das Render oder eine Ansicht davon, wie die Engine arbeitet (`world.diagnostic.mode`); eine ausgegraute wird hier nicht angeboten, oder die Welt hat sie abgelehnt."
+      },
+      "control.viewUnavailable": {
+        "label": "hier nicht gezeichnet",
+        "hint": "Diese Engine-Version zeichnet diese Ansicht noch nicht."
+      },
+      "control.viewRefused": {
+        "label": "von dieser Welt abgelehnt",
+        "hint": "Die Welt behielt die Ansicht, die sie hatte, als diese angefragt wurde; die Konsole sagt, warum."
+      },
+      "control.freeze": {
+        "label": "Culling einfrieren",
+        "hint": "Hält den Schnitt (seine Stufen, HLOD, Frustum und Verdeckung) an der Kamera von jetzt, während die Kamera weiterzieht (`world.diagnostic.freeze`): ein Schritt zur Seite in der Röntgenansicht zeigt, was er abschickte und was er verwarf."
+      },
+      "viewGroup.geometry": {
+        "label": "Geometrie",
+        "hint": "Was der Schnitt gezeichnet hat: seine Dreiecke, Cluster, Detailstufen, HLOD, Voxel, Bildschirmfehler und Seiten, durchsichtig oder gezählt."
+      },
+      "viewGroup.materials": {
+        "label": "Materialien",
+        "hint": "Die Materialien der Oberflächen: ihre Klassen, die Eigenschaften unter dem Cursor, die gelesene Texturgröße, die Subsurface-Profile."
+      },
+      "viewGroup.lighting": {
+        "label": "Beleuchtung",
+        "hint": "Das Licht, das die Oberflächen empfangen, ganz oder Term für Term, und die Atlanten der Bilder und Profile der Lichter."
+      },
+      "viewGroup.temporal": {
+        "label": "Temporales Antialiasing",
+        "hint": "Die temporale Akkumulation: das Bild, das sie empfängt, ihre Historie und was sie verwirft, und was sich von einem Bild zum nächsten geändert hat."
+      },
+      "viewGroup.shadowMaps": {
+        "label": "Schattenkarten",
+        "hint": "Die virtuellen Schattenkarten: die Stufen und Seiten, die jedes Pixel liest, ihr Cache, ihre Werfer und ihre Kosten."
+      },
+      "viewGroup.surfaceCache": {
+        "label": "Oberflächencache",
+        "hint": "Der Atlas der Karten der Meshes, seine Lichtaktualisierungen und die Szene, gesehen durch sein Licht."
+      },
+      "viewGroup.probes": {
+        "label": "Sonden",
+        "hint": "Die Bildschirmsonden, die Sonden der Welt und die Reflexionsstrahlen: wo sie stehen, was sie verfolgen, was sie halten."
+      },
+      "viewGroup.sampledLights": {
+        "label": "Abgetastete Lichter",
+        "hint": "Die abgetastete Beleuchtung vieler Lichter: die Oberflächen, die ihre Schattenstrahlen treffen, und was jedes Pixel kostet."
+      },
+      "viewGroup.hair": {
+        "label": "Haare",
+        "hint": "Die Haarsträhnen: ihre Hüllen, tiefen Schatten, Bildschirmrahmen und Voxel."
+      },
+      "viewGroup.volumes": {
+        "label": "Volumen",
+        "hint": "Die Voxelgitter der heterogenen Volumen, nach jeder Art, die Transmission durch sie zu finden."
+      },
+      "viewGroup.other": {
+        "label": "Andere",
+        "hint": "Ansichten, die noch keine Gruppe des Panels nennt."
+      },
+      "reader.opening": {
+        "label": "öffnet",
+        "hint": "Die Leser der Instrumente werden geladen."
+      },
+      "reader.waiting": {
+        "label": "wartet auf Welt {n}",
+        "hint": "Die gewählte Welt hat seitdem keinen Durchlauf gezeichnet: die gezeigten Zahlen sind die der Welt davor, bis sie einen zeichnet."
+      },
+      "reader.missing": {
+        "label": "nicht in diesem Build: {names}",
+        "hint": "Dieser Engine-Build hat kein solches Instrument; nichts davon wird gezeigt."
+      },
+      "reader.failed": {
+        "label": "fehlgeschlagen",
+        "hint": "Der Leser eines Instruments öffnete sich nicht (seine Familie wurde nicht geladen)."
+      },
+      "reader.faulted": {
+        "label": "Fehler: {message}",
+        "hint": "Ein Lesen oder Zeichnen des Panels warf einen Fehler; es liest weiter."
+      },
+      "gpu.outside": {
+        "label": "Außerhalb des Bildes",
+        "hint": "Arbeit, die die Engine neben den Bildern abschickt (Textur-Kacheln, installierte Seiten, Himmelsaufnahmen), gemessen, solange die Zeit gelesen wird."
+      },
+      "gpu.diagnostic": {
+        "label": "Instrumente",
+        "hint": "Passes, die eine Ansicht oder eine Untersuchung hinzufügt, um zu zeigen, wie die Engine arbeitet; nicht die eigenen Kosten der Engine."
+      },
+      "gpu.views": {
+        "label": "Ansichten neben der Hauptansicht",
+        "hint": "Jede neben dem Hauptbild gezeichnete Ansicht (eine Ansicht der Seite, ein Spiegel, die eigene Tiefe, eine Himmelsseite): ihre mittlere GPU-Zeit über ihre eigenen Bilder, summiert; nicht Teil des Durchlaufs oben."
+      },
+      "cpu.diagnostic": {
+        "label": "Instrumente",
+        "hint": "Die eigene Hauptthread-Arbeit des Zeitinstruments je Durchlauf, solange es gelesen wird (seine Zeilen, seine Messungen, seine Lesevorgänge); nicht die Kosten der Engine."
+      },
+      "control.everyN": {
+        "label": "1 von {n}",
+        "hint": "Eines von {n} Bildern wird auf der GPU gemessen."
+      },
+      "control.actions": {
+        "label": "Aktionen",
+        "hint": "Was die Anzeige mit dem Gelesenen tut: anhalten, das Fenster neu beginnen, herunterladen."
+      },
+      "role.main": {
+        "label": "Hauptansicht",
+        "hint": "Die Hauptansicht der Welt."
+      },
+      "role.pageView": {
+        "label": "Seitenansicht",
+        "hint": "Eine von der Seite hinzugefügte Ansicht (`world.addView`)."
+      },
+      "role.planarReflection": {
+        "label": "ebene Spiegelung",
+        "hint": "Die Ansicht eines ebenen Spiegels, neben der Hauptansicht gezeichnet."
+      },
+      "role.customDepth": {
+        "label": "eigene Tiefe",
+        "hint": "Die Ansicht der eigenen Tiefe, neben der Hauptansicht gezeichnet."
+      },
+      "role.skyFace": {
+        "label": "Himmelsfläche",
+        "hint": "Eine Fläche des Würfels der Himmelsnetze, neben der Hauptansicht gezeichnet."
+      },
+      "role.aside": {
+        "label": "Aufnahme",
+        "hint": "Eine nebenbei gezeichnete Ansicht: eine Aufnahme."
+      },
+      "gpu.surfaceCache": {
+        "label": "Oberflächen-Cache",
+        "hint": "Erfasst die Karten der Meshes in den Atlas, den die Strahlen lesen; steigt mit den in einem Bild erfassten Seiten."
+      },
+      "shadows.pagesEmpty": {
+        "label": "Leere Schattenseiten",
+        "hint": "Seiten des Pools, die nichts enthalten und für die nächste Vergabe frei sind; steigt, wenn die Schatten weniger anfordern."
+      },
+      "shadows.pagesWpoConsidered": {
+        "label": "Schattenseiten mit Versatz",
+        "hint": "Gecachte Schattenseiten, die unter dem Culling der auf ihnen erlaubten Versätze bleiben; steigt mit den Versatz-Materialien im Bild."
+      },
+      "shadows.rootsNoted": {
+        "label": "Verschobene Platzierungen",
+        "hint": "Laufende Summe der als verschoben vermerkten Platzierungswelten; ihr Anstieg pro Bild sind die Platzierungen, die eine Bewegung erreichte."
+      },
+      "shadows.rootsBoxed": {
+        "label": "Abgeleitete Wurzelboxen",
+        "hint": "Laufende Summe der Wurzelboxen, die der Wurzelpass abgeleitet hat; die Schatteninvalidierung sieht eine Platzierung durch sie."
+      },
+      "pass.cluster measure": {
+        "label": "Cluster-Messung",
+        "hint": "Misst die längste Kante der Cluster, deren Seiten angekommen sind; steigt mit den ankommenden Seiten."
+      },
+      "pass.raster depth export": {
+        "label": "Raster-Tiefenexport",
+        "hint": "Schreibt den Tiefenanhang der Szene aus der ersten Ebene der Tiefenpyramide; steigt mit der Rendergröße."
+      },
+      "pass.material bins and shading": {
+        "label": "Material-Bins und Shading",
+        "hint": "Sortiert Pixel nach Material und schattiert den Bin jedes Materials; steigt mit den Materialien und Pixeln im Bild."
+      },
+      "pass.translucency modulation": {
+        "label": "Transluzenz-Modulation",
+        "hint": "Zeichnet die Schichten, die das Dahinterliegende multiplizieren; steigt mit diesen Schichten im Bild."
+      },
+      "pass.translucency compose": {
+        "label": "Transluzenz-Komposition",
+        "hint": "Setzt die transluzenten Schichten auf das Bild; steigt mit der Rendergröße."
+      },
+      "pass.reflection clear": {
+        "label": "Reflexion löschen",
+        "hint": "Leert das Reflexionsbild, wo kein Strahl verfolgt wird; steigt mit der Rendergröße."
+      },
+      "pass.reflection resolve": {
+        "label": "Reflexion auflösen",
+        "hint": "Nutzt die Strahlen benachbarter Pixel, um das Reflexionsbild zu füllen; steigt mit den spiegelnden Pixeln."
+      },
+      "pass.reflection temporal": {
+        "label": "Reflexion: temporal",
+        "hint": "Sammelt die Reflexionen früherer Bilder, um das Bild zu säubern; steigt mit den spiegelnden Pixeln."
+      },
+      "pass.reflection bilateral": {
+        "label": "Reflexion: bilateral",
+        "hint": "Filtert verrauschte oder neue Reflexionen mit ihren Nachbarn und schreibt das Reflexionsbild; steigt mit den spiegelnden Pixeln."
+      },
+      "pass.reflection keep depth": {
+        "label": "Reflexion: Tiefe behalten",
+        "hint": "Behält die opake Tiefe für die Reflexionen des nächsten Bildes; steigt mit der Rendergröße."
+      },
+      "pass.tile classification": {
+        "label": "Kachelklassifizierung",
+        "hint": "Sortiert die Bildschirmkacheln nach der Art Oberfläche, die sie enthalten, damit jede vom Programm beleuchtet wird, das sie braucht; steigt mit der Rendergröße."
+      },
+      "pass.surface colour": {
+        "label": "Oberflächenfarbe",
+        "hint": "Schreibt die erste Farbe jedes Pixels: den Hintergrund, die unverändert gezeigten Oberflächen und die Emission; steigt mit der Rendergröße."
+      },
+      "pass.sun light": {
+        "label": "Sonnenlicht",
+        "hint": "Fügt den Oberflächen das Licht der Sonne und der anderen gerichteten Lichter mit ihren Schatten hinzu; steigt mit den beleuchteten Pixeln und den Lichtern."
+      },
+      "pass.local lights": {
+        "label": "Lokale Lichter",
+        "hint": "Fügt den Oberflächen die Lampen der Zelle des Lichtgitters jedes Pixels hinzu; steigt mit den beleuchteten Pixeln und den Lichtern, die sie erreichen."
+      },
+      "pass.indirect light": {
+        "label": "Indirektes Licht",
+        "hint": "Fügt das Licht der Umgebung und des Himmels, das gestreute Licht, die Reflexionen und die Rückseite einer dünnen Oberfläche hinzu; steigt mit den beleuchteten Pixeln."
+      },
+      "pass.height fog": {
+        "label": "Höhennebel",
+        "hint": "Legt den Nebel, die lokalen Nebelvolumen und den Dunst der Luft über das beleuchtete Bild; steigt mit der Rendergröße."
+      },
+      "pass.temporal dilate velocity": {
+        "label": "Temporal: Geschwindigkeit dilatieren",
+        "hint": "Findet die nächste Oberfläche jedes Pixels und ihre Bewegung für das temporale Antialiasing; steigt mit der Rendergröße."
+      },
+      "pass.temporal decimate history": {
+        "label": "Temporal: Historie dezimieren",
+        "hint": "Projiziert die kleinen Historien der früheren Bilder auf dieses Bild; steigt mit der Rendergröße."
+      },
+      "pass.temporal detect thin geometry": {
+        "label": "Temporal: dünne Geometrie erkennen",
+        "hint": "Findet die dünne Geometrie, die die Historie behalten muss; steigt mit der Rendergröße."
+      },
+      "pass.temporal reject shading": {
+        "label": "Temporal: Shading verwerfen",
+        "hint": "Misst, welche Pixel von Bild zu Bild flackern, und dann, wo die Historie nicht mehr zum Bild passt und verworfen werden muss; steigt mit der Rendergröße."
+      },
+      "pass.temporal spatial anti aliasing": {
+        "label": "Temporal: räumliches Antialiasing",
+        "hint": "Glättet die Kanten der Pixel, deren Historie verworfen wurde; steigt mit der Rendergröße."
+      },
+      "pass.temporal update history": {
+        "label": "Temporal: Historie aktualisieren",
+        "hint": "Mischt das Bild in die Historie, um die Kanten zu glätten; steigt mit der Größe der Historie."
+      },
+      "pass.temporal resolve history": {
+        "label": "Temporal: Historie auflösen",
+        "hint": "Bringt eine Historie, die größer als die Anzeige ist, auf deren Größe; steigt mit der Anzeigegröße."
+      },
+      "pass.temporal resolve display layers": {
+        "label": "Temporal: Anzeigeebenen auflösen",
+        "hint": "Bringt die Historie der Anzeigeebenen auf die Anzeige; steigt mit der Anzeigegröße."
+      },
+      "control.details": {
+        "label": "Details",
+        "hint": "Öffnet das Detailfenster über der Ansicht: das Bild als Diagramm, jede Stufe und jeder Pass, warum jedes Bild gezeichnet wurde, die letzten Minuten, Speicher und Szene. Solange es offen ist, wird die GPU bei jedem Bild gemessen, es sei denn, Sie haben eine andere Abtastung gewählt; geschlossen kostet es nichts."
+      },
+      "details.label": {
+        "label": "Engine-Details",
+        "hint": "Alles, was die Instrumente von der Engine lesen, Tab für Tab; Esc oder × schließt es."
+      },
+      "details.close": {
+        "label": "Schließen",
+        "hint": "Schließt das Detailfenster (Esc)."
+      },
+      "tab.overview": {
+        "label": "Übersicht",
+        "hint": "Das Bild als Diagramm: jede GPU-Stufe ein Balken so lang wie ihre Zeit, die CPU darunter, das Refresh-Budget eine Linie; was das Bild aufhält, in Worten. Klicken Sie auf eine Stufe, um ihre Zeilen zu öffnen."
+      },
+      "tab.history": {
+        "label": "Verlauf",
+        "hint": "Die letzten fünf Minuten, ein Punkt pro Sekunde: die Zeit des Bildes, der GPU und der CPU, die Sekunden mit Rucklern und die, deren Bilder eine Ursache nannten."
+      },
+      "stageGroup.scene": {
+        "label": "Welt",
+        "hint": "Was die Welt bewegt: Physik, Animationen, Lichter."
+      },
+      "stageGroup.cut": {
+        "label": "Schnitt und Streaming",
+        "hint": "Was die Engine zu zeichnen wählt und zur GPU bringt: der Schnitt, die Seiten, die Uploads, die Texturen."
+      },
+      "stageGroup.commands": {
+        "label": "Befehle",
+        "hint": "Aufzeichnen und Senden der GPU-Befehle."
+      },
+      "stageGroup.surfaces": {
+        "label": "Oberflächen",
+        "hint": "Zeichnen der Oberflächen: die Tiefenpyramide, die Geometrie, die Decals und die Transparenten."
+      },
+      "stageGroup.light": {
+        "label": "Licht",
+        "hint": "Beleuchten der Oberflächen: der Oberflächen-Cache, die Schatten, die Lichtlisten, der Bounce, die Reflexionen und die Beleuchtung."
+      },
+      "stageGroup.image": {
+        "label": "Bild",
+        "hint": "Fertigstellen des Bildes: Antialiasing, Effekte und Ausgabe."
+      },
+      "stageGroup.apart": {
+        "label": "Abseits",
+        "hint": "GPU-Arbeit außerhalb des Bildes, die der Instrumente selbst und Pässe, die keine Stufe deklariert."
+      },
+      "overview.said": {
+        "label": "Das Bild braucht {frame} ms, die GPU {gpu} ms, die CPU {cpu} ms; es wartet {wait} ms bei einem Refresh von {budget} ms.",
+        "hint": "Das Bild in einem Satz, solange noch nichts sagt, was es aufhält: die Zeiten der Prozessoren und das Warten auf die Anzeige."
+      },
+      "overview.said.gpu": {
+        "label": "Begrenzt durch die GPU — das Bild braucht {frame} ms, die GPU {gpu} ms, die CPU {cpu} ms; es wartet {wait} ms bei einem Refresh von {budget} ms.",
+        "hint": "Das Bild in einem Satz: die Zeit der GPU hat bestimmt, wie viele Bildwiederholungen ein Bild auf dem Bildschirm bleibt; dann die Zeiten der Prozessoren und das Warten auf die Anzeige."
+      },
+      "overview.said.cpu": {
+        "label": "Begrenzt durch die CPU — das Bild braucht {frame} ms, die GPU {gpu} ms, die CPU {cpu} ms; es wartet {wait} ms bei einem Refresh von {budget} ms.",
+        "hint": "Das Bild in einem Satz: die Zeit des Hauptthreads hat bestimmt, wie viele Bildwiederholungen ein Bild auf dem Bildschirm bleibt; dann die Zeiten der Prozessoren und das Warten auf die Anzeige."
+      },
+      "overview.said.pacing": {
+        "label": "Begrenzt durch den Bildschirmtakt — das Bild braucht {frame} ms, die GPU {gpu} ms, die CPU {cpu} ms; es wartet {wait} ms bei einem Refresh von {budget} ms.",
+        "hint": "Das Bild in einem Satz: nicht die Prozessoren haben bestimmt, wie viele Bildwiederholungen ein Bild auf dem Bildschirm bleibt, sondern die Bildwiederholung des Bildschirms, die Seite oder eine Bildratengrenze; dann die Zeiten der Prozessoren und das Warten auf die Anzeige."
+      },
+      "overview.unread": {
+        "label": "Noch keine Zeit gelesen",
+        "hint": "Die GPU- und CPU-Stufen erscheinen, sobald der Bildzeit-Leser eine Sekunde gelesen hat."
+      },
+      "overview.stage": {
+        "label": "{name}: {ms} ms · {share} % des Bildes",
+        "hint": "Eine Stufe des Bildes, ihre mittlere Zeit in der letzten Sekunde und ihr Anteil am GPU-Bild; klicken, um ihre Zeilen zu öffnen."
+      },
+      "table.name": {
+        "label": "Name",
+        "hint": "Die Stufe und ihre Pässe darunter; klicken, um in Pipeline-Reihenfolge zu sortieren."
+      },
+      "table.avg": {
+        "label": "Mittel",
+        "hint": "Mittelwert der letzten Sekunde; gefärbt nach dem Refresh-Budget: orange über einem Viertel, rot über der Hälfte. Klicken zum Sortieren."
+      },
+      "table.p95": {
+        "label": "p95",
+        "hint": "Das 95. Perzentil der letzten Sekunde: 1 Bild von 20 dauert länger. Klicken zum Sortieren."
+      },
+      "table.max": {
+        "label": "Max",
+        "hint": "Das längste der letzten Sekunde. Klicken zum Sortieren."
+      },
+      "table.share": {
+        "label": "% des Bildes",
+        "hint": "Anteil am GPU-Bild (oder am CPU-Bild). Klicken zum Sortieren."
+      },
+      "table.trend": {
+        "label": "Letzte Minute",
+        "hint": "Der Mittelwert jeder Sekunde der letzten Minute."
+      },
+      "history.stutter": {
+        "label": "Ruckler",
+        "hint": "Eine Sekunde mit mindestens einem Bild, auf das die Anzeige länger als ihr üblicher Takt warten musste: eine rote Marke oben."
+      },
+      "history.cause": {
+        "label": "Ursache",
+        "hint": "Eine Sekunde, deren Bilder nannten, was sie bewegte: eine gelbe Marke unten; darauf zeigen, um die Ursachen zu lesen."
+      },
+      "history.point": {
+        "label": "vor {ago} s · Bild {frame} ms (max {max}) · GPU {gpu} ms · CPU {cpu} ms",
+        "hint": "Die Sekunde unter dem Zeiger: ihre mittleren Zeiten und ihr längstes Bild."
+      },
+      "history.unread": {
+        "label": "Noch nichts gelesen",
+        "hint": "Ein Punkt pro Sekunde aus dem, was der Bildzeit-Leser liest, gleich was das Panel zeigt: der erste kommt nach einer Sekunde."
+      },
+      "history.zoom": {
+        "label": "von vor {from} s bis vor {to} s · Doppelklick: die letzten fünf Minuten",
+        "hint": "Ziehen Sie über das Diagramm, um auf einen Zeitraum zu zoomen; Doppelklick zeigt wieder die letzten fünf Minuten."
+      },
+      "history.clipped": {
+        "label": "▲ über der Skala",
+        "hint": "Ein kleines Dreieck am oberen Rand des Diagramms, in der Farbe einer Linie: die Zeit dieser Sekunde lag über dem oberen Ende der Skala, eine Spitze, die die Skala auslässt; darauf zeigen, um sie ganz zu lesen."
+      },
+      "pass.material bins": {
+        "label": "Material-Bins",
+        "hint": "Sortiert die Pixel in einen Bin pro Materialklasse, bevor jede Klasse ihren eigenen schattiert; steigt mit der Rendergröße."
+      },
+      "pass.material shading": {
+        "label": "Material-Shading",
+        "hint": "Eine Materialklasse schattiert die Pixel ihres Bins, jedes dekodiert sein eigenes Dreieck; steigt mit den Pixeln dieser Klasse."
+      },
+      "pass.blend responsiveness": {
+        "label": "Transparenz-Reaktivität",
+        "hint": "Markiert, wo die Transparenten den temporalen Filter bitten, ihnen schneller zu folgen; steigt mit den transparenten Pixeln."
+      },
+      "pass.alpha holdout start": {
+        "label": "Alpha-Holdout: Start",
+        "hint": "Beginnt das Holdout-Ziel aus dem Alpha des beleuchteten Bildes; steigt mit der Rendergröße."
+      },
+      "pass.blend alpha holdout": {
+        "label": "Transparenz-Alpha-Holdout",
+        "hint": "Zeichnet die Holdout-Schichten in ihr Ziel; steigt mit ihren Pixeln."
+      },
+      "pass.alpha holdout apply": {
+        "label": "Alpha-Holdout anwenden",
+        "hint": "Legt die Sichtbarkeit des Holdouts zurück auf das Alpha des beleuchteten Bildes; steigt mit der Rendergröße."
+      },
+      "pass.translucent radiance mark": {
+        "label": "Transluzente Radianz markieren",
+        "hint": "Markiert die Zellen des Radianz-Caches, die die transluzenten Oberflächen lesen; steigt mit den transluzenten Pixeln."
+      },
+      "pass.sorted translucency collect": {
+        "label": "Sortierte Transluzenz sammeln",
+        "hint": "Sammelt die transluzenten Schichten jedes Pixels für ihre Sortierung; steigt mit den Schichten pro Pixel."
+      },
+      "pass.sorted translucency combine": {
+        "label": "Sortierte Transluzenz kombinieren",
+        "hint": "Setzt die sortierten Schichten von vorne nach hinten auf das Transluzenz-Ziel; steigt mit den Schichten pro Pixel."
+      },
+      "pass.water": {
+        "label": "Wasser",
+        "hint": "Schattiert das einschichtige Wasser; steigt mit den Wasserpixeln auf dem Bildschirm."
+      },
+      "pass.water scene copy": {
+        "label": "Wasser: Szenenkopie",
+        "hint": "Kopiert die Szene ohne das Wasser für seine Brechung; steigt mit der Rendergröße."
+      },
+      "pass.water depth": {
+        "label": "Wassertiefe",
+        "hint": "Zeichnet die Tiefe des Wassers; steigt mit seinen Pixeln."
+      },
+      "pass.water refraction mask": {
+        "label": "Wasser-Brechungsmaske",
+        "hint": "Maskiert, was das Wasser brechen darf; steigt mit seinen Pixeln."
+      },
+      "pass.water tiles": {
+        "label": "Wasserkacheln",
+        "hint": "Listet die Bildschirmkacheln mit Wasser; steigt mit der Rendergröße."
+      },
+      "pass.water velocity": {
+        "label": "Wassergeschwindigkeit",
+        "hint": "Schreibt die Bewegung der Wasseroberfläche für den temporalen Filter; steigt mit seinen Pixeln."
+      },
+      "pass.water sun shadow": {
+        "label": "Wasser-Sonnenschatten",
+        "hint": "Beschattet das Wasser von der Sonne aus; steigt mit seinen Pixeln."
+      },
+      "pass.water composite": {
+        "label": "Wasser-Komposition",
+        "hint": "Setzt Reflexion und Brechung des Wassers auf das Bild; steigt mit seinen Pixeln."
+      },
+      "pass.hzb occlusion roots": {
+        "label": "HZB-Verdeckungswurzeln",
+        "hint": "Leitet die Ecken der Wurzelboxen für ihren Test gegen die Tiefenpyramide ab; steigt mit den Wurzeln."
+      },
+      "pass.hardware occlusion boxes": {
+        "label": "Hardware-Verdeckung: Boxen",
+        "hint": "Zeichnet die Wurzelboxen gegen die Tiefe, eine Occlusion-Query pro Gruppe; steigt mit den getesteten Boxen."
+      },
+      "pass.hardware occlusion small depth": {
+        "label": "Hardware-Verdeckung: kleine Tiefe",
+        "hint": "Baut die kleine Tiefe, gegen die die Verdeckungsboxen gezeichnet werden; steigt mit der Rendergröße."
+      },
+      "pass.hardware occlusion verdicts": {
+        "label": "Hardware-Verdeckung: Urteile",
+        "hint": "Macht aus den Zählungen der Queries Urteile sichtbar oder verdeckt; steigt mit den getesteten Boxen."
+      },
+      "pass.surface cache": {
+        "label": "Oberflächen-Cache",
+        "hint": "Aktualisiert den Oberflächen-Cache: seine Karten erfasst, gelöscht, zurückgemeldet und angezeigt; steigt mit den zu aktualisierenden Karten."
+      },
+      "pass.surface cache lighting": {
+        "label": "Oberflächen-Cache-Beleuchtung",
+        "hint": "Beleuchtet die Karten des Oberflächen-Caches, die der Bounce liest; steigt mit den Karten und den Lichtern."
+      },
+      "pass.card capture": {
+        "label": "Kartenerfassung",
+        "hint": "Erfasst die Karten des Oberflächen-Caches aus den Meshes; steigt mit den in diesem Bild erfassten Karten."
+      },
+      "pass.screen probes": {
+        "label": "Bildschirmsonden",
+        "hint": "Setzt Sonden auf das Bild, verfolgt, filtert und mischt sie für das gestreute Licht; steigt mit der Rendergröße und den Strahlen."
+      },
+      "pass.reflection hit lighting": {
+        "label": "Reflexions-Trefferbeleuchtung",
+        "hint": "Beleuchtet die Treffer der Reflexionsstrahlen erneut, nach Material sortiert; steigt mit den treffenden Strahlen."
+      },
+      "pass.sky surfaces": {
+        "label": "Himmelsoberflächen",
+        "hint": "Zeichnet die Himmelsoberflächen vor Atmosphäre, Nebel und Wolken in das beleuchtete Bild; steigt mit den Himmelspixeln."
+      },
+      "pass.fog separate composition": {
+        "label": "Nebel: getrennte Komposition",
+        "hint": "Legt den in eigenen Texturen gezeichneten Nebel über das beleuchtete Bild; steigt mit der Rendergröße."
+      },
+      "pass.fog blur": {
+        "label": "Nebel-Unschärfe",
+        "hint": "Verwischt die eigenen Texturen des Nebels; steigt mit ihrer Größe."
+      },
+      "pass.fog upsample": {
+        "label": "Nebel-Hochskalierung",
+        "hint": "Bringt die Texturen des Nebels zurück auf das Bild; steigt mit der Rendergröße."
+      },
+      "pass.fog temporal": {
+        "label": "Nebel: temporal",
+        "hint": "Filtert die zweite Ebene des Nebels über die Zeit; steigt mit ihrer Größe."
+      },
+      "pass.fog volume": {
+        "label": "Nebelvolumen",
+        "hint": "Baut das Nebelvolumen: die Tiefe seiner Zellen, das Licht, das jede streut, die Summe entlang jeder Säule; steigt mit den Zellen und den Lichtern."
+      },
+      "pass.fog local volumes": {
+        "label": "Lokale Nebelvolumen",
+        "hint": "Zeichnet die lokalen Nebelvolumen; steigt mit den Volumen auf dem Bildschirm."
+      },
+      "pass.fog sun light function": {
+        "label": "Nebel: Sonnen-Lichtfunktion",
+        "hint": "Zeichnet die Lichtfunktion der Sonne für den volumetrischen Nebel; steigt mit ihrer Größe."
+      },
+      "pass.light function atlas": {
+        "label": "Lichtfunktions-Atlas",
+        "hint": "Zeichnet die Lichtfunktionen der Lichter in ihren Atlas; steigt mit den Lichtern, die eine haben."
+      },
+      "pass.toon profile bake": {
+        "label": "Toon-Profil backen",
+        "hint": "Backt die Bilder eines Toon-Profils in die Muster, die die Lichter lesen; läuft, wenn sich ein Profil ändert."
+      },
+      "pass.rect light atlas add": {
+        "label": "Rechtecklicht-Atlas hinzufügen",
+        "hint": "Zeichnet das Quellbild eines Rechtecklichts in seinen Atlas; läuft, wenn eines hinzugefügt wird."
+      },
+      "pass.rect light atlas copy": {
+        "label": "Rechtecklicht-Atlas kopieren",
+        "hint": "Verschiebt den Platz eines Rechtecklichts in einen neuen Atlas; läuft, wenn der Atlas wächst."
+      },
+      "pass.rect light atlas filter": {
+        "label": "Rechtecklicht-Atlas filtern",
+        "hint": "Filtert eine Ebene des Rechtecklicht-Atlas; läuft, wenn sich ein Bild ändert."
+      },
+      "pass.rect light atlas clear": {
+        "label": "Rechtecklicht-Atlas löschen",
+        "hint": "Löscht den Rechtecklicht-Atlas; läuft, wenn er neu gemacht wird."
+      },
+      "pass.rect light atlas debug": {
+        "label": "Rechtecklicht-Atlas: Debug",
+        "hint": "Zeichnet den Rechtecklicht-Atlas für seine Debug-Ansicht; nur solange diese Ansicht gezeigt wird."
+      },
+      "pass.rect light atlas blit": {
+        "label": "Rechtecklicht-Atlas: Blit",
+        "hint": "Legt den Rechtecklicht-Atlas für seine Debug-Ansicht über das Bild; nur solange diese Ansicht gezeigt wird."
+      },
+      "pass.light profile atlas debug": {
+        "label": "Lichtprofil-Atlas: Debug",
+        "hint": "Zeichnet den Atlas der Lichtprofile für seine Debug-Ansicht; nur solange diese Ansicht gezeigt wird."
+      },
+      "pass.light profile atlas blit": {
+        "label": "Lichtprofil-Atlas: Blit",
+        "hint": "Legt den Atlas der Lichtprofile für seine Debug-Ansicht über das Bild; nur solange diese Ansicht gezeigt wird."
+      },
+      "pass.light shapes": {
+        "label": "Lichtformen",
+        "hint": "Zeichnet die Formen der Lichter als Drahtgitter über das beleuchtete Bild; nur solange sie gezeigt werden."
+      },
+      "pass.volumetric lightmap light": {
+        "label": "Volumetrische Lightmap: Licht",
+        "hint": "Sammelt das Licht der volumetrischen Lightmap auf den Pixeln, bevor das indirekte Licht es liest; steigt mit der Rendergröße."
+      },
+      "pass.volumetric lightmap visualize": {
+        "label": "Volumetrische Lightmap: Anzeige",
+        "hint": "Zeichnet eine Kugel für jede Probe der volumetrischen Lightmap; nur solange diese Ansicht gezeigt wird."
+      },
+      "pass.translucency volume": {
+        "label": "Transluzenzvolumen",
+        "hint": "Speist jedes Licht in die Zellen um die Kamera, aus denen die durchsichtigen Oberflächen beleuchtet werden; steigt mit den Lichtern."
+      },
+      "pass.translucency volume spheres": {
+        "label": "Transluzenzvolumen: Kugeln",
+        "hint": "Zeichnet eine Kugel für jede Zelle des Transluzenzvolumens; nur solange diese Ansicht gezeigt wird."
+      },
+      "pass.translucency global illumination": {
+        "label": "Transluzenz: globale Beleuchtung",
+        "hint": "Verfolgt und filtert das indirekte Licht der durchsichtigen Oberflächen in ein an die Ansicht angepasstes Gitter; steigt mit seinen Zellen."
+      },
+      "pass.traced translucency trace": {
+        "label": "Verfolgte Transluzenz: Strahlen",
+        "hint": "Verfolgt Strahlen durch die durchsichtigen Oberflächen; steigt mit ihren Pixeln."
+      },
+      "pass.traced translucency denoise": {
+        "label": "Verfolgte Transluzenz entrauschen",
+        "hint": "Entrauscht die verfolgten Strahlen der durchsichtigen Oberflächen; steigt mit ihren Pixeln."
+      },
+      "pass.traced translucency compose": {
+        "label": "Verfolgte Transluzenz: Komposition",
+        "hint": "Setzt die verfolgten durchsichtigen Oberflächen auf das beleuchtete Bild; steigt mit ihren Pixeln."
+      },
+      "pass.ambient occlusion": {
+        "label": "Umgebungsverdeckung",
+        "hint": "Ermittelt, wie verdeckt jedes Pixel von seiner Umgebung ist, in mehreren Auflösungen; steigt mit der Rendergröße."
+      },
+      "pass.subsurface scattering": {
+        "label": "Subsurface-Streuung",
+        "hint": "Verteilt das Licht unter hautartigen Oberflächen; steigt mit ihren Pixeln."
+      },
+      "pass.responsiveness clear": {
+        "label": "Reaktivität löschen",
+        "hint": "Löscht die Reaktivität, die die Transparenten schreiben und der temporale Filter liest; steigt mit der Rendergröße."
+      },
+      "pass.velocity": {
+        "label": "Geschwindigkeit",
+        "hint": "Schreibt die Bewegung jedes Pixels für die Pässe, die sie lesen; steigt mit der Rendergröße."
+      },
+      "pass.temporal measure flickering luma": {
+        "label": "Temporal: flackernde Helligkeit messen",
+        "hint": "Misst, wo die Helligkeit von Bild zu Bild flackert; steigt mit der Rendergröße."
+      },
+      "pass.temporal measure thin geometry coverage": {
+        "label": "Temporal: Abdeckung dünner Geometrie messen",
+        "hint": "Misst, wie viel jedes Pixels dünne Geometrie bedeckt; steigt mit der Rendergröße."
+      },
+      "pass.temporal thin geometry weight relaxation": {
+        "label": "Temporal: Gewicht dünner Geometrie lockern",
+        "hint": "Lockert das Gewicht der Historie, wo dünne Geometrie steht; steigt mit der Rendergröße."
+      },
+      "pass.tone table": {
+        "label": "Tontabelle",
+        "hint": "Backt die Farbe, die die Anzeige für jedes Licht zeigt, in einen kleinen Würfel, den die Komposition liest; läuft, wenn sich die Toneinstellungen ändern."
+      },
+      "pass.motion blur": {
+        "label": "Bewegungsunschärfe",
+        "hint": "Verwischt entlang der Bewegung der Pixel: ihre Kacheln, ihre Ausbreitung und der Filter; steigt mit der Rendergröße und der Bewegung."
+      },
+      "pass.depth of field": {
+        "label": "Tiefenschärfe",
+        "hint": "Verwischt, was außerhalb des Fokus liegt: Kreise, Kacheln, Sammlungen und Sprites; steigt mit der Rendergröße und der Unschärfe."
+      },
+      "pass.post process material": {
+        "label": "Post-Process-Material",
+        "hint": "Wendet ein Post-Process-Material auf das ganze Bild an; steigt mit der Rendergröße und der Arbeit des Materials."
+      },
+      "pass.custom depth": {
+        "label": "Eigene Tiefe",
+        "hint": "Schreibt die eigene Tiefe und den Stencil der Objekte, die sie anfordern; steigt mit diesen Objekten."
+      },
+      "pass.page install": {
+        "label": "Seiteninstallation",
+        "hint": "Installiert gerade geladene Geometrieseiten auf dem Gerät; steigt mit den ankommenden Seiten."
+      },
+      "pass.ray query": {
+        "label": "Strahlenabfrage",
+        "hint": "Beantwortet die Auswahlstrahlen der Seite auf der GPU; steigt mit den angefragten Strahlen."
+      },
+      "pass.hair strands": {
+        "label": "Haarsträhnen",
+        "hint": "Jeder Pass der Haarsträhnen: ihre Simulation, Schatten, Voxel und Zeichnung; steigt mit den Strähnen."
+      },
+      "pass.sun distance field shadow": {
+        "label": "Sonnenschatten per Distanzfeld",
+        "hint": "Verfolgt die fernen Schatten der Sonne durch die Distanzfelder; steigt mit der Rendergröße."
+      },
+      "pass.distance field occlusion": {
+        "label": "Distanzfeld-Verdeckung",
+        "hint": "Verfolgt die Umgebungsverdeckung durch die Distanzfelder; steigt mit der Rendergröße."
+      },
+      "pass.global distance field": {
+        "label": "Globales Distanzfeld",
+        "hint": "Baut das globale Distanzfeld, das die Strahlen lesen; steigt mit den sich bewegenden Meshes."
+      },
+      "pass.mesh distance field": {
+        "label": "Mesh-Distanzfeld",
+        "hint": "Baut das eigene Distanzfeld eines Meshes; läuft, wenn ein Mesh eines braucht."
+      },
+      "pass.path tracer": {
+        "label": "Pathtracer",
+        "hint": "Jeder Pass des Pathtracers: seine Samples, Tabellen und Anzeige; steigt mit den Samples pro Pixel."
+      },
+      "pass.air": {
+        "label": "Luft",
+        "hint": "Baut die Nachschlagetabellen der Atmosphäre; steigt mit den Bewegungen der Sonne."
+      },
+      "pass.sky": {
+        "label": "Himmel",
+        "hint": "Zeichnet den Himmel über das Bild, erfasst das Himmelslicht und filtert es; steigt mit den Himmelspixeln und seinen Erfassungen."
+      },
+      "pass.opaque haze": {
+        "label": "Dunst auf Opakem",
+        "hint": "Legt den Dunst der Atmosphäre über die opaken Oberflächen; steigt mit der Rendergröße."
+      },
+      "pass.cloud": {
+        "label": "Wolken",
+        "hint": "Jeder Pass der volumetrischen Wolken; steigt mit den Wolkenpixeln und ihren Schritten."
+      },
+      "pass.light shafts": {
+        "label": "Lichtstrahlen",
+        "hint": "Zeichnet die Lichtstrahlen der Sonne; steigt mit der Rendergröße."
+      },
+      "pass.surface rewrite": {
+        "label": "Oberflächen neu schreiben",
+        "hint": "Schreibt die Oberflächen neu, die Himmel und Nebel verändern; steigt mit der Rendergröße."
+      },
+      "pass.debug lines appended": {
+        "label": "Debug-Linien angehängt",
+        "hint": "Hängt die Linien einer Debug-Ansicht an; nur solange diese Ansicht gezeigt wird."
+      },
+      "pass.inspection reflection": {
+        "label": "Inspektions-Reflexion",
+        "hint": "Die Reflexionskernel der Inspektion; nur solange eine Inspektion offen ist."
+      },
+      "reason.lost": {
+        "label": "Gerät verloren",
+        "hint": "Das GPU-Gerät ging verloren: das Bild wird erneut gezeichnet, sobald es zurück ist."
+      },
+      "reason.capturing": {
+        "label": "Aufnahme",
+        "hint": "Eine Aufnahme läuft: ihre Bilder werden gezeichnet."
+      },
+      "reason.capturePending": {
+        "label": "Aufnahme angefordert",
+        "hint": "Eine Aufnahme wurde angefordert und wartet auf ihr Bild."
+      },
+      "reason.frameEncoder": {
+        "label": "Bild-Encoder",
+        "hint": "Die Befehle des Bildes werden noch aufgezeichnet: das Bild kann noch nicht gehalten werden."
+      },
+      "reason.metricsPending": {
+        "label": "Messwerte ausstehend",
+        "hint": "Die Zählungen des letzten Bildes sind noch nicht von der GPU zurück."
+      },
+      "reason.cutMoving": {
+        "label": "Schnitt in Bewegung",
+        "hint": "Der Schnitt der Geometrie ändert sich noch."
+      },
+      "reason.overBudget": {
+        "label": "über Budget",
+        "hint": "Der Schnitt will mehr, als sein Budget erlaubt: er verfeinert weiter."
+      },
+      "reason.noOccluderHistory": {
+        "label": "keine Verdecker-Historie",
+        "hint": "Der Verdeckungstest hat noch kein letztes Bild, gegen das er testen kann."
+      },
+      "reason.deferredDrops": {
+        "label": "aufgeschobene Abwürfe",
+        "hint": "Geometrie, die der Schnitt losgelassen hat, wartet noch darauf, verworfen zu werden."
+      },
+      "reason.bootstrap": {
+        "label": "Start",
+        "hint": "Die Ansicht ist in ihren ersten Bildern."
+      },
+      "reason.residencyBusy": {
+        "label": "Seiten laden",
+        "hint": "Geometrieseiten werden noch geladen oder installiert."
+      },
+      "reason.clustersOwed": {
+        "label": "Cluster ausstehend",
+        "hint": "Vom Schnitt angeforderte Cluster wurden noch nicht gezeichnet."
+      },
+      "reason.texturesPending": {
+        "label": "Texturen ausstehend",
+        "hint": "Von der Ansicht angeforderte Texturkacheln laden noch."
+      },
+      "reason.shadowsPending": {
+        "label": "Schatten ausstehend",
+        "hint": "Die Schattenseiten, die die Ansicht braucht, sind noch nicht alle gezeichnet."
+      },
+      "reason.cutPending": {
+        "label": "Schnitt ausstehend",
+        "hint": "Ein neuer Schnitt ist angefordert und noch nicht übernommen."
+      },
+      "reason.bounceProbes": {
+        "label": "Bounce-Sonden",
+        "hint": "Die Sonden des gestreuten Lichts konvergieren noch."
+      },
+      "reason.deforming": {
+        "label": "Verformung",
+        "hint": "Geometrie wird in diesem Bild verformt."
+      },
+      "reason.reflections": {
+        "label": "Reflexionen",
+        "hint": "Die Reflexionen konvergieren noch."
+      },
+      "reason.hlodWarming": {
+        "label": "HLOD in Vorbereitung",
+        "hint": "HLOD-Stufen werden noch vorbereitet."
+      },
+      "reason.exposure": {
+        "label": "Belichtung",
+        "hint": "Die automatische Belichtung passt sich noch an."
+      },
+      "reason.fogVolume": {
+        "label": "Nebelvolumen",
+        "hint": "Das Nebelvolumen konvergiert noch."
+      },
+      "reason.translucencyVolume": {
+        "label": "Transluzenzvolumen",
+        "hint": "Das Beleuchtungsvolumen der Transluzenz konvergiert noch."
+      },
+      "reason.translucencyGi": {
+        "label": "Transluzenz-GI",
+        "hint": "Das indirekte Licht der durchsichtigen Oberflächen konvergiert noch."
+      },
+      "reason.screenProbes": {
+        "label": "Bildschirmsonden",
+        "hint": "Die Bildschirmsonden konvergieren noch."
+      },
+      "reason.occlusion": {
+        "label": "Verdeckung",
+        "hint": "Die Verdeckungsurteile stabilisieren sich noch."
+      },
+      "reason.casterSettling": {
+        "label": "Schattenwerfer kommen zur Ruhe",
+        "hint": "Schattenwerfer haben sich kürzlich bewegt: ihre Schatten stabilisieren sich noch."
+      },
+      "reason.noisePhase": {
+        "label": "Rauschphase",
+        "hint": "Das Bild ist eine der Rauschphasen, die die temporale Historie zum Stabilisieren braucht."
+      },
+      "term.taaConverging": {
+        "label": "TAA konvergiert",
+        "hint": "Das temporale Antialiasing hat seine Historie noch nicht gesammelt: jedes Bild wird gezeichnet, bis es sie hat."
+      },
+      "term.frameDifference": {
+        "label": "Bilddifferenz",
+        "hint": "Die Bilddifferenz-Ansicht zeichnet jedes Bild, um es mit dem vorigen zu vergleichen."
+      },
+      "term.surfaceCache": {
+        "label": "Oberflächen-Cache",
+        "hint": "Der Oberflächen-Cache aktualisiert seine Karten."
+      },
+      "term.pathTracing": {
+        "label": "Pathtracing",
+        "hint": "Der Pathtracer fügt jedem Bild Samples hinzu."
+      },
+      "term.guides": {
+        "label": "Hilfslinien",
+        "hint": "Animierte Hilfslinien werden über das Bild gezeichnet."
+      },
+      "term.hairDebug": {
+        "label": "Haar-Debug",
+        "hint": "Eine Haar-Debug-Ansicht wird gezeigt."
+      },
+      "term.effects": {
+        "label": "Effekte",
+        "hint": "Ein Effekt ändert sich mit der Zeit."
+      },
+      "term.postProcessMaterialsAnimated": {
+        "label": "animiertes Post-Process",
+        "hint": "Ein Post-Process-Material ist animiert."
+      },
+      "term.particles": {
+        "label": "Partikel",
+        "hint": "Partikel sind lebendig."
+      },
+      "term.lightFunctions": {
+        "label": "Lichtfunktionen",
+        "hint": "Eine Lichtfunktion ist animiert."
+      },
+      "term.fogSunLightFunction": {
+        "label": "Sonnen-Lichtfunktion des Nebels",
+        "hint": "Die Lichtfunktion der Sonne im Nebel ist animiert."
+      },
+      "term.lightProfiles": {
+        "label": "Lichtprofile",
+        "hint": "Ein Lichtprofil ändert sich."
+      },
+      "term.ambientCubemap": {
+        "label": "Umgebungs-Cubemap",
+        "hint": "Die Umgebungs-Cubemap blendet über."
+      },
+      "term.lightShapes": {
+        "label": "Lichtformen",
+        "hint": "Die Formen der Lichter werden gezeigt."
+      },
+      "term.graphsAnimated": {
+        "label": "animierte Materialien",
+        "hint": "Der Graph eines Materials ist animiert."
+      },
+      "term.blendGraphsAnimated": {
+        "label": "animierte Transparente",
+        "hint": "Der Graph eines transparenten Materials ist animiert."
+      },
+      "term.fogVolumeAnimated": {
+        "label": "animierter Nebel",
+        "hint": "Ein Nebelvolumen ist animiert."
+      },
+      "term.clouds": {
+        "label": "Wolken",
+        "hint": "Die Wolken bewegen sich."
+      },
+      "term.skyCubemaps": {
+        "label": "Himmels-Cubemaps",
+        "hint": "Die Himmels-Cubemaps blenden über."
+      },
+      "term.finishAnimated": {
+        "label": "animiertes Finish",
+        "hint": "Das Bild-Finish (Körnung, Vignette…) ist animiert."
+      },
+      "answer.device refusal": {
+        "label": "Geräteablehnung",
+        "hint": "Das Gerät hat die Arbeit abgelehnt: das Bild wartet, bis sie erneut angefordert wird."
+      },
+      "answer.targets in flight": {
+        "label": "Ziele in Benutzung",
+        "hint": "Die Ziele des letzten Bildes werden noch von der GPU benutzt."
+      },
+      "answer.lit program": {
+        "label": "Beleuchtungsprogramm",
+        "hint": "Das Programm des beleuchteten Bildes wird noch kompiliert."
+      },
+      "answer.sorted translucency buffers": {
+        "label": "Puffer der sortierten Transluzenz",
+        "hint": "Die Puffer der sortierten Transluzenz werden noch angelegt."
+      },
+      "answer.translucent object shadow table": {
+        "label": "transluzente Schattentabelle",
+        "hint": "Die Schattentabelle der transluzenten Objekte wird noch angelegt."
+      },
+      "answer.pipelines": {
+        "label": "Pipelines",
+        "hint": "GPU-Pipelines werden noch kompiliert."
+      },
+      "answer.targets refused": {
+        "label": "Ziele abgelehnt",
+        "hint": "Das Gerät hat die Größe der Ziele abgelehnt; sie wird nach einer Pause erneut angefordert."
+      },
+      "because.firstImage": {
+        "label": "erstes Bild",
+        "hint": "Das erste Bild der Ansicht."
+      },
+      "because.scene": {
+        "label": "Szene geändert",
+        "hint": "Etwas in der Szene hat sich seit dem gehaltenen Bild bewegt."
+      },
+      "because.view": {
+        "label": "Ansicht geändert",
+        "hint": "Die Ansicht hat sich seit dem gehaltenen Bild bewegt."
+      },
+      "because.resources": {
+        "label": "Ressourcen geändert",
+        "hint": "Eine Ressource, die das Bild liest, hat sich seit dem gehaltenen Bild geändert."
+      },
+      "because.confirming": {
+        "label": "Bestätigung",
+        "hint": "Das Bild nach einer Änderung, noch einmal gezeichnet, um sie zu bestätigen."
+      },
+      "because.unstable": {
+        "label": "instabil",
+        "hint": "Die Arbeit der letzten beiden Bilder unterschied sich."
+      },
+      "because.noiseClock": {
+        "label": "Rauschtakt",
+        "hint": "Der Takt des Rauschens hat sich geändert."
+      },
+      "because.swapped": {
+        "label": "getauscht",
+        "hint": "Ein ruhiges Bild, in eingetauschte Ziele gezeichnet."
+      },
+      "because.forced": {
+        "label": "erzwungen",
+        "hint": "Die Messung der stillen Pose hat es angefordert."
+      },
+      "cause.sceneWritten": {
+        "label": "Szene geschrieben",
+        "hint": "Die Seite hat eine Pose, eine Sichtbarkeit oder ein Licht der Szene geschrieben."
+      },
+      "cause.sceneReshaped": {
+        "label": "Szene umgebaut",
+        "hint": "Die Seite hat einen Knoten hinzugefügt, entfernt oder verschoben."
+      },
+      "cause.diagnosticView": {
+        "label": "Ansichtsmodus",
+        "hint": "Der Diagnose-Ansichtsmodus hat sich geändert."
+      },
+      "cause.materialChanged": {
+        "label": "Material geändert",
+        "hint": "Die Seite hat ein Material geändert."
+      },
+      "cause.shadingModels": {
+        "label": "Shading-Modelle",
+        "hint": "Die Shading-Modelle haben sich geändert."
+      },
+      "cause.sceneLights": {
+        "label": "Lichter gesetzt",
+        "hint": "Die Seite hat die Lichter gesetzt."
+      },
+      "cause.fogVolumes": {
+        "label": "Nebelvolumen",
+        "hint": "Die Seite hat die Nebelvolumen gesetzt."
+      },
+      "cause.posesMoved": {
+        "label": "Posen bewegt",
+        "hint": "Die Engine hat Posen bewegt."
+      },
+      "cause.verticesRewritten": {
+        "label": "Vertices neu geschrieben",
+        "hint": "Die Engine hat Vertices neu geschrieben."
+      },
+      "cause.placementsMoved": {
+        "label": "Platzierungen bewegt",
+        "hint": "Die Engine hat Platzierungen bewegt."
+      },
+      "cause.placementsGrown": {
+        "label": "Platzierungen gewachsen",
+        "hint": "Die Platzierungstabelle ist gewachsen."
+      },
+      "cause.placementsComposed": {
+        "label": "Platzierungen zusammengesetzt",
+        "hint": "Die Platzierungen wurden neu zusammengesetzt."
+      },
+      "cause.cameraCut": {
+        "label": "Kameraschnitt",
+        "hint": "Eine andere Kamera oder ein Schnitt in der Historie der Ansicht."
+      },
+      "cause.viewMoved": {
+        "label": "Ansicht bewegt",
+        "hint": "Pose, Projektion oder Viewport der Ansicht haben sich geändert."
+      },
+      "cause.viewQuality": {
+        "label": "Ansichtsqualität",
+        "hint": "Tiefenbereich oder Qualität der Ansicht haben sich geändert."
+      },
+      "cause.simpleLights": {
+        "label": "einfache Lichter",
+        "hint": "Die einfachen Lichter haben sich geändert."
+      },
+      "cause.skyFaceWaiting": {
+        "label": "Himmelsfläche wartet",
+        "hint": "Eine Fläche des Himmelswürfels wartet darauf, gezeichnet zu werden."
+      },
+      "cause.skyMeshesDrawn": {
+        "label": "Himmels-Meshes gezeichnet",
+        "hint": "Die Himmels-Meshes wurden gezeichnet."
+      },
+      "cause.reflectionDrawn": {
+        "label": "Spiegel gezeichnet",
+        "hint": "Eine ebene Spiegelung wurde gezeichnet."
+      },
+      "cause.reflectionChanged": {
+        "label": "Spiegel geändert",
+        "hint": "Die Einstellungen einer ebenen Spiegelung haben sich geändert."
+      },
+      "cause.customDepthMoved": {
+        "label": "Jitter der eigenen Tiefe",
+        "hint": "Der Jitter der eigenen Tiefe hat sich bewegt."
+      },
+      "cause.shadowSettings": {
+        "label": "Schatteneinstellungen",
+        "hint": "Die Schatteneinstellungen haben sich geändert."
+      },
+      "cause.shadowOrigin": {
+        "label": "Schattenursprung",
+        "hint": "Der Ursprung der Schatten hat sich bewegt."
+      },
+      "cause.captureAccumulation": {
+        "label": "Aufnahme-Akkumulation",
+        "hint": "Eine Aufnahme sammelt ihre Bilder."
+      },
+      "cause.targetsMade": {
+        "label": "Ziele angelegt",
+        "hint": "Die Bildziele wurden neu angelegt."
+      },
+      "cause.taaLevel": {
+        "label": "TAA-Stufe",
+        "hint": "Die Stufe des temporalen Antialiasings hat sich geändert."
+      },
+      "cause.taaRigged": {
+        "label": "TAA neu eingerichtet",
+        "hint": "Das temporale Antialiasing wurde neu eingerichtet."
+      },
+      "cause.vertexPoolGrown": {
+        "label": "Vertex-Pool gewachsen",
+        "hint": "Der Vertex-Pool ist gewachsen."
+      },
+      "cause.inspection": {
+        "label": "Inspektion",
+        "hint": "Eine Inspektion hat sich geändert."
+      },
+      "cause.litProgram": {
+        "label": "Beleuchtungsprogramm",
+        "hint": "Das Programm des beleuchteten Bildes hat sich geändert."
+      },
+      "cause.feedbackVariant": {
+        "label": "Feedback-Variante",
+        "hint": "Das Textur-Feedback hat seine Variante gewechselt."
+      },
+      "cause.catalogueCover": {
+        "label": "Katalog-Cover",
+        "hint": "Das Cover des Katalogs hat sich geändert."
+      },
+      "cause.worldCover": {
+        "label": "Welt-Cover",
+        "hint": "Das Cover der Welt hat sich geändert."
+      },
+      "cause.materialGraphs": {
+        "label": "Material-Graphen",
+        "hint": "Material-Graphen haben sich geändert."
+      },
+      "cause.targetsResized": {
+        "label": "Ziele neu skaliert",
+        "hint": "Die Bildziele wurden in der Größe geändert."
+      },
+      "cause.textureColor": {
+        "label": "Texturfarbe",
+        "hint": "Die Farbe einer Textur hat sich geändert."
+      },
+      "cause.tilesServed": {
+        "label": "Kacheln geliefert",
+        "hint": "Texturkacheln sind angekommen."
+      },
+      "cause.layersGrown": {
+        "label": "Ebenen gewachsen",
+        "hint": "Die Texturebenen sind gewachsen."
+      },
+      "cause.bounceSwitched": {
+        "label": "Bounce umgeschaltet",
+        "hint": "Das gestreute Licht wurde umgeschaltet."
+      },
+      "cause.screenProbes": {
+        "label": "Bildschirmsonden",
+        "hint": "Die Bildschirmsonden haben sich geändert."
+      },
+      "cause.bounceProbes": {
+        "label": "Bounce-Sonden",
+        "hint": "Die Sonden des Bounce haben sich geändert."
+      },
+      "cause.memoryBudget": {
+        "label": "Speicherbudget",
+        "hint": "Das Speicherbudget hat sich geändert."
+      },
+      "cause.texturePoolGrown": {
+        "label": "Textur-Pool gewachsen",
+        "hint": "Der Textur-Pool ist gewachsen."
+      },
+      "cause.cutReleased": {
+        "label": "Schnitt freigegeben",
+        "hint": "Geometrie des Schnitts wurde freigegeben."
+      },
+      "cause.residentSynced": {
+        "label": "Residente synchronisiert",
+        "hint": "Die residente Geometrie wurde synchronisiert."
+      },
+      "cause.clearColor": {
+        "label": "Löschfarbe",
+        "hint": "Die Löschfarbe hat sich geändert."
+      },
+      "cause.textureAppended": {
+        "label": "Textur hinzugefügt",
+        "hint": "Eine Textur wurde hinzugefügt."
+      },
+      "cause.textureReleased": {
+        "label": "Textur freigegeben",
+        "hint": "Eine Textur wurde freigegeben."
+      },
+      "cause.pageLanded": {
+        "label": "Seite angekommen",
+        "hint": "Eine Geometrieseite ist angekommen."
+      },
+      "cause.pageDropped": {
+        "label": "Seite verworfen",
+        "hint": "Eine Geometrieseite wurde verworfen."
+      },
+      "cause.pageResidence": {
+        "label": "Seitenresidenz",
+        "hint": "Die Residenz einer Seite hat sich geändert."
+      },
+      "cause.cutAdopted": {
+        "label": "Schnitt übernommen",
+        "hint": "Ein neuer Schnitt der Geometrie wurde übernommen."
+      },
+      "cause.cutFrozen": {
+        "label": "Schnitt eingefroren",
+        "hint": "Der Schnitt wurde eingefroren oder freigegeben."
+      },
+      "cause.deviceGone": {
+        "label": "Gerät weg",
+        "hint": "Das GPU-Gerät ging verloren."
+      },
+      "cause.coverPending": {
+        "label": "Cover ausstehend",
+        "hint": "Ein Cover wartet darauf, gezeichnet zu werden."
+      },
+      "cause.renderScale": {
+        "label": "Renderskala",
+        "hint": "Die Renderskala hat sich geändert."
+      },
+      "cause.worldCells": {
+        "label": "Weltzellen",
+        "hint": "Die Zellen der Welt haben sich geändert."
+      },
+      "cause.blendPipelines": {
+        "label": "Transparenz-Pipelines",
+        "hint": "Transparenz-Pipelines wurden angelegt."
+      },
+      "cause.shadowSetLost": {
+        "label": "Schattensatz verloren",
+        "hint": "Ein Satz Schattenseiten ging verloren."
+      },
+      "cause.skinTable": {
+        "label": "Skinning-Tabelle",
+        "hint": "Die Skinning-Tabelle hat sich geändert."
+      },
+      "cause.volumePrograms": {
+        "label": "Volumenprogramme",
+        "hint": "Volumenprogramme haben sich geändert."
+      },
+      "cause.volumeGrid": {
+        "label": "Volumengitter",
+        "hint": "Ein Volumengitter hat sich geändert."
+      },
+      "cause.hairStrands": {
+        "label": "Haarsträhnen",
+        "hint": "Haarsträhnen haben sich geändert."
+      },
+      "cause.animation": {
+        "label": "Animation",
+        "hint": "Ein Clip ist vorgerückt."
+      },
+      "cause.physics": {
+        "label": "Physik",
+        "hint": "Ein Körper hat einen Schritt gemacht."
+      },
+      "cause.invalidate": {
+        "label": "Invalidierung",
+        "hint": "Die Seite hat ein Bild angefordert: world.invalidate()."
       }
     },
     "failure": {
@@ -753,8 +2659,7 @@
       "waiting": "Wartet auf die Engine (#{issue})"
     },
     "views": {
-      "beauty": "Bild",
-      "wireframe": "Dreiecke",
+      "beauty": "Render",
       "triangles": "farbige Dreiecke",
       "xray": "Röntgen",
       "clusters": "Cluster",
@@ -763,7 +2668,6 @@
       "screen-error": "Bildschirmfehler",
       "materials": "Materialien",
       "visibility": "sichtbare Seiten",
-      "pages": "geladene Seiten",
       "texture-mip": "Texturgröße",
       "overdraw": "Überzeichnung",
       "frame-difference": "Bilddifferenz",
@@ -779,10 +2683,68 @@
       "taa-reprojection": "TAA-Reprojektion",
       "taa-motion": "TAA-Bewegung",
       "taa-thin": "TAA dünne Geometrie",
-      "taa-material-history": "TAA-Verlauf nach Material"
+      "taa-material-history": "TAA-Verlauf nach Material",
+      "voxels": "Voxel",
+      "indirect-diffuse": "indirektes Licht",
+      "surface-cache-albedo": "Oberflächencache: Albedo",
+      "surface-cache-normal": "Oberflächencache: Normalen",
+      "surface-cache-depth": "Oberflächencache: Tiefe",
+      "surface-cache-cards": "Oberflächencache: Karten",
+      "surface-cache-fill": "Oberflächencache: Belegung",
+      "surface-cache-age": "Oberflächencache: Alter",
+      "hair-light-bounds": "Haare: Hüllen",
+      "hair-deep-opacity-maps": "Haare: Tiefenschatten",
+      "hair-macro-group-screen-rect": "Haare: Bildschirmrahmen",
+      "hair-voxels-density": "Haare: Voxeldichte",
+      "sampled-lights-overview": "viele Lichter: Übersicht",
+      "sampled-lights-shadow-casters": "viele Lichter: Schattenwerfer",
+      "sampled-lights-shadow-caster-quality": "viele Lichter: Qualität der Werfer",
+      "sampled-lights-complexity-opaque": "viele Lichter: Kosten auf Oberflächen",
+      "sampled-lights-complexity-hair-strands": "viele Lichter: Kosten auf Haaren",
+      "sampled-lights-complexity-front-layer": "viele Lichter: Kosten auf vorderster Schicht",
+      "sampled-lights-complexity-volume": "viele Lichter: Kosten im Nebel",
+      "sampled-lights-complexity-translucency-volume": "viele Lichter: Kosten in Transluzenz",
+      "subsurface-profiles": "Subsurface-Profile",
+      "virtual-shadow-map-shadow-casters": "Schattenkarten: Werfer",
+      "virtual-shadow-map-clipmap-virtual-space": "Schattenkarten: Sonnen-Clipmap",
+      "virtual-shadow-map-shadow-factor": "Schattenkarten: ankommendes Licht",
+      "virtual-shadow-map-clipmap-or-mip": "Schattenkarten: gelesene Stufe",
+      "virtual-shadow-map-virtual-page": "Schattenkarten: gelesene Seite",
+      "virtual-shadow-map-cached-page": "Schattenkarten: gecachte Seiten",
+      "virtual-shadow-map-ray-count": "Schattenkarten: Strahlenzahl",
+      "virtual-shadow-map-general-debug": "Schattenkarten: Abstand zum Verdecker",
+      "virtual-shadow-map-dirty-page": "Schattenkarten: gezeichnete Seiten",
+      "virtual-shadow-map-gpu-invalidated-page": "Schattenkarten: ungültige Seiten",
+      "virtual-shadow-map-merged-page": "Schattenkarten: zusammengeführte Seiten",
+      "virtual-shadow-map-overdraw": "Schattenkarten: Overdraw",
+      "rect-light-atlas": "Atlas der Rechtecklichter",
+      "light-profile-atlas": "Atlas der Lichtprofile",
+      "surface-cache-direct-stats": "Oberflächencache: direkte Aktualisierung",
+      "surface-cache-indirect-stats": "Oberflächencache: indirekte Aktualisierung",
+      "surface-cache-direct-lighting-stats": "Oberflächencache: gesammelte Lichter",
+      "surface-cache-scene-stats": "Oberflächencache: Zählungen",
+      "surface-cache-primitive-groups": "Oberflächencache: Objektboxen",
+      "radiance-cache-stats": "Radiance-Cache: Zahlen",
+      "screen-probe-gather-debug": "Bildschirmsonden: Anzahl",
+      "screen-probe-tile-stats": "Bildschirmsonden: Kacheln",
+      "screen-probe-placement": "Bildschirmsonden: Platzierung",
+      "screen-probe-traces": "Bildschirmsonden: Strahlen",
+      "reflection-traces": "Reflexionsstrahl",
+      "radiance-cache-probes": "Radiance-Cache: Sonden",
+      "scene-visualization": "verfolgte Szene",
+      "material-properties": "Material unter dem Zeiger",
+      "heterogeneous-volumes-dda-marching": "Volumen: DDA-Marching",
+      "heterogeneous-volumes-sample-marching": "Volumen: Sample-Marching",
+      "heterogeneous-volumes-sample-majorant": "Volumen: Majoranten-Samples",
+      "heterogeneous-volumes-sample-max-majorant": "Volumen: Samples der größten Majorante",
+      "heterogeneous-volumes-sample-majorant-dda": "Volumen: DDA-Samples der Majorante",
+      "heterogeneous-volumes-delta-tracking": "Volumen: Delta-Tracking",
+      "heterogeneous-volumes-ratio-tracking": "Volumen: Ratio-Tracking",
+      "heterogeneous-volumes-spectral-ratio-tracking": "Volumen: spektrales Ratio-Tracking",
+      "heterogeneous-volumes-tracking-majorant-dda": "Volumen: DDA-Tracking der Majorante"
     },
     "viewHints": {
-      "wireframe": "Die Kanten jedes gezeichneten Dreiecks, nur Linien: in der Ferne weniger und größere Dreiecke.",
+      "beauty": "Das normale Bild.",
       "triangles": "Eine volle Farbe pro gezeichnetem Dreieck.",
       "xray": "Die Kanten jedes Dreiecks, das die Engine abschickt, durch Wände hindurch: was das Culling verworfen hat, fehlt. Culling einfrieren, dann zur Seite gehen und prüfen.",
       "clusters": "Eine Farbe pro Cluster, der Dreiecksgruppe, die der Schnitt durch eine gröbere ersetzt.",
@@ -791,7 +2753,6 @@
       "screen-error": "Grün: exakt. Gelb: nahe am erlaubten Pixelfehler. Rot: an der Grenze.",
       "materials": "Eine Farbe pro Materialart.",
       "visibility": "Grün: jede in diesem Bild gezeichnete Seite.",
-      "pages": "Grün: jede geladene und gezeichnete Seite.",
       "frame-difference": "Schwarz: das Pixel hat sich seit dem letzten Bild nicht verändert. Grau bis Weiß: es hat sich verändert, achtfach verstärkt — was flimmert, leuchtet auf.",
       "reflections": "Nur das Licht, das die Oberflächen spiegeln, aus der Bildschirmverfolgung und den Sonden; schwarz, wo sich nichts spiegelt.",
       "shadows": "Wie viel Sonnenlicht jede Oberfläche erreicht — weiß: beleuchtet, schwarz: im Schatten. Ohne Materialfarbe.",
@@ -805,7 +2766,67 @@
       "taa-reprojection": "Warum der Verlauf neu beginnt — rot: freigelegt, grün: freigelegt und mit der Bewegung des Verdeckers gefüllt, blau: außerhalb des letzten Bildes.",
       "taa-motion": "Die Bewegung, die die Akkumulation sieht — rot: bewegt für die Flimmermessung, grün: eine Pixelanimation, blau: die Reprojektionskante (weiß: gleichmäßige Bewegung).",
       "taa-thin": "Dünne Geometrie — rot: wie weit die Verlaufsklemme nachgibt, grün: Cluster-Lochregion, blau: Deckungsverlauf.",
-      "taa-material-history": "Der Verlaufsanteil jedes Materials als Grau — Weiß: 1, die volle Glättung; Schwarz: 0, nur das aktuelle Bild."
+      "taa-material-history": "Der Verlaufsanteil jedes Materials als Grau — Weiß: 1, die volle Glättung; Schwarz: 0, nur das aktuelle Bild.",
+      "voxels": "Was als Voxel gezeichnet wird, eine Farbe pro Stufe; die Dreiecke in Grau.",
+      "indirect-diffuse": "Nur das indirekte Licht (Abpraller, Umgebung, Himmel) auf einer mittelgrauen Oberfläche.",
+      "surface-cache-albedo": "Der Atlas der Oberflächenkarten: die Farbe, die sie erfasst haben.",
+      "surface-cache-normal": "Der Atlas: die von den Karten erfassten Normalen.",
+      "surface-cache-depth": "Der Atlas: die Tiefe jedes Texels in seiner Karte, in Grau.",
+      "surface-cache-cards": "Der Atlas: eine Farbe pro Karte.",
+      "surface-cache-fill": "Der Atlas: grün die gröbste, immer behaltene Stufe, blau feinere Seiten, schwarz frei.",
+      "surface-cache-age": "Der Atlas: Bilder seit der Erfassung jeder Seite, weiß neu, blau alt.",
+      "hair-light-bounds": "Die Hüllen der Haarsträhnen und die Schattenfrusta über dem Bild.",
+      "hair-deep-opacity-maps": "Tiefe und Schichten einer Haar-Tiefenschattenkarte über dem Bild.",
+      "hair-macro-group-screen-rect": "Ein grüner Rahmen um die Pixel, die jede Strähnengruppe bedeckt.",
+      "hair-voxels-density": "Wie viele Strähnen der Strahl jedes Pixels kreuzt, von Grün bis Rot.",
+      "sampled-lights-overview": "Die Ansicht der Schattenwerfer und die ihrer Qualität nebeneinander.",
+      "sampled-lights-shadow-casters": "Was die Schattenstrahlen an jedem Pixel treffen, eine Farbe pro Objekt.",
+      "sampled-lights-shadow-caster-quality": "Rot: ein fehlender Schattenwerfer; blau: einer vor der Oberfläche.",
+      "sampled-lights-complexity-opaque": "Die Lichter der Zelle unter dem Zeiger und eine Heatmap ihrer Abtastkosten.",
+      "sampled-lights-complexity-hair-strands": "Die Abtastkosten der Lichter auf Haarsträhnen.",
+      "sampled-lights-complexity-front-layer": "Die Lichter auf der vordersten transparenten Schicht und eine Heatmap ihrer Kosten.",
+      "sampled-lights-complexity-volume": "Die Abtastkosten der Lichter im Nebelvolumen.",
+      "sampled-lights-complexity-translucency-volume": "Die Abtastkosten der Lichter im Beleuchtungsvolumen der Transluzenz.",
+      "subsurface-profiles": "Das Subsurface-Profil jedes Pixels, eine Farbe pro Profil.",
+      "virtual-shadow-map-shadow-casters": "Die Box jedes Objekts, dessen Bewegung Schattenseiten neu zeichnet.",
+      "virtual-shadow-map-clipmap-virtual-space": "Die Schatten-Clipmap der Sonne in ihrem virtuellen Raum.",
+      "virtual-shadow-map-shadow-factor": "Gelb: beleuchtet; dunkelblau: im Schatten.",
+      "virtual-shadow-map-clipmap-or-mip": "Die Schattenstufe, die jedes Pixel liest, eine Farbe pro Stufe.",
+      "virtual-shadow-map-virtual-page": "Die Schattenseite, die jedes Pixel liest, eine Farbe pro Seite.",
+      "virtual-shadow-map-cached-page": "Ob die Schattenseite, die jedes Pixel liest, behalten oder neu gezeichnet wurde.",
+      "virtual-shadow-map-ray-count": "Die pro Pixel verfolgten Schattenstrahlen, von Grün bis Rot.",
+      "virtual-shadow-map-general-debug": "Der Abstand zum Schattenverdecker jedes Pixels, in Grau.",
+      "virtual-shadow-map-dirty-page": "Die in diesem Bild gezeichneten Schattenseiten.",
+      "virtual-shadow-map-gpu-invalidated-page": "Die von bewegten Objekten ungültig gemachten Schattenseiten.",
+      "virtual-shadow-map-merged-page": "Die Schattenseiten, deren statische Schicht zusammengeführt wurde.",
+      "virtual-shadow-map-overdraw": "Wie oft das Schattenraster jedes Texel gezeichnet hat.",
+      "rect-light-atlas": "Der Atlas der Bilder der Rechtecklichter.",
+      "light-profile-atlas": "Der Atlas der IES-Profile der Lichter.",
+      "surface-cache-direct-stats": "Zahlen der direkten Lichtaktualisierung des Oberflächencaches.",
+      "surface-cache-indirect-stats": "Zahlen der indirekten Lichtaktualisierung des Oberflächencaches.",
+      "surface-cache-direct-lighting-stats": "Die Lichter, die die direkte Aktualisierung des Oberflächencaches sammelt, und ihre Größen.",
+      "surface-cache-scene-stats": "Anzahl der Objekte und Karten im Oberflächencache.",
+      "surface-cache-primitive-groups": "Die Box jedes Objekts mit Oberflächenkarten.",
+      "radiance-cache-stats": "Aktualisierungszahlen der Lichtsonden der Welt.",
+      "screen-probe-gather-debug": "Wie viele Bildschirmsonden, gleichmäßige und adaptive.",
+      "screen-probe-tile-stats": "Die Kacheln jedes Integrationsmodus der Bildschirmsonden.",
+      "screen-probe-placement": "Wo die Bildschirmsonden stehen, je ein Quad.",
+      "screen-probe-traces": "Die Strahlen der Sonde, die dem Zeiger am nächsten ist, gefärbt nach ihrem Licht.",
+      "reflection-traces": "Der Reflexionsstrahl des Pixels unter dem Zeiger, mit seinem Abstand und Licht.",
+      "radiance-cache-probes": "Eine Kugel an jeder Lichtsonde, gefärbt nach dem Licht, das sie hält.",
+      "scene-visualization": "Die von der Kamera aus verfolgte Szene, beleuchtet vom Oberflächencache.",
+      "material-properties": "Das Material des Pixels unter dem Zeiger, als Tabelle.",
+      "texture-mip": "Die Texturgröße, die jede Oberfläche liest.",
+      "overdraw": "Wie oft jedes Pixel gezeichnet wird.",
+      "heterogeneous-volumes-dda-marching": "Das Licht durch das Voxelgitter des Volumens, ermittelt durch DDA-Marching; braucht ein heterogenes Volumen.",
+      "heterogeneous-volumes-sample-marching": "Das Licht durch das Voxelgitter des Volumens, ermittelt durch Sample-Marching; braucht ein heterogenes Volumen.",
+      "heterogeneous-volumes-sample-majorant": "Das Licht durch das Voxelgitter des Volumens, ermittelt durch Majoranten-Samples; braucht ein heterogenes Volumen.",
+      "heterogeneous-volumes-sample-max-majorant": "Das Licht durch das Voxelgitter des Volumens, ermittelt durch Samples der größten Majorante; braucht ein heterogenes Volumen.",
+      "heterogeneous-volumes-sample-majorant-dda": "Das Licht durch das Voxelgitter des Volumens, ermittelt durch DDA-Samples der Majorante; braucht ein heterogenes Volumen.",
+      "heterogeneous-volumes-delta-tracking": "Das Licht durch das Voxelgitter des Volumens, ermittelt durch Delta-Tracking; braucht ein heterogenes Volumen.",
+      "heterogeneous-volumes-ratio-tracking": "Das Licht durch das Voxelgitter des Volumens, ermittelt durch Ratio-Tracking; braucht ein heterogenes Volumen.",
+      "heterogeneous-volumes-spectral-ratio-tracking": "Das Licht durch das Voxelgitter des Volumens, ermittelt durch spektrales Ratio-Tracking; braucht ein heterogenes Volumen.",
+      "heterogeneous-volumes-tracking-majorant-dda": "Das Licht durch das Voxelgitter des Volumens, ermittelt durch DDA-Tracking der Majorante; braucht ein heterogenes Volumen."
     }
   },
   "a-city-from-rules": {
@@ -1514,16 +3535,7 @@
   "detail-by-pixel-error": {
     "banner": "Ziehe, um die Allee entlangzugehen. Scrolle nah an eine Urne, dann weit weg.",
     "controls": {
-      "pixelError": "Pixelfehler",
-      "view": "Ansicht"
-    },
-    "choices": {
-      "view": {
-        "beauty": "Bild",
-        "lod": "Detailstufen",
-        "screen-error": "Bildschirmfehler",
-        "triangles": "Dreiecke"
-      }
+      "pixelError": "Pixelfehler"
     },
     "readouts": {
       "trianglesDrawn": "Gezeichnete Dreiecke",
@@ -1841,6 +3853,16 @@
       "step": "Schritt"
     }
   },
+  "engine-workbench": {
+    "banner": "Ziehen, um sich umzusehen. Jede Schaltfläche schaltet einen Mechanismus ein; der Warum-Tab des Statistikpanels sagt, welche Bilder er zeichnete, warum und was sie kosteten.",
+    "controls": {
+      "invalidate": "Einmal invalidieren",
+      "nudge": "Kamera anstoßen",
+      "moving": "Eine bewegte Kiste",
+      "taa": "Temporales Antialiasing",
+      "scale": "Renderskalierung"
+    }
+  },
   "helpers-to-see-the-scene": {
     "banner": "Ziehe, um herumzugehen. Schalte die Helfer aus, um das reine Bild zu sehen.",
     "controls": {
@@ -2124,15 +4146,7 @@
   "memory-on-a-budget": {
     "banner": "Ziehe, um dich umzusehen. Gib weniger Speicher und sieh, was scharf bleibt.",
     "controls": {
-      "memory": "Speicher",
-      "view": "Ansicht"
-    },
-    "choices": {
-      "view": {
-        "beauty": "Bild",
-        "lod": "Detailstufen",
-        "clusters": "Cluster"
-      }
+      "memory": "Speicher"
     }
   },
   "a-walk-through-the-city": {
@@ -2177,9 +4191,8 @@
     }
   },
   "a-map-of-what-the-engine-draws": {
-    "banner": "Klicke in die linke Ansicht und laufe mit W A S D; die Karte rechts zeigt von oben, was diese Ansicht in diesem Bild berechnet hat. Friere den Schnitt ein und lauf dann aus ihm heraus.",
+    "banner": "Klicke in die linke Ansicht und laufe mit W A S D; die Karte rechts zeigt von oben, was diese Ansicht in diesem Bild berechnet hat. Schalte „Culling einfrieren“ im Statistikpanel unten links ein und lauf dann aus dem Schnitt heraus.",
     "controls": {
-      "freeze": "Einfrieren",
       "frustum": "Sichtkegel",
       "clusters": "Cluster",
       "shadows": "Schattenseiten",
@@ -2276,19 +4289,9 @@
     }
   },
   "observatory-streamed": {
-    "banner": "Ziehe, um dich umzusehen. Wechsle die Ansicht, um zu sehen, wie das Modell zerteilt ist.",
+    "banner": "Ziehe, um dich umzusehen. Wechsle die Ansicht im Menü „Ansicht“ des Statistikpanels unten links, um zu sehen, wie das Modell zerteilt ist.",
     "controls": {
-      "view": "Ansicht",
       "pixelError": "Pixelfehler"
-    },
-    "choices": {
-      "view": {
-        "clusters": "Cluster",
-        "beauty": "Bild",
-        "pages": "Seiten",
-        "lod": "Detailstufen",
-        "triangles": "Dreiecke"
-      }
     }
   },
   "one-clip-many-objects": {
@@ -2403,7 +4406,7 @@
         "triangles": "Dreiecke",
         "clusters": "Cluster",
         "lod": "Detailstufen",
-        "pages": "Seiten",
+        "visibility": "Seiten",
         "beauty": "Bild"
       }
     },
@@ -2636,16 +4639,8 @@
   "ten-thousand-objects": {
     "banner": "Ziehe, um den Planeten zu umkreisen. Scrolle in den Felsenring hinein.",
     "controls": {
-      "view": "Ansicht",
       "pixelError": "Pixelfehler",
       "drift": "Treiben"
-    },
-    "choices": {
-      "view": {
-        "beauty": "Bild",
-        "clusters": "Cluster",
-        "lod": "Detailstufen"
-      }
     },
     "readouts": {
       "objectsScene": "Objekte in der Szene",
@@ -2908,14 +4903,7 @@
     "banner": "Ziehe, um dich umzusehen. Die Hecken verstecken die goldenen Knoten.",
     "controls": {
       "hedgeHeight": "Heckenhöhe",
-      "view": "Ansicht",
       "aboveOrInside": "Oben oder drinnen"
-    },
-    "choices": {
-      "view": {
-        "beauty": "Bild",
-        "visibility": "Sichtbarkeit"
-      }
     },
     "readouts": {
       "gildedKnots": "Goldene Knoten",

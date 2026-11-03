@@ -167,82 +167,11 @@ export function controls<const Specs extends Record<string, ControlSpec>>(
   return live
 }
 
-/** What `viewModes` needs of a world: its view mode and its cut's freeze, read and written, and
- * its frame hook. */
-interface ViewWorld {
-  diagnostic: { mode: string; freeze: boolean; readonly modes: readonly string[] }
-  onFrame(hook: () => void): unknown
-  invalidate(): void
-}
-
 /**
- * A `View` row at the foot of the controls panel, declared after `controls` like a readout: one
- * choice for each view mode the world offers (`world.diagnostic.modes`), the normal image
- * (`beauty`) first, each named in the page's language (`kit.views.<mode>`), and under it, while a
- * mode other than `beauty` is on, what its colours mean (`kit.viewHints.<mode>`). The row shows
- * the world's mode, whoever set it: it is read again when the list is opened. The world knows its
- * modes once its session opens: the list is read again at each frame until they come, then that
- * hook removes itself, so the row costs the frames after nothing. A mode the session refuses (the
- * world keeps the mode it had and says why on the console) is greyed out. Below, a `Freeze culling`
- * toggle (`kit.panel.freeze`) holds the cut — its levels, HLOD, frustum and occlusion — at the
- * camera of that moment (`world.diagnostic.freeze`): stepping aside in the `xray` view then shows
- * what it submitted and what it dropped.
+ * Kept for the pages that call it after `controls`: it draws nothing. The world's view mode, each
+ * named in the page's language (`kit.views`, `kit.viewHints`), and its cut's freeze are chosen in
+ * the stats panel (`stats.ts`), on every example and whatever tab it shows.
  */
-export function viewModes(world: ViewWorld) {
-  const panel = overlay().querySelector('[data-rows]')
-  if (!panel) throw new Error('viewModes: declare the controls first')
-  const values: Record<string, unknown> = {}
-  const refused = new Set<string>()
-  const hint = document.createElement('p')
-  hint.className = 'text-xs opacity-80'
-  const paint = () => {
-    const mode = world.diagnostic.mode
-    values.view = mode
-    const select = line.querySelector('select')
-    if (select) {
-      select.value = mode
-      for (const option of select.options) option.disabled = refused.has(option.value)
-    }
-    hint.textContent = mode === 'beauty' ? '' : kitWord('viewHints', mode, '')
-    hint.hidden = !hint.textContent
-  }
-  const row = (modes: readonly string[]) => {
-    const shown = modes.map((mode) => kitWord('views', mode))
-    const label = kitWord('panel', 'view')
-    const control: Control = { kind: 'choice', key: 'view', label, options: modes, shown }
-    const next = field(control, values, () => {
-      const asked = String(values.view)
-      world.diagnostic.mode = asked
-      if (world.diagnostic.mode !== asked) refused.add(asked)
-      paint()
-      world.invalidate()
-    })
-    next.querySelector('select')?.addEventListener('pointerdown', paint)
-    return next
-  }
-  let modes = world.diagnostic.modes
-  let line = row(modes)
-  values.freeze = world.diagnostic.freeze
-  const freeze = field(
-    { kind: 'toggle', key: 'freeze', label: kitWord('panel', 'freeze') },
-    values,
-    () => {
-      world.diagnostic.freeze = Boolean(values.freeze)
-      world.invalidate()
-    },
-  )
-  panel.append(line, hint, freeze)
-  paint()
-  // Before the session publishes its modes, the world offers `beauty` alone, its first frame
-  // included: the hook waits for the list, then removes itself.
-  const unhook = world.onFrame(() => {
-    const now = world.diagnostic.modes
-    if (now.join() === modes.join()) return
-    if (typeof unhook === 'function') unhook()
-    modes = now
-    const next = row(modes)
-    line.replaceWith(next)
-    line = next
-    paint()
-  })
+export function viewModes(world: unknown) {
+  void world
 }

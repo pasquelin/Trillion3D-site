@@ -1,0 +1,99 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <title>Engine workbench</title>
+    <meta name="thumbnail" content="6" />
+    <style>
+      html,
+      body {
+        margin: 0;
+        height: 100%;
+        background: #9fb8d6;
+      }
+      canvas {
+        display: block;
+        width: 100%;
+        height: 100%;
+      }
+    </style>
+  </head>
+  <body>
+    <canvas id="view"></canvas>
+    <script type="module">
+      import { createWorld, geometry, light, material, object } from '../runtime/engine.js';
+      import { controls, opening, workbench } from '../runtime/kit.js';
+
+      // The engine's instruments over a scene small enough to read: a ground, three boxes, the
+      // sky's sun with its shadows, a hemisphere light, and no clouds. Every mechanism is off at
+      // the start — no temporal antialiasing, a fixed render scale, a fixed exposure, nothing that
+      // moves — so the view settles and holds its image; each button below turns one on, and the
+      // stats panel's Why tab says which images it drew, why, and what each cost. The panel opens
+      // the heavy scenes of the site, each with the same panel.
+      const world = createWorld('view', { controls: 'orbit', temporalAntialiasing: false, renderScale: 1 });
+      world.scene.sky = { clouds: false };
+      // The sky's sun lights the ground with 6 lux: an incident meter reading E asks for
+      // EV100 = log2(E × 100 / 250), the exposure fixed for it, as `health-check` reads its own.
+      world.exposure = 1 / (1.2 * ((6 * 100) / 250));
+      world.scene.add(light.hemisphere({ color: '#dfeaff', groundColor: '#5a5040', intensity: 1.5 }));
+
+      const ground = object.mesh(geometry.box(40, 0.2, 40), material.meshStandard({ color: '#8c8a80', roughness: 0.9 }));
+      ground.position.y = -0.1;
+      const boxes = [
+        ['#c8553d', [-2.5, 0.5, 0]],
+        ['#3d7cc8', [0, 0.75, -1.5]],
+        ['#6aa84f', [2.5, 0.5, 0.5]],
+      ].map(([color, [x, y, z]]) => {
+        const box = object.mesh(geometry.box(1, 2 * y, 1), material.meshStandard({ color, roughness: 0.6 }));
+        box.position.set(x, y, z);
+        return box;
+      });
+      world.scene.add(ground, ...boxes);
+
+      const HOME = { position: [7, 4, 9], target: [0, 0.6, 0] };
+      world.camera.position.set(...HOME.position);
+      world.controls.target.set(...HOME.target);
+
+      // The camera nudged a centimetre aside and back, one fixed sixtieth of a second a frame:
+      // the same images on every run, whatever the frame rate.
+      const STEP = 1 / 60;
+      let nudge = null;
+      const nudged = () => {
+        nudge?.dispose();
+        nudge = opening(
+          world,
+          (time) => {
+            const [x, y, z] = HOME.position;
+            world.camera.position.set(time < STEP / 2 ? x + 0.01 : x, y, z);
+            world.controls.target.set(...HOME.target);
+            return time < STEP / 2;
+          },
+          STEP,
+        );
+      };
+
+      // One box moved by the page every frame: the scene written at each image.
+      let unmove = null;
+      const moving = (on) => {
+        unmove?.();
+        unmove = on ? world.beforeFrame(({ time }) => (boxes[1].position.y = 0.75 + 0.25 * Math.sin(2 * time))) : null;
+      };
+
+      controls(
+        {
+          invalidate: () => world.invalidate(),
+          nudge: nudged,
+          moving: false,
+          taa: ['off', 'low', 'medium', 'high', 'max'],
+          scale: ['1', '0.5', 'auto'],
+        },
+        (values, key) => {
+          if (key === 'moving') moving(values.moving);
+          if (key === 'taa') world.temporalAntialiasing = values.taa;
+          if (key === 'scale') world.renderScale = values.scale === 'auto' ? 'auto' : Number(values.scale);
+        },
+      );
+      await workbench(world);
+    </script>
+  </body>
+</html>

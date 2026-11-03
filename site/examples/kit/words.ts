@@ -60,15 +60,25 @@ export const kitWord = (group: string, key: string, fallback = labelOf(key)) =>
   lookup(['kit', group, key]) ?? fallback
 
 /** The kit's whole section `kit.<group>` as the dictionary has it, empty when it has none. */
-export const kitSection = (group: string): WordTree => {
+const kitSection = (group: string): WordTree => {
   const kit = tree.kit
   const node = typeof kit === 'object' ? kit[group] : undefined
   return typeof node === 'object' ? node : {}
 }
 
 /** The kit's `statsPanel` section as the engine's stats words: its `{ label, hint }` by key (the
- *  dictionary is the one place that vouches for the shape). */
-export const statsWords = () => kitSection('statsPanel') as StatsWords
+ *  dictionary is the one place that vouches for the shape); and each view mode the kit names
+ *  (`kit.views.<mode>`, what it shows `kit.viewHints.<mode>`) as the panel's `view.<mode>`. */
+export function statsWords(): StatsWords {
+  const words = { ...(kitSection('statsPanel') as StatsWords) }
+  const hints = kitSection('viewHints')
+  for (const [mode, label] of Object.entries(kitSection('views'))) {
+    const hint = hints[mode]
+    if (typeof label === 'string')
+      words[`view.${mode}`] = { label, hint: typeof hint === 'string' ? hint : undefined }
+  }
+  return words
+}
 
 /** The example's word at `<id>.<group>.<key>…`, else `fallback`: a label, a choice, a readout. */
 export const exampleWord = (fallback: string, ...path: string[]) =>

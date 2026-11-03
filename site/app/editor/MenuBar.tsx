@@ -1,4 +1,5 @@
 import { useRef } from 'react'
+import { downloadJson } from '../../examples/kit/dom.ts'
 import { useWords } from '../i18n.ts'
 import { usePortal } from '../layout/PortalContext.ts'
 import { Dropdown } from '../ui/Dropdown.tsx'
@@ -17,16 +18,6 @@ type ItemWord =
   | 'delete'
   | `add.${AddKind}`
   | `model.${ModelId}`
-
-/** Hands the scene to the person as a JSON file. */
-function download(json: string) {
-  const link = document.createElement('a')
-  link.href = URL.createObjectURL(new Blob([json], { type: 'application/json' }))
-  link.download = 'scene.json'
-  link.click()
-  // Revoked on the next task: some browsers start the download after `click` returns.
-  setTimeout(() => URL.revokeObjectURL(link.href), 0)
-}
 
 /**
  * The editor's menus, first in its bar: File (new, open a JSON file, save one), Add (the shapes,
@@ -69,7 +60,7 @@ export function MenuBar({ editor }: { editor: Editor }) {
           item('openFile', () => file.current?.click()),
           item('save', () => {
             try {
-              download(actions.save())
+              downloadJson('scene.json', actions.save())
             } catch (error) {
               failed(error)
             }

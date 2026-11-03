@@ -17,9 +17,7 @@
   },
   "kit": {
     "panel": {
-      "controls": "设置",
-      "view": "视图",
-      "freeze": "冻结剔除"
+      "controls": "设置"
     },
     "menu": {
       "play": "开始",
@@ -53,11 +51,11 @@
       },
       "tab.cpu": {
         "label": "CPU",
-        "hint": "引擎在一帧中花掉 CPU 时间的位置，取最近一秒的中位数；标题中的 CPU 是主线程的整帧。每帧工作越多，数值越高。"
+        "hint": "引擎把一张图像的 CPU 时间花在哪里，取最近一秒的平均值；标题栏的 CPU 数值是主线程的整帧。每帧工作越多，它越高。"
       },
       "tab.shadows": {
         "label": "阴影",
-        "hint": "阴影通道及其页面计数；它们的耗时已包含在 GPU 时间内。"
+        "hint": "阴影通道及其页计数器（最后一帧的）；它们的时间是 GPU 时间的一部分。"
       },
       "tab.memory": {
         "label": "内存",
@@ -101,7 +99,7 @@
       },
       "summary.frame": {
         "label": "帧",
-        "hint": "两幅显示图像之间的时间；任一处理器耗时超过一次刷新时会升高。"
+        "hint": "最近一秒内两张显示图像之间的平均时间，即速率的倒数；任一处理器耗时超过一次刷新时上升。"
       },
       "summary.gpu": {
         "label": "GPU",
@@ -109,15 +107,19 @@
       },
       "summary.cpu": {
         "label": "CPU",
-        "hint": "最近一秒每帧主线程时间的中位数；随发送给 GPU 的工作增加而升高。"
+        "hint": "最近一秒内每帧主线程的平均时间；随发送给 GPU 的工作上升。"
       },
       "summary.wait": {
         "label": "等待",
-        "hint": "较慢的处理器完成后，帧等待显示器的时间。"
+        "hint": "平均帧减去较忙的处理器：两个处理器并行工作时等待下一次刷新的时间。"
       },
-      "summary.bottleneck": {
+      "summary.toNext": {
+        "label": "提前一次刷新",
+        "hint": "限制帧的处理器为使其图像提前一次刷新送达而必须省下的时间，以及届时达到的帧率。"
+      },
+      "summary.bound": {
         "label": "受限于",
-        "hint": "引擎对拖住帧的因素的判断：窗口首先触及的限制。"
+        "hint": "最近一秒拖住帧的因素：以其时间决定典型图像在屏幕上停留几次刷新的处理器；两者都不是时，则是显示器的节奏。"
       },
       "summary.screen": {
         "label": "屏幕 {hz} Hz",
@@ -137,7 +139,7 @@
       },
       "summary.gpuIdle": {
         "label": "GPU 空闲",
-        "hint": "GPU 在其最近一次测得的图像之前空闲的时间；CPU 供给过晚时上升。"
+        "hint": "最近一秒内 GPU 在一张图像之前空闲的平均时间上限：图像之间计时的工作不计入，无人计时的工作计入；CPU 供给过晚时上升。"
       },
       "summary.mainView": {
         "label": "主视图",
@@ -150,30 +152,6 @@
       "summary.budget": {
         "label": "预算",
         "hint": "一次显示刷新允许一帧使用的时间；图表中的虚线。"
-      },
-      "bottleneck.healthy": {
-        "label": "显示器",
-        "hint": "帧能在一次刷新内完成：帧率由显示器决定。"
-      },
-      "bottleneck.memory_pressure": {
-        "label": "卡顿",
-        "hint": "帧耗时超过卡顿上限：释放内存或降低流式加载量。"
-      },
-      "bottleneck.gpu_bound": {
-        "label": "GPU",
-        "hint": "GPU 耗时超过一次刷新并拖住了帧：降低分辨率或光照。"
-      },
-      "bottleneck.cpu_bound": {
-        "label": "CPU",
-        "hint": "主线程耗时超过一次刷新并拖住了帧：减少每帧的工作。"
-      },
-      "bottleneck.gpu_submit_bound": {
-        "label": "GPU 提交",
-        "hint": "向 GPU 发送命令耗时超过半次刷新：减少绘制调用和通道。"
-      },
-      "bottleneck.streaming_bound": {
-        "label": "流式加载",
-        "hint": "在途页面多于获取线程能提供的数量：网络或磁盘拖住了场景。"
       },
       "panel.label": {
         "label": "统计",
@@ -246,10 +224,6 @@
       "gpu.textures": {
         "label": "纹理",
         "hint": "纹理层级的流式加载与解码；新纹理加载时升高。"
-      },
-      "gpu.partition": {
-        "label": "分区",
-        "hint": "把已绘制的簇排入绘制批次；随绘制的簇增加而升高。"
       },
       "gpu.encode": {
         "label": "编码",
@@ -379,10 +353,6 @@
         "label": "投射",
         "hint": "把阴影贴图投射到图像上；随带阴影的光源和分辨率增加而升高。"
       },
-      "shadows.transmission": {
-        "label": "透射",
-        "hint": "半透明投影体的图集；随半透明投影体增加而升高。"
-      },
       "shadows.lights": {
         "label": "投影光源",
         "hint": "本帧投射虚拟阴影贴图的光源；场景中的数量统计所有启用的光源。"
@@ -507,14 +477,6 @@
         "label": "DAG 选择",
         "hint": "遍历几何图，选出每个视图所需的细节；随视野内的细节增加。"
       },
-      "pass.DAG mask swap": {
-        "label": "DAG 掩码交换",
-        "hint": "在帧之间交换选择掩码；小而固定。"
-      },
-      "pass.partition": {
-        "label": "分区",
-        "hint": "把选中的簇压缩成该帧的绘制调用；随选中的簇数增加。"
-      },
       "pass.HiZ": {
         "label": "HiZ",
         "hint": "构建用于隐藏被遮挡物的深度金字塔；随渲染尺寸增加。"
@@ -527,41 +489,33 @@
         "label": "可见性 次遍",
         "hint": "对照遮挡物深度绘制被测试的那一半几何；随通过测试的几何增加。"
       },
-      "pass.visibility identifiers": {
-        "label": "可见性 标识符",
-        "hint": "绘制每个像素下表面的标识符；随渲染尺寸和绘制的几何增加。"
-      },
       "pass.raster binning": {
         "label": "光栅分箱",
-        "hint": "把软件光栅的小三角形分入屏幕分块；随视野内的小三角形增加。"
+        "hint": "解码可见簇，将其分入硬件光栅的绘制批次，并列出软件光栅的簇；随视野中的簇增加。"
       },
       "pass.raster occluder depth": {
-        "label": "光栅 遮挡物深度",
-        "hint": "遮挡物深度的软件光栅；随小遮挡三角形增加。"
+        "label": "光栅遮挡物深度",
+        "hint": "遮挡物深度的软件光栅，每个簇一组通道；随小遮挡三角形增加。"
       },
       "pass.raster tested depth": {
         "label": "光栅 测试深度",
         "hint": "被测试几何深度的软件光栅；随被测试的小三角形增加。"
       },
       "pass.raster identifiers": {
-        "label": "光栅 标识符",
-        "hint": "表面标识符的软件光栅；随绘制的小三角形增加。"
+        "label": "光栅标识符",
+        "hint": "在没有 64 位原子最大值的设备上，表面标识符的软件光栅；随绘制的小三角形增加。"
       },
       "pass.raster occluder hiz": {
-        "label": "光栅 遮挡物 HiZ",
-        "hint": "由软件光栅的遮挡物构建深度金字塔；随渲染尺寸增加。"
+        "label": "光栅遮挡物 Hi-Z",
+        "hint": "把可见性缓冲区的遮挡物深度写入深度金字塔的第一级；随渲染尺寸增加。"
       },
       "pass.raster resolve": {
         "label": "光栅解析",
-        "hint": "把软件光栅的像素合并进可见性缓冲；随渲染尺寸增加。"
+        "hint": "把可见性缓冲区的表面标识符写入材质读取的图像；随渲染尺寸增加。"
       },
       "pass.empty surfaces": {
         "label": "空表面",
         "hint": "当该帧不绘制任何材质时清除表面图像；小而固定。"
-      },
-      "pass.material cache, bins and shading": {
-        "label": "材质缓存、分箱与着色",
-        "hint": "合成该帧共享的内容，按材质对像素排序，并对每种材质的分箱着色；随视野内的材质和像素增加。"
       },
       "pass.material surfaces": {
         "label": "材质表面",
@@ -627,10 +581,6 @@
         "label": "反弹",
         "hint": "更新反弹光：标记视野内的单元，写入表并刷新探针；随视野内被照亮的单元增加。"
       },
-      "pass.bounce light lists": {
-        "label": "反弹灯光列表",
-        "hint": "在反弹的世界网格上构建灯光列表；随被照亮单元附近的灯光增加。"
-      },
       "pass.proxy pose": {
         "label": "代理姿态",
         "hint": "为反射和反弹摆放变形摆放的代理；随变形摆放数增加。"
@@ -647,29 +597,13 @@
         "label": "反射场景",
         "hint": "在场景中追踪屏幕无法回答的光线；随屏幕未命中的反射像素增加。"
       },
-      "pass.reflection denoise": {
-        "label": "反射降噪",
-        "hint": "复用相邻和先前的反射来清理图像；随渲染尺寸增加。"
-      },
-      "pass.reflection radiance": {
-        "label": "反射辐射",
-        "hint": "为下一帧的反射构建已照亮图像的辐射金字塔；随渲染尺寸增加。"
-      },
       "pass.particles": {
         "label": "粒子",
         "hint": "模拟粒子的步进；随存活粒子数增加。"
       },
-      "pass.deferred lighting": {
-        "label": "延迟光照",
-        "hint": "根据表面、灯光和阴影照亮每个像素；随渲染尺寸和灯光增加。"
-      },
       "pass.as is share seed": {
         "label": "保持不变部分种子",
         "hint": "为时间解析原样保留的图像比例设置种子；随渲染尺寸增加。"
-      },
-      "pass.temporal antialiasing": {
-        "label": "时间抗锯齿",
-        "hint": "把图像与先前的图像混合以平滑边缘；随渲染尺寸增加。"
       },
       "pass.exposure": {
         "label": "曝光",
@@ -742,6 +676,1978 @@
       "pass.vsm": {
         "label": "VSM",
         "hint": "虚拟阴影贴图的任一遍：阴影页的渲染、清除、投影与合并；随投射阴影的灯光及其所需的页增加。"
+      },
+      "pass.vsm castDiff": {
+        "label": "VSM 投射体变化",
+        "hint": "找出自上一张图像以来移动、出现或离开的阴影投射体，只重绘它们的页；随投射体增加。"
+      },
+      "pass.vsm marking": {
+        "label": "VSM 页标记",
+        "hint": "逐个灯光标记可见像素所需的阴影页；随渲染尺寸和投射阴影的灯光增加。"
+      },
+      "pass.vsm pageMapping": {
+        "label": "VSM 页映射",
+        "hint": "为每个已标记的阴影页在页池中分配位置，并保留已缓存的页；随标记的页增加。"
+      },
+      "pass.vsm afterRaster": {
+        "label": "VSM 光栅后处理",
+        "hint": "页绘制完成后更新页表：哪些已缓存、哪些已绘制；随页增加。"
+      },
+      "pass.vsm filterable": {
+        "label": "VSM 可过滤页",
+        "hint": "为软阴影的过滤读取准备已绘制的页；随绘制的页增加。"
+      },
+      "pass.vsm invalidateCastPages": {
+        "label": "VSM 页失效",
+        "hint": "把移动的投射体所触及的已缓存页标记为过期，以便重绘；随移动的投射体增加。"
+      },
+      "pass.vsm occlusion build": {
+        "label": "VSM 遮挡金字塔",
+        "hint": "构建已绘制页的深度金字塔，供第二次剔除测试投射体；随页增加。"
+      },
+      "pass.vsm projection": {
+        "label": "VSM 投影",
+        "hint": "把阴影页投影到图像上：每个灯光的阴影遮罩；随渲染尺寸和投射阴影的灯光增加。"
+      },
+      "pass.vsm projection hair": {
+        "label": "VSM 发丝投影",
+        "hint": "把阴影页投影到发丝上；随屏幕上的发丝增加。"
+      },
+      "pass.vsm projection perLight clear": {
+        "label": "VSM 逐灯光遮罩清除",
+        "hint": "在投影前清除逐灯光的阴影遮罩；随渲染尺寸和灯光增加。"
+      },
+      "pass.vsm projection perLight project": {
+        "label": "VSM 逐灯光投影",
+        "hint": "把每个灯光的阴影页投影到它自己的遮罩中；随渲染尺寸和投射阴影的灯光增加。"
+      },
+      "pass.vsm accumulateStats": {
+        "label": "VSM 页统计",
+        "hint": "为诊断仪表汇总请求、分配和缓存的阴影页；小而固定。"
+      },
+      "pass.vsm visualize": {
+        "label": "VSM 页视图",
+        "hint": "绘制虚拟阴影贴图的页调试视图；仅在该视图显示时。"
+      },
+      "pass.vsm render cull": {
+        "label": "VSM 剔除",
+        "hint": "在把投射体绘入已标记的页之前，对照这些页剔除投射体；随投射体和页增加。"
+      },
+      "pass.vsm render raster": {
+        "label": "VSM 光栅",
+        "hint": "用硬件光栅把投射体绘入已标记的阴影页；随绘制的三角形增加。"
+      },
+      "pass.vsm render software": {
+        "label": "VSM 软件光栅",
+        "hint": "用计算光栅把投射体的小三角形绘入页中；随小三角形增加。"
+      },
+      "pass.vsm render cullSecond": {
+        "label": "VSM 第二次剔除",
+        "hint": "对照遮挡金字塔，再次剔除第一遍漏掉的投射体；随投射体增加。"
+      },
+      "pass.vsm render rasterSecond": {
+        "label": "VSM 第二次光栅",
+        "hint": "用硬件光栅绘制第二次剔除保留的投射体；随其三角形增加。"
+      },
+      "pass.vsm render softwareSecond": {
+        "label": "VSM 第二次软件光栅",
+        "hint": "用计算光栅绘制第二次剔除保留的小三角形；随其数量增加。"
+      },
+      "pass.vsm render atlas clear": {
+        "label": "阴影图集清除",
+        "hint": "在绘入投射体之前清除传统阴影图集的层；随图集尺寸增加。"
+      },
+      "pass.vsm render atlas raster": {
+        "label": "阴影图集光栅",
+        "hint": "把投射体逐层绘入传统阴影图集；随绘制的三角形增加。"
+      },
+      "pass.vsm render atlas sort": {
+        "label": "阴影图集排序",
+        "hint": "在绘制图集前按图集图块对投射体的绘制排序；随绘制次数增加。"
+      },
+      "pass.vsm render atlas out": {
+        "label": "阴影图集复制",
+        "hint": "把传统阴影图集的图块复制到页池中；随图块增加。"
+      },
+      "pass.vsm denoise": {
+        "label": "VSM 降噪",
+        "hint": "以深度和法线为引导，过滤阴影遮罩的噪点；随渲染尺寸和软阴影增加。"
+      },
+      "pass.vsm denoise tiles": {
+        "label": "VSM 降噪图块",
+        "hint": "找出图像中阴影柔和的图块，即降噪唯一过滤的图块；随屏幕上的半影增加。"
+      },
+      "pass.vsm firstPersonSelfShadow": {
+        "label": "第一人称自阴影",
+        "hint": "追踪第一人称身体投在自身上的阴影；仅在第一人称视角下。"
+      },
+      "pass.vsm firstPersonSelfShadow merge": {
+        "label": "第一人称阴影合并",
+        "hint": "把第一人称自阴影合并到局部光源的遮罩中；仅在第一人称视角下。"
+      },
+      "pass.vsm rayTracedShadow": {
+        "label": "光线追踪阴影",
+        "hint": "对照距离场追踪被要求光线追踪的灯光的阴影；随渲染尺寸和这些灯光增加。"
+      },
+      "pass.vsm rayTracedShadow merge": {
+        "label": "光线追踪阴影合并",
+        "hint": "把光线追踪阴影合并到局部光源的遮罩中；随渲染尺寸增加。"
+      },
+      "pass.hair strands bounds and tangents": {
+        "label": "发丝包围盒与切线",
+        "hint": "计算发丝的切线及其分组的包围盒；随发丝增加。"
+      },
+      "pass.hair strands voxelization": {
+        "label": "发丝体素化",
+        "hint": "把发丝的密度写入光照和阴影读取的体素体积；随发丝和体积增加。"
+      },
+      "pass.hair strands scattering table": {
+        "label": "发丝散射表",
+        "hint": "构建光在发丝纤维中如何散射的表；发丝设置改变时运行一次。"
+      },
+      "pass.hair strands visibility": {
+        "label": "发丝可见性",
+        "hint": "光栅化发丝的可见性样本并逐像素压缩；随屏幕上的发丝增加。"
+      },
+      "pass.hair strands visibility draw": {
+        "label": "发丝可见性绘制",
+        "hint": "把发丝绘入多重采样的可见性目标；随屏幕上的发丝增加。"
+      },
+      "pass.hair strands visibility resolve": {
+        "label": "发丝可见性解析",
+        "hint": "把多重采样的可见性解析为每像素的发丝样本；随渲染尺寸增加。"
+      },
+      "pass.hair strands depth under full coverage": {
+        "label": "发丝完全覆盖深度",
+        "hint": "写入被发丝完全覆盖的像素的深度，使其后方的表面不被着色；随屏幕上的发丝增加。"
+      },
+      "pass.hair strands coverage count": {
+        "label": "发丝覆盖计数",
+        "hint": "统计覆盖每个像素的发丝；随屏幕上的发丝增加。"
+      },
+      "pass.hair strands coverage mapping": {
+        "label": "发丝覆盖映射",
+        "hint": "把计数转换为合成混合时使用的覆盖率；随渲染尺寸增加。"
+      },
+      "pass.hair strands forward visibility": {
+        "label": "发丝前向可见性",
+        "hint": "把前向路径的发丝分箱并光栅化到其深度栅格中；随屏幕上的发丝增加。"
+      },
+      "pass.hair strands forward colour raster": {
+        "label": "发丝前向颜色",
+        "hint": "以已照亮的颜色光栅化前向路径的发丝；随屏幕上的发丝增加。"
+      },
+      "pass.hair strands curve raster clear output": {
+        "label": "发丝曲线光栅清除",
+        "hint": "在绘制发丝前清除曲线光栅的输出；随渲染尺寸增加。"
+      },
+      "pass.hair strands curve raster pipeline": {
+        "label": "发丝曲线光栅",
+        "hint": "按图块把发丝作为曲线光栅化；随屏幕上的发丝增加。"
+      },
+      "pass.hair strands curve raster compose": {
+        "label": "发丝曲线合成",
+        "hint": "把曲线光栅的输出铺到图像上；随渲染尺寸增加。"
+      },
+      "pass.hair strands transmittance": {
+        "label": "发丝透射率",
+        "hint": "绘制朝向每个光源穿过发丝的光量；随发丝和光源增加。"
+      },
+      "pass.hair strands transmittance resolve": {
+        "label": "发丝透射率解析",
+        "hint": "逐像素解析多重采样的透射率；随渲染尺寸增加。"
+      },
+      "pass.hair strands deep shadow allocate": {
+        "label": "发丝深度阴影分配",
+        "hint": "为每个光源的深度阴影贴图在图集中分配位置；随投射阴影的光源增加。"
+      },
+      "pass.hair strands deep shadow front depth": {
+        "label": "发丝深度阴影前沿",
+        "hint": "绘制每个光源的深度阴影贴图中最近的发丝深度；随发丝和光源增加。"
+      },
+      "pass.hair strands deep shadow layers": {
+        "label": "发丝深度阴影层",
+        "hint": "在该前沿之后分层绘制发丝的密度；随发丝和光源增加。"
+      },
+      "pass.hair strands light": {
+        "label": "发丝光照",
+        "hint": "用场景的光源照亮发丝样本；随屏幕上的发丝和光源增加。"
+      },
+      "pass.hair strands light transmittance": {
+        "label": "发丝光源透射率",
+        "hint": "把每个光源穿过发丝的透射率读入发丝的光照；随发丝和光源增加。"
+      },
+      "pass.hair strands sampled lights": {
+        "label": "发丝采样光源",
+        "hint": "用多光源采样选出的光源照亮发丝；随屏幕上的发丝增加。"
+      },
+      "pass.hair strands static light": {
+        "label": "发丝静态光照",
+        "hint": "从光照贴图和体积中收集发丝的静态光照；随发丝增加。"
+      },
+      "pass.hair strands environment sh sky": {
+        "label": "发丝天空（球谐）",
+        "hint": "通过球谐函数用天空照亮发丝；随发丝增加。"
+      },
+      "pass.hair strands environment adhoc sky": {
+        "label": "发丝天空（近似）",
+        "hint": "通过近似积分用天空照亮发丝；随发丝增加。"
+      },
+      "pass.hair strands environment uniform sky": {
+        "label": "发丝天空（采样）",
+        "hint": "通过体素对天空均匀采样来照亮发丝；随发丝增加。"
+      },
+      "pass.hair strands sky occlusion": {
+        "label": "发丝天空遮蔽",
+        "hint": "压暗发丝下方表面的天空光；随渲染尺寸增加。"
+      },
+      "pass.hair strands shadow on the surfaces": {
+        "label": "发丝在表面的阴影",
+        "hint": "把发丝的阴影投到表面上；随渲染尺寸和投射阴影的光源增加。"
+      },
+      "pass.hair strands g buffer override": {
+        "label": "发丝表面覆写",
+        "hint": "把发丝写入表面缓冲区，让光照把它们当作表面处理；随屏幕上的发丝增加。"
+      },
+      "pass.hair strands g buffer override depth": {
+        "label": "发丝表面覆写深度",
+        "hint": "写入已写入表面缓冲区的发丝的深度；随屏幕上的发丝增加。"
+      },
+      "pass.hair strands composition": {
+        "label": "发丝合成",
+        "hint": "把已照亮的发丝连同其覆盖率铺到图像上；随渲染尺寸增加。"
+      },
+      "pass.hair strands custom depth": {
+        "label": "发丝自定义深度",
+        "hint": "把发丝写入轮廓和后期材质读取的自定义深度；仅在有请求之处。"
+      },
+      "pass.hair strands debug lines": {
+        "label": "发丝调试线",
+        "hint": "绘制发丝调试视图的线；仅在显示时。"
+      },
+      "pass.hair strands debug lines frusta": {
+        "label": "发丝调试视锥",
+        "hint": "写入发丝调试视图中光源视锥的线；仅在显示时。"
+      },
+      "pass.hair strands debug lines macro": {
+        "label": "发丝调试分组",
+        "hint": "写入发丝调试视图中发丝分组包围盒的线；仅在显示时。"
+      },
+      "pass.hair strands debug lines nodes": {
+        "label": "发丝调试节点",
+        "hint": "写入发丝调试视图中发丝树节点的线；仅在显示时。"
+      },
+      "pass.hair strands debug panels atlas": {
+        "label": "发丝调试图集",
+        "hint": "绘制深度阴影图集的发丝调试面板；仅在显示时。"
+      },
+      "pass.hair strands debug panels voxels": {
+        "label": "发丝调试体素",
+        "hint": "绘制体素体积的发丝调试面板；仅在显示时。"
+      },
+      "pass.sun distance field shadow cull": {
+        "label": "距离场太阳阴影剔除",
+        "hint": "对照太阳的阴影图块剔除网格的距离场；随网格增加。"
+      },
+      "pass.sun distance field shadow offsets": {
+        "label": "距离场太阳阴影偏移",
+        "hint": "排布每个图块中为其投下阴影的网格列表；随图块增加。"
+      },
+      "pass.sun distance field shadow count tiles": {
+        "label": "距离场太阳阴影图块计数",
+        "hint": "统计每个阴影图块包含的网格；随网格增加。"
+      },
+      "pass.sun distance field shadow write tiles": {
+        "label": "距离场太阳阴影图块写入",
+        "hint": "把网格写入每个阴影图块的列表；随网格增加。"
+      },
+      "pass.distance field occlusion grid": {
+        "label": "距离场遮蔽栅格",
+        "hint": "构建距离场遮蔽所追踪网格的栅格；随网格增加。"
+      },
+      "pass.distance field occlusion cull": {
+        "label": "距离场遮蔽剔除",
+        "hint": "对照屏幕图块剔除网格的距离场；随网格增加。"
+      },
+      "pass.distance field occlusion offsets": {
+        "label": "距离场遮蔽偏移",
+        "hint": "排布每个屏幕图块的网格列表；随图块增加。"
+      },
+      "pass.distance field occlusion count tiles": {
+        "label": "距离场遮蔽图块计数",
+        "hint": "统计每个屏幕图块包含的网格；随网格增加。"
+      },
+      "pass.distance field occlusion write tiles": {
+        "label": "距离场遮蔽图块写入",
+        "hint": "把网格写入每个屏幕图块的列表；随网格增加。"
+      },
+      "pass.distance field occlusion cones": {
+        "label": "距离场遮蔽锥体",
+        "hint": "通过距离场追踪遮蔽锥体；随渲染尺寸增加。"
+      },
+      "pass.distance field occlusion history": {
+        "label": "距离场遮蔽历史",
+        "hint": "把遮蔽与先前图像的遮蔽混合；随渲染尺寸增加。"
+      },
+      "pass.distance field occlusion pack": {
+        "label": "距离场遮蔽打包",
+        "hint": "打包遮蔽供光照读取；随渲染尺寸增加。"
+      },
+      "pass.global distance field reset": {
+        "label": "全局距离场重置",
+        "hint": "在重建前清除全局距离场的页；距离场重置时运行。"
+      },
+      "pass.global distance field update, static": {
+        "label": "全局距离场更新（静态）",
+        "hint": "重建静止网格改变了的全局距离场页；随更新的页增加。"
+      },
+      "pass.global distance field update, movable": {
+        "label": "全局距离场更新（可移动）",
+        "hint": "重建移动网格触及的全局距离场页；随这些网格增加。"
+      },
+      "pass.global distance field page statistics": {
+        "label": "全局距离场统计",
+        "hint": "为其调试视图统计全局距离场的页；仅在该视图显示时。"
+      },
+      "pass.mesh distance field streaming": {
+        "label": "网格距离场流送",
+        "hint": "把网格的距离场调入或调出图集；随流送的距离场增加。"
+      },
+      "pass.sky light face": {
+        "label": "天空光捕获面",
+        "hint": "绘制天空光立方体捕获的一个面；随捕获尺寸增加。"
+      },
+      "pass.sky light clouds": {
+        "label": "天空光云",
+        "hint": "把云追踪进天空光的捕获中；随捕获尺寸增加。"
+      },
+      "pass.sky light sky table": {
+        "label": "天空光天空表",
+        "hint": "构建天空光捕获读取的天空表；随表的尺寸增加。"
+      },
+      "pass.sky light copy": {
+        "label": "天空光复制",
+        "hint": "复制捕获的立方体以供过滤；随捕获尺寸增加。"
+      },
+      "pass.sky light mips": {
+        "label": "天空光 mip",
+        "hint": "构建捕获立方体的较小层级；随其尺寸增加。"
+      },
+      "pass.sky light filter": {
+        "label": "天空光过滤",
+        "hint": "为粗糙反射过滤捕获的立方体；随其尺寸增加。"
+      },
+      "pass.sky light harmonics": {
+        "label": "天空光球谐",
+        "hint": "把捕获的立方体累加为球谐函数，用于漫反射天空光；小而固定。"
+      },
+      "pass.sky light table": {
+        "label": "追踪天空光表",
+        "hint": "构建追踪天空光读取的天空表；随表的尺寸增加。"
+      },
+      "pass.sky light directions": {
+        "label": "追踪天空光方向",
+        "hint": "选择追踪天空光采样的方向；随渲染尺寸增加。"
+      },
+      "pass.sky light trace": {
+        "label": "追踪天空光",
+        "hint": "在场景中追踪天空光的遮蔽；随渲染尺寸增加。"
+      },
+      "pass.sky light composite": {
+        "label": "追踪天空光合成",
+        "hint": "把追踪的天空光铺到图像上；随渲染尺寸增加。"
+      },
+      "pass.sky meshes face": {
+        "label": "天空网格面",
+        "hint": "把天空网格绘入天空捕获的一个面；随天空网格增加。"
+      },
+      "pass.sky meshes copy": {
+        "label": "天空网格复制",
+        "hint": "复制天空网格的捕获供天空读取；随其尺寸增加。"
+      },
+      "pass.cloud depth range": {
+        "label": "云深度范围",
+        "hint": "找出追踪云的深度范围；随渲染尺寸增加。"
+      },
+      "pass.cloud empty space": {
+        "label": "云空白区域",
+        "hint": "找出云追踪可跳过的空白区域；随渲染尺寸增加。"
+      },
+      "pass.cloud trace": {
+        "label": "云追踪",
+        "hint": "让光线步进穿过云层；随渲染尺寸和云的质量增加。"
+      },
+      "pass.cloud haze": {
+        "label": "云霾",
+        "hint": "追踪云中和云下的霾；随渲染尺寸增加。"
+      },
+      "pass.cloud reconstruction": {
+        "label": "云重建",
+        "hint": "由追踪的像素和先前图像重建完整的云；随渲染尺寸增加。"
+      },
+      "pass.cloud composition": {
+        "label": "云合成",
+        "hint": "把云铺到图像上；随渲染尺寸增加。"
+      },
+      "pass.cloud composition behind water": {
+        "label": "水体后的云",
+        "hint": "把云铺到透过水体看到的图像上；随屏幕上的水体增加。"
+      },
+      "pass.cloud holdout": {
+        "label": "云 Alpha 遮挡",
+        "hint": "在图像 alpha 被遮挡的地方把云挖掉；随渲染尺寸增加。"
+      },
+      "pass.cloud shadow": {
+        "label": "云阴影",
+        "hint": "为太阳追踪云的阴影贴图；随贴图尺寸增加。"
+      },
+      "pass.cloud sky occlusion": {
+        "label": "云天空遮蔽",
+        "hint": "为天空光追踪云遮住了多少天空；随贴图尺寸增加。"
+      },
+      "pass.cloud lightning volume": {
+        "label": "云闪电体积",
+        "hint": "构建闪电照亮云所用的体积；云改变时运行。"
+      },
+      "pass.cloud layout pattern": {
+        "label": "云布局图案",
+        "hint": "构建云布局读取的图案；云改变时运行。"
+      },
+      "pass.fog local volumes cull": {
+        "label": "雾体积剔除",
+        "hint": "对照视锥体素（froxel）图块剔除局部雾体积；随体积增加。"
+      },
+      "pass.fog local volumes sky": {
+        "label": "雾体积天空",
+        "hint": "用天空照亮局部雾体积；随体积增加。"
+      },
+      "pass.path tracer light grid": {
+        "label": "路径追踪器光源网格",
+        "hint": "构建路径追踪器采样的光源网格；光源改变时运行。"
+      },
+      "pass.path tracer air optical depth": {
+        "label": "路径追踪器大气深度",
+        "hint": "构建路径追踪器读取的大气光学深度表；大气改变时运行。"
+      },
+      "pass.path tracer cloud acceleration map": {
+        "label": "路径追踪器云图",
+        "hint": "构建路径追踪器用来跳过空云区域的图；云改变时运行。"
+      },
+      "pass.path tracer sky table": {
+        "label": "路径追踪器天空表",
+        "hint": "构建路径追踪器采样的天空表；天空改变时运行。"
+      },
+      "pass.path tracer sample": {
+        "label": "路径追踪器样本",
+        "hint": "为图像追踪路径追踪器的样本；随渲染尺寸和反弹次数增加。"
+      },
+      "pass.path tracer error mips": {
+        "label": "路径追踪器误差 mip",
+        "hint": "构建自适应采样读取的样本误差层级；随渲染尺寸增加。"
+      },
+      "pass.path tracer normal space": {
+        "label": "路径追踪器法线空间",
+        "hint": "写入引导降噪器的法线和深度；随渲染尺寸增加。"
+      },
+      "pass.path tracer denoiser": {
+        "label": "路径追踪器降噪器",
+        "hint": "为路径追踪的图像降噪；随渲染尺寸增加。"
+      },
+      "pass.path tracer denoiser motion view": {
+        "label": "路径追踪器运动视图",
+        "hint": "绘制降噪器的运动调试视图；仅在显示时。"
+      },
+      "pass.path tracer denoiser warp view": {
+        "label": "路径追踪器扭曲视图",
+        "hint": "绘制降噪器的扭曲调试视图；仅在显示时。"
+      },
+      "pass.path tracer display": {
+        "label": "路径追踪器显示",
+        "hint": "把路径追踪的图像显示到屏幕上；随渲染尺寸增加。"
+      },
+      "pass.card capture clear": {
+        "label": "卡片捕获清除",
+        "hint": "清除即将捕获的表面缓存卡片；随捕获的卡片增加。"
+      },
+      "pass.card capture cull": {
+        "label": "卡片捕获剔除",
+        "hint": "对照即将捕获的卡片剔除网格；随卡片和网格增加。"
+      },
+      "pass.card capture raster": {
+        "label": "卡片捕获光栅",
+        "hint": "把网格绘入卡片的捕获中；随捕获的三角形增加。"
+      },
+      "pass.card capture export": {
+        "label": "卡片捕获导出",
+        "hint": "把捕获的卡片写入表面缓存的图集；随捕获的卡片增加。"
+      },
+      "pass.surface cache atlas clear": {
+        "label": "表面缓存图集清除",
+        "hint": "清除表面缓存图集的层；图集创建或重置时运行。"
+      },
+      "pass.surface cache feedback table arguments": {
+        "label": "表面缓存反馈参数",
+        "hint": "准备表面缓存反馈表的调度；小而固定。"
+      },
+      "pass.surface cache feedback table": {
+        "label": "表面缓存反馈表",
+        "hint": "构建图像请求的卡片表；随看到的卡片增加。"
+      },
+      "pass.surface cache feedback compaction": {
+        "label": "表面缓存反馈压缩",
+        "hint": "把图像请求的卡片压缩成列表；随看到的卡片增加。"
+      },
+      "pass.surface cache atlas view": {
+        "label": "表面缓存图集视图",
+        "hint": "绘制表面缓存图集的调试视图；仅在显示时。"
+      },
+      "pass.inspection reflections": {
+        "label": "检查反射",
+        "hint": "追踪检查所绘制的反射光线；仅在显示时。"
+      },
+      "tab.why": {
+        "label": "原因",
+        "hint": "每张图像为何被绘制或保持、什么在移动、主视图稳定到什么程度，以及各测量工具的开销；面板打开期间引擎都会记录。"
+      },
+      "summary.still": {
+        "label": "静止视图",
+        "hint": "最近一秒的每一轮都保持了图像：没有绘制任何内容，所以没有计时。"
+      },
+      "summary.stillValue": {
+        "label": "未绘制",
+        "hint": "“测量静止姿态”开启期间会重新绘制每张静止图像，以便计时其开销。"
+      },
+      "summary.stillMeasured": {
+        "label": "正在测量静止",
+        "hint": "正在测量静止姿态：视图本会保持的每张图像都被重绘（原因 forced）。"
+      },
+      "summary.paused": {
+        "label": "已暂停",
+        "hint": "显示已暂停：数字保持不变，仪表继续读取。"
+      },
+      "detail.median": {
+        "label": "p50 {p50} ms = {n} × {refresh} ms",
+        "hint": "显示器网格上的中位间隔：整数次刷新乘以一次刷新。"
+      },
+      "detail.held": {
+        "label": "保持 {n}",
+        "hint": "窗口中没有绘制图像的轮次。"
+      },
+      "detail.stutters": {
+        "label": "卡顿 {n}",
+        "hint": "超过 50 ms 且超过中位数两倍的间隔。"
+      },
+      "detail.samples": {
+        "label": "采样 {n} · 丢弃 {d}",
+        "hint": "窗口内 GPU 计时器采样的图像，以及未读即丢弃的样本。"
+      },
+      "detail.gpuClock": {
+        "label": "GPU 计时器 {us} µs",
+        "hint": "GPU 计时器的步长，由其时间戳得出。"
+      },
+      "detail.cpuClock": {
+        "label": "CPU 时钟 {us} µs",
+        "hint": "CPU 时钟的步长：跨源隔离时为 5 µs，否则为 100 µs。"
+      },
+      "why.strip": {
+        "label": "图像",
+        "hint": "主视图的每张图像一格，位于图表的时间轴上，每格在其四分之一秒对应的点下方，按其判定着色；顶部标记表示静止姿态测量强制绘制的图像，底部标记表示给出原因的图像。指向某格可显示该图像的名称，较近的图像可在“原因”标签页中读取。"
+      },
+      "why.forced": {
+        "label": "强制",
+        "hint": "由静止姿态测量重绘的图像。"
+      },
+      "why.caused": {
+        "label": "原因",
+        "hint": "指明自视图保留图像以来什么在动的图像。"
+      },
+      "why.roles": {
+        "label": "按视图的图像",
+        "hint": "自窗口重置以来读取的图像，按视图角色划分：主视图、页面的视图、引擎自身的视图（镜面、自定义深度、天空的一面）、捕获。"
+      },
+      "why.frames": {
+        "label": "已读轮次",
+        "hint": "自窗口重置以来读取器记录的第一张和最后一张图像，按记录自身的编号。"
+      },
+      "why.verdicts": {
+        "label": "判定",
+        "hint": "所选视图的图像结果：已绘制，或被保持及其原因；没有图像得到的判定显示为灰色。"
+      },
+      "why.reasons": {
+        "label": "未稳定",
+        "hint": "决定保持时仍未稳定的工作，按图像统计（一张图像可指明多个）；没有图像出现的名称显示为灰色。"
+      },
+      "why.terms": {
+        "label": "每帧项",
+        "hint": "使安静视图重绘的项，按其绘制的图像统计；没有图像出现的项显示为灰色。"
+      },
+      "why.causes": {
+        "label": "原因",
+        "hint": "推动修订或请求图像的因素，按图像统计（一张图像可指明多个）；没有图像出现的原因显示为灰色。"
+      },
+      "why.sinceChange": {
+        "label": "自变化以来",
+        "hint": "主视图上次变化以来的图像数，对比其时间历史忘掉之前视图所需的图像数；上一个窗口没有比较时显示为灰色（视图在动或被保持）。"
+      },
+      "why.history": {
+        "label": "历史",
+        "hint": "时间历史累积的图像数，对比抖动周期结束时将其填满的图像数；上一个窗口没有比较时显示为灰色。"
+      },
+      "why.panelCost": {
+        "label": "面板，每秒 ms",
+        "hint": "最近一秒面板自身读取和绘制所用的主线程时间，每秒 ms。"
+      },
+      "why.instrumentCpu": {
+        "label": "仪表，CPU",
+        "hint": "时间仪表自身每轮的主线程时间（其行、其样本、其读取）：CPU 标签页的“仪表”行。"
+      },
+      "why.instrumentGpu": {
+        "label": "仪表，GPU",
+        "hint": "仪表每轮添加的 GPU 通道（诊断阶段）：GPU 标签页的“仪表”行。"
+      },
+      "verdict.drawn": {
+        "label": "已绘制",
+        "hint": "绘制并显示了一张新图像。"
+      },
+      "verdict.still": {
+        "label": "静止",
+        "hint": "保持：之前的图像，逐位相同地再次显示。"
+      },
+      "verdict.heldOnAnswer": {
+        "label": "等待应答",
+        "hint": "因设备尚未给出的应答而保持：正在编译的程序、缓冲区。"
+      },
+      "verdict.targetsAwaited": {
+        "label": "等待目标",
+        "hint": "因设备尚未分配的目标而保持。"
+      },
+      "verdict.swapped": {
+        "label": "已交换",
+        "hint": "绘制到另外准备的目标中再交换上来。"
+      },
+      "verdict.noiseFinal": {
+        "label": "最终噪声",
+        "hint": "视图建立过程的最后一张图像，在视图保持之前以噪声的标准相位绘制。"
+      },
+      "verdict.withheld": {
+        "label": "未显示",
+        "hint": "已绘制但未显示：视图加载完成之前，或加载在等待缓慢的流式传输时。"
+      },
+      "image.frame": {
+        "label": "图像",
+        "hint": "下方各行读取的图像：条带上指针下的那张，否则为最后一张；它在会话中的图像编号。"
+      },
+      "image.view": {
+        "label": "视图",
+        "hint": "视图的角色，以及它在该角色视图中的位置。"
+      },
+      "image.verdict": {
+        "label": "判定",
+        "hint": "图像的结果。"
+      },
+      "image.because": {
+        "label": "绘制原因",
+        "hint": "保持决定绘制它的唯一原因；保持的图像没有。"
+      },
+      "image.reasons": {
+        "label": "未稳定",
+        "hint": "决定保持时仍未稳定的工作。"
+      },
+      "image.term": {
+        "label": "项",
+        "hint": "每帧都绘制安静视图并绘制了这张图像的项。"
+      },
+      "image.causes": {
+        "label": "原因",
+        "hint": "自视图保留图像以来什么在动，按来源。"
+      },
+      "image.answer": {
+        "label": "保持于",
+        "hint": "图像因之保持的应答；已绘制的图像没有。"
+      },
+      "image.retryInMs": {
+        "label": "重试于",
+        "hint": "因目标被拒绝而保持：再次请求被拒尺寸之前的毫秒数。"
+      },
+      "image.intervalMs": {
+        "label": "间隔",
+        "hint": "图像停留在屏幕上的时间。"
+      },
+      "image.refreshes": {
+        "label": "刷新次数",
+        "hint": "图像停留在屏幕上期间显示器的整次刷新数。"
+      },
+      "image.bound": {
+        "label": "受限于",
+        "hint": "决定其刷新次数的因素：GPU、CPU 或显示器的节奏。"
+      },
+      "bound.gpu": {
+        "label": "GPU",
+        "hint": "由图形处理器的时间决定。"
+      },
+      "bound.cpu": {
+        "label": "CPU",
+        "hint": "由主线程的时间决定。"
+      },
+      "bound.pacing": {
+        "label": "显示器节奏",
+        "hint": "两个处理器都不是：由显示器刷新、页面或帧率上限决定。"
+      },
+      "image.cpuMs": {
+        "label": "CPU",
+        "hint": "该轮的主线程时间。"
+      },
+      "image.gpuMs": {
+        "label": "GPU",
+        "hint": "图像的 GPU 时间；计时器未采样时没有。"
+      },
+      "image.outsideMs": {
+        "label": "图像之外",
+        "hint": "该轮中与图像一同提交的 GPU 工作。"
+      },
+      "image.waitMs": {
+        "label": "等待",
+        "hint": "间隔减去更忙的处理器：等待刷新的时间。"
+      },
+      "image.toNextRefreshMs": {
+        "label": "提前一次刷新",
+        "hint": "受限的处理器需要让出的时间，使图像提前一次刷新到达。"
+      },
+      "control.every": {
+        "label": "GPU 计时",
+        "hint": "GPU 计时器读取图像的频率：默认每 {every} 张取 1 张，开销最小；每 3 张取 1 张或每张都计时会测得更多，每张需要一次计时查询和一次回读。"
+      },
+      "control.everyImage": {
+        "label": "每帧",
+        "hint": "每张图像都在 GPU 上计时：样本最多，每张图像需要一次计时查询和一次回读。"
+      },
+      "control.still": {
+        "label": "测量静止姿态",
+        "hint": "开启时，视图本会保持的每张图像都会重绘，从而计时静止姿态；每张这样的图像都是一个新的 TAA 样本（原因 forced）。每帧开销一整张图像。"
+      },
+      "control.pause": {
+        "label": "暂停显示",
+        "hint": "冻结显示的数字；仪表继续读取，条带仍响应指针。"
+      },
+      "control.reset": {
+        "label": "重置窗口",
+        "hint": "忘掉迄今读取的图像和计数：窗口从现在重新开始。"
+      },
+      "control.export": {
+        "label": "下载 JSON",
+        "hint": "原因与时间仪表最近一分钟的窗口，按引擎给出的原样，每个时间窗口附带其读取器打开时的选项；以及页面地址、所读世界、读取器状态和请求内容。"
+      },
+      "control.role": {
+        "label": "计数的视图",
+        "hint": "此标签页统计哪个视图的图像：主视图、页面的视图、引擎自身的视图（镜子、天空的一面）、截取；在已读取的角色中选择。"
+      },
+      "control.world": {
+        "label": "世界",
+        "hint": "面板读取的页面世界，按其在页面世界中的位置（最先创建的是主视图）；选择后每个窗口都在所选世界上重新开始。"
+      },
+      "control.view": {
+        "label": "视图",
+        "hint": "世界绘制的内容：渲染，或展示引擎如何工作的视图（`world.diagnostic.mode`）；灰色的在此不提供，或被世界拒绝。"
+      },
+      "control.viewUnavailable": {
+        "label": "此处不绘制",
+        "hint": "此版本的引擎尚未绘制该视图。"
+      },
+      "control.viewRefused": {
+        "label": "被此世界拒绝",
+        "hint": "请求此视图时，世界保留了原有视图；控制台会说明原因。"
+      },
+      "control.freeze": {
+        "label": "冻结剔除",
+        "hint": "在相机继续移动时，把剖切（其层级、HLOD、视锥与遮挡）保持在当前相机（`world.diagnostic.freeze`）：在 X 光视图中侧移一步，即可看到它提交了什么、丢弃了什么。"
+      },
+      "viewGroup.geometry": {
+        "label": "几何",
+        "hint": "剖切绘制的内容：其三角形、簇、细节层级、HLOD、体素、屏幕误差与页面，透视显示或计数。"
+      },
+      "viewGroup.materials": {
+        "label": "材质",
+        "hint": "表面的材质：其类别、光标下的属性、读取的纹理尺寸、次表面配置。"
+      },
+      "viewGroup.lighting": {
+        "label": "光照",
+        "hint": "表面接收到的光，整体或逐项，以及光源图片与配置文件的图集。"
+      },
+      "viewGroup.temporal": {
+        "label": "时间抗锯齿",
+        "hint": "时间累积：它接收的图像、它的历史与拒绝历史的因素，以及从一张图像到下一张的变化。"
+      },
+      "viewGroup.shadowMaps": {
+        "label": "阴影贴图",
+        "hint": "虚拟阴影贴图：每个像素读取的层级与页面、其缓存、投影物与开销。"
+      },
+      "viewGroup.surfaceCache": {
+        "label": "表面缓存",
+        "hint": "网格卡片的图集、其光照更新，以及透过其光照看到的场景。"
+      },
+      "viewGroup.probes": {
+        "label": "探针",
+        "hint": "屏幕探针、世界探针与反射光线：它们位于何处、追踪什么、保存什么。"
+      },
+      "viewGroup.sampledLights": {
+        "label": "采样光源",
+        "hint": "多光源的采样光照：其阴影光线遇到的表面，以及每个像素的开销。"
+      },
+      "viewGroup.hair": {
+        "label": "毛发",
+        "hint": "毛发发丝：其包围盒、深度阴影、屏幕框与体素。"
+      },
+      "viewGroup.volumes": {
+        "label": "体积",
+        "hint": "非均匀体积的体素网格，按求其透射率的每种方式。"
+      },
+      "viewGroup.other": {
+        "label": "其他",
+        "hint": "面板中尚无分组命名的视图。"
+      },
+      "reader.opening": {
+        "label": "正在打开",
+        "hint": "仪表的读取器正在加载。"
+      },
+      "reader.waiting": {
+        "label": "等待世界 {n}",
+        "hint": "所选世界此后尚未绘制任何一轮：在它绘制之前，显示的是之前世界的数字。"
+      },
+      "reader.missing": {
+        "label": "此构建中没有：{names}",
+        "hint": "此引擎构建没有该仪表；不显示其任何内容。"
+      },
+      "reader.failed": {
+        "label": "失败",
+        "hint": "某个仪表的读取器未能打开（其模块族未加载）。"
+      },
+      "reader.faulted": {
+        "label": "出错：{message}",
+        "hint": "面板的一次读取或绘制抛出了错误；它会继续读取。"
+      },
+      "gpu.outside": {
+        "label": "图像之外",
+        "hint": "引擎在图像之外提交的工作（纹理图块、安装的页面、天空捕获），在读取时间时计时。"
+      },
+      "gpu.diagnostic": {
+        "label": "仪表",
+        "hint": "视图或检查为展示引擎工作方式而添加的通道；不是引擎自身的开销。"
+      },
+      "gpu.views": {
+        "label": "主视图之外的视图",
+        "hint": "在主图像之外绘制的每个视图（页面视图、镜面、自定义深度、天空的一面）：其自身图像的平均 GPU 时间之和；不计入上面的一轮。"
+      },
+      "cpu.diagnostic": {
+        "label": "仪表",
+        "hint": "时间仪表在被读取时每轮自身的主线程工作（其行、其样本、其读取）；不是引擎的开销。"
+      },
+      "control.everyN": {
+        "label": "{n} 帧取 1",
+        "hint": "每 {n} 帧在 GPU 上计时一帧。"
+      },
+      "control.actions": {
+        "label": "操作",
+        "hint": "显示对读取内容的操作：暂停、重新开始窗口、下载。"
+      },
+      "role.main": {
+        "label": "主视图",
+        "hint": "世界的主视图。"
+      },
+      "role.pageView": {
+        "label": "页面视图",
+        "hint": "页面添加的视图（`world.addView`）。"
+      },
+      "role.planarReflection": {
+        "label": "平面反射",
+        "hint": "平面镜的视图，在主视图旁绘制。"
+      },
+      "role.customDepth": {
+        "label": "自定义深度",
+        "hint": "自定义深度视图，在主视图旁绘制。"
+      },
+      "role.skyFace": {
+        "label": "天空面",
+        "hint": "天空网格立方体的一个面，在主视图旁绘制。"
+      },
+      "role.aside": {
+        "label": "捕获",
+        "hint": "单独绘制的视图：一次捕获。"
+      },
+      "gpu.surfaceCache": {
+        "label": "表面缓存",
+        "hint": "把网格的卡片捕获到光线读取的图集中；随一张图像中捕获的页增加。"
+      },
+      "shadows.pagesEmpty": {
+        "label": "空阴影页",
+        "hint": "什么都不装、可供下次分配的池页；阴影请求减少时增加。"
+      },
+      "shadows.pagesWpoConsidered": {
+        "label": "带偏移的阴影页",
+        "hint": "在其允许的偏移的剔除下保留的缓存阴影页；随视野中带偏移的材质增加。"
+      },
+      "shadows.rootsNoted": {
+        "label": "移动的放置",
+        "hint": "记录为已移动的放置世界的累计总数；每张图像的增量是一次移动波及的放置数。"
+      },
+      "shadows.rootsBoxed": {
+        "label": "推导的根包围盒",
+        "hint": "根通道推导出的根包围盒的累计总数；阴影失效通过它们看到一个放置。"
+      },
+      "pass.cluster measure": {
+        "label": "簇测量",
+        "hint": "测量页已到达的簇的最长边；随到达的页增加。"
+      },
+      "pass.raster depth export": {
+        "label": "光栅深度导出",
+        "hint": "从深度金字塔的第一级写入场景的深度附件；随渲染尺寸增加。"
+      },
+      "pass.material bins and shading": {
+        "label": "材质分箱与着色",
+        "hint": "按材质分拣像素并为每种材质的箱着色；随视野中的材质和像素增加。"
+      },
+      "pass.translucency modulation": {
+        "label": "半透明调制",
+        "hint": "绘制与其后方内容相乘的层；随视野中这些层增加。"
+      },
+      "pass.translucency compose": {
+        "label": "半透明合成",
+        "hint": "把半透明层合成到图像上；随渲染尺寸增加。"
+      },
+      "pass.reflection clear": {
+        "label": "反射清除",
+        "hint": "在不追踪光线的地方清空反射图像；随渲染尺寸增加。"
+      },
+      "pass.reflection resolve": {
+        "label": "反射解析",
+        "hint": "复用相邻像素的光线来填充反射图像；随反射像素增加。"
+      },
+      "pass.reflection temporal": {
+        "label": "反射时间累积",
+        "hint": "累积先前图像的反射以清理图像；随反射像素增加。"
+      },
+      "pass.reflection bilateral": {
+        "label": "反射双边滤波",
+        "hint": "用邻近像素过滤有噪点或新的反射并写入反射图像；随反射像素增加。"
+      },
+      "pass.reflection keep depth": {
+        "label": "反射保留深度",
+        "hint": "为下一张图像的反射保留不透明深度；随渲染尺寸增加。"
+      },
+      "pass.tile classification": {
+        "label": "图块分类",
+        "hint": "按所含表面类型对屏幕图块分类，使每块用它需要的程序照明；随渲染尺寸增加。"
+      },
+      "pass.surface colour": {
+        "label": "表面颜色",
+        "hint": "写入每个像素的第一种颜色：背景、按原样显示的表面和自发光；随渲染尺寸增加。"
+      },
+      "pass.sun light": {
+        "label": "阳光",
+        "hint": "把太阳及其他方向光的光照连同阴影加到表面上；随受光像素和光源增加。"
+      },
+      "pass.local lights": {
+        "label": "局部光源",
+        "hint": "把每个像素所在光照网格单元中的灯加到表面上；随受光像素和照到它们的光源增加。"
+      },
+      "pass.indirect light": {
+        "label": "间接光",
+        "hint": "加入环境和天空的光、反弹光、反射以及薄表面的背面；随受光像素增加。"
+      },
+      "pass.height fog": {
+        "label": "高度雾",
+        "hint": "在已照亮的图像上铺上雾、局部雾体积和空气的霾；随渲染尺寸增加。"
+      },
+      "pass.temporal dilate velocity": {
+        "label": "时间速度膨胀",
+        "hint": "为时间抗锯齿找出每个像素最近的表面及其运动；随渲染尺寸增加。"
+      },
+      "pass.temporal decimate history": {
+        "label": "时间历史抽稀",
+        "hint": "把先前图像的小历史重投影到这张图像上；随渲染尺寸增加。"
+      },
+      "pass.temporal detect thin geometry": {
+        "label": "时间细几何检测",
+        "hint": "找出历史必须保留的细几何；随渲染尺寸增加。"
+      },
+      "pass.temporal reject shading": {
+        "label": "时间着色拒绝",
+        "hint": "先测量哪些像素在图像间闪烁，再测量历史与图像不再匹配、必须丢弃的位置；随渲染尺寸增加。"
+      },
+      "pass.temporal spatial anti aliasing": {
+        "label": "时间空间抗锯齿",
+        "hint": "平滑历史被丢弃的像素的边缘；随渲染尺寸增加。"
+      },
+      "pass.temporal update history": {
+        "label": "时间历史更新",
+        "hint": "把图像混入历史以平滑边缘；随历史尺寸增加。"
+      },
+      "pass.temporal resolve history": {
+        "label": "时间历史解析",
+        "hint": "把比显示更大的历史缩到显示尺寸；随显示尺寸增加。"
+      },
+      "pass.temporal resolve display layers": {
+        "label": "时间显示层解析",
+        "hint": "把显示层的历史缩到显示尺寸；随显示尺寸增加。"
+      },
+      "control.details": {
+        "label": "详情",
+        "hint": "在视图上打开详情窗口：以图示呈现的帧、每个阶段和通道、每张图像为何被绘制、最近几分钟、内存和场景。打开期间，除非你选了别的采样，GPU 在每张图像上计时；关闭后不产生任何开销。"
+      },
+      "details.label": {
+        "label": "引擎详情",
+        "hint": "仪表从引擎读取的一切，按标签页呈现；按 Esc 或 × 关闭。"
+      },
+      "details.close": {
+        "label": "关闭",
+        "hint": "关闭详情窗口（Esc）。"
+      },
+      "tab.overview": {
+        "label": "概览",
+        "hint": "以图示呈现的帧：每个 GPU 阶段是一条与其时间等长的条，下方是 CPU，刷新预算是一条线；用文字说明是什么拖住了帧。点击一个阶段可打开它的行。"
+      },
+      "tab.history": {
+        "label": "历史",
+        "hint": "最近五分钟，每秒一个点：图像、GPU 和 CPU 的时间，发生卡顿的秒，以及图像给出原因的秒。"
+      },
+      "stageGroup.scene": {
+        "label": "世界",
+        "hint": "让世界运动的东西：物理、动画、光源。"
+      },
+      "stageGroup.cut": {
+        "label": "裁剪与流式加载",
+        "hint": "引擎选择绘制并送到 GPU 的内容：裁剪、页、上传、纹理。"
+      },
+      "stageGroup.commands": {
+        "label": "命令",
+        "hint": "录制并发送 GPU 命令。"
+      },
+      "stageGroup.surfaces": {
+        "label": "表面",
+        "hint": "绘制表面：深度金字塔、几何、贴花和透明物。"
+      },
+      "stageGroup.light": {
+        "label": "光照",
+        "hint": "照亮表面：表面缓存、阴影、光源列表、反弹、反射和光照。"
+      },
+      "stageGroup.image": {
+        "label": "图像",
+        "hint": "完成图像：抗锯齿、效果和输出。"
+      },
+      "stageGroup.apart": {
+        "label": "另计",
+        "hint": "图像之外的 GPU 工作、仪表自身的工作，以及没有阶段声明的通道。"
+      },
+      "overview.said": {
+        "label": "图像耗时 {frame} ms，GPU {gpu} ms，CPU {cpu} ms；在 {budget} ms 的刷新上等待 {wait} ms。",
+        "hint": "尚无法判断是什么拖住帧时，一句话说明帧：处理器的时间和等待显示的时间。"
+      },
+      "overview.said.gpu": {
+        "label": "受 GPU 限制，图像耗时 {frame} ms，GPU {gpu} ms，CPU {cpu} ms，在 {budget} ms 的刷新上等待 {wait} ms。",
+        "hint": "一句话说明帧：GPU 的时间决定了图像在屏幕上停留几次刷新；随后是处理器的时间和等待显示的时间。"
+      },
+      "overview.said.cpu": {
+        "label": "受 CPU 限制，图像耗时 {frame} ms，GPU {gpu} ms，CPU {cpu} ms，在 {budget} ms 的刷新上等待 {wait} ms。",
+        "hint": "一句话说明帧：主线程的时间决定了图像在屏幕上停留几次刷新；随后是处理器的时间和等待显示的时间。"
+      },
+      "overview.said.pacing": {
+        "label": "受显示器节奏限制，图像耗时 {frame} ms，GPU {gpu} ms，CPU {cpu} ms，在 {budget} ms 的刷新上等待 {wait} ms。",
+        "hint": "一句话说明帧：决定图像在屏幕上停留几次刷新的不是任一处理器，而是显示器刷新、页面或帧率上限；随后是处理器的时间和等待显示的时间。"
+      },
+      "overview.unread": {
+        "label": "尚未读取到时间",
+        "hint": "帧时间读取器读满一秒后，GPU 和 CPU 阶段才会出现。"
+      },
+      "overview.stage": {
+        "label": "{name}：{ms} ms · 占图像 {share} %",
+        "hint": "帧的一个阶段，最近一秒的平均时间及其在 GPU 图像中的占比；点击打开它的行。"
+      },
+      "table.name": {
+        "label": "名称",
+        "hint": "阶段及其下的通道；点击按管线顺序排序。"
+      },
+      "table.avg": {
+        "label": "平均",
+        "hint": "最近一秒的平均值；按刷新预算着色：超过四分之一为橙色，超过一半为红色。点击排序。"
+      },
+      "table.p95": {
+        "label": "p95",
+        "hint": "最近一秒的第 95 百分位：每 20 张图像中有 1 张更长。点击排序。"
+      },
+      "table.max": {
+        "label": "最大",
+        "hint": "最近一秒中最长的。点击排序。"
+      },
+      "table.share": {
+        "label": "占图像 %",
+        "hint": "在 GPU 图像（或 CPU 帧）中的占比。点击排序。"
+      },
+      "table.trend": {
+        "label": "最近一分钟",
+        "hint": "最近一分钟每一秒的平均值。"
+      },
+      "history.stutter": {
+        "label": "卡顿",
+        "hint": "至少有一张图像让显示等待超过其通常节奏的一秒：顶部的红色标记。"
+      },
+      "history.cause": {
+        "label": "原因",
+        "hint": "图像给出了是什么使其变化的一秒：底部的黄色标记；指向它可读取原因。"
+      },
+      "history.point": {
+        "label": "{ago} 秒前 · 图像 {frame} ms（最大 {max}）· GPU {gpu} ms · CPU {cpu} ms",
+        "hint": "指针下的那一秒：其平均时间和最长的图像。"
+      },
+      "history.unread": {
+        "label": "尚未读取任何内容",
+        "hint": "无论面板显示什么，每秒取一个点，来自帧时间读取器所读的数据：第一个点在一秒后出现。"
+      },
+      "history.zoom": {
+        "label": "从 {from} 秒前到 {to} 秒前 · 双击：最近五分钟",
+        "hint": "在图表上拖动以放大某一时段；双击可重新查看最近五分钟。"
+      },
+      "history.clipped": {
+        "label": "▲ 超出刻度",
+        "hint": "图表顶边上、线条颜色的小三角形：那一秒的时间超过了刻度上限，是刻度未显示的尖峰；指向它可读取完整数值。"
+      },
+      "pass.material bins": {
+        "label": "材质分箱",
+        "hint": "在每个类别为自己的箱着色之前，把像素分到每个材质类别一个的箱中；随渲染尺寸增加。"
+      },
+      "pass.material shading": {
+        "label": "材质着色",
+        "hint": "一个材质类别为其箱中的像素着色，每个像素解码自己的三角形；随该类别的像素增加。"
+      },
+      "pass.blend responsiveness": {
+        "label": "透明物响应度",
+        "hint": "标记透明物要求时间滤波更快跟随它们的位置；随透明像素增加。"
+      },
+      "pass.alpha holdout start": {
+        "label": "Alpha 遮挡开始",
+        "hint": "从已照亮图像的 alpha 开始遮挡目标；随渲染尺寸增加。"
+      },
+      "pass.blend alpha holdout": {
+        "label": "透明物 Alpha 遮挡",
+        "hint": "把遮挡层绘制到其目标中；随其像素增加。"
+      },
+      "pass.alpha holdout apply": {
+        "label": "Alpha 遮挡应用",
+        "hint": "把遮挡的可见性重新放到已照亮图像的 alpha 上；随渲染尺寸增加。"
+      },
+      "pass.translucent radiance mark": {
+        "label": "半透明辐射标记",
+        "hint": "标记半透明表面读取的辐射缓存单元；随半透明像素增加。"
+      },
+      "pass.sorted translucency collect": {
+        "label": "排序半透明收集",
+        "hint": "收集每个像素的半透明层以供排序；随每像素层数增加。"
+      },
+      "pass.sorted translucency combine": {
+        "label": "排序半透明合并",
+        "hint": "把排好序的层从前到后合成到半透明目标上；随每像素层数增加。"
+      },
+      "pass.water": {
+        "label": "水体",
+        "hint": "为单层水体着色；随屏幕上的水体像素增加。"
+      },
+      "pass.water scene copy": {
+        "label": "水体场景拷贝",
+        "hint": "为折射拷贝不含水体的场景；随渲染尺寸增加。"
+      },
+      "pass.water depth": {
+        "label": "水体深度",
+        "hint": "绘制水体的深度；随其像素增加。"
+      },
+      "pass.water refraction mask": {
+        "label": "水体折射遮罩",
+        "hint": "遮罩水体可以折射的内容；随其像素增加。"
+      },
+      "pass.water tiles": {
+        "label": "水体图块",
+        "hint": "列出含有水体的屏幕图块；随渲染尺寸增加。"
+      },
+      "pass.water velocity": {
+        "label": "水体速度",
+        "hint": "为时间滤波写入水面的运动；随其像素增加。"
+      },
+      "pass.water sun shadow": {
+        "label": "水体太阳阴影",
+        "hint": "从太阳为水体投下阴影；随其像素增加。"
+      },
+      "pass.water composite": {
+        "label": "水体合成",
+        "hint": "把水体的反射和折射合成到图像上；随其像素增加。"
+      },
+      "pass.hzb occlusion roots": {
+        "label": "HZB 遮挡根",
+        "hint": "推导根包围盒的角点，以便与深度金字塔比较；随根的数量增加。"
+      },
+      "pass.hardware occlusion boxes": {
+        "label": "硬件遮挡包围盒",
+        "hint": "把根包围盒对着深度绘制，每组一个遮挡查询；随测试的包围盒增加。"
+      },
+      "pass.hardware occlusion small depth": {
+        "label": "硬件遮挡小深度",
+        "hint": "构建遮挡包围盒对照绘制的小深度；随渲染尺寸增加。"
+      },
+      "pass.hardware occlusion verdicts": {
+        "label": "硬件遮挡判定",
+        "hint": "把查询的计数转成可见或隐藏的判定；随测试的包围盒增加。"
+      },
+      "pass.surface cache": {
+        "label": "表面缓存",
+        "hint": "更新表面缓存：捕获、清除、反馈并显示其卡片；随需要更新的卡片增加。"
+      },
+      "pass.surface cache lighting": {
+        "label": "表面缓存光照",
+        "hint": "照亮反弹读取的表面缓存卡片；随卡片和光源增加。"
+      },
+      "pass.card capture": {
+        "label": "卡片捕获",
+        "hint": "从网格捕获表面缓存的卡片；随这张图像中捕获的卡片增加。"
+      },
+      "pass.screen probes": {
+        "label": "屏幕探针",
+        "hint": "在图像上放置探针，为反弹光追踪、过滤并混合它们；随渲染尺寸和光线增加。"
+      },
+      "pass.reflection hit lighting": {
+        "label": "反射命中光照",
+        "hint": "按材质排序，重新照亮反射光线的命中点；随命中的光线增加。"
+      },
+      "pass.sky surfaces": {
+        "label": "天空表面",
+        "hint": "在大气、雾和云之前，把天空表面绘制到已照亮的图像中；随天空像素增加。"
+      },
+      "pass.fog separate composition": {
+        "label": "雾独立合成",
+        "hint": "把绘制在其自有纹理中的雾铺到已照亮的图像上；随渲染尺寸增加。"
+      },
+      "pass.fog blur": {
+        "label": "雾模糊",
+        "hint": "模糊雾的自有纹理；随其尺寸增加。"
+      },
+      "pass.fog upsample": {
+        "label": "雾上采样",
+        "hint": "把雾的纹理放大回图像尺寸；随渲染尺寸增加。"
+      },
+      "pass.fog temporal": {
+        "label": "雾时间滤波",
+        "hint": "在时间上过滤雾的第二级；随其尺寸增加。"
+      },
+      "pass.fog volume": {
+        "label": "雾体积",
+        "hint": "构建雾的体积：其单元的深度、每个单元散射的光、沿每列的累加；随单元和光源增加。"
+      },
+      "pass.fog local volumes": {
+        "label": "局部雾体积",
+        "hint": "绘制局部雾体积；随屏幕上的体积增加。"
+      },
+      "pass.fog sun light function": {
+        "label": "雾的太阳光照函数",
+        "hint": "为体积雾绘制太阳的光照函数；随其尺寸增加。"
+      },
+      "pass.light function atlas": {
+        "label": "光照函数图集",
+        "hint": "把光源的光照函数绘制到其图集中；随拥有光照函数的光源增加。"
+      },
+      "pass.toon profile bake": {
+        "label": "卡通配置烘焙",
+        "hint": "把卡通配置的图像烘焙成光源读取的图案；配置改变时运行。"
+      },
+      "pass.rect light atlas add": {
+        "label": "矩形光图集添加",
+        "hint": "把矩形光的源图绘制到其图集中；添加一个时运行。"
+      },
+      "pass.rect light atlas copy": {
+        "label": "矩形光图集复制",
+        "hint": "把矩形光的槽位移到新图集；图集增大时运行。"
+      },
+      "pass.rect light atlas filter": {
+        "label": "矩形光图集过滤",
+        "hint": "过滤矩形光图集的一级；图片改变时运行。"
+      },
+      "pass.rect light atlas clear": {
+        "label": "矩形光图集清除",
+        "hint": "清除矩形光图集；重新创建时运行。"
+      },
+      "pass.rect light atlas debug": {
+        "label": "矩形光图集调试",
+        "hint": "为调试视图绘制矩形光图集；仅在该视图显示时。"
+      },
+      "pass.rect light atlas blit": {
+        "label": "矩形光图集位块传输",
+        "hint": "为调试视图把矩形光图集铺到图像上；仅在该视图显示时。"
+      },
+      "pass.light profile atlas debug": {
+        "label": "光源配置图集调试",
+        "hint": "为调试视图绘制光源配置图集；仅在该视图显示时。"
+      },
+      "pass.light profile atlas blit": {
+        "label": "光源配置图集位块传输",
+        "hint": "为调试视图把光源配置图集铺到图像上；仅在该视图显示时。"
+      },
+      "pass.light shapes": {
+        "label": "光源形状",
+        "hint": "在已照亮的图像上以线框绘制光源形状；仅在显示时。"
+      },
+      "pass.volumetric lightmap light": {
+        "label": "体积光照贴图光照",
+        "hint": "在间接光读取之前，把体积光照贴图的光汇集到像素上；随渲染尺寸增加。"
+      },
+      "pass.volumetric lightmap visualize": {
+        "label": "体积光照贴图可视化",
+        "hint": "为体积光照贴图的每个样本绘制一个球；仅在该视图显示时。"
+      },
+      "pass.translucency volume": {
+        "label": "半透明体积",
+        "hint": "把每个光源注入相机周围、用于照亮透明表面的单元；随光源增加。"
+      },
+      "pass.translucency volume spheres": {
+        "label": "半透明体积球",
+        "hint": "为半透明体积的每个单元绘制一个球；仅在该视图显示时。"
+      },
+      "pass.translucency global illumination": {
+        "label": "半透明全局光照",
+        "hint": "把透明表面的间接光追踪并过滤到贴合视图的网格中；随其单元增加。"
+      },
+      "pass.traced translucency trace": {
+        "label": "追踪半透明追踪",
+        "hint": "追踪穿过透明表面的光线；随其像素增加。"
+      },
+      "pass.traced translucency denoise": {
+        "label": "追踪半透明降噪",
+        "hint": "为透明表面的追踪光线降噪；随其像素增加。"
+      },
+      "pass.traced translucency compose": {
+        "label": "追踪半透明合成",
+        "hint": "把追踪的透明表面合成到已照亮的图像上；随其像素增加。"
+      },
+      "pass.ambient occlusion": {
+        "label": "环境光遮蔽",
+        "hint": "在多个分辨率下求出每个像素被周围遮挡的程度；随渲染尺寸增加。"
+      },
+      "pass.subsurface scattering": {
+        "label": "次表面散射",
+        "hint": "让光在类皮肤表面之下扩散；随其像素增加。"
+      },
+      "pass.responsiveness clear": {
+        "label": "响应度清除",
+        "hint": "清除透明物写入、时间滤波读取的响应度；随渲染尺寸增加。"
+      },
+      "pass.velocity": {
+        "label": "速度",
+        "hint": "为读取它的通道写入每个像素的运动；随渲染尺寸增加。"
+      },
+      "pass.temporal measure flickering luma": {
+        "label": "时间闪烁亮度测量",
+        "hint": "测量亮度在图像之间闪烁的位置；随渲染尺寸增加。"
+      },
+      "pass.temporal measure thin geometry coverage": {
+        "label": "时间细几何覆盖测量",
+        "hint": "测量细几何覆盖每个像素的比例；随渲染尺寸增加。"
+      },
+      "pass.temporal thin geometry weight relaxation": {
+        "label": "时间细几何权重放宽",
+        "hint": "在细几何所在处放宽历史的权重；随渲染尺寸增加。"
+      },
+      "pass.tone table": {
+        "label": "色调表",
+        "hint": "把显示器为每种光量显示的颜色烘焙进合成读取的小立方体；色调设置改变时运行。"
+      },
+      "pass.motion blur": {
+        "label": "运动模糊",
+        "hint": "沿像素的运动模糊：其图块、扩散和滤波；随渲染尺寸和运动增加。"
+      },
+      "pass.depth of field": {
+        "label": "景深",
+        "hint": "模糊焦外内容：其圆、图块、采集和精灵；随渲染尺寸和模糊程度增加。"
+      },
+      "pass.post process material": {
+        "label": "后期处理材质",
+        "hint": "在整张图像上运行后期处理材质；随渲染尺寸和材质的工作量增加。"
+      },
+      "pass.custom depth": {
+        "label": "自定义深度",
+        "hint": "写入请求它们的物体的自定义深度和模板；随这些物体增加。"
+      },
+      "pass.page install": {
+        "label": "页安装",
+        "hint": "把刚加载的几何页安装到设备上；随到达的页增加。"
+      },
+      "pass.ray query": {
+        "label": "光线查询",
+        "hint": "在 GPU 上回答页面的拾取光线；随请求的光线增加。"
+      },
+      "pass.hair strands": {
+        "label": "发丝",
+        "hint": "发丝的任一通道：模拟、阴影、体素和绘制；随发丝数量增加。"
+      },
+      "pass.sun distance field shadow": {
+        "label": "距离场太阳阴影",
+        "hint": "通过距离场追踪太阳的远处阴影；随渲染尺寸增加。"
+      },
+      "pass.distance field occlusion": {
+        "label": "距离场遮蔽",
+        "hint": "通过距离场追踪环境光遮蔽；随渲染尺寸增加。"
+      },
+      "pass.global distance field": {
+        "label": "全局距离场",
+        "hint": "构建追踪读取的全局距离场；随移动的网格增加。"
+      },
+      "pass.mesh distance field": {
+        "label": "网格距离场",
+        "hint": "构建网格自身的距离场；网格需要时运行。"
+      },
+      "pass.path tracer": {
+        "label": "路径追踪器",
+        "hint": "路径追踪器的任一通道：样本、表和显示；随每像素样本数增加。"
+      },
+      "pass.air": {
+        "label": "大气",
+        "hint": "构建大气的查找表；随太阳的移动增加。"
+      },
+      "pass.sky": {
+        "label": "天空",
+        "hint": "在图像上绘制天空，捕获天空光并过滤；随天空像素及其捕获增加。"
+      },
+      "pass.opaque haze": {
+        "label": "不透明霾",
+        "hint": "把大气的霾铺到不透明表面上；随渲染尺寸增加。"
+      },
+      "pass.cloud": {
+        "label": "云",
+        "hint": "体积云的任一通道；随云像素及其步数增加。"
+      },
+      "pass.light shafts": {
+        "label": "光束",
+        "hint": "绘制太阳的光束；随渲染尺寸增加。"
+      },
+      "pass.surface rewrite": {
+        "label": "表面重写",
+        "hint": "重写天空和雾改变的表面；随渲染尺寸增加。"
+      },
+      "pass.debug lines appended": {
+        "label": "追加调试线",
+        "hint": "追加调试视图的线；仅在该视图显示时。"
+      },
+      "pass.inspection reflection": {
+        "label": "检查反射",
+        "hint": "检查的反射内核；仅在检查打开时。"
+      },
+      "reason.lost": {
+        "label": "设备丢失",
+        "hint": "GPU 设备丢失：设备恢复后重新绘制图像。"
+      },
+      "reason.capturing": {
+        "label": "捕获中",
+        "hint": "正在捕获：其图像会被绘制。"
+      },
+      "reason.capturePending": {
+        "label": "已请求捕获",
+        "hint": "已请求一次捕获，正在等待其图像。"
+      },
+      "reason.frameEncoder": {
+        "label": "帧编码器",
+        "hint": "帧的命令仍在录制：图像尚不能保持。"
+      },
+      "reason.metricsPending": {
+        "label": "指标待回",
+        "hint": "最后一张图像的计数尚未从 GPU 返回。"
+      },
+      "reason.cutMoving": {
+        "label": "裁剪变动中",
+        "hint": "几何的裁剪仍在变化。"
+      },
+      "reason.overBudget": {
+        "label": "超出预算",
+        "hint": "裁剪想要的超出预算允许：仍在细化。"
+      },
+      "reason.noOccluderHistory": {
+        "label": "无遮挡物历史",
+        "hint": "遮挡测试还没有可比较的上一张图像。"
+      },
+      "reason.deferredDrops": {
+        "label": "延迟丢弃",
+        "hint": "裁剪放弃的几何仍在等待丢弃。"
+      },
+      "reason.bootstrap": {
+        "label": "启动中",
+        "hint": "视图处于最初的几张图像。"
+      },
+      "reason.residencyBusy": {
+        "label": "页加载中",
+        "hint": "几何页仍在加载或安装。"
+      },
+      "reason.clustersOwed": {
+        "label": "待绘制簇",
+        "hint": "裁剪请求的簇尚未绘制。"
+      },
+      "reason.texturesPending": {
+        "label": "纹理待加载",
+        "hint": "视图请求的纹理图块仍在加载。"
+      },
+      "reason.shadowsPending": {
+        "label": "阴影待绘制",
+        "hint": "视图需要的阴影页尚未全部绘制。"
+      },
+      "reason.cutPending": {
+        "label": "裁剪待采纳",
+        "hint": "已请求新的裁剪，尚未采纳。"
+      },
+      "reason.bounceProbes": {
+        "label": "反弹探针",
+        "hint": "反弹光的探针仍在收敛。"
+      },
+      "reason.deforming": {
+        "label": "变形中",
+        "hint": "这张图像中有几何正在变形。"
+      },
+      "reason.reflections": {
+        "label": "反射",
+        "hint": "反射仍在收敛。"
+      },
+      "reason.hlodWarming": {
+        "label": "HLOD 准备中",
+        "hint": "HLOD 层级仍在准备。"
+      },
+      "reason.exposure": {
+        "label": "曝光",
+        "hint": "自动曝光仍在适应。"
+      },
+      "reason.fogVolume": {
+        "label": "雾体积",
+        "hint": "雾的体积仍在收敛。"
+      },
+      "reason.translucencyVolume": {
+        "label": "半透明体积",
+        "hint": "半透明光照体积仍在收敛。"
+      },
+      "reason.translucencyGi": {
+        "label": "半透明 GI",
+        "hint": "透明表面的间接光仍在收敛。"
+      },
+      "reason.screenProbes": {
+        "label": "屏幕探针",
+        "hint": "屏幕探针仍在收敛。"
+      },
+      "reason.occlusion": {
+        "label": "遮挡",
+        "hint": "遮挡判定仍在稳定。"
+      },
+      "reason.casterSettling": {
+        "label": "阴影投射者稳定中",
+        "hint": "阴影投射者最近移动过：其阴影仍在稳定。"
+      },
+      "reason.noisePhase": {
+        "label": "噪声相位",
+        "hint": "这张图像是时间历史稳定所需的噪声相位之一。"
+      },
+      "term.taaConverging": {
+        "label": "TAA 收敛中",
+        "hint": "时间抗锯齿尚未积累其历史：在积累完成前每张图像都会绘制。"
+      },
+      "term.frameDifference": {
+        "label": "帧差",
+        "hint": "帧差视图绘制每张图像，以便与上一张比较。"
+      },
+      "term.surfaceCache": {
+        "label": "表面缓存",
+        "hint": "表面缓存正在更新其卡片。"
+      },
+      "term.pathTracing": {
+        "label": "路径追踪",
+        "hint": "路径追踪器每张图像都在添加样本。"
+      },
+      "term.guides": {
+        "label": "参考线",
+        "hint": "图像上绘制着动画参考线。"
+      },
+      "term.hairDebug": {
+        "label": "毛发调试",
+        "hint": "正在显示毛发调试视图。"
+      },
+      "term.effects": {
+        "label": "效果",
+        "hint": "某个效果随时间变化。"
+      },
+      "term.postProcessMaterialsAnimated": {
+        "label": "动画后期处理",
+        "hint": "某个后期处理材质在动画。"
+      },
+      "term.particles": {
+        "label": "粒子",
+        "hint": "有存活的粒子。"
+      },
+      "term.lightFunctions": {
+        "label": "光照函数",
+        "hint": "某个光照函数在动画。"
+      },
+      "term.fogSunLightFunction": {
+        "label": "雾中的太阳光照函数",
+        "hint": "雾中太阳的光照函数在动画。"
+      },
+      "term.lightProfiles": {
+        "label": "光源配置",
+        "hint": "某个光源配置在变化。"
+      },
+      "term.ambientCubemap": {
+        "label": "环境立方体贴图",
+        "hint": "环境立方体贴图在混合。"
+      },
+      "term.lightShapes": {
+        "label": "光源形状",
+        "hint": "正在显示光源形状。"
+      },
+      "term.graphsAnimated": {
+        "label": "动画材质",
+        "hint": "某个材质的图在动画。"
+      },
+      "term.blendGraphsAnimated": {
+        "label": "动画透明物",
+        "hint": "某个透明材质的图在动画。"
+      },
+      "term.fogVolumeAnimated": {
+        "label": "动画雾",
+        "hint": "某个雾体积在动画。"
+      },
+      "term.clouds": {
+        "label": "云",
+        "hint": "云在移动。"
+      },
+      "term.skyCubemaps": {
+        "label": "天空立方体贴图",
+        "hint": "天空立方体贴图在混合。"
+      },
+      "term.finishAnimated": {
+        "label": "动画收尾",
+        "hint": "图像收尾（颗粒、暗角…）在动画。"
+      },
+      "answer.device refusal": {
+        "label": "设备拒绝",
+        "hint": "设备拒绝了工作：图像等待再次请求。"
+      },
+      "answer.targets in flight": {
+        "label": "目标使用中",
+        "hint": "上一张图像的目标仍被 GPU 使用。"
+      },
+      "answer.lit program": {
+        "label": "光照程序",
+        "hint": "已照亮图像的程序仍在编译。"
+      },
+      "answer.sorted translucency buffers": {
+        "label": "排序半透明缓冲区",
+        "hint": "排序半透明的缓冲区仍在创建。"
+      },
+      "answer.translucent object shadow table": {
+        "label": "半透明阴影表",
+        "hint": "半透明物体的阴影表仍在创建。"
+      },
+      "answer.pipelines": {
+        "label": "管线",
+        "hint": "GPU 管线仍在编译。"
+      },
+      "answer.targets refused": {
+        "label": "目标被拒",
+        "hint": "设备拒绝了目标的尺寸；延迟后再次请求。"
+      },
+      "because.firstImage": {
+        "label": "首张图像",
+        "hint": "视图的第一张图像。"
+      },
+      "because.scene": {
+        "label": "场景已变",
+        "hint": "自保持的图像以来，场景中有东西移动了。"
+      },
+      "because.view": {
+        "label": "视图已变",
+        "hint": "自保持的图像以来，视图移动了。"
+      },
+      "because.resources": {
+        "label": "资源已变",
+        "hint": "自保持的图像以来，图像读取的某个资源变了。"
+      },
+      "because.confirming": {
+        "label": "确认",
+        "hint": "变化后的图像，再绘制一次以确认。"
+      },
+      "because.unstable": {
+        "label": "不稳定",
+        "hint": "最后两张图像的工作不同。"
+      },
+      "because.noiseClock": {
+        "label": "噪声时钟",
+        "hint": "噪声的时钟变了。"
+      },
+      "because.swapped": {
+        "label": "已交换",
+        "hint": "绘制到交换后目标中的一张静止图像。"
+      },
+      "because.forced": {
+        "label": "强制",
+        "hint": "静止姿态的测量请求了它。"
+      },
+      "cause.sceneWritten": {
+        "label": "场景写入",
+        "hint": "页面写入了场景的姿态、可见性或光源。"
+      },
+      "cause.sceneReshaped": {
+        "label": "场景重组",
+        "hint": "页面添加、移除或移动了一个节点。"
+      },
+      "cause.diagnosticView": {
+        "label": "视图模式",
+        "hint": "诊断视图模式变了。"
+      },
+      "cause.materialChanged": {
+        "label": "材质改变",
+        "hint": "页面改变了一个材质。"
+      },
+      "cause.shadingModels": {
+        "label": "着色模型",
+        "hint": "着色模型变了。"
+      },
+      "cause.sceneLights": {
+        "label": "光源设置",
+        "hint": "页面设置了光源。"
+      },
+      "cause.fogVolumes": {
+        "label": "雾体积",
+        "hint": "页面设置了雾体积。"
+      },
+      "cause.posesMoved": {
+        "label": "姿态移动",
+        "hint": "引擎移动了姿态。"
+      },
+      "cause.verticesRewritten": {
+        "label": "顶点重写",
+        "hint": "引擎重写了顶点。"
+      },
+      "cause.placementsMoved": {
+        "label": "放置移动",
+        "hint": "引擎移动了放置。"
+      },
+      "cause.placementsGrown": {
+        "label": "放置增长",
+        "hint": "放置表增大了。"
+      },
+      "cause.placementsComposed": {
+        "label": "放置组合",
+        "hint": "放置重新组合了。"
+      },
+      "cause.cameraCut": {
+        "label": "镜头切换",
+        "hint": "另一个相机，或视图历史的一次切断。"
+      },
+      "cause.viewMoved": {
+        "label": "视图移动",
+        "hint": "视图的姿态、投影或视口变了。"
+      },
+      "cause.viewQuality": {
+        "label": "视图质量",
+        "hint": "视图的深度范围或质量变了。"
+      },
+      "cause.simpleLights": {
+        "label": "简单光源",
+        "hint": "简单光源变了。"
+      },
+      "cause.skyFaceWaiting": {
+        "label": "天空面等待",
+        "hint": "天空立方体的一个面在等待绘制。"
+      },
+      "cause.skyMeshesDrawn": {
+        "label": "天空网格已绘制",
+        "hint": "天空网格已绘制。"
+      },
+      "cause.reflectionDrawn": {
+        "label": "镜面已绘制",
+        "hint": "一个平面反射已绘制。"
+      },
+      "cause.reflectionChanged": {
+        "label": "镜面改变",
+        "hint": "一个平面反射的设置变了。"
+      },
+      "cause.customDepthMoved": {
+        "label": "自定义深度抖动",
+        "hint": "自定义深度的抖动移动了。"
+      },
+      "cause.shadowSettings": {
+        "label": "阴影设置",
+        "hint": "阴影设置变了。"
+      },
+      "cause.shadowOrigin": {
+        "label": "阴影原点",
+        "hint": "阴影的原点移动了。"
+      },
+      "cause.captureAccumulation": {
+        "label": "捕获累积",
+        "hint": "一次捕获在累积其图像。"
+      },
+      "cause.targetsMade": {
+        "label": "目标创建",
+        "hint": "图像目标被重新创建。"
+      },
+      "cause.taaLevel": {
+        "label": "TAA 级别",
+        "hint": "时间抗锯齿的级别变了。"
+      },
+      "cause.taaRigged": {
+        "label": "TAA 重建",
+        "hint": "时间抗锯齿被重新搭建。"
+      },
+      "cause.vertexPoolGrown": {
+        "label": "顶点池增长",
+        "hint": "顶点池增大了。"
+      },
+      "cause.inspection": {
+        "label": "检查",
+        "hint": "某个检查变了。"
+      },
+      "cause.litProgram": {
+        "label": "光照程序",
+        "hint": "已照亮图像的程序变了。"
+      },
+      "cause.feedbackVariant": {
+        "label": "反馈变体",
+        "hint": "纹理反馈换了变体。"
+      },
+      "cause.catalogueCover": {
+        "label": "目录封面",
+        "hint": "目录的封面变了。"
+      },
+      "cause.worldCover": {
+        "label": "世界封面",
+        "hint": "世界的封面变了。"
+      },
+      "cause.materialGraphs": {
+        "label": "材质图",
+        "hint": "材质图变了。"
+      },
+      "cause.targetsResized": {
+        "label": "目标调整尺寸",
+        "hint": "图像目标被调整了尺寸。"
+      },
+      "cause.textureColor": {
+        "label": "纹理颜色",
+        "hint": "某个纹理的颜色变了。"
+      },
+      "cause.tilesServed": {
+        "label": "图块送达",
+        "hint": "纹理图块到达了。"
+      },
+      "cause.layersGrown": {
+        "label": "层增长",
+        "hint": "纹理层增大了。"
+      },
+      "cause.bounceSwitched": {
+        "label": "反弹切换",
+        "hint": "反弹光被切换了。"
+      },
+      "cause.screenProbes": {
+        "label": "屏幕探针",
+        "hint": "屏幕探针变了。"
+      },
+      "cause.bounceProbes": {
+        "label": "反弹探针",
+        "hint": "反弹的探针变了。"
+      },
+      "cause.memoryBudget": {
+        "label": "内存预算",
+        "hint": "内存预算变了。"
+      },
+      "cause.texturePoolGrown": {
+        "label": "纹理池增长",
+        "hint": "纹理池增大了。"
+      },
+      "cause.cutReleased": {
+        "label": "裁剪释放",
+        "hint": "裁剪的几何被释放了。"
+      },
+      "cause.residentSynced": {
+        "label": "驻留同步",
+        "hint": "驻留几何已同步。"
+      },
+      "cause.clearColor": {
+        "label": "清除颜色",
+        "hint": "清除颜色变了。"
+      },
+      "cause.textureAppended": {
+        "label": "纹理添加",
+        "hint": "添加了一个纹理。"
+      },
+      "cause.textureReleased": {
+        "label": "纹理释放",
+        "hint": "释放了一个纹理。"
+      },
+      "cause.pageLanded": {
+        "label": "页到达",
+        "hint": "一个几何页到达了。"
+      },
+      "cause.pageDropped": {
+        "label": "页丢弃",
+        "hint": "一个几何页被丢弃了。"
+      },
+      "cause.pageResidence": {
+        "label": "页驻留",
+        "hint": "某页的驻留状态变了。"
+      },
+      "cause.cutAdopted": {
+        "label": "采纳裁剪",
+        "hint": "采纳了几何的新裁剪。"
+      },
+      "cause.cutFrozen": {
+        "label": "裁剪冻结",
+        "hint": "裁剪被冻结或放开。"
+      },
+      "cause.deviceGone": {
+        "label": "设备消失",
+        "hint": "GPU 设备丢失了。"
+      },
+      "cause.coverPending": {
+        "label": "封面待绘制",
+        "hint": "某个封面在等待绘制。"
+      },
+      "cause.renderScale": {
+        "label": "渲染比例",
+        "hint": "渲染比例变了。"
+      },
+      "cause.worldCells": {
+        "label": "世界单元",
+        "hint": "世界的单元变了。"
+      },
+      "cause.blendPipelines": {
+        "label": "透明物管线",
+        "hint": "创建了透明物管线。"
+      },
+      "cause.shadowSetLost": {
+        "label": "阴影集丢失",
+        "hint": "一组阴影页丢失了。"
+      },
+      "cause.skinTable": {
+        "label": "蒙皮表",
+        "hint": "蒙皮表变了。"
+      },
+      "cause.volumePrograms": {
+        "label": "体积程序",
+        "hint": "体积程序变了。"
+      },
+      "cause.volumeGrid": {
+        "label": "体积网格",
+        "hint": "某个体积网格变了。"
+      },
+      "cause.hairStrands": {
+        "label": "发丝",
+        "hint": "发丝变了。"
+      },
+      "cause.animation": {
+        "label": "动画",
+        "hint": "某个片段推进了。"
+      },
+      "cause.physics": {
+        "label": "物理",
+        "hint": "某个物体前进了一步。"
+      },
+      "cause.invalidate": {
+        "label": "失效",
+        "hint": "页面请求了一张图像：world.invalidate()。"
       }
     },
     "failure": {
@@ -753,8 +2659,7 @@
       "waiting": "等待引擎（#{issue}）"
     },
     "views": {
-      "beauty": "正常",
-      "wireframe": "三角形",
+      "beauty": "渲染",
       "triangles": "彩色三角形",
       "xray": "X 光",
       "clusters": "簇",
@@ -763,7 +2668,6 @@
       "screen-error": "屏幕误差",
       "materials": "材质",
       "visibility": "可见页",
-      "pages": "驻留页",
       "texture-mip": "纹理尺寸",
       "overdraw": "过度绘制",
       "frame-difference": "帧间差异",
@@ -779,10 +2683,68 @@
       "taa-reprojection": "TAA 重投影",
       "taa-motion": "TAA 运动",
       "taa-thin": "TAA 细几何",
-      "taa-material-history": "按材质的 TAA 历史"
+      "taa-material-history": "按材质的 TAA 历史",
+      "voxels": "体素",
+      "indirect-diffuse": "间接光",
+      "surface-cache-albedo": "表面缓存：反照率",
+      "surface-cache-normal": "表面缓存：法线",
+      "surface-cache-depth": "表面缓存：深度",
+      "surface-cache-cards": "表面缓存：卡片",
+      "surface-cache-fill": "表面缓存：填充",
+      "surface-cache-age": "表面缓存：时长",
+      "hair-light-bounds": "毛发：包围盒",
+      "hair-deep-opacity-maps": "毛发：深度阴影",
+      "hair-macro-group-screen-rect": "毛发：屏幕框",
+      "hair-voxels-density": "毛发：体素密度",
+      "sampled-lights-overview": "多光源：概览",
+      "sampled-lights-shadow-casters": "多光源：投影物",
+      "sampled-lights-shadow-caster-quality": "多光源：投影质量",
+      "sampled-lights-complexity-opaque": "多光源：表面开销",
+      "sampled-lights-complexity-hair-strands": "多光源：毛发开销",
+      "sampled-lights-complexity-front-layer": "多光源：前层开销",
+      "sampled-lights-complexity-volume": "多光源：雾中开销",
+      "sampled-lights-complexity-translucency-volume": "多光源：半透明开销",
+      "subsurface-profiles": "次表面配置",
+      "virtual-shadow-map-shadow-casters": "阴影贴图：投影物",
+      "virtual-shadow-map-clipmap-virtual-space": "阴影贴图：太阳 clipmap",
+      "virtual-shadow-map-shadow-factor": "阴影贴图：到达的光",
+      "virtual-shadow-map-clipmap-or-mip": "阴影贴图：读取的级别",
+      "virtual-shadow-map-virtual-page": "阴影贴图：读取的页面",
+      "virtual-shadow-map-cached-page": "阴影贴图：缓存的页面",
+      "virtual-shadow-map-ray-count": "阴影贴图：光线数",
+      "virtual-shadow-map-general-debug": "阴影贴图：遮挡物距离",
+      "virtual-shadow-map-dirty-page": "阴影贴图：绘制的页面",
+      "virtual-shadow-map-gpu-invalidated-page": "阴影贴图：失效的页面",
+      "virtual-shadow-map-merged-page": "阴影贴图：合并的页面",
+      "virtual-shadow-map-overdraw": "阴影贴图：过度绘制",
+      "rect-light-atlas": "矩形光图集",
+      "light-profile-atlas": "光源配置文件图集",
+      "surface-cache-direct-stats": "表面缓存：直接更新",
+      "surface-cache-indirect-stats": "表面缓存：间接更新",
+      "surface-cache-direct-lighting-stats": "表面缓存：收集的光源",
+      "surface-cache-scene-stats": "表面缓存：计数",
+      "surface-cache-primitive-groups": "表面缓存：物体包围盒",
+      "radiance-cache-stats": "辐射缓存：数据",
+      "screen-probe-gather-debug": "屏幕探针：数量",
+      "screen-probe-tile-stats": "屏幕探针：图块",
+      "screen-probe-placement": "屏幕探针：位置",
+      "screen-probe-traces": "屏幕探针：光线",
+      "reflection-traces": "反射光线",
+      "radiance-cache-probes": "辐射缓存：探针",
+      "scene-visualization": "追踪的场景",
+      "material-properties": "光标下的材质",
+      "heterogeneous-volumes-dda-marching": "体积：DDA 步进",
+      "heterogeneous-volumes-sample-marching": "体积：采样步进",
+      "heterogeneous-volumes-sample-majorant": "体积：上界采样",
+      "heterogeneous-volumes-sample-max-majorant": "体积：最大上界采样",
+      "heterogeneous-volumes-sample-majorant-dda": "体积：上界 DDA 采样",
+      "heterogeneous-volumes-delta-tracking": "体积：delta 追踪",
+      "heterogeneous-volumes-ratio-tracking": "体积：比率追踪",
+      "heterogeneous-volumes-spectral-ratio-tracking": "体积：光谱比率追踪",
+      "heterogeneous-volumes-tracking-majorant-dda": "体积：上界 DDA 追踪"
     },
     "viewHints": {
-      "wireframe": "每个绘制的三角形的边，仅线条：越远三角形越少越大。",
+      "beauty": "正常图像。",
       "triangles": "每个绘制的三角形一种实心颜色。",
       "xray": "引擎提交的每个三角形的边，可透过墙壁看到：被剔除的部分不会出现。冻结剔除后移到侧面检查。",
       "clusters": "每个簇一种颜色，即切割换成更粗版本的一组三角形。",
@@ -791,7 +2753,6 @@
       "screen-error": "绿：精确。黄：接近允许的像素误差。红：达到上限。",
       "materials": "每种材质一种颜色。",
       "visibility": "绿：本帧绘制的每个页面。",
-      "pages": "绿：驻留内存并被绘制的每个页面。",
       "frame-difference": "黑色：像素自上一帧以来没有变化。灰到白：有变化，放大八倍——闪烁的地方会亮起来。",
       "reflections": "只显示表面反射的光，来自屏幕追踪和探针；没有反射的地方为黑色。",
       "shadows": "每个表面接收到多少阳光——白色：受光，黑色：在阴影中。不显示材质颜色。",
@@ -805,7 +2766,67 @@
       "taa-reprojection": "历史为何重新开始 — 红：去遮挡，绿：去遮挡并以遮挡物的运动填充，蓝：在上一帧屏幕之外。",
       "taa-motion": "累积所见的运动 — 红：对闪烁测量而言在运动，绿：像素动画，蓝：重投影边缘（白：运动平坦）。",
       "taa-thin": "细几何 — 红：历史钳制放宽的程度，绿：簇空洞区域，蓝：覆盖率历史。",
-      "taa-material-history": "每种材质可保留的历史比例，以灰度显示——白：1，完整平滑；黑：0，只用当前图像。"
+      "taa-material-history": "每种材质可保留的历史比例，以灰度显示——白：1，完整平滑；黑：0，只用当前图像。",
+      "voxels": "以体素绘制的部分，每个级别一种颜色；三角形为灰色。",
+      "indirect-diffuse": "只显示中灰表面上的间接光（反弹、环境、天空）。",
+      "surface-cache-albedo": "表面卡片的图集：它们捕获的颜色。",
+      "surface-cache-normal": "图集：卡片捕获的法线。",
+      "surface-cache-depth": "图集：每个纹素在其卡片中的深度，以灰色显示。",
+      "surface-cache-cards": "图集：每张卡片一种颜色。",
+      "surface-cache-fill": "图集：绿色为始终保留的最粗级别，蓝色为更细的页面，黑色为空闲。",
+      "surface-cache-age": "图集：每页捕获以来的图像数，白色为新，蓝色为旧。",
+      "hair-light-bounds": "毛发发束的包围盒及其阴影视锥，叠加在图像上。",
+      "hair-deep-opacity-maps": "毛发深度阴影贴图的深度和层，叠加在图像上。",
+      "hair-macro-group-screen-rect": "每组发束所覆盖像素周围的绿色框。",
+      "hair-voxels-density": "每个像素的光线穿过多少发束，从绿到红。",
+      "sampled-lights-overview": "投影物视图与其质量视图并排显示。",
+      "sampled-lights-shadow-casters": "阴影光线在每个像素处击中的物体，每个物体一种颜色。",
+      "sampled-lights-shadow-caster-quality": "红色：缺少投影物；蓝色：投影物在表面前方。",
+      "sampled-lights-complexity-opaque": "光标下单元格的光源，以及其采样开销的热力图。",
+      "sampled-lights-complexity-hair-strands": "毛发发束上光源的采样开销。",
+      "sampled-lights-complexity-front-layer": "最近透明层上的光源，以及其开销的热力图。",
+      "sampled-lights-complexity-volume": "雾体积中光源的采样开销。",
+      "sampled-lights-complexity-translucency-volume": "半透明光照体积中光源的采样开销。",
+      "subsurface-profiles": "每个像素的次表面配置，每种配置一种颜色。",
+      "virtual-shadow-map-shadow-casters": "其移动会重绘阴影页面的每个物体的包围盒。",
+      "virtual-shadow-map-clipmap-virtual-space": "太阳阴影 clipmap 在其虚拟空间中的样子。",
+      "virtual-shadow-map-shadow-factor": "黄色：受光；深蓝：在阴影中。",
+      "virtual-shadow-map-clipmap-or-mip": "每个像素读取的阴影级别，每个级别一种颜色。",
+      "virtual-shadow-map-virtual-page": "每个像素读取的阴影页面，每个页面一种颜色。",
+      "virtual-shadow-map-cached-page": "每个像素读取的阴影页面是保留的还是重绘的。",
+      "virtual-shadow-map-ray-count": "每个像素追踪的阴影光线数，从绿到红。",
+      "virtual-shadow-map-general-debug": "每个像素到阴影遮挡物的距离，以灰色显示。",
+      "virtual-shadow-map-dirty-page": "本张图像中绘制的阴影页面。",
+      "virtual-shadow-map-gpu-invalidated-page": "移动物体导致失效的阴影页面。",
+      "virtual-shadow-map-merged-page": "静态层已合并的阴影页面。",
+      "virtual-shadow-map-overdraw": "阴影光栅化绘制每个纹素的次数。",
+      "rect-light-atlas": "矩形光源图像的图集。",
+      "light-profile-atlas": "光源 IES 配置文件的图集。",
+      "surface-cache-direct-stats": "表面缓存直接光照更新的数据。",
+      "surface-cache-indirect-stats": "表面缓存间接光照更新的数据。",
+      "surface-cache-direct-lighting-stats": "表面缓存直接更新收集的光源及其尺寸。",
+      "surface-cache-scene-stats": "表面缓存中物体和卡片的数量。",
+      "surface-cache-primitive-groups": "每个带有表面卡片的物体的包围盒。",
+      "radiance-cache-stats": "世界光照探针的更新数据。",
+      "screen-probe-gather-debug": "屏幕探针的数量，均匀的和自适应的。",
+      "screen-probe-tile-stats": "屏幕探针每种积分模式的图块。",
+      "screen-probe-placement": "屏幕探针所在的位置，每个一个四边形。",
+      "screen-probe-traces": "离光标最近的探针的光线，按其光着色。",
+      "reflection-traces": "光标下像素的反射光线，附带距离和光。",
+      "radiance-cache-probes": "每个光照探针处的球体，按其保存的光着色。",
+      "scene-visualization": "从相机追踪的场景，由表面缓存照明。",
+      "material-properties": "光标下像素的材质，以表格显示。",
+      "texture-mip": "每个表面读取的纹理尺寸。",
+      "overdraw": "每个像素被绘制的次数。",
+      "heterogeneous-volumes-dda-marching": "穿过体积体素网格的光，由DDA 步进求得；需要非均匀体积。",
+      "heterogeneous-volumes-sample-marching": "穿过体积体素网格的光，由采样步进求得；需要非均匀体积。",
+      "heterogeneous-volumes-sample-majorant": "穿过体积体素网格的光，由上界采样求得；需要非均匀体积。",
+      "heterogeneous-volumes-sample-max-majorant": "穿过体积体素网格的光，由最大上界采样求得；需要非均匀体积。",
+      "heterogeneous-volumes-sample-majorant-dda": "穿过体积体素网格的光，由上界 DDA 采样求得；需要非均匀体积。",
+      "heterogeneous-volumes-delta-tracking": "穿过体积体素网格的光，由delta 追踪求得；需要非均匀体积。",
+      "heterogeneous-volumes-ratio-tracking": "穿过体积体素网格的光，由比率追踪求得；需要非均匀体积。",
+      "heterogeneous-volumes-spectral-ratio-tracking": "穿过体积体素网格的光，由光谱比率追踪求得；需要非均匀体积。",
+      "heterogeneous-volumes-tracking-majorant-dda": "穿过体积体素网格的光，由上界 DDA 追踪求得；需要非均匀体积。"
     }
   },
   "a-city-from-rules": {
@@ -1514,16 +3535,7 @@
   "detail-by-pixel-error": {
     "banner": "拖动走过大道。靠近一个花瓶，再走远。",
     "controls": {
-      "pixelError": "像素误差",
-      "view": "视图"
-    },
-    "choices": {
-      "view": {
-        "beauty": "成品",
-        "lod": "细节层级",
-        "screen-error": "屏幕误差",
-        "triangles": "三角形"
-      }
+      "pixelError": "像素误差"
     },
     "readouts": {
       "trianglesDrawn": "绘制的三角形",
@@ -1841,6 +3853,16 @@
       "step": "步长"
     }
   },
+  "engine-workbench": {
+    "banner": "拖动以环顾四周。每个按钮打开一种机制；统计面板的“原因”标签页会说明它绘制了哪些图像、原因以及开销。",
+    "controls": {
+      "invalidate": "失效一次",
+      "nudge": "轻推相机",
+      "moving": "一个移动的盒子",
+      "taa": "时间抗锯齿",
+      "scale": "渲染比例"
+    }
+  },
   "helpers-to-see-the-scene": {
     "banner": "拖动四处走走。关掉辅助线，看原本的画面。",
     "controls": {
@@ -2124,15 +4146,7 @@
   "memory-on-a-budget": {
     "banner": "拖动四处看看。少给点内存，看什么还清楚。",
     "controls": {
-      "memory": "内存",
-      "view": "视图"
-    },
-    "choices": {
-      "view": {
-        "beauty": "成品",
-        "lod": "细节层级",
-        "clusters": "簇"
-      }
+      "memory": "内存"
     }
   },
   "a-walk-through-the-city": {
@@ -2177,9 +4191,8 @@
     }
   },
   "a-map-of-what-the-engine-draws": {
-    "banner": "点击左侧视图，用 W A S D 行走；右侧地图从上方显示该视图在这一帧计算出的内容。冻结裁选，然后走出它的范围。",
+    "banner": "点击左侧视图，用 W A S D 行走；右侧地图从上方显示该视图在这一帧计算出的内容。在左下角的统计面板里打开“冻结剔除”，然后走出裁选的范围。",
     "controls": {
-      "freeze": "冻结",
       "frustum": "视锥体",
       "clusters": "簇",
       "shadows": "阴影页",
@@ -2276,19 +4289,9 @@
     }
   },
   "observatory-streamed": {
-    "banner": "拖动四处看看。切换视图，看模型是怎么切开的。",
+    "banner": "拖动四处看看。在左下角统计面板的“视图”菜单里切换视图，看模型是怎么切开的。",
     "controls": {
-      "view": "视图",
       "pixelError": "像素误差"
-    },
-    "choices": {
-      "view": {
-        "clusters": "簇",
-        "beauty": "成品",
-        "pages": "页",
-        "lod": "细节层级",
-        "triangles": "三角形"
-      }
     }
   },
   "one-clip-many-objects": {
@@ -2403,7 +4406,7 @@
         "triangles": "三角形",
         "clusters": "簇",
         "lod": "细节层级",
-        "pages": "页",
+        "visibility": "页",
         "beauty": "成品"
       }
     },
@@ -2636,16 +4639,8 @@
   "ten-thousand-objects": {
     "banner": "拖动绕着星球转。滚动进入岩石环。",
     "controls": {
-      "view": "视图",
       "pixelError": "像素误差",
       "drift": "漂移"
-    },
-    "choices": {
-      "view": {
-        "beauty": "成品",
-        "clusters": "簇",
-        "lod": "细节层级"
-      }
     },
     "readouts": {
       "objectsScene": "场景中的物体",
@@ -2908,14 +4903,7 @@
     "banner": "拖动四处看看。树篱把金色的结藏了起来。",
     "controls": {
       "hedgeHeight": "树篱高度",
-      "view": "视图",
       "aboveOrInside": "上方或里面"
-    },
-    "choices": {
-      "view": {
-        "beauty": "成品",
-        "visibility": "可见性"
-      }
     },
     "readouts": {
       "gildedKnots": "金色的结",

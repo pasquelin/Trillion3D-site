@@ -17,9 +17,7 @@
   },
   "kit": {
     "panel": {
-      "controls": "Ajustes",
-      "view": "Vista",
-      "freeze": "Congelar o culling"
+      "controls": "Ajustes"
     },
     "menu": {
       "play": "Jogar",
@@ -53,11 +51,11 @@
       },
       "tab.cpu": {
         "label": "CPU",
-        "hint": "Onde o motor gasta o tempo de CPU de uma imagem, em medianas do último segundo; a CPU do cabeçalho é o quadro inteiro da thread principal. Mais trabalho por imagem a aumenta."
+        "hint": "Onde o motor gasta o tempo de CPU de uma imagem, como médias do último segundo; a CPU do cabeçalho é o quadro inteiro da thread principal. Mais trabalho por quadro a aumenta."
       },
       "tab.shadows": {
         "label": "Sombras",
-        "hint": "Os passes de sombras e seus contadores de páginas; o tempo deles faz parte do tempo de GPU."
+        "hint": "Os passes de sombra e os seus contadores de páginas, os do último quadro; o seu tempo faz parte do tempo de GPU."
       },
       "tab.memory": {
         "label": "Memória",
@@ -101,7 +99,7 @@
       },
       "summary.frame": {
         "label": "Quadro",
-        "hint": "Tempo entre duas imagens exibidas; sobe quando um processador demora mais que um refresh."
+        "hint": "Tempo médio entre duas imagens mostradas no último segundo, o inverso da taxa; sobe quando um processador demora mais que uma atualização."
       },
       "summary.gpu": {
         "label": "GPU",
@@ -109,15 +107,19 @@
       },
       "summary.cpu": {
         "label": "CPU",
-        "hint": "Tempo mediano da thread principal por quadro no último segundo; sobe com o trabalho enviado à GPU."
+        "hint": "Tempo médio da thread principal por quadro no último segundo; sobe com o trabalho enviado à GPU."
       },
       "summary.wait": {
         "label": "Espera",
-        "hint": "Tempo que o quadro espera o monitor depois que o processador mais lento terminou."
+        "hint": "O quadro médio menos o processador mais ocupado: o tempo à espera da próxima atualização, com os dois processadores a trabalhar lado a lado."
       },
-      "summary.bottleneck": {
+      "summary.toNext": {
+        "label": "Uma atualização antes",
+        "hint": "O tempo que o processador que retém o fotograma tem de ceder para que as suas imagens cheguem uma atualização antes, e a taxa que atingiriam então."
+      },
+      "summary.bound": {
         "label": "Limitado por",
-        "hint": "O veredito do motor sobre o que segura o quadro: o primeiro limite que a janela atinge."
+        "hint": "O que segurou o quadro no último segundo: o processador cujo tempo fixou durante quantas atualizações uma imagem típica ficou exibida, ou o ritmo da tela quando nenhum dos dois o fez."
       },
       "summary.screen": {
         "label": "Ecrã {hz} Hz",
@@ -137,7 +139,7 @@
       },
       "summary.gpuIdle": {
         "label": "GPU ociosa",
-        "hint": "Tempo em que a GPU esteve parada antes da sua última imagem medida; sobe quando a CPU a alimenta tarde."
+        "hint": "Tempo médio em que a GPU ficou ociosa antes de uma imagem no último segundo, no máximo: sem o trabalho cronometrado entre as imagens, contando o trabalho que ninguém cronometrou; sobe quando a CPU a alimenta tarde."
       },
       "summary.mainView": {
         "label": "vista principal",
@@ -150,30 +152,6 @@
       "summary.budget": {
         "label": "orçamento",
         "hint": "O tempo que um refresh permite a um quadro; a linha tracejada do gráfico."
-      },
-      "bottleneck.healthy": {
-        "label": "Tela",
-        "hint": "O quadro cabe em um refresh: a taxa é a da tela."
-      },
-      "bottleneck.memory_pressure": {
-        "label": "Engasgos",
-        "hint": "Quadros demoraram mais que o limite de engasgo: libere memória ou reduza o streaming."
-      },
-      "bottleneck.gpu_bound": {
-        "label": "GPU",
-        "hint": "A GPU demora mais que um refresh e segura o quadro: reduza a resolução ou a iluminação."
-      },
-      "bottleneck.cpu_bound": {
-        "label": "CPU",
-        "hint": "A thread principal demora mais que um refresh e segura o quadro: reduza o trabalho por quadro."
-      },
-      "bottleneck.gpu_submit_bound": {
-        "label": "Envio à GPU",
-        "hint": "Enviar os comandos à GPU leva mais de meio refresh: reduza draw calls e passes."
-      },
-      "bottleneck.streaming_bound": {
-        "label": "Streaming",
-        "hint": "Há mais páginas em trânsito do que os workers conseguem servir: rede ou disco seguram a cena."
       },
       "panel.label": {
         "label": "Estatísticas",
@@ -246,10 +224,6 @@
       "gpu.textures": {
         "label": "Texturas",
         "hint": "Streaming e decodificação de níveis de textura; sobe enquanto novas texturas carregam."
-      },
-      "gpu.partition": {
-        "label": "Partição",
-        "hint": "Ordenação dos clusters desenhados em lotes de desenho; sobe com os clusters desenhados."
       },
       "gpu.encode": {
         "label": "Codificação",
@@ -379,10 +353,6 @@
         "label": "Projeção",
         "hint": "Projeção dos mapas de sombra na imagem; sobe com as luzes com sombra e a resolução."
       },
-      "shadows.transmission": {
-        "label": "Transmissão",
-        "hint": "O atlas dos emissores translúcidos; sobe com emissores translúcidos."
-      },
       "shadows.lights": {
         "label": "Luzes com sombra",
         "hint": "Luzes que projetam mapas de sombra virtuais neste quadro; a contagem em Cena conta todas as luzes ativas."
@@ -507,14 +477,6 @@
         "label": "seleção DAG",
         "hint": "Percorre o grafo de geometria e escolhe o detalhe de que cada vista precisa; cresce com o detalhe à vista."
       },
-      "pass.DAG mask swap": {
-        "label": "troca de máscaras DAG",
-        "hint": "Troca as máscaras de seleção entre imagens; pequeno e fixo."
-      },
-      "pass.partition": {
-        "label": "partição",
-        "hint": "Compacta os clusters escolhidos nas chamadas de desenho da imagem; cresce com os clusters escolhidos."
-      },
       "pass.HiZ": {
         "label": "HiZ",
         "hint": "Constrói a pirâmide de profundidade usada para esconder o que está oculto; cresce com o tamanho de render."
@@ -527,17 +489,13 @@
         "label": "visibilidade secundária",
         "hint": "Desenha a metade testada da geometria contra a profundidade dos oclusores; cresce com a geometria que passou no teste."
       },
-      "pass.visibility identifiers": {
-        "label": "identificadores de visibilidade",
-        "hint": "Desenha o identificador da superfície sob cada pixel; cresce com o tamanho de render e a geometria desenhada."
-      },
       "pass.raster binning": {
-        "label": "agrupamento do raster",
-        "hint": "Ordena os triângulos pequenos do raster por software em blocos de ecrã; cresce com os triângulos pequenos à vista."
+        "label": "binning do raster",
+        "hint": "Decodifica os clusters visíveis, separa-os nos lotes de desenho do raster por hardware e lista os do raster por software; cresce com os clusters à vista."
       },
       "pass.raster occluder depth": {
         "label": "profundidade dos oclusores (raster)",
-        "hint": "Raster por software da profundidade dos oclusores; cresce com os triângulos pequenos oclusores."
+        "hint": "Raster por software da profundidade dos oclusores, um grupo de lanes por cluster; cresce com os triângulos pequenos oclusores."
       },
       "pass.raster tested depth": {
         "label": "profundidade testada (raster)",
@@ -545,23 +503,19 @@
       },
       "pass.raster identifiers": {
         "label": "identificadores (raster)",
-        "hint": "Raster por software dos identificadores de superfície; cresce com os triângulos pequenos desenhados."
+        "hint": "Raster por software dos identificadores de superfície, num dispositivo sem o máximo atómico de 64 bits; cresce com os triângulos pequenos desenhados."
       },
       "pass.raster occluder hiz": {
-        "label": "HiZ dos oclusores (raster)",
-        "hint": "Constrói a pirâmide de profundidade a partir dos oclusores do raster por software; cresce com o tamanho de render."
+        "label": "Hi-Z dos oclusores (raster)",
+        "hint": "Escreve a profundidade dos oclusores do buffer de visibilidade no primeiro nível da pirâmide de profundidade; cresce com o tamanho de render."
       },
       "pass.raster resolve": {
         "label": "resolução do raster",
-        "hint": "Funde os pixels do raster por software no buffer de visibilidade; cresce com o tamanho de render."
+        "hint": "Escreve os identificadores de superfície do buffer de visibilidade na imagem que os materiais leem; cresce com o tamanho de render."
       },
       "pass.empty surfaces": {
         "label": "superfícies vazias",
         "hint": "Limpa as imagens de superfície quando a imagem não desenha nenhum material; pequeno e fixo."
-      },
-      "pass.material cache, bins and shading": {
-        "label": "cache, bins e shading dos materiais",
-        "hint": "Compõe o que o quadro partilha, ordena os pixels por material e faz o shading do bin de cada material; cresce com os materiais e pixels à vista."
       },
       "pass.material surfaces": {
         "label": "superfícies dos materiais",
@@ -627,10 +581,6 @@
         "label": "ressalto",
         "hint": "Atualiza a luz ressaltada: marca as células à vista, escreve a tabela e atualiza as sondas; cresce com as células iluminadas à vista."
       },
-      "pass.bounce light lists": {
-        "label": "listas de luzes do ressalto",
-        "hint": "Constrói as listas de luzes sobre a grelha de mundo do ressalto; cresce com as luzes perto das células iluminadas."
-      },
       "pass.proxy pose": {
         "label": "pose dos proxies",
         "hint": "Posiciona os proxies dos posicionamentos deformados para os reflexos e o ressalto; cresce com os posicionamentos deformados."
@@ -647,29 +597,13 @@
         "label": "reflexos da cena",
         "hint": "Traça pela cena os raios que o ecrã não soube resolver; cresce com os pixels refletores que o ecrã falhou."
       },
-      "pass.reflection denoise": {
-        "label": "redução de ruído dos reflexos",
-        "hint": "Reutiliza reflexos vizinhos e anteriores para limpar a imagem; cresce com o tamanho de render."
-      },
-      "pass.reflection radiance": {
-        "label": "radiância dos reflexos",
-        "hint": "Constrói a pirâmide de radiância da imagem iluminada para os reflexos da imagem seguinte; cresce com o tamanho de render."
-      },
       "pass.particles": {
         "label": "partículas",
         "hint": "Simula o passo das partículas; cresce com as partículas vivas."
       },
-      "pass.deferred lighting": {
-        "label": "iluminação diferida",
-        "hint": "Ilumina cada pixel a partir das superfícies, das luzes e das sombras; cresce com o tamanho de render e as luzes."
-      },
       "pass.as is share seed": {
         "label": "semente da parte inalterada",
         "hint": "Semeia a parte da imagem que a resolução temporal mantém tal como está; cresce com o tamanho de render."
-      },
-      "pass.temporal antialiasing": {
-        "label": "antialiasing temporal",
-        "hint": "Mistura a imagem com as anteriores para suavizar as arestas; cresce com o tamanho de render."
       },
       "pass.exposure": {
         "label": "exposição",
@@ -742,6 +676,1978 @@
       "pass.vsm": {
         "label": "VSM",
         "hint": "Qualquer passagem dos mapas de sombra virtuais: desenho, limpeza, projeção e fusão das páginas de sombra; cresce com as luzes com sombra e as páginas de que precisam."
+      },
+      "pass.vsm castDiff": {
+        "label": "alterações dos projetores VSM",
+        "hint": "Encontra os projetores de sombra que se moveram, surgiram ou saíram desde a última imagem, para que só as suas páginas sejam redesenhadas; cresce com os projetores."
+      },
+      "pass.vsm marking": {
+        "label": "marcação de páginas VSM",
+        "hint": "Marca as páginas de sombra de que os pixels visíveis precisam, luz a luz; cresce com o tamanho de render e as luzes com sombra."
+      },
+      "pass.vsm pageMapping": {
+        "label": "mapeamento de páginas VSM",
+        "hint": "Dá a cada página de sombra marcada um lugar no pool de páginas, mantendo as que estão em cache; cresce com as páginas marcadas."
+      },
+      "pass.vsm afterRaster": {
+        "label": "VSM após o raster",
+        "hint": "Atualiza as tabelas de páginas depois de as páginas serem desenhadas: o que está em cache, o que está desenhado; cresce com as páginas."
+      },
+      "pass.vsm filterable": {
+        "label": "páginas VSM filtráveis",
+        "hint": "Prepara as páginas desenhadas para as leituras filtradas das sombras suaves; cresce com as páginas desenhadas."
+      },
+      "pass.vsm invalidateCastPages": {
+        "label": "invalidação de páginas VSM",
+        "hint": "Marca como obsoletas as páginas em cache que os projetores deslocados tocam, para que sejam redesenhadas; cresce com os projetores em movimento."
+      },
+      "pass.vsm occlusion build": {
+        "label": "pirâmide de oclusão VSM",
+        "hint": "Constrói a pirâmide de profundidade das páginas desenhadas contra a qual o segundo culling testa os projetores; cresce com as páginas."
+      },
+      "pass.vsm projection": {
+        "label": "projeção VSM",
+        "hint": "Projeta as páginas de sombra sobre a imagem: a máscara de sombra de cada luz; cresce com o tamanho de render e as luzes com sombra."
+      },
+      "pass.vsm projection hair": {
+        "label": "projeção VSM no cabelo",
+        "hint": "Projeta as páginas de sombra sobre as madeixas de cabelo; cresce com as madeixas no ecrã."
+      },
+      "pass.vsm projection perLight clear": {
+        "label": "limpeza das máscaras VSM por luz",
+        "hint": "Limpa as máscaras de sombra por luz antes de serem projetadas; cresce com o tamanho de render e as luzes."
+      },
+      "pass.vsm projection perLight project": {
+        "label": "projeção VSM por luz",
+        "hint": "Projeta as páginas de sombra de cada luz na sua própria máscara; cresce com o tamanho de render e as luzes com sombra."
+      },
+      "pass.vsm accumulateStats": {
+        "label": "estatísticas de páginas VSM",
+        "hint": "Soma as páginas de sombra pedidas, alocadas e em cache para os instrumentos; um pequeno custo fixo."
+      },
+      "pass.vsm visualize": {
+        "label": "vista de páginas VSM",
+        "hint": "Desenha a vista de depuração das páginas dos mapas de sombra virtuais; só enquanto essa vista é mostrada."
+      },
+      "pass.vsm render cull": {
+        "label": "culling VSM",
+        "hint": "Faz o culling dos projetores contra as páginas marcadas antes de serem desenhados nelas; cresce com os projetores e as páginas."
+      },
+      "pass.vsm render raster": {
+        "label": "raster VSM",
+        "hint": "Desenha os projetores nas páginas de sombra marcadas com o raster por hardware; cresce com os triângulos desenhados."
+      },
+      "pass.vsm render software": {
+        "label": "raster por software VSM",
+        "hint": "Desenha os triângulos pequenos dos projetores nas páginas com o raster de compute; cresce com os triângulos pequenos."
+      },
+      "pass.vsm render cullSecond": {
+        "label": "segundo culling VSM",
+        "hint": "Refaz o culling dos projetores que o primeiro passe deixou de fora, testando-os contra a pirâmide de oclusão; cresce com os projetores."
+      },
+      "pass.vsm render rasterSecond": {
+        "label": "segundo raster VSM",
+        "hint": "Desenha os projetores que o segundo culling manteve, com o raster por hardware; cresce com os seus triângulos."
+      },
+      "pass.vsm render softwareSecond": {
+        "label": "segundo raster por software VSM",
+        "hint": "Desenha os triângulos pequenos que o segundo culling manteve, com o raster de compute; cresce com eles."
+      },
+      "pass.vsm render atlas clear": {
+        "label": "limpeza do atlas de sombras",
+        "hint": "Limpa as camadas do atlas de sombras clássico antes de os projetores serem desenhados nelas; cresce com o tamanho do atlas."
+      },
+      "pass.vsm render atlas raster": {
+        "label": "raster do atlas de sombras",
+        "hint": "Desenha os projetores no atlas de sombras clássico, uma camada de cada vez; cresce com os triângulos desenhados."
+      },
+      "pass.vsm render atlas sort": {
+        "label": "ordenação do atlas de sombras",
+        "hint": "Ordena os desenhos dos projetores por bloco do atlas antes de o atlas ser desenhado; cresce com os desenhos."
+      },
+      "pass.vsm render atlas out": {
+        "label": "cópia do atlas de sombras",
+        "hint": "Copia os blocos do atlas de sombras clássico para o pool de páginas; cresce com os blocos."
+      },
+      "pass.vsm denoise": {
+        "label": "remoção de ruído VSM",
+        "hint": "Filtra o ruído das máscaras de sombra, guiado pela profundidade e pelas normais; cresce com o tamanho de render e as sombras suaves."
+      },
+      "pass.vsm denoise tiles": {
+        "label": "blocos da remoção de ruído VSM",
+        "hint": "Encontra os blocos da imagem onde as sombras são suaves, os únicos que a remoção de ruído filtra; cresce com as penumbras no ecrã."
+      },
+      "pass.vsm firstPersonSelfShadow": {
+        "label": "autossombra em primeira pessoa",
+        "hint": "Traça a sombra do corpo em primeira pessoa sobre si mesmo; só com uma vista em primeira pessoa."
+      },
+      "pass.vsm firstPersonSelfShadow merge": {
+        "label": "fusão da sombra em primeira pessoa",
+        "hint": "Funde a autossombra em primeira pessoa nas máscaras das luzes locais; só com uma vista em primeira pessoa."
+      },
+      "pass.vsm rayTracedShadow": {
+        "label": "sombras por ray tracing",
+        "hint": "Traça contra os campos de distância as sombras das luzes para as quais se pediu ray tracing; cresce com o tamanho de render e essas luzes."
+      },
+      "pass.vsm rayTracedShadow merge": {
+        "label": "fusão das sombras por ray tracing",
+        "hint": "Funde as sombras por ray tracing nas máscaras das luzes locais; cresce com o tamanho de render."
+      },
+      "pass.hair strands bounds and tangents": {
+        "label": "limites e tangentes do cabelo",
+        "hint": "Calcula as tangentes das madeixas e os limites dos seus grupos; cresce com as madeixas."
+      },
+      "pass.hair strands voxelization": {
+        "label": "voxelização do cabelo",
+        "hint": "Escreve a densidade das madeixas no volume de voxels que a iluminação e as sombras leem; cresce com as madeixas e o volume."
+      },
+      "pass.hair strands scattering table": {
+        "label": "tabela de dispersão do cabelo",
+        "hint": "Constrói a tabela de como a luz se dispersa numa fibra de cabelo; uma vez, quando as definições do cabelo mudam."
+      },
+      "pass.hair strands visibility": {
+        "label": "visibilidade do cabelo",
+        "hint": "Rasteriza as amostras de visibilidade das madeixas e compacta-as por pixel; cresce com as madeixas no ecrã."
+      },
+      "pass.hair strands visibility draw": {
+        "label": "desenho da visibilidade do cabelo",
+        "hint": "Desenha as madeixas no alvo de visibilidade multiamostrado; cresce com as madeixas no ecrã."
+      },
+      "pass.hair strands visibility resolve": {
+        "label": "resolução da visibilidade do cabelo",
+        "hint": "Resolve a visibilidade multiamostrada nas amostras das madeixas por pixel; cresce com o tamanho de render."
+      },
+      "pass.hair strands depth under full coverage": {
+        "label": "profundidade de cobertura total do cabelo",
+        "hint": "Escreve a profundidade dos pixels que as madeixas cobrem por inteiro, para que não se faça o shading das superfícies atrás; cresce com as madeixas no ecrã."
+      },
+      "pass.hair strands coverage count": {
+        "label": "contagem de cobertura do cabelo",
+        "hint": "Conta as madeixas que cobrem cada pixel; cresce com as madeixas no ecrã."
+      },
+      "pass.hair strands coverage mapping": {
+        "label": "mapeamento de cobertura do cabelo",
+        "hint": "Transforma as contagens na cobertura com que a composição mistura; cresce com o tamanho de render."
+      },
+      "pass.hair strands forward visibility": {
+        "label": "visibilidade forward do cabelo",
+        "hint": "Separa e rasteriza as madeixas do caminho forward na sua grelha de profundidade; cresce com as madeixas no ecrã."
+      },
+      "pass.hair strands forward colour raster": {
+        "label": "cor forward do cabelo",
+        "hint": "Rasteriza as madeixas do caminho forward com as suas cores iluminadas; cresce com as madeixas no ecrã."
+      },
+      "pass.hair strands curve raster clear output": {
+        "label": "limpeza do raster de curvas do cabelo",
+        "hint": "Limpa a saída do raster de curvas antes de as madeixas serem desenhadas; cresce com o tamanho de render."
+      },
+      "pass.hair strands curve raster pipeline": {
+        "label": "raster de curvas do cabelo",
+        "hint": "Rasteriza as madeixas como curvas, por blocos; cresce com as madeixas no ecrã."
+      },
+      "pass.hair strands curve raster compose": {
+        "label": "composição das curvas do cabelo",
+        "hint": "Coloca a saída do raster de curvas sobre a imagem; cresce com o tamanho de render."
+      },
+      "pass.hair strands transmittance": {
+        "label": "transmitância do cabelo",
+        "hint": "Desenha quanta luz atravessa as madeixas em direção a cada luz; cresce com as madeixas e as luzes."
+      },
+      "pass.hair strands transmittance resolve": {
+        "label": "resolução da transmitância do cabelo",
+        "hint": "Resolve por pixel a transmitância multiamostrada; cresce com o tamanho de render."
+      },
+      "pass.hair strands deep shadow allocate": {
+        "label": "alocação das sombras profundas do cabelo",
+        "hint": "Dá ao mapa de sombra profunda de cada luz o seu lugar no atlas; cresce com as luzes com sombra."
+      },
+      "pass.hair strands deep shadow front depth": {
+        "label": "frente das sombras profundas do cabelo",
+        "hint": "Desenha a profundidade da madeixa mais próxima no mapa de sombra profunda de cada luz; cresce com as madeixas e as luzes."
+      },
+      "pass.hair strands deep shadow layers": {
+        "label": "camadas das sombras profundas do cabelo",
+        "hint": "Desenha a densidade das madeixas em camadas atrás dessa frente; cresce com as madeixas e as luzes."
+      },
+      "pass.hair strands light": {
+        "label": "iluminação do cabelo",
+        "hint": "Ilumina as amostras das madeixas com as luzes da cena; cresce com as madeixas no ecrã e as luzes."
+      },
+      "pass.hair strands light transmittance": {
+        "label": "transmitância da luz no cabelo",
+        "hint": "Leva para a iluminação das madeixas a transmitância de cada luz através delas; cresce com as madeixas e as luzes."
+      },
+      "pass.hair strands sampled lights": {
+        "label": "luzes amostradas do cabelo",
+        "hint": "Ilumina as madeixas com as luzes que a amostragem de muitas luzes escolhe; cresce com as madeixas no ecrã."
+      },
+      "pass.hair strands static light": {
+        "label": "luz estática do cabelo",
+        "hint": "Reúne a iluminação estática das madeixas a partir dos lightmaps e dos volumes; cresce com as madeixas."
+      },
+      "pass.hair strands environment sh sky": {
+        "label": "céu do cabelo (harmónicos)",
+        "hint": "Ilumina as madeixas com o céu através dos seus harmónicos esféricos; cresce com as madeixas."
+      },
+      "pass.hair strands environment adhoc sky": {
+        "label": "céu do cabelo (aproximado)",
+        "hint": "Ilumina as madeixas com o céu através da integração aproximada; cresce com as madeixas."
+      },
+      "pass.hair strands environment uniform sky": {
+        "label": "céu do cabelo (amostrado)",
+        "hint": "Ilumina as madeixas com o céu amostrando-o uniformemente através dos voxels; cresce com as madeixas."
+      },
+      "pass.hair strands sky occlusion": {
+        "label": "oclusão do céu do cabelo",
+        "hint": "Escurece a luz do céu das superfícies sob as madeixas; cresce com o tamanho de render."
+      },
+      "pass.hair strands shadow on the surfaces": {
+        "label": "sombra do cabelo nas superfícies",
+        "hint": "Projeta a sombra das madeixas sobre as superfícies; cresce com o tamanho de render e as luzes com sombra."
+      },
+      "pass.hair strands g buffer override": {
+        "label": "substituição de superfícies pelo cabelo",
+        "hint": "Escreve as madeixas nos buffers de superfícies para que a iluminação as trate como superfícies; cresce com as madeixas no ecrã."
+      },
+      "pass.hair strands g buffer override depth": {
+        "label": "profundidade da substituição pelo cabelo",
+        "hint": "Escreve a profundidade das madeixas escritas nos buffers de superfícies; cresce com as madeixas no ecrã."
+      },
+      "pass.hair strands composition": {
+        "label": "composição do cabelo",
+        "hint": "Coloca as madeixas iluminadas sobre a imagem com a sua cobertura; cresce com o tamanho de render."
+      },
+      "pass.hair strands custom depth": {
+        "label": "profundidade personalizada do cabelo",
+        "hint": "Escreve as madeixas na profundidade personalizada que o contorno e os materiais de pós-processamento leem; só onde pedido."
+      },
+      "pass.hair strands debug lines": {
+        "label": "linhas de depuração do cabelo",
+        "hint": "Desenha as linhas da vista de depuração do cabelo; só enquanto é mostrada."
+      },
+      "pass.hair strands debug lines frusta": {
+        "label": "frustums de depuração do cabelo",
+        "hint": "Escreve as linhas dos frustums das luzes da vista de depuração do cabelo; só enquanto é mostrada."
+      },
+      "pass.hair strands debug lines macro": {
+        "label": "grupos de depuração do cabelo",
+        "hint": "Escreve as linhas das caixas dos grupos de madeixas da vista de depuração do cabelo; só enquanto é mostrada."
+      },
+      "pass.hair strands debug lines nodes": {
+        "label": "nós de depuração do cabelo",
+        "hint": "Escreve as linhas dos nós da árvore das madeixas da vista de depuração do cabelo; só enquanto é mostrada."
+      },
+      "pass.hair strands debug panels atlas": {
+        "label": "atlas de depuração do cabelo",
+        "hint": "Desenha o painel de depuração do cabelo com o atlas das sombras profundas; só enquanto é mostrado."
+      },
+      "pass.hair strands debug panels voxels": {
+        "label": "voxels de depuração do cabelo",
+        "hint": "Desenha o painel de depuração do cabelo com o volume de voxels; só enquanto é mostrado."
+      },
+      "pass.sun distance field shadow cull": {
+        "label": "culling (sombra do sol por campo)",
+        "hint": "Faz o culling dos campos de distância das malhas contra os blocos de sombra do sol; cresce com as malhas."
+      },
+      "pass.sun distance field shadow offsets": {
+        "label": "deslocamentos (sombra do sol por campo)",
+        "hint": "Dispõe a lista de cada bloco com as malhas que lhe fazem sombra; cresce com os blocos."
+      },
+      "pass.sun distance field shadow count tiles": {
+        "label": "contagem de blocos (sombra do sol por campo)",
+        "hint": "Conta as malhas que cada bloco de sombra contém; cresce com as malhas."
+      },
+      "pass.sun distance field shadow write tiles": {
+        "label": "escrita de blocos (sombra do sol por campo)",
+        "hint": "Escreve as malhas na lista de cada bloco de sombra; cresce com as malhas."
+      },
+      "pass.distance field occlusion grid": {
+        "label": "grelha (oclusão por campo)",
+        "hint": "Constrói a grelha das malhas que a oclusão por campo de distância traça; cresce com as malhas."
+      },
+      "pass.distance field occlusion cull": {
+        "label": "culling (oclusão por campo)",
+        "hint": "Faz o culling dos campos de distância das malhas contra os blocos do ecrã; cresce com as malhas."
+      },
+      "pass.distance field occlusion offsets": {
+        "label": "deslocamentos (oclusão por campo)",
+        "hint": "Dispõe a lista de malhas de cada bloco do ecrã; cresce com os blocos."
+      },
+      "pass.distance field occlusion count tiles": {
+        "label": "contagem de blocos (oclusão por campo)",
+        "hint": "Conta as malhas que cada bloco do ecrã contém; cresce com as malhas."
+      },
+      "pass.distance field occlusion write tiles": {
+        "label": "escrita de blocos (oclusão por campo)",
+        "hint": "Escreve as malhas na lista de cada bloco do ecrã; cresce com as malhas."
+      },
+      "pass.distance field occlusion cones": {
+        "label": "cones (oclusão por campo)",
+        "hint": "Traça os cones de oclusão através dos campos de distância; cresce com o tamanho de render."
+      },
+      "pass.distance field occlusion history": {
+        "label": "histórico (oclusão por campo)",
+        "hint": "Mistura a oclusão com a das últimas imagens; cresce com o tamanho de render."
+      },
+      "pass.distance field occlusion pack": {
+        "label": "empacotamento (oclusão por campo)",
+        "hint": "Empacota a oclusão para a iluminação a ler; cresce com o tamanho de render."
+      },
+      "pass.global distance field reset": {
+        "label": "reinicialização do campo global",
+        "hint": "Limpa as páginas do campo de distância global antes de ser reconstruído; quando o campo é reinicializado."
+      },
+      "pass.global distance field update, static": {
+        "label": "atualização do campo global (estático)",
+        "hint": "Reconstrói as páginas do campo de distância global que as malhas paradas alteraram; cresce com as páginas atualizadas."
+      },
+      "pass.global distance field update, movable": {
+        "label": "atualização do campo global (móvel)",
+        "hint": "Reconstrói as páginas do campo de distância global que as malhas em movimento tocam; cresce com elas."
+      },
+      "pass.global distance field page statistics": {
+        "label": "estatísticas do campo global",
+        "hint": "Conta as páginas do campo de distância global para a sua vista de depuração; só enquanto é mostrada."
+      },
+      "pass.mesh distance field streaming": {
+        "label": "streaming dos campos das malhas",
+        "hint": "Traz os campos de distância das malhas para dentro e para fora do atlas; cresce com os campos em streaming."
+      },
+      "pass.sky light face": {
+        "label": "face de captura da luz do céu",
+        "hint": "Desenha uma face da captura em cubo da luz do céu; cresce com o tamanho da captura."
+      },
+      "pass.sky light clouds": {
+        "label": "nuvens da luz do céu",
+        "hint": "Traça as nuvens na captura da luz do céu; cresce com o tamanho da captura."
+      },
+      "pass.sky light sky table": {
+        "label": "tabela do céu (luz do céu)",
+        "hint": "Constrói a tabela do céu que a captura da luz do céu lê; cresce com o tamanho da tabela."
+      },
+      "pass.sky light copy": {
+        "label": "cópia da luz do céu",
+        "hint": "Copia o cubo capturado para a sua filtragem; cresce com o tamanho da captura."
+      },
+      "pass.sky light mips": {
+        "label": "mips da luz do céu",
+        "hint": "Constrói os níveis menores do cubo capturado; cresce com o seu tamanho."
+      },
+      "pass.sky light filter": {
+        "label": "filtro da luz do céu",
+        "hint": "Filtra o cubo capturado para os reflexos rugosos; cresce com o seu tamanho."
+      },
+      "pass.sky light harmonics": {
+        "label": "harmónicos da luz do céu",
+        "hint": "Soma o cubo capturado em harmónicos esféricos para a luz difusa do céu; um pequeno custo fixo."
+      },
+      "pass.sky light table": {
+        "label": "tabela da luz do céu traçada",
+        "hint": "Constrói a tabela do céu que a luz do céu traçada lê; cresce com o tamanho da tabela."
+      },
+      "pass.sky light directions": {
+        "label": "direções da luz do céu traçada",
+        "hint": "Escolhe as direções que a luz do céu traçada amostra; cresce com o tamanho de render."
+      },
+      "pass.sky light trace": {
+        "label": "luz do céu traçada",
+        "hint": "Traça a oclusão da luz do céu através da cena; cresce com o tamanho de render."
+      },
+      "pass.sky light composite": {
+        "label": "composição da luz do céu traçada",
+        "hint": "Coloca a luz do céu traçada sobre a imagem; cresce com o tamanho de render."
+      },
+      "pass.sky meshes face": {
+        "label": "face das malhas do céu",
+        "hint": "Desenha as malhas do céu numa face da captura do céu; cresce com as malhas do céu."
+      },
+      "pass.sky meshes copy": {
+        "label": "cópia das malhas do céu",
+        "hint": "Copia a captura das malhas do céu para o céu a ler; cresce com o seu tamanho."
+      },
+      "pass.cloud depth range": {
+        "label": "intervalo de profundidade das nuvens",
+        "hint": "Encontra o intervalo de profundidade sobre o qual as nuvens são traçadas; cresce com o tamanho de render."
+      },
+      "pass.cloud empty space": {
+        "label": "espaço vazio das nuvens",
+        "hint": "Encontra o espaço vazio que o traçado das nuvens pode saltar; cresce com o tamanho de render."
+      },
+      "pass.cloud trace": {
+        "label": "traçado das nuvens",
+        "hint": "Faz avançar os raios por passos através da camada de nuvens; cresce com o tamanho de render e a qualidade das nuvens."
+      },
+      "pass.cloud haze": {
+        "label": "névoa das nuvens",
+        "hint": "Traça a névoa dentro e debaixo das nuvens; cresce com o tamanho de render."
+      },
+      "pass.cloud reconstruction": {
+        "label": "reconstrução das nuvens",
+        "hint": "Reconstrói as nuvens completas a partir dos pixels traçados e das últimas imagens; cresce com o tamanho de render."
+      },
+      "pass.cloud composition": {
+        "label": "composição das nuvens",
+        "hint": "Coloca as nuvens sobre a imagem; cresce com o tamanho de render."
+      },
+      "pass.cloud composition behind water": {
+        "label": "nuvens atrás da água",
+        "hint": "Coloca as nuvens sobre a imagem vista através da água; cresce com a água no ecrã."
+      },
+      "pass.cloud holdout": {
+        "label": "holdout das nuvens",
+        "hint": "Recorta as nuvens onde o alfa da imagem está em holdout; cresce com o tamanho de render."
+      },
+      "pass.cloud shadow": {
+        "label": "sombra das nuvens",
+        "hint": "Traça o mapa de sombra das nuvens para o sol; cresce com o tamanho do mapa."
+      },
+      "pass.cloud sky occlusion": {
+        "label": "oclusão do céu pelas nuvens",
+        "hint": "Traça quanto do céu as nuvens escondem, para a luz do céu; cresce com o tamanho do mapa."
+      },
+      "pass.cloud lightning volume": {
+        "label": "volume de relâmpagos das nuvens",
+        "hint": "Constrói o volume com que os relâmpagos iluminam as nuvens; quando as nuvens mudam."
+      },
+      "pass.cloud layout pattern": {
+        "label": "padrão de disposição das nuvens",
+        "hint": "Constrói o padrão que a disposição das nuvens lê; quando as nuvens mudam."
+      },
+      "pass.fog local volumes cull": {
+        "label": "culling dos volumes de nevoeiro",
+        "hint": "Faz o culling dos volumes de nevoeiro locais contra os blocos de froxels; cresce com os volumes."
+      },
+      "pass.fog local volumes sky": {
+        "label": "céu dos volumes de nevoeiro",
+        "hint": "Ilumina os volumes de nevoeiro locais com o céu; cresce com os volumes."
+      },
+      "pass.path tracer light grid": {
+        "label": "grelha de luzes do path tracer",
+        "hint": "Constrói a grelha das luzes que o path tracer amostra; quando as luzes mudam."
+      },
+      "pass.path tracer air optical depth": {
+        "label": "profundidade do ar do path tracer",
+        "hint": "Constrói a tabela de profundidade ótica do ar que o path tracer lê; quando a atmosfera muda."
+      },
+      "pass.path tracer cloud acceleration map": {
+        "label": "mapa de nuvens do path tracer",
+        "hint": "Constrói o mapa com que o path tracer salta os espaços vazios das nuvens; quando as nuvens mudam."
+      },
+      "pass.path tracer sky table": {
+        "label": "tabela do céu do path tracer",
+        "hint": "Constrói a tabela do céu que o path tracer amostra; quando o céu muda."
+      },
+      "pass.path tracer sample": {
+        "label": "amostras do path tracer",
+        "hint": "Traça as amostras do path tracer para a imagem; cresce com o tamanho de render e os ressaltos."
+      },
+      "pass.path tracer error mips": {
+        "label": "mips de erro do path tracer",
+        "hint": "Constrói os níveis do erro das amostras que a amostragem adaptativa lê; cresce com o tamanho de render."
+      },
+      "pass.path tracer normal space": {
+        "label": "espaço das normais do path tracer",
+        "hint": "Escreve as normais e a profundidade que guiam a remoção de ruído; cresce com o tamanho de render."
+      },
+      "pass.path tracer denoiser": {
+        "label": "remoção de ruído do path tracer",
+        "hint": "Remove o ruído da imagem em path tracing; cresce com o tamanho de render."
+      },
+      "pass.path tracer denoiser motion view": {
+        "label": "vista de movimento do path tracer",
+        "hint": "Desenha a vista de depuração do movimento da remoção de ruído; só enquanto é mostrada."
+      },
+      "pass.path tracer denoiser warp view": {
+        "label": "vista de deformação do path tracer",
+        "hint": "Desenha a vista de depuração da deformação (warp) da remoção de ruído; só enquanto é mostrada."
+      },
+      "pass.path tracer display": {
+        "label": "apresentação do path tracer",
+        "hint": "Mostra no ecrã a imagem em path tracing; cresce com o tamanho de render."
+      },
+      "pass.card capture clear": {
+        "label": "limpeza da captura de cartões",
+        "hint": "Limpa os cartões da cache de superfícies prestes a ser capturados; cresce com os cartões capturados."
+      },
+      "pass.card capture cull": {
+        "label": "culling da captura de cartões",
+        "hint": "Faz o culling das malhas contra os cartões prestes a ser capturados; cresce com os cartões e as malhas."
+      },
+      "pass.card capture raster": {
+        "label": "raster da captura de cartões",
+        "hint": "Desenha as malhas nas capturas dos cartões; cresce com os triângulos capturados."
+      },
+      "pass.card capture export": {
+        "label": "exportação da captura de cartões",
+        "hint": "Escreve os cartões capturados no atlas da cache de superfícies; cresce com os cartões capturados."
+      },
+      "pass.surface cache atlas clear": {
+        "label": "limpeza do atlas da cache de superfícies",
+        "hint": "Limpa as camadas do atlas da cache de superfícies; quando o atlas é criado ou reinicializado."
+      },
+      "pass.surface cache feedback table arguments": {
+        "label": "argumentos do feedback da cache de superfícies",
+        "hint": "Prepara o dispatch da tabela de feedback da cache de superfícies; um pequeno custo fixo."
+      },
+      "pass.surface cache feedback table": {
+        "label": "tabela de feedback da cache de superfícies",
+        "hint": "Constrói a tabela dos cartões que a imagem pediu; cresce com os cartões vistos."
+      },
+      "pass.surface cache feedback compaction": {
+        "label": "compactação do feedback da cache de superfícies",
+        "hint": "Compacta numa lista os cartões que a imagem pediu; cresce com os cartões vistos."
+      },
+      "pass.surface cache atlas view": {
+        "label": "vista do atlas da cache de superfícies",
+        "hint": "Desenha a vista de depuração do atlas da cache de superfícies; só enquanto é mostrada."
+      },
+      "pass.inspection reflections": {
+        "label": "reflexos de inspeção",
+        "hint": "Traça os raios de reflexo que a inspeção desenha; só enquanto é mostrada."
+      },
+      "tab.why": {
+        "label": "Por quê",
+        "hint": "Por que cada imagem foi desenhada ou retida, o que se moveu, quanto a vista principal se assentou e quanto custam os instrumentos; o motor o registra enquanto o painel está aberto."
+      },
+      "summary.still": {
+        "label": "Vista parada",
+        "hint": "Cada volta do último segundo manteve sua imagem: nada foi desenhado, então nada foi cronometrado."
+      },
+      "summary.stillValue": {
+        "label": "nada desenhado",
+        "hint": "“Medir a pose parada” redesenha cada imagem parada enquanto está ativo, para que seu custo seja medido."
+      },
+      "summary.stillMeasured": {
+        "label": "parada medida",
+        "hint": "A pose parada é medida: cada imagem que a vista manteria é desenhada de novo (razão forced)."
+      },
+      "summary.paused": {
+        "label": "em pausa",
+        "hint": "A exibição está em pausa: os números ficam como estavam, os instrumentos continuam lendo."
+      },
+      "detail.median": {
+        "label": "p50 {p50} ms = {n} × {refresh} ms",
+        "hint": "O intervalo mediano na grade da tela: atualizações inteiras vezes a atualização."
+      },
+      "detail.held": {
+        "label": "mantidas {n}",
+        "hint": "Voltas da janela que não desenharam nenhuma imagem."
+      },
+      "detail.stutters": {
+        "label": "engasgos {n}",
+        "hint": "Intervalos acima de 50 ms e acima do dobro da mediana."
+      },
+      "detail.samples": {
+        "label": "amostradas {n} · descartadas {d}",
+        "hint": "As imagens que o temporizador da GPU amostrou na janela, e as amostras descartadas sem leitura."
+      },
+      "detail.gpuClock": {
+        "label": "temporizador GPU {us} µs",
+        "hint": "O passo do temporizador da GPU, deduzido de seus carimbos de tempo."
+      },
+      "detail.cpuClock": {
+        "label": "relógio CPU {us} µs",
+        "hint": "O passo do relógio da CPU: 5 µs com isolamento de origem cruzada, senão 100 µs."
+      },
+      "why.strip": {
+        "label": "Imagens",
+        "hint": "Uma célula por imagem da vista principal no eixo de tempo do gráfico, cada uma sob o ponto do seu quarto de segundo, colorida pelo seu veredito; uma marca em cima numa imagem forçada pela medição da pose parada, uma marca embaixo numa que nomeia uma causa. Aponte uma célula para nomear essa imagem e ler uma recente na aba Por quê."
+      },
+      "why.forced": {
+        "label": "forçada",
+        "hint": "Uma imagem desenhada de novo pela medição da pose parada."
+      },
+      "why.caused": {
+        "label": "causas",
+        "hint": "Uma imagem que nomeia o que se moveu desde que a vista guardou uma."
+      },
+      "why.roles": {
+        "label": "Imagens por vista",
+        "hint": "As imagens lidas desde que a janela foi zerada, pelo papel da vista: a vista principal, as vistas da página, as próprias do motor (um espelho, a profundidade personalizada, uma face do céu), uma captura."
+      },
+      "why.frames": {
+        "label": "Voltas lidas",
+        "hint": "A primeira e a última imagem que o leitor registrou desde que a janela foi zerada, pelos números do próprio registro."
+      },
+      "why.verdicts": {
+        "label": "Veredictos",
+        "hint": "O que aconteceu com as imagens da vista escolhida: desenhadas, ou mantidas e por quê; um veredito que nenhuma imagem teve fica em cinza."
+      },
+      "why.reasons": {
+        "label": "Não assentado",
+        "hint": "O trabalho ainda não assentado quando se decidiu manter, sobre as imagens (uma imagem pode nomear vários); um nome que nenhuma imagem teve fica em cinza."
+      },
+      "why.terms": {
+        "label": "Termos de cada imagem",
+        "hint": "O termo que redesenhou uma vista calma, sobre as imagens que desenhou; um termo que nenhuma imagem teve fica em cinza."
+      },
+      "why.causes": {
+        "label": "Causas",
+        "hint": "O que moveu uma revisão ou pediu uma imagem, sobre as imagens (uma imagem pode nomear várias); uma causa que nenhuma imagem teve fica em cinza."
+      },
+      "why.sinceChange": {
+        "label": "Desde a mudança",
+        "hint": "Imagens desde a última mudança da vista principal, contra as imagens que seu histórico temporal leva para esquecer a vista anterior; em cinza quando a última janela não comparou nenhuma (uma vista em movimento ou mantida)."
+      },
+      "why.history": {
+        "label": "Histórico",
+        "hint": "Imagens que o histórico temporal acumulou, contra as imagens com que ele se enche no fim do ciclo de jitter; em cinza quando a última janela não comparou nenhuma."
+      },
+      "why.panelCost": {
+        "label": "Painel, ms por segundo",
+        "hint": "O tempo próprio da thread principal que o painel gasta lendo e desenhando no último segundo, em ms por segundo."
+      },
+      "why.instrumentCpu": {
+        "label": "Instrumentos, CPU",
+        "hint": "O tempo próprio da thread principal do instrumento de tempo por volta (suas linhas, suas amostras, suas leituras): a linha Instrumentos da aba CPU."
+      },
+      "why.instrumentGpu": {
+        "label": "Instrumentos, GPU",
+        "hint": "Os passes de GPU que os instrumentos acrescentam por volta (o estágio de diagnóstico): a linha Instrumentos da aba GPU."
+      },
+      "verdict.drawn": {
+        "label": "desenhada",
+        "hint": "Uma nova imagem foi desenhada e mostrada."
+      },
+      "verdict.still": {
+        "label": "parada",
+        "hint": "Mantida: a imagem anterior, mostrada de novo bit a bit."
+      },
+      "verdict.heldOnAnswer": {
+        "label": "à espera de resposta",
+        "hint": "Mantida à espera de uma resposta que o dispositivo ainda deve: um programa compilando, um buffer."
+      },
+      "verdict.targetsAwaited": {
+        "label": "alvos aguardados",
+        "hint": "Mantida à espera de alvos que o dispositivo ainda não concedeu."
+      },
+      "verdict.swapped": {
+        "label": "trocada",
+        "hint": "Desenhada em alvos feitos à parte e trocados."
+      },
+      "verdict.noiseFinal": {
+        "label": "ruído final",
+        "hint": "A última imagem do estabelecimento de uma vista, desenhada na fase canônica do ruído antes de a vista se manter."
+      },
+      "verdict.withheld": {
+        "label": "retida",
+        "hint": "Desenhada e não mostrada: antes de a vista carregar, ou enquanto um carregamento espera um streaming lento."
+      },
+      "image.frame": {
+        "label": "Imagem",
+        "hint": "A imagem que as linhas abaixo leem: a que está sob o ponteiro na faixa, senão a última; seu número de imagem na sessão."
+      },
+      "image.view": {
+        "label": "Vista",
+        "hint": "O papel da vista e seu lugar entre as vistas desse papel."
+      },
+      "image.verdict": {
+        "label": "Veredito",
+        "hint": "O que aconteceu com a imagem."
+      },
+      "image.because": {
+        "label": "Desenhada porque",
+        "hint": "A única razão pela qual a decisão de manter a desenhou; nenhuma para uma imagem mantida."
+      },
+      "image.reasons": {
+        "label": "Não assentado",
+        "hint": "O trabalho ainda não assentado quando se decidiu manter."
+      },
+      "image.term": {
+        "label": "Termo",
+        "hint": "O termo que desenha uma vista calma a cada imagem e desenhou esta."
+      },
+      "image.causes": {
+        "label": "Causas",
+        "hint": "O que se moveu desde que a vista guardou uma imagem, por origem."
+      },
+      "image.answer": {
+        "label": "Mantida por",
+        "hint": "A resposta pela qual a imagem foi mantida; nenhuma para uma imagem desenhada."
+      },
+      "image.retryInMs": {
+        "label": "Nova tentativa em",
+        "hint": "Mantida por alvos recusados: os milissegundos antes de o tamanho recusado ser pedido de novo."
+      },
+      "image.intervalMs": {
+        "label": "Intervalo",
+        "hint": "O tempo que a imagem ficou na tela."
+      },
+      "image.refreshes": {
+        "label": "Atualizações",
+        "hint": "As atualizações inteiras da tela durante as quais a imagem ficou na tela."
+      },
+      "image.bound": {
+        "label": "Limitado por",
+        "hint": "O que fixou suas atualizações: a GPU, a CPU ou o ritmo da tela."
+      },
+      "bound.gpu": {
+        "label": "GPU",
+        "hint": "O tempo do processador gráfico o fixou."
+      },
+      "bound.cpu": {
+        "label": "CPU",
+        "hint": "O tempo da thread principal o fixou."
+      },
+      "bound.pacing": {
+        "label": "ritmo da tela",
+        "hint": "Nenhum processador: a atualização da tela, a página ou um teto de quadros o fixou."
+      },
+      "image.cpuMs": {
+        "label": "CPU",
+        "hint": "O tempo da thread principal da volta."
+      },
+      "image.gpuMs": {
+        "label": "GPU",
+        "hint": "O tempo de GPU da imagem; nenhum quando o temporizador não a amostrou."
+      },
+      "image.outsideMs": {
+        "label": "Fora da imagem",
+        "hint": "O trabalho de GPU enviado ao lado da imagem em sua volta."
+      },
+      "image.waitMs": {
+        "label": "Espera",
+        "hint": "O intervalo menos o processador mais ocupado: tempo esperando uma atualização."
+      },
+      "image.toNextRefreshMs": {
+        "label": "Uma atualização antes",
+        "hint": "O tempo que o processador limitante precisa ceder para a imagem chegar uma atualização antes."
+      },
+      "control.every": {
+        "label": "GPU cronometrada",
+        "hint": "Com que frequência o temporizador da GPU lê uma imagem: 1 a cada {every} por padrão, o mais leve; 1 a cada 3 ou cada imagem mede mais, cada uma ao preço de uma consulta de temporizador e uma releitura."
+      },
+      "control.everyImage": {
+        "label": "cada imagem",
+        "hint": "Cada imagem é medida na GPU: o máximo de amostras, ao preço de uma consulta de temporizador e uma releitura por imagem."
+      },
+      "control.still": {
+        "label": "Medir a pose parada",
+        "hint": "Enquanto ligado, cada imagem que a vista manteria é desenhada de novo, para cronometrar a pose parada; cada uma é uma nova amostra de TAA (razão forced). Custa uma imagem inteira a cada quadro."
+      },
+      "control.pause": {
+        "label": "Pausar a exibição",
+        "hint": "Congela os números mostrados; os instrumentos continuam lendo, e a faixa ainda responde ao ponteiro."
+      },
+      "control.reset": {
+        "label": "Zerar a janela",
+        "hint": "Esquece as imagens e as contagens lidas até agora: a janela recomeça agora."
+      },
+      "control.export": {
+        "label": "Baixar JSON",
+        "hint": "As janelas do último minuto dos instrumentos do porquê e do tempo, como o motor as deu, cada janela de tempo com as opções com que seu leitor foi aberto; o endereço da página, o mundo lido, o estado dos leitores e o que foi pedido."
+      },
+      "control.role": {
+        "label": "Vista contada",
+        "hint": "De qual vista esta aba conta as imagens: a vista principal, as vistas da página, as do motor (um espelho, uma face do céu), uma captura; entre os papéis lidos."
+      },
+      "control.world": {
+        "label": "Mundo",
+        "hint": "O mundo da página que o painel lê, pelo seu lugar entre os mundos da página (o primeiro criado é a vista principal); cada janela recomeça no escolhido."
+      },
+      "control.view": {
+        "label": "Vista",
+        "hint": "O que o mundo desenha: o render, ou uma vista de como o motor funciona (`world.diagnostic.mode`); uma em cinza não é oferecida aqui, ou o mundo a recusou."
+      },
+      "control.viewUnavailable": {
+        "label": "não desenhada aqui",
+        "hint": "Esta versão do motor ainda não desenha esta vista."
+      },
+      "control.viewRefused": {
+        "label": "recusada por este mundo",
+        "hint": "O mundo manteve a vista que tinha quando esta foi pedida; o console diz por quê."
+      },
+      "control.freeze": {
+        "label": "Congelar o culling",
+        "hint": "Mantém o corte (seus níveis, o HLOD, o frustum e a oclusão) na câmera de agora enquanto a câmera segue (`world.diagnostic.freeze`): um passo ao lado na vista de raios X mostra o que ele enviou e o que descartou."
+      },
+      "viewGroup.geometry": {
+        "label": "Geometria",
+        "hint": "O que o corte desenhou: seus triângulos, clusters, níveis de detalhe, HLOD, voxels, erro na tela e páginas, vistos através ou contados."
+      },
+      "viewGroup.materials": {
+        "label": "Materiais",
+        "hint": "Os materiais das superfícies: suas classes, as propriedades sob o cursor, o tamanho de textura lido, os perfis de subsuperfície."
+      },
+      "viewGroup.lighting": {
+        "label": "Iluminação",
+        "hint": "A luz que as superfícies recebem, inteira ou termo a termo, e os atlas das imagens e dos perfis das luzes."
+      },
+      "viewGroup.temporal": {
+        "label": "Antialiasing temporal",
+        "hint": "A acumulação temporal: a imagem que recebe, seu histórico e o que o rejeita, e o que mudou de uma imagem para a seguinte."
+      },
+      "viewGroup.shadowMaps": {
+        "label": "Mapas de sombra",
+        "hint": "Os mapas de sombra virtuais: os níveis e as páginas que cada pixel lê, seu cache, seus projetores e seu custo."
+      },
+      "viewGroup.surfaceCache": {
+        "label": "Cache de superfícies",
+        "hint": "O atlas dos cartões das malhas, suas atualizações de luz e a cena vista através de sua luz."
+      },
+      "viewGroup.probes": {
+        "label": "Sondas",
+        "hint": "As sondas de tela, as sondas do mundo e os raios de reflexão: onde ficam, o que traçam, o que guardam."
+      },
+      "viewGroup.sampledLights": {
+        "label": "Luzes amostradas",
+        "hint": "A iluminação amostrada de muitas luzes: as superfícies que seus raios de sombra encontram e quanto custa cada pixel."
+      },
+      "viewGroup.hair": {
+        "label": "Cabelo",
+        "hint": "As mechas de cabelo: suas caixas, sombras profundas, molduras na tela e voxels."
+      },
+      "viewGroup.volumes": {
+        "label": "Volumes",
+        "hint": "As grades de voxels dos volumes heterogêneos, por cada modo de encontrar a transmitância através delas."
+      },
+      "viewGroup.other": {
+        "label": "Outras",
+        "hint": "Vistas que nenhum grupo do painel nomeia ainda."
+      },
+      "reader.opening": {
+        "label": "abrindo",
+        "hint": "Os leitores dos instrumentos estão carregando."
+      },
+      "reader.waiting": {
+        "label": "aguardando o mundo {n}",
+        "hint": "O mundo escolhido não desenhou nenhuma volta desde então: os números mostrados são os do mundo anterior até que ele desenhe uma."
+      },
+      "reader.missing": {
+        "label": "ausente nesta versão: {names}",
+        "hint": "Esta versão do motor não tem esse instrumento; nada dele é mostrado."
+      },
+      "reader.failed": {
+        "label": "falhou",
+        "hint": "O leitor de um instrumento não abriu (sua família não carregou)."
+      },
+      "reader.faulted": {
+        "label": "erro: {message}",
+        "hint": "Uma leitura ou um desenho do painel lançou um erro; ele continua lendo."
+      },
+      "gpu.outside": {
+        "label": "Fora da imagem",
+        "hint": "Trabalho que o motor envia ao lado das imagens (blocos de textura, páginas instaladas, capturas do céu), cronometrado enquanto o tempo é lido."
+      },
+      "gpu.diagnostic": {
+        "label": "Instrumentos",
+        "hint": "Passes que uma vista ou uma inspeção acrescenta para mostrar como o motor funciona; não é o custo próprio do motor."
+      },
+      "gpu.views": {
+        "label": "Vistas ao lado da principal",
+        "hint": "Cada vista desenhada ao lado da imagem principal (uma vista da página, um espelho, a profundidade personalizada, uma face do céu): seu tempo médio de GPU sobre suas próprias imagens, somado; não faz parte da volta acima."
+      },
+      "cpu.diagnostic": {
+        "label": "Instrumentos",
+        "hint": "O trabalho próprio da thread principal do instrumento de tempo por volta enquanto é lido (suas linhas, suas amostras, suas leituras); não é o custo do motor."
+      },
+      "control.everyN": {
+        "label": "1 em {n}",
+        "hint": "Uma imagem em cada {n} é cronometrada na GPU."
+      },
+      "control.actions": {
+        "label": "Ações",
+        "hint": "O que a exibição faz com o que é lido: pausá-la, reiniciar a janela, baixá-la."
+      },
+      "role.main": {
+        "label": "vista principal",
+        "hint": "A vista principal do mundo."
+      },
+      "role.pageView": {
+        "label": "vista da página",
+        "hint": "Uma vista que a página adicionou (`world.addView`)."
+      },
+      "role.planarReflection": {
+        "label": "reflexo plano",
+        "hint": "A vista de um espelho plano, desenhada ao lado da principal."
+      },
+      "role.customDepth": {
+        "label": "profundidade personalizada",
+        "hint": "A vista de profundidade personalizada, desenhada ao lado da principal."
+      },
+      "role.skyFace": {
+        "label": "face do céu",
+        "hint": "Uma face do cubo das malhas do céu, desenhada ao lado da principal."
+      },
+      "role.aside": {
+        "label": "captura",
+        "hint": "Uma vista desenhada à parte: uma captura."
+      },
+      "gpu.surfaceCache": {
+        "label": "Cache de superfícies",
+        "hint": "Captura os cartões das malhas no atlas que os raios leem; cresce com as páginas capturadas numa imagem."
+      },
+      "shadows.pagesEmpty": {
+        "label": "Páginas de sombra vazias",
+        "hint": "Páginas do pool que não contêm nada, livres para a próxima atribuição; cresce quando as sombras pedem menos."
+      },
+      "shadows.pagesWpoConsidered": {
+        "label": "Páginas de sombra com deslocamento",
+        "hint": "Páginas de sombra em cache mantidas sob o culling dos deslocamentos permitidos nelas; cresce com os materiais com deslocamento à vista."
+      },
+      "shadows.rootsNoted": {
+        "label": "Posicionamentos movidos",
+        "hint": "Total acumulado de mundos de posicionamento marcados como movidos; o seu aumento por imagem são os posicionamentos que um movimento atingiu."
+      },
+      "shadows.rootsBoxed": {
+        "label": "Caixas raiz derivadas",
+        "hint": "Total acumulado de caixas raiz que o passe de raízes derivou; a invalidação de sombras vê um posicionamento através delas."
+      },
+      "pass.cluster measure": {
+        "label": "medição de clusters",
+        "hint": "Mede a aresta mais longa dos clusters cujas páginas chegaram; cresce com as páginas que chegam."
+      },
+      "pass.raster depth export": {
+        "label": "exportação de profundidade (raster)",
+        "hint": "Escreve a profundidade da cena a partir do primeiro nível da pirâmide de profundidade; cresce com o tamanho de render."
+      },
+      "pass.material bins and shading": {
+        "label": "lotes e sombreamento de materiais",
+        "hint": "Ordena os pixels por material e sombreia o lote de cada material; cresce com os materiais e pixels à vista."
+      },
+      "pass.translucency modulation": {
+        "label": "modulação de translúcidos",
+        "hint": "Desenha as camadas que multiplicam o que está atrás delas; cresce com essas camadas à vista."
+      },
+      "pass.translucency compose": {
+        "label": "composição de translúcidos",
+        "hint": "Compõe as camadas translúcidas sobre a imagem; cresce com o tamanho de render."
+      },
+      "pass.reflection clear": {
+        "label": "limpeza de reflexos",
+        "hint": "Esvazia a imagem de reflexos onde nenhum raio é traçado; cresce com o tamanho de render."
+      },
+      "pass.reflection resolve": {
+        "label": "resolução de reflexos",
+        "hint": "Reutiliza os raios dos pixels vizinhos para preencher a imagem de reflexos; cresce com os pixels refletores."
+      },
+      "pass.reflection temporal": {
+        "label": "reflexos temporais",
+        "hint": "Acumula os reflexos de imagens anteriores para limpar a imagem; cresce com os pixels refletores."
+      },
+      "pass.reflection bilateral": {
+        "label": "filtro bilateral de reflexos",
+        "hint": "Filtra os reflexos ruidosos ou novos com os vizinhos e escreve a imagem de reflexos; cresce com os pixels refletores."
+      },
+      "pass.reflection keep depth": {
+        "label": "profundidade guardada de reflexos",
+        "hint": "Guarda a profundidade opaca para os reflexos da próxima imagem; cresce com o tamanho de render."
+      },
+      "pass.tile classification": {
+        "label": "classificação de blocos",
+        "hint": "Ordena os blocos do ecrã pelo tipo de superfície que contêm, para que cada um seja iluminado pelo programa de que precisa; cresce com o tamanho de render."
+      },
+      "pass.surface colour": {
+        "label": "cor da superfície",
+        "hint": "Escreve a primeira cor de cada pixel: o fundo, as superfícies mostradas tal como são e a emissão; cresce com o tamanho de render."
+      },
+      "pass.sun light": {
+        "label": "luz do sol",
+        "hint": "Adiciona às superfícies a luz do sol e das outras luzes direcionais, com as suas sombras; cresce com os pixels iluminados e as luzes."
+      },
+      "pass.local lights": {
+        "label": "luzes locais",
+        "hint": "Adiciona às superfícies as lâmpadas da célula da grelha de luzes de cada pixel; cresce com os pixels iluminados e as luzes que os alcançam."
+      },
+      "pass.indirect light": {
+        "label": "luz indireta",
+        "hint": "Adiciona a luz do ambiente e do céu, a luz rebatida, os reflexos e o verso de uma superfície fina; cresce com os pixels iluminados."
+      },
+      "pass.height fog": {
+        "label": "nevoeiro de altura",
+        "hint": "Coloca o nevoeiro, os volumes de nevoeiro locais e a névoa do ar sobre a imagem iluminada; cresce com o tamanho de render."
+      },
+      "pass.temporal dilate velocity": {
+        "label": "dilatação da velocidade (temporal)",
+        "hint": "Encontra a superfície mais próxima de cada pixel e o seu movimento para o antialiasing temporal; cresce com o tamanho de render."
+      },
+      "pass.temporal decimate history": {
+        "label": "dizimação do histórico (temporal)",
+        "hint": "Reprojeta os pequenos históricos das imagens anteriores nesta imagem; cresce com o tamanho de render."
+      },
+      "pass.temporal detect thin geometry": {
+        "label": "deteção de geometria fina (temporal)",
+        "hint": "Encontra a geometria fina que o histórico deve manter; cresce com o tamanho de render."
+      },
+      "pass.temporal reject shading": {
+        "label": "rejeição do sombreamento (temporal)",
+        "hint": "Depois de medir que pixels cintilam de uma imagem para a outra, mede onde o histórico já não corresponde à imagem e tem de ser descartado; cresce com o tamanho de render."
+      },
+      "pass.temporal spatial anti aliasing": {
+        "label": "antialiasing espacial (temporal)",
+        "hint": "Suaviza as arestas dos pixels cujo histórico foi descartado; cresce com o tamanho de render."
+      },
+      "pass.temporal update history": {
+        "label": "atualização do histórico (temporal)",
+        "hint": "Mistura a imagem no histórico para suavizar as arestas; cresce com o tamanho do histórico."
+      },
+      "pass.temporal resolve history": {
+        "label": "resolução do histórico (temporal)",
+        "hint": "Reduz ao ecrã um histórico maior do que ele; cresce com o tamanho do ecrã."
+      },
+      "pass.temporal resolve display layers": {
+        "label": "resolução das camadas de ecrã (temporal)",
+        "hint": "Reduz o histórico das camadas de ecrã ao ecrã; cresce com o tamanho do ecrã."
+      },
+      "control.details": {
+        "label": "Detalhes",
+        "hint": "Abre a janela de detalhes sobre a vista: o quadro como diagrama, cada etapa e cada passe, porque cada imagem foi desenhada, os últimos minutos, a memória e a cena. Enquanto está aberta, a GPU é cronometrada em cada imagem, a menos que tenha escolhido outra amostragem; fechada, não custa nada."
+      },
+      "details.label": {
+        "label": "Detalhes do motor",
+        "hint": "Tudo o que os instrumentos leem do motor, separador a separador; Esc ou × fecha-a."
+      },
+      "details.close": {
+        "label": "Fechar",
+        "hint": "Fecha a janela de detalhes (Esc)."
+      },
+      "tab.overview": {
+        "label": "Visão geral",
+        "hint": "O quadro como diagrama: cada etapa de GPU uma barra tão longa quanto o seu tempo, a CPU por baixo, o orçamento de atualização uma linha; o que segura o quadro dito em palavras. Clique numa etapa para abrir as suas linhas."
+      },
+      "tab.history": {
+        "label": "Histórico",
+        "hint": "Os últimos cinco minutos, um ponto por segundo: o tempo da imagem, da GPU e da CPU, os segundos que engasgaram e aqueles cujas imagens nomearam uma causa."
+      },
+      "stageGroup.scene": {
+        "label": "Mundo",
+        "hint": "O que move o mundo: física, animações, luzes."
+      },
+      "stageGroup.cut": {
+        "label": "Corte e streaming",
+        "hint": "O que o motor escolhe desenhar e leva à GPU: o corte, as páginas, os envios, as texturas."
+      },
+      "stageGroup.commands": {
+        "label": "Comandos",
+        "hint": "Gravar e enviar os comandos de GPU."
+      },
+      "stageGroup.surfaces": {
+        "label": "Superfícies",
+        "hint": "Desenhar as superfícies: a pirâmide de profundidade, a geometria, os decalques e os transparentes."
+      },
+      "stageGroup.light": {
+        "label": "Luz",
+        "hint": "Iluminar as superfícies: a cache de superfícies, as sombras, as listas de luzes, o rebatimento, os reflexos e a iluminação."
+      },
+      "stageGroup.image": {
+        "label": "Imagem",
+        "hint": "Terminar a imagem: antialiasing, efeitos e apresentação."
+      },
+      "stageGroup.apart": {
+        "label": "À parte",
+        "hint": "Trabalho de GPU fora da imagem, o dos próprios instrumentos e os passes que nenhuma etapa declara."
+      },
+      "overview.said": {
+        "label": "A imagem leva {frame} ms, a GPU {gpu} ms, a CPU {cpu} ms; espera {wait} ms numa atualização de {budget} ms.",
+        "hint": "O quadro numa frase enquanto nada diz ainda o que o segura: os tempos dos processadores e a espera pelo ecrã."
+      },
+      "overview.said.gpu": {
+        "label": "Limitado pela GPU — a imagem leva {frame} ms, a GPU {gpu} ms, a CPU {cpu} ms; espera {wait} ms numa atualização de {budget} ms.",
+        "hint": "O quadro numa frase: o tempo da GPU fixou durante quantas atualizações uma imagem fica no ecrã; depois os tempos dos processadores e a espera pelo ecrã."
+      },
+      "overview.said.cpu": {
+        "label": "Limitado pela CPU — a imagem leva {frame} ms, a GPU {gpu} ms, a CPU {cpu} ms; espera {wait} ms numa atualização de {budget} ms.",
+        "hint": "O quadro numa frase: o tempo da thread principal fixou durante quantas atualizações uma imagem fica no ecrã; depois os tempos dos processadores e a espera pelo ecrã."
+      },
+      "overview.said.pacing": {
+        "label": "Limitado pelo ritmo da tela — a imagem leva {frame} ms, a GPU {gpu} ms, a CPU {cpu} ms; espera {wait} ms numa atualização de {budget} ms.",
+        "hint": "O quadro numa frase: nenhum processador fixou durante quantas atualizações uma imagem fica no ecrã, foi a atualização do ecrã, a página ou um teto de quadros; depois os tempos dos processadores e a espera pelo ecrã."
+      },
+      "overview.unread": {
+        "label": "Ainda nenhum tempo lido",
+        "hint": "As etapas de GPU e CPU aparecem quando o leitor do tempo do quadro leu um segundo."
+      },
+      "overview.stage": {
+        "label": "{name}: {ms} ms · {share} % da imagem",
+        "hint": "Uma etapa do quadro, o seu tempo médio no último segundo e a sua parte da imagem da GPU; clique para abrir as suas linhas."
+      },
+      "table.name": {
+        "label": "Nome",
+        "hint": "A etapa, e os seus passes por baixo; clique para ordenar pela ordem do pipeline."
+      },
+      "table.avg": {
+        "label": "Média",
+        "hint": "Média do último segundo; colorida face ao orçamento de atualização: laranja acima de um quarto, vermelho acima de metade. Clique para ordenar."
+      },
+      "table.p95": {
+        "label": "p95",
+        "hint": "O percentil 95 do último segundo: 1 imagem em 20 demora mais. Clique para ordenar."
+      },
+      "table.max": {
+        "label": "Máx.",
+        "hint": "O mais longo do último segundo. Clique para ordenar."
+      },
+      "table.share": {
+        "label": "% da imagem",
+        "hint": "Parte da imagem da GPU (ou do quadro da CPU). Clique para ordenar."
+      },
+      "table.trend": {
+        "label": "Último minuto",
+        "hint": "A média de cada segundo do último minuto."
+      },
+      "history.stutter": {
+        "label": "engasgo",
+        "hint": "Um segundo com pelo menos uma imagem que o ecrã teve de esperar mais do que a sua cadência habitual: uma marca vermelha em cima."
+      },
+      "history.cause": {
+        "label": "causa",
+        "hint": "Um segundo cujas imagens nomearam o que as moveu: uma marca amarela em baixo; aponte para ler as causas."
+      },
+      "history.point": {
+        "label": "há {ago} s · imagem {frame} ms (máx. {max}) · GPU {gpu} ms · CPU {cpu} ms",
+        "hint": "O segundo sob o ponteiro: os seus tempos médios e a sua imagem mais longa."
+      },
+      "history.unread": {
+        "label": "Ainda nada lido",
+        "hint": "Um ponto por segundo a partir do que o leitor do tempo de imagem lê, seja o que for que o painel mostre: o primeiro chega após um segundo."
+      },
+      "history.zoom": {
+        "label": "de há {from} s a há {to} s · duplo clique: os últimos cinco minutos",
+        "hint": "Arraste sobre o gráfico para ampliar um intervalo; faça duplo clique para voltar a ver os últimos cinco minutos."
+      },
+      "history.clipped": {
+        "label": "▲ além da escala",
+        "hint": "Um pequeno triângulo na borda superior do gráfico, na cor de uma linha: o tempo desse segundo passou o topo da escala, um pico que a escala deixa de fora; aponte para o ler por inteiro."
+      },
+      "pass.material bins": {
+        "label": "lotes de materiais",
+        "hint": "Separa os pixels num lote por classe de material antes de cada classe sombrear o seu; cresce com o tamanho de render."
+      },
+      "pass.material shading": {
+        "label": "sombreamento de materiais",
+        "hint": "Uma classe de material sombreia os pixels do seu lote, cada um decodificando o seu próprio triângulo; cresce com os pixels dessa classe."
+      },
+      "pass.blend responsiveness": {
+        "label": "reatividade dos transparentes",
+        "hint": "Marca onde os transparentes pedem ao filtro temporal que os siga mais depressa; cresce com os pixels transparentes."
+      },
+      "pass.alpha holdout start": {
+        "label": "início do holdout alfa",
+        "hint": "Inicia o alvo de holdout a partir do alfa da imagem iluminada; cresce com o tamanho de render."
+      },
+      "pass.blend alpha holdout": {
+        "label": "holdout alfa dos transparentes",
+        "hint": "Desenha as camadas de holdout no seu alvo; cresce com os seus pixels."
+      },
+      "pass.alpha holdout apply": {
+        "label": "aplicação do holdout alfa",
+        "hint": "Volta a colocar a visibilidade do holdout sobre o alfa da imagem iluminada; cresce com o tamanho de render."
+      },
+      "pass.translucent radiance mark": {
+        "label": "marcação da radiância translúcida",
+        "hint": "Marca as células da cache de radiância que as superfícies translúcidas leem; cresce com os pixels translúcidos."
+      },
+      "pass.sorted translucency collect": {
+        "label": "recolha dos translúcidos ordenados",
+        "hint": "Recolhe as camadas translúcidas de cada pixel para as ordenar; cresce com as camadas por pixel."
+      },
+      "pass.sorted translucency combine": {
+        "label": "combinação dos translúcidos ordenados",
+        "hint": "Compõe as camadas ordenadas da frente para trás sobre o alvo de translucidez; cresce com as camadas por pixel."
+      },
+      "pass.water": {
+        "label": "água",
+        "hint": "Sombreia a água de camada única; cresce com os pixels de água no ecrã."
+      },
+      "pass.water scene copy": {
+        "label": "cópia da cena (água)",
+        "hint": "Copia a cena sem a água para a sua refração; cresce com o tamanho de render."
+      },
+      "pass.water depth": {
+        "label": "profundidade da água",
+        "hint": "Desenha a profundidade da água; cresce com os seus pixels."
+      },
+      "pass.water refraction mask": {
+        "label": "máscara de refração da água",
+        "hint": "Mascara o que a água pode refratar; cresce com os seus pixels."
+      },
+      "pass.water tiles": {
+        "label": "blocos de água",
+        "hint": "Lista os blocos do ecrã que contêm água; cresce com o tamanho de render."
+      },
+      "pass.water velocity": {
+        "label": "velocidade da água",
+        "hint": "Escreve o movimento da superfície da água para o filtro temporal; cresce com os seus pixels."
+      },
+      "pass.water sun shadow": {
+        "label": "sombra do sol na água",
+        "hint": "Sombreia a água a partir do sol; cresce com os seus pixels."
+      },
+      "pass.water composite": {
+        "label": "composição da água",
+        "hint": "Compõe o reflexo e a refração da água sobre a imagem; cresce com os seus pixels."
+      },
+      "pass.hzb occlusion roots": {
+        "label": "raízes da oclusão HZB",
+        "hint": "Deriva os cantos das caixas raiz para o seu teste contra a pirâmide de profundidade; cresce com as raízes."
+      },
+      "pass.hardware occlusion boxes": {
+        "label": "caixas de oclusão por hardware",
+        "hint": "Desenha as caixas raiz contra a profundidade, uma consulta de oclusão por grupo; cresce com as caixas testadas."
+      },
+      "pass.hardware occlusion small depth": {
+        "label": "profundidade reduzida da oclusão por hardware",
+        "hint": "Constrói a profundidade reduzida contra a qual as caixas de oclusão são desenhadas; cresce com o tamanho de render."
+      },
+      "pass.hardware occlusion verdicts": {
+        "label": "veredictos da oclusão por hardware",
+        "hint": "Transforma as contagens das consultas em veredictos visível ou oculto; cresce com as caixas testadas."
+      },
+      "pass.surface cache": {
+        "label": "cache de superfícies",
+        "hint": "Atualiza a cache de superfícies: os seus cartões capturados, limpos, devolvidos e mostrados; cresce com os cartões a atualizar."
+      },
+      "pass.surface cache lighting": {
+        "label": "iluminação da cache de superfícies",
+        "hint": "Ilumina os cartões da cache de superfícies que o rebatimento lê; cresce com os cartões e as luzes."
+      },
+      "pass.card capture": {
+        "label": "captura de cartões",
+        "hint": "Captura os cartões da cache de superfícies a partir das malhas; cresce com os cartões capturados nesta imagem."
+      },
+      "pass.screen probes": {
+        "label": "sondas de ecrã",
+        "hint": "Coloca sondas na imagem, traça-as, filtra-as e mistura-as para a luz rebatida; cresce com o tamanho de render e os raios."
+      },
+      "pass.reflection hit lighting": {
+        "label": "iluminação dos impactos de reflexo",
+        "hint": "Volta a iluminar os impactos dos raios de reflexo, ordenados por material; cresce com os raios que atingem."
+      },
+      "pass.sky surfaces": {
+        "label": "superfícies do céu",
+        "hint": "Desenha as superfícies do céu na imagem iluminada antes da atmosfera, do nevoeiro e das nuvens; cresce com os pixels de céu."
+      },
+      "pass.fog separate composition": {
+        "label": "composição separada do nevoeiro",
+        "hint": "Coloca sobre a imagem iluminada o nevoeiro desenhado nas suas próprias texturas; cresce com o tamanho de render."
+      },
+      "pass.fog blur": {
+        "label": "desfoque do nevoeiro",
+        "hint": "Desfoca as texturas próprias do nevoeiro; cresce com o seu tamanho."
+      },
+      "pass.fog upsample": {
+        "label": "sobreamostragem do nevoeiro",
+        "hint": "Devolve as texturas do nevoeiro ao tamanho da imagem; cresce com o tamanho de render."
+      },
+      "pass.fog temporal": {
+        "label": "nevoeiro temporal",
+        "hint": "Filtra no tempo o segundo nível do nevoeiro; cresce com o seu tamanho."
+      },
+      "pass.fog volume": {
+        "label": "volume do nevoeiro",
+        "hint": "Constrói o volume do nevoeiro: a profundidade das suas células, a luz que cada uma dispersa, a soma ao longo de cada coluna; cresce com as células e as luzes."
+      },
+      "pass.fog local volumes": {
+        "label": "volumes de nevoeiro locais",
+        "hint": "Desenha os volumes de nevoeiro locais; cresce com os volumes no ecrã."
+      },
+      "pass.fog sun light function": {
+        "label": "função de luz do sol (nevoeiro)",
+        "hint": "Desenha a função de luz do sol para o nevoeiro volumétrico; cresce com o seu tamanho."
+      },
+      "pass.light function atlas": {
+        "label": "atlas das funções de luz",
+        "hint": "Desenha as funções de luz das luzes no seu atlas; cresce com as luzes que têm uma."
+      },
+      "pass.toon profile bake": {
+        "label": "cozedura do perfil toon",
+        "hint": "Coze as imagens de um perfil toon nos padrões que as luzes leem; corre quando um perfil muda."
+      },
+      "pass.rect light atlas add": {
+        "label": "adição ao atlas de luzes retangulares",
+        "hint": "Desenha a imagem de origem de uma luz retangular no seu atlas; corre quando uma é adicionada."
+      },
+      "pass.rect light atlas copy": {
+        "label": "cópia do atlas de luzes retangulares",
+        "hint": "Move o espaço de uma luz retangular para um novo atlas; corre quando o atlas cresce."
+      },
+      "pass.rect light atlas filter": {
+        "label": "filtro do atlas de luzes retangulares",
+        "hint": "Filtra um nível do atlas de luzes retangulares; corre quando uma imagem muda."
+      },
+      "pass.rect light atlas clear": {
+        "label": "limpeza do atlas de luzes retangulares",
+        "hint": "Limpa o atlas de luzes retangulares; corre quando é refeito."
+      },
+      "pass.rect light atlas debug": {
+        "label": "depuração do atlas de luzes retangulares",
+        "hint": "Desenha o atlas de luzes retangulares para a sua vista de depuração; só enquanto essa vista é mostrada."
+      },
+      "pass.rect light atlas blit": {
+        "label": "blit do atlas de luzes retangulares",
+        "hint": "Coloca o atlas de luzes retangulares sobre a imagem para a sua vista de depuração; só enquanto essa vista é mostrada."
+      },
+      "pass.light profile atlas debug": {
+        "label": "depuração do atlas de perfis de luz",
+        "hint": "Desenha o atlas de perfis de luz para a sua vista de depuração; só enquanto essa vista é mostrada."
+      },
+      "pass.light profile atlas blit": {
+        "label": "blit do atlas de perfis de luz",
+        "hint": "Coloca o atlas de perfis de luz sobre a imagem para a sua vista de depuração; só enquanto essa vista é mostrada."
+      },
+      "pass.light shapes": {
+        "label": "formas das luzes",
+        "hint": "Desenha as formas das luzes em arame sobre a imagem iluminada; só enquanto são mostradas."
+      },
+      "pass.volumetric lightmap light": {
+        "label": "luz do lightmap volumétrico",
+        "hint": "Reúne a luz do lightmap volumétrico nos pixels antes de a luz indireta a ler; cresce com o tamanho de render."
+      },
+      "pass.volumetric lightmap visualize": {
+        "label": "visualização do lightmap volumétrico",
+        "hint": "Desenha uma esfera por cada amostra do lightmap volumétrico; só enquanto essa vista é mostrada."
+      },
+      "pass.translucency volume": {
+        "label": "volume de translucidez",
+        "hint": "Injeta cada luz nas células em volta da câmara a partir das quais as superfícies transparentes são iluminadas; cresce com as luzes."
+      },
+      "pass.translucency volume spheres": {
+        "label": "esferas do volume de translucidez",
+        "hint": "Desenha uma esfera por cada célula do volume de translucidez; só enquanto essa vista é mostrada."
+      },
+      "pass.translucency global illumination": {
+        "label": "iluminação global dos translúcidos",
+        "hint": "Traça e filtra a luz indireta das superfícies transparentes numa grelha ajustada à vista; cresce com as suas células."
+      },
+      "pass.traced translucency trace": {
+        "label": "traçado dos translúcidos traçados",
+        "hint": "Traça raios através das superfícies transparentes; cresce com os seus pixels."
+      },
+      "pass.traced translucency denoise": {
+        "label": "remoção de ruído dos translúcidos traçados",
+        "hint": "Remove o ruído dos raios traçados das superfícies transparentes; cresce com os seus pixels."
+      },
+      "pass.traced translucency compose": {
+        "label": "composição dos translúcidos traçados",
+        "hint": "Compõe as superfícies transparentes traçadas sobre a imagem iluminada; cresce com os seus pixels."
+      },
+      "pass.ambient occlusion": {
+        "label": "oclusão ambiente",
+        "hint": "Determina quão escondido está cada pixel do que o rodeia, em várias resoluções; cresce com o tamanho de render."
+      },
+      "pass.subsurface scattering": {
+        "label": "dispersão subsuperficial",
+        "hint": "Espalha a luz sob as superfícies semelhantes à pele; cresce com os seus pixels."
+      },
+      "pass.responsiveness clear": {
+        "label": "limpeza da reatividade",
+        "hint": "Limpa a reatividade que os transparentes escrevem e o filtro temporal lê; cresce com o tamanho de render."
+      },
+      "pass.velocity": {
+        "label": "velocidade",
+        "hint": "Escreve o movimento de cada pixel para os passes que o leem; cresce com o tamanho de render."
+      },
+      "pass.temporal measure flickering luma": {
+        "label": "medição da cintilação de luminância (temporal)",
+        "hint": "Mede onde o brilho cintila de imagem para imagem; cresce com o tamanho de render."
+      },
+      "pass.temporal measure thin geometry coverage": {
+        "label": "medição da cobertura de geometria fina (temporal)",
+        "hint": "Mede quanto de cada pixel a geometria fina cobre; cresce com o tamanho de render."
+      },
+      "pass.temporal thin geometry weight relaxation": {
+        "label": "relaxamento do peso da geometria fina (temporal)",
+        "hint": "Relaxa o peso do histórico onde está a geometria fina; cresce com o tamanho de render."
+      },
+      "pass.tone table": {
+        "label": "tabela de tons",
+        "hint": "Coze a cor que o ecrã mostra para cada luz num pequeno cubo que a composição lê; corre quando as definições de tom mudam."
+      },
+      "pass.motion blur": {
+        "label": "desfoque de movimento",
+        "hint": "Desfoca ao longo do movimento dos pixels: os seus blocos, a sua extensão e o filtro; cresce com o tamanho de render e o movimento."
+      },
+      "pass.depth of field": {
+        "label": "profundidade de campo",
+        "hint": "Desfoca o que está fora de foco: os seus círculos, blocos, recolhas e sprites; cresce com o tamanho de render e o desfoque."
+      },
+      "pass.post process material": {
+        "label": "material de pós-processamento",
+        "hint": "Aplica um material de pós-processamento a toda a imagem; cresce com o tamanho de render e o trabalho do material."
+      },
+      "pass.custom depth": {
+        "label": "profundidade personalizada",
+        "hint": "Escreve a profundidade e o stencil personalizados dos objetos que os pedem; cresce com esses objetos."
+      },
+      "pass.page install": {
+        "label": "instalação de páginas",
+        "hint": "Instala no dispositivo as páginas de geometria acabadas de carregar; cresce com as páginas que chegam."
+      },
+      "pass.ray query": {
+        "label": "consulta de raios",
+        "hint": "Responde na GPU aos raios de seleção da página; cresce com os raios pedidos."
+      },
+      "pass.hair strands": {
+        "label": "madeixas de cabelo",
+        "hint": "Qualquer passe das madeixas de cabelo: a sua simulação, sombras, voxels e desenho; cresce com as madeixas."
+      },
+      "pass.sun distance field shadow": {
+        "label": "sombra do sol por campo de distância",
+        "hint": "Traça as sombras distantes do sol através dos campos de distância; cresce com o tamanho de render."
+      },
+      "pass.distance field occlusion": {
+        "label": "oclusão por campo de distância",
+        "hint": "Traça a oclusão ambiente através dos campos de distância; cresce com o tamanho de render."
+      },
+      "pass.global distance field": {
+        "label": "campo de distância global",
+        "hint": "Constrói o campo de distância global que os traçados leem; cresce com as malhas que se movem."
+      },
+      "pass.mesh distance field": {
+        "label": "campo de distância da malha",
+        "hint": "Constrói o campo de distância próprio de uma malha; corre quando uma malha precisa de um."
+      },
+      "pass.path tracer": {
+        "label": "path tracer",
+        "hint": "Qualquer passe do path tracer: as suas amostras, tabelas e apresentação; cresce com as amostras por pixel."
+      },
+      "pass.air": {
+        "label": "ar",
+        "hint": "Constrói as tabelas de consulta da atmosfera; cresce com os movimentos do sol."
+      },
+      "pass.sky": {
+        "label": "céu",
+        "hint": "Desenha o céu sobre a imagem, captura a luz do céu e filtra-a; cresce com os pixels de céu e as suas capturas."
+      },
+      "pass.opaque haze": {
+        "label": "névoa sobre opacos",
+        "hint": "Coloca a névoa da atmosfera sobre as superfícies opacas; cresce com o tamanho de render."
+      },
+      "pass.cloud": {
+        "label": "nuvens",
+        "hint": "Qualquer passe das nuvens volumétricas; cresce com os pixels de nuvem e os seus passos."
+      },
+      "pass.light shafts": {
+        "label": "raios de luz",
+        "hint": "Desenha os raios de luz do sol; cresce com o tamanho de render."
+      },
+      "pass.surface rewrite": {
+        "label": "reescrita de superfícies",
+        "hint": "Reescreve as superfícies que o céu e o nevoeiro alteram; cresce com o tamanho de render."
+      },
+      "pass.debug lines appended": {
+        "label": "linhas de depuração acrescentadas",
+        "hint": "Acrescenta as linhas de uma vista de depuração; só enquanto essa vista é mostrada."
+      },
+      "pass.inspection reflection": {
+        "label": "reflexo de inspeção",
+        "hint": "Os kernels de reflexo da inspeção; só enquanto uma inspeção está aberta."
+      },
+      "reason.lost": {
+        "label": "dispositivo perdido",
+        "hint": "O dispositivo GPU perdeu-se: a imagem é redesenhada assim que ele volta."
+      },
+      "reason.capturing": {
+        "label": "a capturar",
+        "hint": "Uma captura está em curso: as suas imagens são desenhadas."
+      },
+      "reason.capturePending": {
+        "label": "captura pedida",
+        "hint": "Foi pedida uma captura que espera pela sua imagem."
+      },
+      "reason.frameEncoder": {
+        "label": "codificador do quadro",
+        "hint": "Os comandos do quadro ainda estão a ser gravados: a imagem ainda não pode ser mantida."
+      },
+      "reason.metricsPending": {
+        "label": "métricas pendentes",
+        "hint": "As contagens da última imagem ainda não voltaram da GPU."
+      },
+      "reason.cutMoving": {
+        "label": "corte em movimento",
+        "hint": "O corte da geometria ainda está a mudar."
+      },
+      "reason.overBudget": {
+        "label": "acima do orçamento",
+        "hint": "O corte quer mais do que o seu orçamento permite: continua a refinar."
+      },
+      "reason.noOccluderHistory": {
+        "label": "sem histórico de oclusores",
+        "hint": "O teste de oclusão ainda não tem uma última imagem contra a qual testar."
+      },
+      "reason.deferredDrops": {
+        "label": "descartes adiados",
+        "hint": "Geometria que o corte largou ainda espera ser descartada."
+      },
+      "reason.bootstrap": {
+        "label": "a arrancar",
+        "hint": "A vista está nas suas primeiras imagens."
+      },
+      "reason.residencyBusy": {
+        "label": "páginas a carregar",
+        "hint": "Páginas de geometria ainda estão a carregar ou a instalar."
+      },
+      "reason.clustersOwed": {
+        "label": "clusters em dívida",
+        "hint": "Clusters pedidos pelo corte ainda não foram desenhados."
+      },
+      "reason.texturesPending": {
+        "label": "texturas pendentes",
+        "hint": "Blocos de textura pedidos pela vista ainda estão a carregar."
+      },
+      "reason.shadowsPending": {
+        "label": "sombras pendentes",
+        "hint": "As páginas de sombra de que a vista precisa ainda não estão todas desenhadas."
+      },
+      "reason.cutPending": {
+        "label": "corte pendente",
+        "hint": "Foi pedido um novo corte ainda não adotado."
+      },
+      "reason.bounceProbes": {
+        "label": "sondas do rebatimento",
+        "hint": "As sondas da luz rebatida ainda estão a convergir."
+      },
+      "reason.deforming": {
+        "label": "a deformar",
+        "hint": "Geometria está a ser deformada nesta imagem."
+      },
+      "reason.reflections": {
+        "label": "reflexos",
+        "hint": "Os reflexos ainda estão a convergir."
+      },
+      "reason.hlodWarming": {
+        "label": "HLOD em preparação",
+        "hint": "Níveis HLOD ainda estão a ser preparados."
+      },
+      "reason.exposure": {
+        "label": "exposição",
+        "hint": "A exposição automática ainda se está a adaptar."
+      },
+      "reason.fogVolume": {
+        "label": "volume do nevoeiro",
+        "hint": "O volume do nevoeiro ainda está a convergir."
+      },
+      "reason.translucencyVolume": {
+        "label": "volume de translucidez",
+        "hint": "O volume de iluminação dos translúcidos ainda está a convergir."
+      },
+      "reason.translucencyGi": {
+        "label": "GI dos translúcidos",
+        "hint": "A luz indireta das superfícies transparentes ainda está a convergir."
+      },
+      "reason.screenProbes": {
+        "label": "sondas de ecrã",
+        "hint": "As sondas de ecrã ainda estão a convergir."
+      },
+      "reason.occlusion": {
+        "label": "oclusão",
+        "hint": "Os veredictos de oclusão ainda estão a assentar."
+      },
+      "reason.casterSettling": {
+        "label": "projetores de sombra a assentar",
+        "hint": "Projetores de sombra moveram-se recentemente: as suas sombras ainda estão a assentar."
+      },
+      "reason.noisePhase": {
+        "label": "fase do ruído",
+        "hint": "A imagem é uma das fases do ruído de que o histórico temporal precisa para assentar."
+      },
+      "term.taaConverging": {
+        "label": "TAA a convergir",
+        "hint": "O antialiasing temporal ainda não reuniu o seu histórico: cada imagem é desenhada até o ter."
+      },
+      "term.frameDifference": {
+        "label": "diferença de quadros",
+        "hint": "A vista de diferença de quadros desenha cada imagem para a comparar com a anterior."
+      },
+      "term.surfaceCache": {
+        "label": "cache de superfícies",
+        "hint": "A cache de superfícies está a atualizar os seus cartões."
+      },
+      "term.pathTracing": {
+        "label": "path tracing",
+        "hint": "O path tracer acrescenta amostras em cada imagem."
+      },
+      "term.guides": {
+        "label": "guias",
+        "hint": "Guias animadas são desenhadas sobre a imagem."
+      },
+      "term.hairDebug": {
+        "label": "depuração do cabelo",
+        "hint": "Uma vista de depuração do cabelo é mostrada."
+      },
+      "term.effects": {
+        "label": "efeitos",
+        "hint": "Um efeito muda com o tempo."
+      },
+      "term.postProcessMaterialsAnimated": {
+        "label": "pós-processamento animado",
+        "hint": "Um material de pós-processamento anima-se."
+      },
+      "term.particles": {
+        "label": "partículas",
+        "hint": "Há partículas vivas."
+      },
+      "term.lightFunctions": {
+        "label": "funções de luz",
+        "hint": "Uma função de luz anima-se."
+      },
+      "term.fogSunLightFunction": {
+        "label": "função de luz do sol no nevoeiro",
+        "hint": "A função de luz do sol no nevoeiro anima-se."
+      },
+      "term.lightProfiles": {
+        "label": "perfis de luz",
+        "hint": "Um perfil de luz muda."
+      },
+      "term.ambientCubemap": {
+        "label": "cubemap ambiente",
+        "hint": "O cubemap ambiente mistura-se."
+      },
+      "term.lightShapes": {
+        "label": "formas das luzes",
+        "hint": "As formas das luzes são mostradas."
+      },
+      "term.graphsAnimated": {
+        "label": "materiais animados",
+        "hint": "O grafo de um material anima-se."
+      },
+      "term.blendGraphsAnimated": {
+        "label": "transparentes animados",
+        "hint": "O grafo de um material transparente anima-se."
+      },
+      "term.fogVolumeAnimated": {
+        "label": "nevoeiro animado",
+        "hint": "Um volume de nevoeiro anima-se."
+      },
+      "term.clouds": {
+        "label": "nuvens",
+        "hint": "As nuvens movem-se."
+      },
+      "term.skyCubemaps": {
+        "label": "cubemaps do céu",
+        "hint": "Os cubemaps do céu misturam-se."
+      },
+      "term.finishAnimated": {
+        "label": "acabamento animado",
+        "hint": "O acabamento da imagem (grão, vinheta…) anima-se."
+      },
+      "answer.device refusal": {
+        "label": "recusa do dispositivo",
+        "hint": "O dispositivo recusou o trabalho: a imagem espera até ser pedida de novo."
+      },
+      "answer.targets in flight": {
+        "label": "alvos em uso",
+        "hint": "Os alvos da última imagem ainda estão a ser usados pela GPU."
+      },
+      "answer.lit program": {
+        "label": "programa iluminado",
+        "hint": "O programa da imagem iluminada ainda está a compilar."
+      },
+      "answer.sorted translucency buffers": {
+        "label": "buffers dos translúcidos ordenados",
+        "hint": "Os buffers da translucidez ordenada ainda estão a ser criados."
+      },
+      "answer.translucent object shadow table": {
+        "label": "tabela de sombras translúcidas",
+        "hint": "A tabela de sombras dos objetos translúcidos ainda está a ser criada."
+      },
+      "answer.pipelines": {
+        "label": "pipelines",
+        "hint": "Pipelines de GPU ainda estão a compilar."
+      },
+      "answer.targets refused": {
+        "label": "alvos recusados",
+        "hint": "O dispositivo recusou o tamanho dos alvos; é pedido de novo após uma espera."
+      },
+      "because.firstImage": {
+        "label": "primeira imagem",
+        "hint": "A primeira imagem da vista."
+      },
+      "because.scene": {
+        "label": "cena alterada",
+        "hint": "Algo da cena moveu-se desde a imagem mantida."
+      },
+      "because.view": {
+        "label": "vista alterada",
+        "hint": "A vista moveu-se desde a imagem mantida."
+      },
+      "because.resources": {
+        "label": "recursos alterados",
+        "hint": "Um recurso que a imagem lê mudou desde a imagem mantida."
+      },
+      "because.confirming": {
+        "label": "a confirmar",
+        "hint": "A imagem após uma mudança, desenhada mais uma vez para a confirmar."
+      },
+      "because.unstable": {
+        "label": "instável",
+        "hint": "O trabalho das duas últimas imagens diferia."
+      },
+      "because.noiseClock": {
+        "label": "relógio do ruído",
+        "hint": "O relógio do ruído mudou."
+      },
+      "because.swapped": {
+        "label": "trocada",
+        "hint": "Uma imagem calma desenhada em alvos trocados."
+      },
+      "because.forced": {
+        "label": "forçada",
+        "hint": "A medição da pose parada pediu-a."
+      },
+      "cause.sceneWritten": {
+        "label": "cena escrita",
+        "hint": "A página escreveu uma pose, uma visibilidade ou uma luz da cena."
+      },
+      "cause.sceneReshaped": {
+        "label": "cena reorganizada",
+        "hint": "A página adicionou, removeu ou moveu um nó."
+      },
+      "cause.diagnosticView": {
+        "label": "modo de vista",
+        "hint": "O modo de vista de diagnóstico mudou."
+      },
+      "cause.materialChanged": {
+        "label": "material alterado",
+        "hint": "A página alterou um material."
+      },
+      "cause.shadingModels": {
+        "label": "modelos de sombreamento",
+        "hint": "Os modelos de sombreamento mudaram."
+      },
+      "cause.sceneLights": {
+        "label": "luzes definidas",
+        "hint": "A página definiu as luzes."
+      },
+      "cause.fogVolumes": {
+        "label": "volumes de nevoeiro",
+        "hint": "A página definiu os volumes de nevoeiro."
+      },
+      "cause.posesMoved": {
+        "label": "poses movidas",
+        "hint": "O motor moveu poses."
+      },
+      "cause.verticesRewritten": {
+        "label": "vértices reescritos",
+        "hint": "O motor reescreveu vértices."
+      },
+      "cause.placementsMoved": {
+        "label": "posicionamentos movidos",
+        "hint": "O motor moveu posicionamentos."
+      },
+      "cause.placementsGrown": {
+        "label": "posicionamentos ampliados",
+        "hint": "A tabela de posicionamentos cresceu."
+      },
+      "cause.placementsComposed": {
+        "label": "posicionamentos compostos",
+        "hint": "Os posicionamentos foram compostos de novo."
+      },
+      "cause.cameraCut": {
+        "label": "corte de câmara",
+        "hint": "Outra câmara, ou um corte do histórico da vista."
+      },
+      "cause.viewMoved": {
+        "label": "vista movida",
+        "hint": "A pose, a projeção ou o viewport da vista mudou."
+      },
+      "cause.viewQuality": {
+        "label": "qualidade da vista",
+        "hint": "O intervalo de profundidade ou a qualidade da vista mudou."
+      },
+      "cause.simpleLights": {
+        "label": "luzes simples",
+        "hint": "As luzes simples mudaram."
+      },
+      "cause.skyFaceWaiting": {
+        "label": "face do céu à espera",
+        "hint": "Uma face do cubo do céu espera ser desenhada."
+      },
+      "cause.skyMeshesDrawn": {
+        "label": "malhas do céu desenhadas",
+        "hint": "As malhas do céu foram desenhadas."
+      },
+      "cause.reflectionDrawn": {
+        "label": "espelho desenhado",
+        "hint": "Um reflexo plano foi desenhado."
+      },
+      "cause.reflectionChanged": {
+        "label": "espelho alterado",
+        "hint": "As definições de um reflexo plano mudaram."
+      },
+      "cause.customDepthMoved": {
+        "label": "jitter da profundidade personalizada",
+        "hint": "O jitter da profundidade personalizada moveu-se."
+      },
+      "cause.shadowSettings": {
+        "label": "definições de sombras",
+        "hint": "As definições das sombras mudaram."
+      },
+      "cause.shadowOrigin": {
+        "label": "origem das sombras",
+        "hint": "A origem das sombras moveu-se."
+      },
+      "cause.captureAccumulation": {
+        "label": "acumulação de captura",
+        "hint": "Uma captura acumula as suas imagens."
+      },
+      "cause.targetsMade": {
+        "label": "alvos criados",
+        "hint": "Os alvos da imagem foram recriados."
+      },
+      "cause.taaLevel": {
+        "label": "nível de TAA",
+        "hint": "O nível do antialiasing temporal mudou."
+      },
+      "cause.taaRigged": {
+        "label": "TAA remontado",
+        "hint": "O antialiasing temporal foi montado de novo."
+      },
+      "cause.vertexPoolGrown": {
+        "label": "pool de vértices ampliado",
+        "hint": "O pool de vértices cresceu."
+      },
+      "cause.inspection": {
+        "label": "inspeção",
+        "hint": "Uma inspeção mudou."
+      },
+      "cause.litProgram": {
+        "label": "programa iluminado",
+        "hint": "O programa da imagem iluminada mudou."
+      },
+      "cause.feedbackVariant": {
+        "label": "variante do feedback",
+        "hint": "O feedback de texturas mudou de variante."
+      },
+      "cause.catalogueCover": {
+        "label": "capa do catálogo",
+        "hint": "A capa do catálogo mudou."
+      },
+      "cause.worldCover": {
+        "label": "capa do mundo",
+        "hint": "A capa do mundo mudou."
+      },
+      "cause.materialGraphs": {
+        "label": "grafos de materiais",
+        "hint": "Grafos de materiais mudaram."
+      },
+      "cause.targetsResized": {
+        "label": "alvos redimensionados",
+        "hint": "Os alvos da imagem foram redimensionados."
+      },
+      "cause.textureColor": {
+        "label": "cor da textura",
+        "hint": "A cor de uma textura mudou."
+      },
+      "cause.tilesServed": {
+        "label": "blocos servidos",
+        "hint": "Chegaram blocos de textura."
+      },
+      "cause.layersGrown": {
+        "label": "camadas ampliadas",
+        "hint": "As camadas de textura cresceram."
+      },
+      "cause.bounceSwitched": {
+        "label": "rebatimento comutado",
+        "hint": "A luz rebatida foi comutada."
+      },
+      "cause.screenProbes": {
+        "label": "sondas de ecrã",
+        "hint": "As sondas de ecrã mudaram."
+      },
+      "cause.bounceProbes": {
+        "label": "sondas do rebatimento",
+        "hint": "As sondas do rebatimento mudaram."
+      },
+      "cause.memoryBudget": {
+        "label": "orçamento de memória",
+        "hint": "O orçamento de memória mudou."
+      },
+      "cause.texturePoolGrown": {
+        "label": "pool de texturas ampliado",
+        "hint": "O pool de texturas cresceu."
+      },
+      "cause.cutReleased": {
+        "label": "corte libertado",
+        "hint": "Geometria do corte foi libertada."
+      },
+      "cause.residentSynced": {
+        "label": "residentes sincronizados",
+        "hint": "A geometria residente foi sincronizada."
+      },
+      "cause.clearColor": {
+        "label": "cor de limpeza",
+        "hint": "A cor de limpeza mudou."
+      },
+      "cause.textureAppended": {
+        "label": "textura adicionada",
+        "hint": "Foi adicionada uma textura."
+      },
+      "cause.textureReleased": {
+        "label": "textura libertada",
+        "hint": "Foi libertada uma textura."
+      },
+      "cause.pageLanded": {
+        "label": "página chegada",
+        "hint": "Chegou uma página de geometria."
+      },
+      "cause.pageDropped": {
+        "label": "página descartada",
+        "hint": "Foi descartada uma página de geometria."
+      },
+      "cause.pageResidence": {
+        "label": "residência da página",
+        "hint": "A residência de uma página mudou."
+      },
+      "cause.cutAdopted": {
+        "label": "corte adotado",
+        "hint": "Foi adotado um novo corte da geometria."
+      },
+      "cause.cutFrozen": {
+        "label": "corte congelado",
+        "hint": "O corte foi congelado ou largado."
+      },
+      "cause.deviceGone": {
+        "label": "dispositivo perdido",
+        "hint": "O dispositivo GPU perdeu-se."
+      },
+      "cause.coverPending": {
+        "label": "capa pendente",
+        "hint": "Uma capa espera ser desenhada."
+      },
+      "cause.renderScale": {
+        "label": "escala de render",
+        "hint": "A escala de render mudou."
+      },
+      "cause.worldCells": {
+        "label": "células do mundo",
+        "hint": "As células do mundo mudaram."
+      },
+      "cause.blendPipelines": {
+        "label": "pipelines de transparentes",
+        "hint": "Foram criadas pipelines de transparentes."
+      },
+      "cause.shadowSetLost": {
+        "label": "conjunto de sombras perdido",
+        "hint": "Perdeu-se um conjunto de páginas de sombra."
+      },
+      "cause.skinTable": {
+        "label": "tabela de skinning",
+        "hint": "A tabela de skinning mudou."
+      },
+      "cause.volumePrograms": {
+        "label": "programas de volume",
+        "hint": "Programas de volume mudaram."
+      },
+      "cause.volumeGrid": {
+        "label": "grelha de volume",
+        "hint": "Uma grelha de volume mudou."
+      },
+      "cause.hairStrands": {
+        "label": "madeixas de cabelo",
+        "hint": "Madeixas de cabelo mudaram."
+      },
+      "cause.animation": {
+        "label": "animação",
+        "hint": "Um clip avançou."
+      },
+      "cause.physics": {
+        "label": "física",
+        "hint": "Um corpo avançou um passo."
+      },
+      "cause.invalidate": {
+        "label": "invalidação",
+        "hint": "A página pediu uma imagem: world.invalidate()."
       }
     },
     "failure": {
@@ -753,8 +2659,7 @@
       "waiting": "À espera do motor (#{issue})"
     },
     "views": {
-      "beauty": "imagem",
-      "wireframe": "triângulos",
+      "beauty": "Render",
       "triangles": "triângulos coloridos",
       "xray": "raio X",
       "clusters": "clusters",
@@ -763,7 +2668,6 @@
       "screen-error": "erro na tela",
       "materials": "materiais",
       "visibility": "páginas vistas",
-      "pages": "páginas na memória",
       "texture-mip": "tamanho da textura",
       "overdraw": "sobredesenho",
       "frame-difference": "diferença de imagem",
@@ -779,10 +2683,68 @@
       "taa-reprojection": "reprojeção TAA",
       "taa-motion": "movimento TAA",
       "taa-thin": "geometria fina TAA",
-      "taa-material-history": "histórico TAA por material"
+      "taa-material-history": "histórico TAA por material",
+      "voxels": "voxels",
+      "indirect-diffuse": "luz indireta",
+      "surface-cache-albedo": "cache de superfícies: albedo",
+      "surface-cache-normal": "cache de superfícies: normais",
+      "surface-cache-depth": "cache de superfícies: profundidade",
+      "surface-cache-cards": "cache de superfícies: cartões",
+      "surface-cache-fill": "cache de superfícies: ocupação",
+      "surface-cache-age": "cache de superfícies: idade",
+      "hair-light-bounds": "cabelo: caixas",
+      "hair-deep-opacity-maps": "cabelo: sombras profundas",
+      "hair-macro-group-screen-rect": "cabelo: molduras na tela",
+      "hair-voxels-density": "cabelo: densidade de voxels",
+      "sampled-lights-overview": "muitas luzes: visão geral",
+      "sampled-lights-shadow-casters": "muitas luzes: projetores de sombra",
+      "sampled-lights-shadow-caster-quality": "muitas luzes: qualidade dos projetores",
+      "sampled-lights-complexity-opaque": "muitas luzes: custo nas superfícies",
+      "sampled-lights-complexity-hair-strands": "muitas luzes: custo no cabelo",
+      "sampled-lights-complexity-front-layer": "muitas luzes: custo na camada frontal",
+      "sampled-lights-complexity-volume": "muitas luzes: custo na névoa",
+      "sampled-lights-complexity-translucency-volume": "muitas luzes: custo na translucidez",
+      "subsurface-profiles": "perfis de subsuperfície",
+      "virtual-shadow-map-shadow-casters": "mapas de sombra: projetores",
+      "virtual-shadow-map-clipmap-virtual-space": "mapas de sombra: clipmap do sol",
+      "virtual-shadow-map-shadow-factor": "mapas de sombra: luz recebida",
+      "virtual-shadow-map-clipmap-or-mip": "mapas de sombra: nível lido",
+      "virtual-shadow-map-virtual-page": "mapas de sombra: página lida",
+      "virtual-shadow-map-cached-page": "mapas de sombra: páginas em cache",
+      "virtual-shadow-map-ray-count": "mapas de sombra: número de raios",
+      "virtual-shadow-map-general-debug": "mapas de sombra: distância do oclusor",
+      "virtual-shadow-map-dirty-page": "mapas de sombra: páginas desenhadas",
+      "virtual-shadow-map-gpu-invalidated-page": "mapas de sombra: páginas invalidadas",
+      "virtual-shadow-map-merged-page": "mapas de sombra: páginas mescladas",
+      "virtual-shadow-map-overdraw": "mapas de sombra: overdraw",
+      "rect-light-atlas": "atlas das luzes retangulares",
+      "light-profile-atlas": "atlas dos perfis de luz",
+      "surface-cache-direct-stats": "cache de superfícies: atualização direta",
+      "surface-cache-indirect-stats": "cache de superfícies: atualização indireta",
+      "surface-cache-direct-lighting-stats": "cache de superfícies: luzes reunidas",
+      "surface-cache-scene-stats": "cache de superfícies: contagens",
+      "surface-cache-primitive-groups": "cache de superfícies: caixas dos objetos",
+      "radiance-cache-stats": "cache de radiância: números",
+      "screen-probe-gather-debug": "sondas de tela: quantidade",
+      "screen-probe-tile-stats": "sondas de tela: blocos",
+      "screen-probe-placement": "sondas de tela: posicionamento",
+      "screen-probe-traces": "sondas de tela: raios",
+      "reflection-traces": "raio de reflexão",
+      "radiance-cache-probes": "cache de radiância: sondas",
+      "scene-visualization": "cena traçada",
+      "material-properties": "material sob o cursor",
+      "heterogeneous-volumes-dda-marching": "volumes: marcha DDA",
+      "heterogeneous-volumes-sample-marching": "volumes: marcha por amostras",
+      "heterogeneous-volumes-sample-majorant": "volumes: amostras do majorante",
+      "heterogeneous-volumes-sample-max-majorant": "volumes: amostras do majorante máximo",
+      "heterogeneous-volumes-sample-majorant-dda": "volumes: amostras DDA do majorante",
+      "heterogeneous-volumes-delta-tracking": "volumes: delta tracking",
+      "heterogeneous-volumes-ratio-tracking": "volumes: ratio tracking",
+      "heterogeneous-volumes-spectral-ratio-tracking": "volumes: ratio tracking espectral",
+      "heterogeneous-volumes-tracking-majorant-dda": "volumes: tracking DDA do majorante"
     },
     "viewHints": {
-      "wireframe": "As arestas de cada triângulo desenhado, só linhas: ao longe, menos triângulos e maiores.",
+      "beauty": "A imagem normal.",
       "triangles": "Uma cor sólida por triângulo desenhado.",
       "xray": "As arestas de cada triângulo que o motor envia, vistas através das paredes: o que o culling descartou não aparece. Congele o culling e afaste-se para conferir.",
       "clusters": "Uma cor por cluster, o grupo de triângulos que o corte troca por um mais simples.",
@@ -791,7 +2753,6 @@
       "screen-error": "Verde: exato. Amarelo: perto do erro em pixels permitido. Vermelho: no limite.",
       "materials": "Uma cor por tipo de material.",
       "visibility": "Verde: cada página desenhada nesta imagem.",
-      "pages": "Verde: cada página na memória e desenhada.",
       "frame-difference": "Preto: o pixel não mudou desde a imagem anterior. De cinza a branco: mudou, amplificado oito vezes — o que cintila acende.",
       "reflections": "Só a luz que as superfícies refletem, do traçado na tela e das sondas; preto onde nada se reflete.",
       "shadows": "Quanto da luz do sol chega a cada superfície — branco: iluminada, preto: na sombra. Sem cor de material.",
@@ -805,7 +2766,67 @@
       "taa-reprojection": "Por que o histórico recomeça — vermelho: desocluído, verde: desocluído e preenchido com o movimento do oclusor, azul: fora da tela anterior.",
       "taa-motion": "O movimento que a acumulação vê — vermelho: em movimento para a medida da cintilação, verde: uma animação de pixels, azul: a borda de reprojeção (branco: movimento uniforme).",
       "taa-thin": "Geometria fina — vermelho: quanto o limite do histórico relaxa, verde: região de buracos de cluster, azul: histórico de cobertura.",
-      "taa-material-history": "A parte do histórico de cada material, em cinza — branco: 1, a suavização completa; preto: 0, só a imagem atual."
+      "taa-material-history": "A parte do histórico de cada material, em cinza — branco: 1, a suavização completa; preto: 0, só a imagem atual.",
+      "voxels": "O que é desenhado como voxels, uma cor por nível; os triângulos em cinza.",
+      "indirect-diffuse": "Só a luz indireta (rebotes, ambiente, céu) sobre uma superfície cinza médio.",
+      "surface-cache-albedo": "O atlas dos cartões de superfície: a cor que capturaram.",
+      "surface-cache-normal": "O atlas: as normais que os cartões capturaram.",
+      "surface-cache-depth": "O atlas: a profundidade de cada texel no seu cartão, em cinza.",
+      "surface-cache-cards": "O atlas: uma cor por cartão.",
+      "surface-cache-fill": "O atlas: verde o nível mais grosseiro sempre mantido, azul páginas mais finas, preto livre.",
+      "surface-cache-age": "O atlas: imagens desde a captura de cada página, branco recente, azul antigo.",
+      "hair-light-bounds": "As caixas das mechas de cabelo e os frustums das suas sombras sobre a imagem.",
+      "hair-deep-opacity-maps": "A profundidade e as camadas de um mapa de sombras profundas do cabelo sobre a imagem.",
+      "hair-macro-group-screen-rect": "Uma moldura verde ao redor dos pixels que cada grupo de mechas cobre.",
+      "hair-voxels-density": "Quantas mechas o raio de cada pixel atravessa, do verde ao vermelho.",
+      "sampled-lights-overview": "A vista dos projetores de sombra e a da sua qualidade lado a lado.",
+      "sampled-lights-shadow-casters": "O que os raios de sombra atingem em cada pixel, uma cor por objeto.",
+      "sampled-lights-shadow-caster-quality": "Vermelho: falta um projetor de sombra; azul: um à frente da superfície.",
+      "sampled-lights-complexity-opaque": "As luzes da célula sob o cursor e um mapa de calor do seu custo de amostragem.",
+      "sampled-lights-complexity-hair-strands": "O custo de amostragem das luzes nas mechas de cabelo.",
+      "sampled-lights-complexity-front-layer": "As luzes na camada transparente mais próxima e um mapa de calor do seu custo.",
+      "sampled-lights-complexity-volume": "O custo de amostragem das luzes no volume de névoa.",
+      "sampled-lights-complexity-translucency-volume": "O custo de amostragem das luzes no volume de iluminação da translucidez.",
+      "subsurface-profiles": "O perfil de subsuperfície de cada pixel, uma cor por perfil.",
+      "virtual-shadow-map-shadow-casters": "A caixa de cada objeto cujo movimento redesenha páginas de sombra.",
+      "virtual-shadow-map-clipmap-virtual-space": "O clipmap de sombra do sol no seu espaço virtual.",
+      "virtual-shadow-map-shadow-factor": "Amarelo: iluminado; azul escuro: na sombra.",
+      "virtual-shadow-map-clipmap-or-mip": "O nível de sombra que cada pixel lê, uma cor por nível.",
+      "virtual-shadow-map-virtual-page": "A página de sombra que cada pixel lê, uma cor por página.",
+      "virtual-shadow-map-cached-page": "Se a página de sombra que cada pixel lê foi mantida ou redesenhada.",
+      "virtual-shadow-map-ray-count": "Os raios de sombra traçados por pixel, do verde ao vermelho.",
+      "virtual-shadow-map-general-debug": "A distância ao oclusor da sombra de cada pixel, em cinza.",
+      "virtual-shadow-map-dirty-page": "As páginas de sombra desenhadas nesta imagem.",
+      "virtual-shadow-map-gpu-invalidated-page": "As páginas de sombra que objetos em movimento invalidaram.",
+      "virtual-shadow-map-merged-page": "As páginas de sombra cuja camada estática foi mesclada.",
+      "virtual-shadow-map-overdraw": "Quantas vezes a rasterização das sombras desenhou cada texel.",
+      "rect-light-atlas": "O atlas das imagens das luzes retangulares.",
+      "light-profile-atlas": "O atlas dos perfis IES das luzes.",
+      "surface-cache-direct-stats": "Números da atualização da luz direta do cache de superfícies.",
+      "surface-cache-indirect-stats": "Números da atualização da luz indireta do cache de superfícies.",
+      "surface-cache-direct-lighting-stats": "As luzes que a atualização direta do cache de superfícies reúne, e seus tamanhos.",
+      "surface-cache-scene-stats": "Contagens dos objetos e cartões no cache de superfícies.",
+      "surface-cache-primitive-groups": "A caixa de cada objeto que tem cartões de superfície.",
+      "radiance-cache-stats": "Números de atualização das sondas de luz do mundo.",
+      "screen-probe-gather-debug": "Quantas sondas de tela, uniformes e adaptativas.",
+      "screen-probe-tile-stats": "Os blocos de cada modo de integração das sondas de tela.",
+      "screen-probe-placement": "Onde ficam as sondas de tela, um quad cada.",
+      "screen-probe-traces": "Os raios da sonda mais próxima do cursor, coloridos pela sua luz.",
+      "reflection-traces": "O raio de reflexão do pixel sob o cursor, com sua distância e sua luz.",
+      "radiance-cache-probes": "Uma esfera em cada sonda de luz, colorida pela luz que guarda.",
+      "scene-visualization": "A cena traçada a partir da câmera, iluminada pelo cache de superfícies.",
+      "material-properties": "O material do pixel sob o cursor, como tabela.",
+      "texture-mip": "O tamanho de textura que cada superfície lê.",
+      "overdraw": "Quantas vezes cada pixel é desenhado.",
+      "heterogeneous-volumes-dda-marching": "A luz através da grade de voxels do volume, encontrada por marcha DDA; precisa de um volume heterogêneo.",
+      "heterogeneous-volumes-sample-marching": "A luz através da grade de voxels do volume, encontrada por marcha por amostras; precisa de um volume heterogêneo.",
+      "heterogeneous-volumes-sample-majorant": "A luz através da grade de voxels do volume, encontrada por amostras do majorante; precisa de um volume heterogêneo.",
+      "heterogeneous-volumes-sample-max-majorant": "A luz através da grade de voxels do volume, encontrada por amostras do majorante máximo; precisa de um volume heterogêneo.",
+      "heterogeneous-volumes-sample-majorant-dda": "A luz através da grade de voxels do volume, encontrada por amostras DDA do majorante; precisa de um volume heterogêneo.",
+      "heterogeneous-volumes-delta-tracking": "A luz através da grade de voxels do volume, encontrada por delta tracking; precisa de um volume heterogêneo.",
+      "heterogeneous-volumes-ratio-tracking": "A luz através da grade de voxels do volume, encontrada por ratio tracking; precisa de um volume heterogêneo.",
+      "heterogeneous-volumes-spectral-ratio-tracking": "A luz através da grade de voxels do volume, encontrada por ratio tracking espectral; precisa de um volume heterogêneo.",
+      "heterogeneous-volumes-tracking-majorant-dda": "A luz através da grade de voxels do volume, encontrada por tracking DDA do majorante; precisa de um volume heterogêneo."
     }
   },
   "a-city-from-rules": {
@@ -1514,16 +3535,7 @@
   "detail-by-pixel-error": {
     "banner": "Arraste para descer a avenida. Chegue perto de uma urna, depois vá para longe.",
     "controls": {
-      "pixelError": "Erro em pixels",
-      "view": "Vista"
-    },
-    "choices": {
-      "view": {
-        "beauty": "imagem",
-        "lod": "níveis de detalhe",
-        "screen-error": "erro na tela",
-        "triangles": "triângulos"
-      }
+      "pixelError": "Erro em pixels"
     },
     "readouts": {
       "trianglesDrawn": "Triângulos desenhados",
@@ -1841,6 +3853,16 @@
       "step": "Passo"
     }
   },
+  "engine-workbench": {
+    "banner": "Arraste para olhar em volta. Cada botão liga um mecanismo; a aba Por quê do painel de estatísticas diz quais imagens ele desenhou, por quê e quanto custaram.",
+    "controls": {
+      "invalidate": "Invalidar uma vez",
+      "nudge": "Empurrar a câmera",
+      "moving": "Uma caixa que se move",
+      "taa": "Antisserrilhamento temporal",
+      "scale": "Escala de renderização"
+    }
+  },
   "helpers-to-see-the-scene": {
     "banner": "Arraste para andar em volta. Desligue os ajudantes para ver só a imagem.",
     "controls": {
@@ -2124,15 +4146,7 @@
   "memory-on-a-budget": {
     "banner": "Arraste para olhar em volta. Dê menos memória e veja o que continua nítido.",
     "controls": {
-      "memory": "Memória",
-      "view": "Vista"
-    },
-    "choices": {
-      "view": {
-        "beauty": "imagem",
-        "lod": "níveis de detalhe",
-        "clusters": "clusters"
-      }
+      "memory": "Memória"
     }
   },
   "a-walk-through-the-city": {
@@ -2177,9 +4191,8 @@
     }
   },
   "a-map-of-what-the-engine-draws": {
-    "banner": "Clique na vista da esquerda e caminhe com W A S D; o mapa da direita mostra de cima o que essa vista calculou nesta imagem. Congele o corte e depois saia dele.",
+    "banner": "Clique na vista da esquerda e caminhe com W A S D; o mapa da direita mostra de cima o que essa vista calculou nesta imagem. Ative Congelar o culling no painel de estatísticas, embaixo à esquerda, e depois saia do corte.",
     "controls": {
-      "freeze": "Congelar",
       "frustum": "Frustum",
       "clusters": "Clusters",
       "shadows": "Páginas de sombra",
@@ -2276,19 +4289,9 @@
     }
   },
   "observatory-streamed": {
-    "banner": "Arraste para olhar em volta. Troque a vista para ver como o modelo é dividido.",
+    "banner": "Arraste para olhar em volta. Troque a vista no menu Vista do painel de estatísticas, embaixo à esquerda, para ver como o modelo é dividido.",
     "controls": {
-      "view": "Vista",
       "pixelError": "Erro em pixels"
-    },
-    "choices": {
-      "view": {
-        "clusters": "clusters",
-        "beauty": "imagem",
-        "pages": "páginas",
-        "lod": "níveis de detalhe",
-        "triangles": "triângulos"
-      }
     }
   },
   "one-clip-many-objects": {
@@ -2403,7 +4406,7 @@
         "triangles": "triângulos",
         "clusters": "clusters",
         "lod": "níveis de detalhe",
-        "pages": "páginas",
+        "visibility": "páginas",
         "beauty": "imagem"
       }
     },
@@ -2636,16 +4639,8 @@
   "ten-thousand-objects": {
     "banner": "Arraste para girar em volta do planeta. Role para dentro do anel de rochas.",
     "controls": {
-      "view": "Vista",
       "pixelError": "Erro em pixels",
       "drift": "Deriva"
-    },
-    "choices": {
-      "view": {
-        "beauty": "imagem",
-        "clusters": "clusters",
-        "lod": "níveis de detalhe"
-      }
     },
     "readouts": {
       "objectsScene": "Objetos na cena",
@@ -2908,14 +4903,7 @@
     "banner": "Arraste para olhar em volta. As sebes escondem os nós dourados.",
     "controls": {
       "hedgeHeight": "Altura das sebes",
-      "view": "Vista",
       "aboveOrInside": "Em cima ou dentro"
-    },
-    "choices": {
-      "view": {
-        "beauty": "imagem",
-        "visibility": "visibilidade"
-      }
     },
     "readouts": {
       "gildedKnots": "Nós dourados",

@@ -53,11 +53,9 @@
 
       const { sourceTriangles, totalNodes } = ring.metadata;
       controls({
-        view: ['beauty', 'clusters', 'lod'],
         pixelError: [0.5, 8, 1, 0.5],
         drift: () => drift.restart(),
       }, (values) => {
-        world.diagnostic.mode = values.view;
         world.pixelError = values.pixelError;
         world.invalidate();
       });

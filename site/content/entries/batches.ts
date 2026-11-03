@@ -12,15 +12,7 @@ export const BATCHES: EntryNote[] = [
     replaces: 'a loop of Box3.union, Box3.setFromObject',
   },
   {
-    id: 'invertMatrix4Batch',
-    replaces: 'a loop of Matrix4.invert, getNormalMatrix, compose, decompose',
-  },
-  {
     id: 'transformPointsBatch',
     replaces: 'a loop of Vector3.applyMatrix4, of Vector3.transformDirection',
-  },
-  {
-    id: 'srgbToLinearBatch',
-    replaces: 'a loop of Color.convertSRGBToLinear, convertLinearToSRGB',
   },
 ]

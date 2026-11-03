@@ -140,7 +140,6 @@
       let to = INSIDE;
       controls({
         hedgeHeight: [0.3, 4, 2.6, 0.1],
-        view: ['beauty', 'visibility'],
         aboveOrInside: () => {
           // From wherever the camera stands now, to the other end of the flight.
           to = to === INSIDE ? ABOVE : INSIDE;
@@ -148,7 +147,6 @@
         },
       }, (values) => {
         setHeight(values.hedgeHeight);
-        world.diagnostic.mode = values.view;
         world.invalidate();
       });
       readout('gildedKnots')(String(deadEnds));

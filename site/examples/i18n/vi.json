@@ -17,9 +17,7 @@
   },
   "kit": {
     "panel": {
-      "controls": "Cài đặt",
-      "view": "Chế độ xem",
-      "freeze": "Đóng băng loại bỏ"
+      "controls": "Cài đặt"
     },
     "menu": {
       "play": "Chơi",
@@ -53,11 +51,11 @@
       },
       "tab.cpu": {
         "label": "CPU",
-        "hint": "Nơi engine tiêu tốn thời gian CPU của một ảnh, là trung vị trong giây vừa qua; CPU ở tiêu đề là cả khung của luồng chính. Nhiều việc mỗi khung làm nó tăng."
+        "hint": "Nơi engine tiêu thời gian CPU của một ảnh, tính trung bình trong giây vừa qua; số CPU ở đầu bảng là toàn bộ khung của luồng chính. Nhiều việc hơn mỗi khung làm nó tăng."
       },
       "tab.shadows": {
-        "label": "Bóng đổ",
-        "hint": "Các lượt bóng đổ và bộ đếm trang của chúng; thời gian của chúng nằm trong thời gian GPU."
+        "label": "Bóng",
+        "hint": "Các lượt bóng và bộ đếm trang của chúng, của khung cuối; thời gian của chúng là một phần thời gian GPU."
       },
       "tab.memory": {
         "label": "Bộ nhớ",
@@ -101,7 +99,7 @@
       },
       "summary.frame": {
         "label": "Khung",
-        "hint": "Thời gian giữa hai ảnh hiển thị; tăng khi một bộ xử lý lâu hơn một lần làm tươi."
+        "hint": "Thời gian trung bình giữa hai ảnh được hiển thị trong giây vừa qua, nghịch đảo của tốc độ; tăng khi một bộ xử lý mất lâu hơn một lần làm mới."
       },
       "summary.gpu": {
         "label": "GPU",
@@ -109,15 +107,19 @@
       },
       "summary.cpu": {
         "label": "CPU",
-        "hint": "Thời gian trung vị của luồng chính cho một khung trong giây vừa qua; tăng theo việc gửi cho GPU."
+        "hint": "Thời gian trung bình của luồng chính cho mỗi khung trong giây vừa qua; tăng theo lượng việc gửi cho GPU."
       },
       "summary.wait": {
         "label": "Chờ",
-        "hint": "Thời gian khung chờ màn hình sau khi bộ xử lý chậm hơn xong việc."
+        "hint": "Khung trung bình trừ bộ xử lý bận hơn: thời gian chờ lần làm mới kế tiếp, khi hai bộ xử lý chạy song song."
       },
-      "summary.bottleneck": {
+      "summary.toNext": {
+        "label": "Sớm hơn một lần làm mới",
+        "hint": "Thời gian bộ xử lý đang giữ khung hình phải bớt đi để ảnh của nó đến sớm hơn một lần làm mới, và tốc độ khi đó đạt được."
+      },
+      "summary.bound": {
         "label": "Bị giới hạn bởi",
-        "hint": "Phán quyết của engine về điều giữ khung: giới hạn đầu tiên mà cửa sổ chạm tới."
+        "hint": "Điều đã giữ khung trong giây vừa qua: bộ xử lý có thời gian quyết định một ảnh thông thường ở lại trên màn hình bao nhiêu lần làm mới, hoặc nhịp màn hình khi không bộ xử lý nào quyết định."
       },
       "summary.screen": {
         "label": "Màn hình {hz} Hz",
@@ -137,7 +139,7 @@
       },
       "summary.gpuIdle": {
         "label": "GPU rảnh",
-        "hint": "Thời gian GPU nhàn rỗi trước ảnh được đo gần nhất; tăng khi CPU cấp việc trễ."
+        "hint": "Thời gian trung bình GPU rảnh trước một ảnh trong giây vừa qua, tối đa: bỏ ra phần việc được đo giữa các ảnh, tính vào phần việc không ai đo; tăng khi CPU cấp việc trễ."
       },
       "summary.mainView": {
         "label": "góc nhìn chính",
@@ -150,30 +152,6 @@
       "summary.budget": {
         "label": "ngân sách",
         "hint": "Thời gian một lần làm tươi cho phép một khung; đường nét đứt của biểu đồ."
-      },
-      "bottleneck.healthy": {
-        "label": "Màn hình",
-        "hint": "Khung nằm trong một lần làm tươi: tốc độ khung là của màn hình."
-      },
-      "bottleneck.memory_pressure": {
-        "label": "Giật",
-        "hint": "Các khung lâu hơn ngưỡng giật: giải phóng bộ nhớ hoặc giảm tải streaming."
-      },
-      "bottleneck.gpu_bound": {
-        "label": "GPU",
-        "hint": "GPU lâu hơn một lần làm tươi và giữ khung: giảm độ phân giải hoặc ánh sáng."
-      },
-      "bottleneck.cpu_bound": {
-        "label": "CPU",
-        "hint": "Luồng chính lâu hơn một lần làm tươi và giữ khung: giảm việc mỗi khung."
-      },
-      "bottleneck.gpu_submit_bound": {
-        "label": "Gửi GPU",
-        "hint": "Gửi lệnh tới GPU mất hơn nửa lần làm tươi: giảm draw call và lượt vẽ."
-      },
-      "bottleneck.streaming_bound": {
-        "label": "Streaming",
-        "hint": "Nhiều trang đang chuyển hơn mức worker phục vụ được: mạng hoặc ổ đĩa giữ cảnh."
       },
       "panel.label": {
         "label": "Thống kê",
@@ -246,10 +224,6 @@
       "gpu.textures": {
         "label": "Texture",
         "hint": "Streaming và giải mã các mức texture; tăng khi texture mới được tải."
-      },
-      "gpu.partition": {
-        "label": "Phân vùng",
-        "hint": "Sắp xếp các cụm đã vẽ thành lô vẽ; tăng theo số cụm được vẽ."
       },
       "gpu.encode": {
         "label": "Mã hoá",
@@ -379,10 +353,6 @@
         "label": "Phép chiếu",
         "hint": "Chiếu bản đồ bóng lên ảnh; tăng theo đèn có bóng và độ phân giải."
       },
-      "shadows.transmission": {
-        "label": "Truyền sáng",
-        "hint": "Atlas của vật đổ bóng trong mờ; tăng theo vật đổ bóng trong mờ."
-      },
       "shadows.lights": {
         "label": "Đèn có bóng",
         "hint": "Các đèn đổ bản đồ bóng ảo trong khung này; số trong Cảnh đếm mọi đèn đang hoạt động."
@@ -507,14 +477,6 @@
         "label": "chọn DAG",
         "hint": "Duyệt đồ thị hình học và chọn mức chi tiết mà mỗi khung nhìn cần; tăng theo chi tiết trong tầm nhìn."
       },
-      "pass.DAG mask swap": {
-        "label": "hoán đổi mặt nạ DAG",
-        "hint": "Hoán đổi các mặt nạ chọn giữa các ảnh; nhỏ và cố định."
-      },
-      "pass.partition": {
-        "label": "phân vùng",
-        "hint": "Nén các cụm đã chọn thành các lệnh vẽ của ảnh; tăng theo số cụm được chọn."
-      },
       "pass.HiZ": {
         "label": "HiZ",
         "hint": "Dựng kim tự tháp độ sâu dùng để ẩn những gì bị che; tăng theo kích thước kết xuất."
@@ -527,17 +489,13 @@
         "label": "khả kiến thứ cấp",
         "hint": "Vẽ nửa hình học được kiểm tra với độ sâu của vật che; tăng theo hình học qua được kiểm tra."
       },
-      "pass.visibility identifiers": {
-        "label": "định danh khả kiến",
-        "hint": "Vẽ định danh của bề mặt dưới mỗi điểm ảnh; tăng theo kích thước kết xuất và hình học được vẽ."
-      },
       "pass.raster binning": {
-        "label": "phân thùng raster",
-        "hint": "Sắp xếp các tam giác nhỏ của raster phần mềm vào các ô màn hình; tăng theo số tam giác nhỏ trong tầm nhìn."
+        "label": "phân lô raster",
+        "hint": "Giải mã các cluster nhìn thấy, xếp chúng vào các lô vẽ của raster phần cứng và liệt kê các cluster của raster phần mềm; tăng theo số cluster trong khung nhìn."
       },
       "pass.raster occluder depth": {
         "label": "độ sâu vật che (raster)",
-        "hint": "Raster phần mềm của độ sâu vật che; tăng theo số tam giác nhỏ che khuất."
+        "hint": "Raster phần mềm độ sâu của vật che, một nhóm lane cho mỗi cluster; tăng theo số tam giác nhỏ che khuất."
       },
       "pass.raster tested depth": {
         "label": "độ sâu được kiểm tra (raster)",
@@ -545,23 +503,19 @@
       },
       "pass.raster identifiers": {
         "label": "định danh (raster)",
-        "hint": "Raster phần mềm của các định danh bề mặt; tăng theo số tam giác nhỏ được vẽ."
+        "hint": "Raster phần mềm các định danh bề mặt, trên thiết bị không có max nguyên tử 64-bit; tăng theo số tam giác nhỏ được vẽ."
       },
       "pass.raster occluder hiz": {
-        "label": "HiZ vật che (raster)",
-        "hint": "Dựng kim tự tháp độ sâu từ các vật che của raster phần mềm; tăng theo kích thước kết xuất."
+        "label": "Hi-Z vật che (raster)",
+        "hint": "Ghi độ sâu vật che của bộ đệm hiển thị vào mức đầu tiên của kim tự tháp độ sâu; tăng theo kích thước kết xuất."
       },
       "pass.raster resolve": {
-        "label": "hợp nhất raster",
-        "hint": "Gộp các điểm ảnh của raster phần mềm vào bộ đệm khả kiến; tăng theo kích thước kết xuất."
+        "label": "phân giải raster",
+        "hint": "Ghi các định danh bề mặt của bộ đệm hiển thị vào ảnh mà vật liệu đọc; tăng theo kích thước kết xuất."
       },
       "pass.empty surfaces": {
         "label": "bề mặt trống",
         "hint": "Xóa các ảnh bề mặt khi ảnh không vẽ vật liệu nào; nhỏ và cố định."
-      },
-      "pass.material cache, bins and shading": {
-        "label": "bộ nhớ đệm, thùng và đổ bóng vật liệu",
-        "hint": "Tổng hợp những gì khung hình chia sẻ, sắp xếp điểm ảnh theo vật liệu và đổ bóng thùng của mỗi vật liệu; tăng theo số vật liệu và điểm ảnh trong tầm nhìn."
       },
       "pass.material surfaces": {
         "label": "bề mặt vật liệu",
@@ -627,10 +581,6 @@
         "label": "nảy",
         "hint": "Cập nhật ánh sáng nảy: đánh dấu các ô trong tầm nhìn, ghi bảng và làm mới các đầu dò; tăng theo số ô được chiếu sáng trong tầm nhìn."
       },
-      "pass.bounce light lists": {
-        "label": "danh sách đèn của nảy",
-        "hint": "Dựng danh sách đèn trên lưới thế giới của ánh sáng nảy; tăng theo số đèn gần các ô được chiếu sáng."
-      },
       "pass.proxy pose": {
         "label": "tạo dáng proxy",
         "hint": "Đặt dáng các proxy của vị trí đặt bị biến dạng cho phản chiếu và ánh sáng nảy; tăng theo số vị trí đặt bị biến dạng."
@@ -647,29 +597,13 @@
         "label": "phản chiếu cảnh",
         "hint": "Dò qua cảnh những tia mà màn hình không trả lời được; tăng theo số điểm ảnh phản chiếu mà màn hình bỏ sót."
       },
-      "pass.reflection denoise": {
-        "label": "khử nhiễu phản chiếu",
-        "hint": "Dùng lại các phản chiếu lân cận và trước đó để làm sạch ảnh; tăng theo kích thước kết xuất."
-      },
-      "pass.reflection radiance": {
-        "label": "độ rọi phản chiếu",
-        "hint": "Dựng kim tự tháp độ rọi của ảnh đã chiếu sáng cho phản chiếu của ảnh kế tiếp; tăng theo kích thước kết xuất."
-      },
       "pass.particles": {
         "label": "hạt",
         "hint": "Mô phỏng bước của các hạt; tăng theo số hạt còn sống."
       },
-      "pass.deferred lighting": {
-        "label": "chiếu sáng trì hoãn",
-        "hint": "Chiếu sáng từng điểm ảnh từ các bề mặt, đèn và bóng đổ; tăng theo kích thước kết xuất và số đèn."
-      },
       "pass.as is share seed": {
         "label": "hạt giống phần giữ nguyên",
         "hint": "Gieo phần ảnh được giữ nguyên bởi bước giải theo thời gian; tăng theo kích thước kết xuất."
-      },
-      "pass.temporal antialiasing": {
-        "label": "khử răng cưa theo thời gian",
-        "hint": "Trộn ảnh với các ảnh trước để làm mịn cạnh; tăng theo kích thước kết xuất."
       },
       "pass.exposure": {
         "label": "phơi sáng",
@@ -742,6 +676,1978 @@
       "pass.vsm": {
         "label": "VSM",
         "hint": "Mọi lượt của bản đồ bóng ảo: vẽ, xóa, chiếu và gộp các trang bóng; tăng theo số đèn có bóng và các trang chúng cần."
+      },
+      "pass.vsm castDiff": {
+        "label": "thay đổi vật đổ bóng VSM",
+        "hint": "Tìm các vật đổ bóng đã di chuyển, xuất hiện hoặc rời đi kể từ ảnh trước, để chỉ trang của chúng được vẽ lại; tăng theo số vật đổ bóng."
+      },
+      "pass.vsm marking": {
+        "label": "đánh dấu trang VSM",
+        "hint": "Đánh dấu các trang bóng mà các điểm ảnh nhìn thấy cần, từng đèn một; tăng theo kích thước kết xuất và số đèn có bóng."
+      },
+      "pass.vsm pageMapping": {
+        "label": "ánh xạ trang VSM",
+        "hint": "Cấp cho mỗi trang bóng đã đánh dấu một chỗ trong bể trang, giữ lại các trang trong bộ đệm; tăng theo số trang được đánh dấu."
+      },
+      "pass.vsm afterRaster": {
+        "label": "sau raster VSM",
+        "hint": "Cập nhật các bảng trang sau khi trang được vẽ: trang nào trong bộ đệm, trang nào đã vẽ; tăng theo số trang."
+      },
+      "pass.vsm filterable": {
+        "label": "trang lọc được VSM",
+        "hint": "Chuẩn bị các trang đã vẽ cho việc đọc có lọc của bóng mềm; tăng theo số trang đã vẽ."
+      },
+      "pass.vsm invalidateCastPages": {
+        "label": "vô hiệu hóa trang VSM",
+        "hint": "Đánh dấu là cũ các trang trong bộ đệm mà vật đổ bóng di chuyển chạm vào, để chúng được vẽ lại; tăng theo số vật đổ bóng đang chuyển động."
+      },
+      "pass.vsm occlusion build": {
+        "label": "kim tự tháp che khuất VSM",
+        "hint": "Dựng kim tự tháp độ sâu của các trang đã vẽ, dùng cho lần loại bỏ thứ hai kiểm tra vật đổ bóng; tăng theo số trang."
+      },
+      "pass.vsm projection": {
+        "label": "phép chiếu VSM",
+        "hint": "Chiếu các trang bóng lên ảnh: mặt nạ bóng của mỗi đèn; tăng theo kích thước kết xuất và số đèn có bóng."
+      },
+      "pass.vsm projection hair": {
+        "label": "chiếu lên tóc VSM",
+        "hint": "Chiếu các trang bóng lên các sợi tóc; tăng theo số sợi trên màn hình."
+      },
+      "pass.vsm projection perLight clear": {
+        "label": "xóa mặt nạ từng đèn VSM",
+        "hint": "Xóa mặt nạ bóng của từng đèn trước khi chiếu; tăng theo kích thước kết xuất và số đèn."
+      },
+      "pass.vsm projection perLight project": {
+        "label": "chiếu từng đèn VSM",
+        "hint": "Chiếu các trang bóng của mỗi đèn vào mặt nạ riêng của nó; tăng theo kích thước kết xuất và số đèn có bóng."
+      },
+      "pass.vsm accumulateStats": {
+        "label": "thống kê trang VSM",
+        "hint": "Cộng số trang bóng được yêu cầu, được cấp và trong bộ đệm cho công cụ đo; chi phí nhỏ cố định."
+      },
+      "pass.vsm visualize": {
+        "label": "xem trang VSM",
+        "hint": "Vẽ khung nhìn gỡ lỗi các trang của bản đồ bóng ảo; chỉ khi khung nhìn đó được hiển thị."
+      },
+      "pass.vsm render cull": {
+        "label": "loại bỏ VSM",
+        "hint": "Loại bỏ vật đổ bóng so với các trang đã đánh dấu trước khi vẽ vào chúng; tăng theo số vật đổ bóng và số trang."
+      },
+      "pass.vsm render raster": {
+        "label": "raster VSM",
+        "hint": "Vẽ vật đổ bóng vào các trang bóng đã đánh dấu bằng raster phần cứng; tăng theo số tam giác được vẽ."
+      },
+      "pass.vsm render software": {
+        "label": "raster phần mềm VSM",
+        "hint": "Vẽ các tam giác nhỏ của vật đổ bóng vào trang bằng raster compute; tăng theo số tam giác nhỏ."
+      },
+      "pass.vsm render cullSecond": {
+        "label": "loại bỏ lần hai VSM",
+        "hint": "Loại bỏ lại các vật đổ bóng mà lượt đầu bỏ ra, kiểm tra với kim tự tháp che khuất; tăng theo số vật đổ bóng."
+      },
+      "pass.vsm render rasterSecond": {
+        "label": "raster lần hai VSM",
+        "hint": "Vẽ các vật đổ bóng mà lần loại bỏ thứ hai giữ lại, bằng raster phần cứng; tăng theo số tam giác của chúng."
+      },
+      "pass.vsm render softwareSecond": {
+        "label": "raster phần mềm lần hai VSM",
+        "hint": "Vẽ các tam giác nhỏ mà lần loại bỏ thứ hai giữ lại, bằng raster compute; tăng theo số tam giác đó."
+      },
+      "pass.vsm render atlas clear": {
+        "label": "xóa atlas bóng",
+        "hint": "Xóa các lớp của atlas bóng cổ điển trước khi vẽ vật đổ bóng vào; tăng theo kích thước atlas."
+      },
+      "pass.vsm render atlas raster": {
+        "label": "raster atlas bóng",
+        "hint": "Vẽ vật đổ bóng vào atlas bóng cổ điển, từng lớp một; tăng theo số tam giác được vẽ."
+      },
+      "pass.vsm render atlas sort": {
+        "label": "sắp xếp atlas bóng",
+        "hint": "Sắp xếp các lệnh vẽ của vật đổ bóng theo ô atlas trước khi vẽ atlas; tăng theo số lệnh vẽ."
+      },
+      "pass.vsm render atlas out": {
+        "label": "sao chép atlas bóng",
+        "hint": "Sao chép các ô của atlas bóng cổ điển vào bể trang; tăng theo số ô."
+      },
+      "pass.vsm denoise": {
+        "label": "khử nhiễu VSM",
+        "hint": "Lọc nhiễu của các mặt nạ bóng, dẫn hướng bởi độ sâu và pháp tuyến; tăng theo kích thước kết xuất và bóng mềm."
+      },
+      "pass.vsm denoise tiles": {
+        "label": "ô khử nhiễu VSM",
+        "hint": "Tìm các ô của ảnh nơi bóng mềm, những ô duy nhất được khử nhiễu lọc; tăng theo vùng nửa tối trên màn hình."
+      },
+      "pass.vsm firstPersonSelfShadow": {
+        "label": "tự đổ bóng góc nhìn thứ nhất",
+        "hint": "Dò bóng của cơ thể góc nhìn thứ nhất đổ lên chính nó; chỉ với góc nhìn thứ nhất."
+      },
+      "pass.vsm firstPersonSelfShadow merge": {
+        "label": "gộp bóng góc nhìn thứ nhất",
+        "hint": "Gộp bóng tự đổ của góc nhìn thứ nhất vào mặt nạ của các đèn cục bộ; chỉ với góc nhìn thứ nhất."
+      },
+      "pass.vsm rayTracedShadow": {
+        "label": "bóng dò tia",
+        "hint": "Dò bóng của các đèn được yêu cầu dò tia, qua các trường khoảng cách; tăng theo kích thước kết xuất và các đèn đó."
+      },
+      "pass.vsm rayTracedShadow merge": {
+        "label": "gộp bóng dò tia",
+        "hint": "Gộp bóng dò tia vào mặt nạ của các đèn cục bộ; tăng theo kích thước kết xuất."
+      },
+      "pass.hair strands bounds and tangents": {
+        "label": "khung bao và tiếp tuyến tóc",
+        "hint": "Tính tiếp tuyến của các sợi và khung bao của các nhóm sợi; tăng theo số sợi."
+      },
+      "pass.hair strands voxelization": {
+        "label": "voxel hóa tóc",
+        "hint": "Ghi mật độ của các sợi vào khối voxel mà chiếu sáng và bóng đọc; tăng theo số sợi và khối."
+      },
+      "pass.hair strands scattering table": {
+        "label": "bảng tán xạ tóc",
+        "hint": "Dựng bảng mô tả ánh sáng tán xạ trong một sợi tóc; một lần, khi thiết lập tóc thay đổi."
+      },
+      "pass.hair strands visibility": {
+        "label": "khả kiến tóc",
+        "hint": "Raster các mẫu khả kiến của sợi và nén chúng theo từng điểm ảnh; tăng theo số sợi trên màn hình."
+      },
+      "pass.hair strands visibility draw": {
+        "label": "vẽ khả kiến tóc",
+        "hint": "Vẽ các sợi vào đích khả kiến đa mẫu; tăng theo số sợi trên màn hình."
+      },
+      "pass.hair strands visibility resolve": {
+        "label": "phân giải khả kiến tóc",
+        "hint": "Phân giải khả kiến đa mẫu thành các mẫu sợi cho mỗi điểm ảnh; tăng theo kích thước kết xuất."
+      },
+      "pass.hair strands depth under full coverage": {
+        "label": "độ sâu phủ kín tóc",
+        "hint": "Ghi độ sâu của các điểm ảnh bị sợi phủ kín, để không tô bóng bề mặt phía sau; tăng theo số sợi trên màn hình."
+      },
+      "pass.hair strands coverage count": {
+        "label": "đếm độ phủ tóc",
+        "hint": "Đếm số sợi phủ mỗi điểm ảnh; tăng theo số sợi trên màn hình."
+      },
+      "pass.hair strands coverage mapping": {
+        "label": "ánh xạ độ phủ tóc",
+        "hint": "Biến số đếm thành độ phủ mà bước ghép dùng để pha trộn; tăng theo kích thước kết xuất."
+      },
+      "pass.hair strands forward visibility": {
+        "label": "khả kiến forward tóc",
+        "hint": "Phân lô và raster các sợi của đường forward vào lưới độ sâu của nó; tăng theo số sợi trên màn hình."
+      },
+      "pass.hair strands forward colour raster": {
+        "label": "màu forward tóc",
+        "hint": "Raster các sợi của đường forward với màu đã chiếu sáng của chúng; tăng theo số sợi trên màn hình."
+      },
+      "pass.hair strands curve raster clear output": {
+        "label": "xóa raster đường cong tóc",
+        "hint": "Xóa đầu ra của raster đường cong trước khi vẽ sợi; tăng theo kích thước kết xuất."
+      },
+      "pass.hair strands curve raster pipeline": {
+        "label": "raster đường cong tóc",
+        "hint": "Raster các sợi dưới dạng đường cong theo ô; tăng theo số sợi trên màn hình."
+      },
+      "pass.hair strands curve raster compose": {
+        "label": "ghép đường cong tóc",
+        "hint": "Phủ đầu ra của raster đường cong lên ảnh; tăng theo kích thước kết xuất."
+      },
+      "pass.hair strands transmittance": {
+        "label": "độ truyền qua tóc",
+        "hint": "Vẽ lượng ánh sáng đi qua các sợi về phía mỗi đèn; tăng theo số sợi và số đèn."
+      },
+      "pass.hair strands transmittance resolve": {
+        "label": "phân giải độ truyền qua tóc",
+        "hint": "Phân giải độ truyền qua đa mẫu theo từng điểm ảnh; tăng theo kích thước kết xuất."
+      },
+      "pass.hair strands deep shadow allocate": {
+        "label": "cấp chỗ bóng sâu tóc",
+        "hint": "Cấp cho bản đồ bóng sâu của mỗi đèn một chỗ trong atlas; tăng theo số đèn có bóng."
+      },
+      "pass.hair strands deep shadow front depth": {
+        "label": "mặt trước bóng sâu tóc",
+        "hint": "Vẽ độ sâu sợi gần nhất của bản đồ bóng sâu mỗi đèn; tăng theo số sợi và số đèn."
+      },
+      "pass.hair strands deep shadow layers": {
+        "label": "lớp bóng sâu tóc",
+        "hint": "Vẽ mật độ của các sợi thành từng lớp phía sau mặt trước đó; tăng theo số sợi và số đèn."
+      },
+      "pass.hair strands light": {
+        "label": "chiếu sáng tóc",
+        "hint": "Chiếu sáng các mẫu sợi bằng đèn của cảnh; tăng theo số sợi trên màn hình và số đèn."
+      },
+      "pass.hair strands light transmittance": {
+        "label": "độ truyền sáng tóc",
+        "hint": "Đọc độ truyền qua các sợi của mỗi đèn vào chiếu sáng của chúng; tăng theo số sợi và số đèn."
+      },
+      "pass.hair strands sampled lights": {
+        "label": "đèn lấy mẫu tóc",
+        "hint": "Chiếu sáng các sợi bằng các đèn mà việc lấy mẫu nhiều nguồn sáng chọn ra; tăng theo số sợi trên màn hình."
+      },
+      "pass.hair strands static light": {
+        "label": "ánh sáng tĩnh tóc",
+        "hint": "Gom ánh sáng tĩnh của các sợi từ lightmap và các khối thể tích; tăng theo số sợi."
+      },
+      "pass.hair strands environment sh sky": {
+        "label": "bầu trời tóc (điều hòa)",
+        "hint": "Chiếu sáng các sợi bằng bầu trời qua điều hòa cầu của nó; tăng theo số sợi."
+      },
+      "pass.hair strands environment adhoc sky": {
+        "label": "bầu trời tóc (gần đúng)",
+        "hint": "Chiếu sáng các sợi bằng bầu trời qua phép tích phân gần đúng; tăng theo số sợi."
+      },
+      "pass.hair strands environment uniform sky": {
+        "label": "bầu trời tóc (lấy mẫu)",
+        "hint": "Chiếu sáng các sợi bằng bầu trời, lấy mẫu đều qua các voxel; tăng theo số sợi."
+      },
+      "pass.hair strands sky occlusion": {
+        "label": "che khuất bầu trời tóc",
+        "hint": "Làm tối ánh sáng bầu trời của các bề mặt dưới sợi tóc; tăng theo kích thước kết xuất."
+      },
+      "pass.hair strands shadow on the surfaces": {
+        "label": "bóng tóc trên bề mặt",
+        "hint": "Đổ bóng của các sợi lên bề mặt; tăng theo kích thước kết xuất và số đèn có bóng."
+      },
+      "pass.hair strands g buffer override": {
+        "label": "ghi đè bề mặt tóc",
+        "hint": "Ghi các sợi vào bộ đệm bề mặt để chiếu sáng xử lý chúng như bề mặt; tăng theo số sợi trên màn hình."
+      },
+      "pass.hair strands g buffer override depth": {
+        "label": "độ sâu ghi đè bề mặt tóc",
+        "hint": "Ghi độ sâu của các sợi đã ghi vào bộ đệm bề mặt; tăng theo số sợi trên màn hình."
+      },
+      "pass.hair strands composition": {
+        "label": "ghép tóc",
+        "hint": "Phủ các sợi đã chiếu sáng lên ảnh với độ phủ của chúng; tăng theo kích thước kết xuất."
+      },
+      "pass.hair strands custom depth": {
+        "label": "độ sâu tùy chỉnh tóc",
+        "hint": "Ghi các sợi vào độ sâu tùy chỉnh mà đường viền và vật liệu hậu kỳ đọc; chỉ ở nơi được yêu cầu."
+      },
+      "pass.hair strands debug lines": {
+        "label": "đường gỡ lỗi tóc",
+        "hint": "Vẽ các đường của khung nhìn gỡ lỗi tóc; chỉ khi khung nhìn đó được hiển thị."
+      },
+      "pass.hair strands debug lines frusta": {
+        "label": "frustum gỡ lỗi tóc",
+        "hint": "Ghi các đường frustum của đèn trong khung nhìn gỡ lỗi tóc; chỉ khi khung nhìn đó được hiển thị."
+      },
+      "pass.hair strands debug lines macro": {
+        "label": "nhóm gỡ lỗi tóc",
+        "hint": "Ghi các đường hộp của nhóm sợi trong khung nhìn gỡ lỗi tóc; chỉ khi khung nhìn đó được hiển thị."
+      },
+      "pass.hair strands debug lines nodes": {
+        "label": "nút gỡ lỗi tóc",
+        "hint": "Ghi các đường nút cây của sợi trong khung nhìn gỡ lỗi tóc; chỉ khi khung nhìn đó được hiển thị."
+      },
+      "pass.hair strands debug panels atlas": {
+        "label": "atlas gỡ lỗi tóc",
+        "hint": "Vẽ bảng gỡ lỗi tóc cho atlas bóng sâu; chỉ khi khung nhìn đó được hiển thị."
+      },
+      "pass.hair strands debug panels voxels": {
+        "label": "voxel gỡ lỗi tóc",
+        "hint": "Vẽ bảng gỡ lỗi tóc cho khối voxel; chỉ khi khung nhìn đó được hiển thị."
+      },
+      "pass.sun distance field shadow cull": {
+        "label": "loại bỏ (bóng nắng bằng trường)",
+        "hint": "Loại bỏ trường khoảng cách của các lưới so với các ô bóng của mặt trời; tăng theo số lưới."
+      },
+      "pass.sun distance field shadow offsets": {
+        "label": "offset (bóng nắng bằng trường)",
+        "hint": "Sắp đặt danh sách các lưới đổ bóng lên từng ô; tăng theo số ô."
+      },
+      "pass.sun distance field shadow count tiles": {
+        "label": "đếm ô (bóng nắng bằng trường)",
+        "hint": "Đếm số lưới mà mỗi ô bóng chứa; tăng theo số lưới."
+      },
+      "pass.sun distance field shadow write tiles": {
+        "label": "ghi ô (bóng nắng bằng trường)",
+        "hint": "Ghi các lưới vào danh sách của từng ô bóng; tăng theo số lưới."
+      },
+      "pass.distance field occlusion grid": {
+        "label": "lưới ô (che khuất bằng trường)",
+        "hint": "Dựng lưới ô chứa các lưới mà phép che khuất bằng trường khoảng cách dò qua; tăng theo số lưới."
+      },
+      "pass.distance field occlusion cull": {
+        "label": "loại bỏ (che khuất bằng trường)",
+        "hint": "Loại bỏ trường khoảng cách của các lưới so với các ô màn hình; tăng theo số lưới."
+      },
+      "pass.distance field occlusion offsets": {
+        "label": "offset (che khuất bằng trường)",
+        "hint": "Sắp đặt danh sách lưới của từng ô màn hình; tăng theo số ô."
+      },
+      "pass.distance field occlusion count tiles": {
+        "label": "đếm ô (che khuất bằng trường)",
+        "hint": "Đếm số lưới mà mỗi ô màn hình chứa; tăng theo số lưới."
+      },
+      "pass.distance field occlusion write tiles": {
+        "label": "ghi ô (che khuất bằng trường)",
+        "hint": "Ghi các lưới vào danh sách của từng ô màn hình; tăng theo số lưới."
+      },
+      "pass.distance field occlusion cones": {
+        "label": "nón (che khuất bằng trường)",
+        "hint": "Dò các nón che khuất qua trường khoảng cách; tăng theo kích thước kết xuất."
+      },
+      "pass.distance field occlusion history": {
+        "label": "lịch sử (che khuất bằng trường)",
+        "hint": "Trộn phần che khuất với phần che khuất của các ảnh trước; tăng theo kích thước kết xuất."
+      },
+      "pass.distance field occlusion pack": {
+        "label": "đóng gói (che khuất bằng trường)",
+        "hint": "Đóng gói phần che khuất để chiếu sáng đọc; tăng theo kích thước kết xuất."
+      },
+      "pass.global distance field reset": {
+        "label": "đặt lại trường toàn cục",
+        "hint": "Xóa các trang của trường khoảng cách toàn cục trước khi dựng lại; khi trường được đặt lại."
+      },
+      "pass.global distance field update, static": {
+        "label": "cập nhật trường toàn cục (tĩnh)",
+        "hint": "Dựng lại các trang của trường khoảng cách toàn cục mà các lưới đứng yên đã thay đổi; tăng theo số trang được cập nhật."
+      },
+      "pass.global distance field update, movable": {
+        "label": "cập nhật trường toàn cục (di động)",
+        "hint": "Dựng lại các trang của trường khoảng cách toàn cục mà các lưới chuyển động chạm vào; tăng theo số lưới đó."
+      },
+      "pass.global distance field page statistics": {
+        "label": "thống kê trường toàn cục",
+        "hint": "Đếm các trang của trường khoảng cách toàn cục cho khung nhìn gỡ lỗi của nó; chỉ khi khung nhìn đó được hiển thị."
+      },
+      "pass.mesh distance field streaming": {
+        "label": "streaming trường lưới",
+        "hint": "Đưa trường khoảng cách của các lưới vào và ra khỏi atlas; tăng theo số trường được stream."
+      },
+      "pass.sky light face": {
+        "label": "mặt chụp ánh sáng bầu trời",
+        "hint": "Vẽ một mặt của ảnh chụp khối lập phương của ánh sáng bầu trời; tăng theo kích thước ảnh chụp."
+      },
+      "pass.sky light clouds": {
+        "label": "mây ánh sáng bầu trời",
+        "hint": "Dò mây vào ảnh chụp của ánh sáng bầu trời; tăng theo kích thước ảnh chụp."
+      },
+      "pass.sky light sky table": {
+        "label": "bảng bầu trời ánh sáng bầu trời",
+        "hint": "Dựng bảng bầu trời mà ảnh chụp ánh sáng bầu trời đọc; tăng theo kích thước bảng."
+      },
+      "pass.sky light copy": {
+        "label": "sao chép ánh sáng bầu trời",
+        "hint": "Sao chép khối lập phương đã chụp để lọc; tăng theo kích thước ảnh chụp."
+      },
+      "pass.sky light mips": {
+        "label": "mip ánh sáng bầu trời",
+        "hint": "Dựng các mức nhỏ hơn của khối lập phương đã chụp; tăng theo kích thước của nó."
+      },
+      "pass.sky light filter": {
+        "label": "lọc ánh sáng bầu trời",
+        "hint": "Lọc khối lập phương đã chụp cho các phản chiếu nhám; tăng theo kích thước của nó."
+      },
+      "pass.sky light harmonics": {
+        "label": "điều hòa ánh sáng bầu trời",
+        "hint": "Cộng khối lập phương đã chụp thành điều hòa cầu cho ánh sáng bầu trời khuếch tán; chi phí nhỏ cố định."
+      },
+      "pass.sky light table": {
+        "label": "bảng ánh sáng bầu trời dò tia",
+        "hint": "Dựng bảng bầu trời mà ánh sáng bầu trời dò tia đọc; tăng theo kích thước bảng."
+      },
+      "pass.sky light directions": {
+        "label": "hướng ánh sáng bầu trời dò tia",
+        "hint": "Chọn các hướng mà ánh sáng bầu trời dò tia lấy mẫu; tăng theo kích thước kết xuất."
+      },
+      "pass.sky light trace": {
+        "label": "ánh sáng bầu trời dò tia",
+        "hint": "Dò che khuất của ánh sáng bầu trời qua cảnh; tăng theo kích thước kết xuất."
+      },
+      "pass.sky light composite": {
+        "label": "ghép ánh sáng bầu trời dò tia",
+        "hint": "Phủ ánh sáng bầu trời dò tia lên ảnh; tăng theo kích thước kết xuất."
+      },
+      "pass.sky meshes face": {
+        "label": "mặt lưới bầu trời",
+        "hint": "Vẽ các lưới bầu trời vào một mặt của ảnh chụp bầu trời; tăng theo số lưới bầu trời."
+      },
+      "pass.sky meshes copy": {
+        "label": "sao chép lưới bầu trời",
+        "hint": "Sao chép ảnh chụp của các lưới bầu trời để bầu trời đọc; tăng theo kích thước của nó."
+      },
+      "pass.cloud depth range": {
+        "label": "khoảng độ sâu mây",
+        "hint": "Tìm khoảng độ sâu mà mây được dò qua; tăng theo kích thước kết xuất."
+      },
+      "pass.cloud empty space": {
+        "label": "khoảng trống mây",
+        "hint": "Tìm khoảng trống mà phép dò mây có thể bỏ qua; tăng theo kích thước kết xuất."
+      },
+      "pass.cloud trace": {
+        "label": "dò mây",
+        "hint": "Cho các tia tiến từng bước qua lớp mây; tăng theo kích thước kết xuất và chất lượng mây."
+      },
+      "pass.cloud haze": {
+        "label": "màn mù mây",
+        "hint": "Dò màn mù trong và dưới mây; tăng theo kích thước kết xuất."
+      },
+      "pass.cloud reconstruction": {
+        "label": "tái dựng mây",
+        "hint": "Dựng lại mây đầy đủ từ các điểm ảnh đã dò và các ảnh trước; tăng theo kích thước kết xuất."
+      },
+      "pass.cloud composition": {
+        "label": "ghép mây",
+        "hint": "Phủ mây lên ảnh; tăng theo kích thước kết xuất."
+      },
+      "pass.cloud composition behind water": {
+        "label": "mây sau mặt nước",
+        "hint": "Phủ mây lên ảnh nhìn qua mặt nước; tăng theo lượng nước trên màn hình."
+      },
+      "pass.cloud holdout": {
+        "label": "holdout mây",
+        "hint": "Cắt mây ở nơi alpha của ảnh được holdout; tăng theo kích thước kết xuất."
+      },
+      "pass.cloud shadow": {
+        "label": "bóng mây",
+        "hint": "Dò bản đồ bóng của mây cho mặt trời; tăng theo kích thước bản đồ."
+      },
+      "pass.cloud sky occlusion": {
+        "label": "che khuất bầu trời do mây",
+        "hint": "Dò lượng bầu trời bị mây che, cho ánh sáng bầu trời; tăng theo kích thước bản đồ."
+      },
+      "pass.cloud lightning volume": {
+        "label": "khối tia sét mây",
+        "hint": "Dựng khối mà tia sét dùng để chiếu sáng mây; khi mây thay đổi."
+      },
+      "pass.cloud layout pattern": {
+        "label": "mẫu bố cục mây",
+        "hint": "Dựng mẫu mà bố cục mây đọc; khi mây thay đổi."
+      },
+      "pass.fog local volumes cull": {
+        "label": "loại bỏ khối sương mù",
+        "hint": "Loại bỏ các khối sương mù cục bộ so với các ô froxel; tăng theo số khối."
+      },
+      "pass.fog local volumes sky": {
+        "label": "bầu trời cho khối sương mù",
+        "hint": "Chiếu sáng các khối sương mù cục bộ bằng bầu trời; tăng theo số khối."
+      },
+      "pass.path tracer light grid": {
+        "label": "lưới đèn path tracer",
+        "hint": "Dựng lưới các đèn mà path tracer lấy mẫu; khi đèn thay đổi."
+      },
+      "pass.path tracer air optical depth": {
+        "label": "độ sâu không khí path tracer",
+        "hint": "Dựng bảng độ sâu quang học của không khí mà path tracer đọc; khi khí quyển thay đổi."
+      },
+      "pass.path tracer cloud acceleration map": {
+        "label": "bản đồ mây path tracer",
+        "hint": "Dựng bản đồ mà path tracer dùng để bỏ qua mây trống; khi mây thay đổi."
+      },
+      "pass.path tracer sky table": {
+        "label": "bảng bầu trời path tracer",
+        "hint": "Dựng bảng bầu trời mà path tracer lấy mẫu; khi bầu trời thay đổi."
+      },
+      "pass.path tracer sample": {
+        "label": "mẫu path tracer",
+        "hint": "Dò các mẫu của path tracer cho ảnh; tăng theo kích thước kết xuất và số lần nảy."
+      },
+      "pass.path tracer error mips": {
+        "label": "mip sai số path tracer",
+        "hint": "Dựng các mức sai số của mẫu mà việc lấy mẫu thích ứng đọc; tăng theo kích thước kết xuất."
+      },
+      "pass.path tracer normal space": {
+        "label": "không gian pháp tuyến path tracer",
+        "hint": "Ghi pháp tuyến và độ sâu dẫn hướng bộ khử nhiễu; tăng theo kích thước kết xuất."
+      },
+      "pass.path tracer denoiser": {
+        "label": "bộ khử nhiễu path tracer",
+        "hint": "Khử nhiễu ảnh path tracing; tăng theo kích thước kết xuất."
+      },
+      "pass.path tracer denoiser motion view": {
+        "label": "khung nhìn chuyển động path tracer",
+        "hint": "Vẽ khung nhìn gỡ lỗi chuyển động của bộ khử nhiễu; chỉ khi khung nhìn đó được hiển thị."
+      },
+      "pass.path tracer denoiser warp view": {
+        "label": "khung nhìn warp path tracer",
+        "hint": "Vẽ khung nhìn gỡ lỗi warp của bộ khử nhiễu; chỉ khi khung nhìn đó được hiển thị."
+      },
+      "pass.path tracer display": {
+        "label": "hiển thị path tracer",
+        "hint": "Hiển thị ảnh path tracing lên màn hình; tăng theo kích thước kết xuất."
+      },
+      "pass.card capture clear": {
+        "label": "xóa chụp thẻ",
+        "hint": "Xóa các thẻ bộ đệm bề mặt sắp được chụp; tăng theo số thẻ được chụp."
+      },
+      "pass.card capture cull": {
+        "label": "loại bỏ chụp thẻ",
+        "hint": "Loại bỏ các lưới so với các thẻ sắp được chụp; tăng theo số thẻ và số lưới."
+      },
+      "pass.card capture raster": {
+        "label": "raster chụp thẻ",
+        "hint": "Vẽ các lưới vào ảnh chụp của thẻ; tăng theo số tam giác được chụp."
+      },
+      "pass.card capture export": {
+        "label": "xuất chụp thẻ",
+        "hint": "Ghi các thẻ đã chụp vào atlas của bộ đệm bề mặt; tăng theo số thẻ được chụp."
+      },
+      "pass.surface cache atlas clear": {
+        "label": "xóa atlas bộ đệm bề mặt",
+        "hint": "Xóa các lớp của atlas bộ đệm bề mặt; khi atlas được tạo hoặc đặt lại."
+      },
+      "pass.surface cache feedback table arguments": {
+        "label": "tham số phản hồi bộ đệm bề mặt",
+        "hint": "Chuẩn bị lệnh dispatch cho bảng phản hồi của bộ đệm bề mặt; chi phí nhỏ cố định."
+      },
+      "pass.surface cache feedback table": {
+        "label": "bảng phản hồi bộ đệm bề mặt",
+        "hint": "Dựng bảng các thẻ mà ảnh yêu cầu; tăng theo số thẻ được thấy."
+      },
+      "pass.surface cache feedback compaction": {
+        "label": "nén phản hồi bộ đệm bề mặt",
+        "hint": "Nén các thẻ mà ảnh yêu cầu thành một danh sách; tăng theo số thẻ được thấy."
+      },
+      "pass.surface cache atlas view": {
+        "label": "xem atlas bộ đệm bề mặt",
+        "hint": "Vẽ khung nhìn gỡ lỗi atlas của bộ đệm bề mặt; chỉ khi khung nhìn đó được hiển thị."
+      },
+      "pass.inspection reflections": {
+        "label": "phản chiếu kiểm tra",
+        "hint": "Dò các tia phản chiếu mà phép kiểm tra vẽ ra; chỉ khi được hiển thị."
+      },
+      "tab.why": {
+        "label": "Vì sao",
+        "hint": "Vì sao mỗi hình được vẽ hay giữ lại, cái gì đã chuyển động, chế độ xem chính đã ổn định đến đâu, và chi phí của các công cụ đo; engine ghi lại khi bảng đang mở."
+      },
+      "summary.still": {
+        "label": "Khung nhìn tĩnh",
+        "hint": "Mọi vòng của giây vừa qua đều giữ ảnh của nó: không vẽ gì, nên không đo được gì."
+      },
+      "summary.stillValue": {
+        "label": "không vẽ gì",
+        "hint": "\"Đo tư thế tĩnh\" vẽ lại mọi hình tĩnh khi đang bật, để đo được chi phí của nó."
+      },
+      "summary.stillMeasured": {
+        "label": "đang đo tĩnh",
+        "hint": "Tư thế tĩnh đang được đo: mọi ảnh mà chế độ xem sẽ giữ đều được vẽ lại (lý do forced)."
+      },
+      "summary.paused": {
+        "label": "tạm dừng",
+        "hint": "Hiển thị đang tạm dừng: các con số giữ nguyên, công cụ đo vẫn tiếp tục đọc."
+      },
+      "detail.median": {
+        "label": "p50 {p50} ms = {n} × {refresh} ms",
+        "hint": "Khoảng trung vị trên lưới của màn hình: số lần làm mới nguyên nhân với một lần làm mới."
+      },
+      "detail.held": {
+        "label": "đã giữ {n}",
+        "hint": "Các vòng của cửa sổ không vẽ ảnh nào."
+      },
+      "detail.stutters": {
+        "label": "giật {n}",
+        "hint": "Các khoảng dài hơn 50 ms và hơn gấp đôi trung vị."
+      },
+      "detail.samples": {
+        "label": "đã lấy mẫu {n} · bỏ {d}",
+        "hint": "Các ảnh mà bộ hẹn giờ GPU lấy mẫu trong cửa sổ, và các mẫu bị bỏ chưa đọc."
+      },
+      "detail.gpuClock": {
+        "label": "bộ hẹn giờ GPU {us} µs",
+        "hint": "Bước của bộ hẹn giờ GPU, tìm từ các dấu thời gian của nó."
+      },
+      "detail.cpuClock": {
+        "label": "đồng hồ CPU {us} µs",
+        "hint": "Bước của đồng hồ CPU: 5 µs khi cách ly cross-origin, nếu không là 100 µs."
+      },
+      "why.strip": {
+        "label": "Ảnh",
+        "hint": "Mỗi hình của chế độ xem chính là một ô trên trục thời gian của biểu đồ, mỗi ô nằm dưới điểm của phần tư giây của nó, tô màu theo kết luận; dấu trên cho hình bị phép đo tư thế tĩnh ép vẽ, dấu dưới cho hình nêu một nguyên nhân. Trỏ vào một ô để gọi tên hình đó và đọc một hình gần đây trong thẻ Vì sao."
+      },
+      "why.forced": {
+        "label": "bị ép",
+        "hint": "Một ảnh được vẽ lại bởi phép đo tư thế tĩnh."
+      },
+      "why.caused": {
+        "label": "nguyên nhân",
+        "hint": "Một ảnh nêu cái gì đã chuyển động kể từ khi chế độ xem giữ một ảnh."
+      },
+      "why.roles": {
+        "label": "Ảnh theo chế độ xem",
+        "hint": "Các ảnh đã đọc kể từ khi đặt lại cửa sổ, theo vai trò của chế độ xem: chế độ xem chính, các chế độ xem của trang, của riêng engine (một gương, độ sâu tùy chỉnh, một mặt bầu trời), một lần chụp."
+      },
+      "why.frames": {
+        "label": "Các vòng đã đọc",
+        "hint": "Ảnh đầu và cuối mà bộ đọc ghi lại kể từ khi đặt lại cửa sổ, theo số của chính bản ghi."
+      },
+      "why.verdicts": {
+        "label": "Phán quyết",
+        "hint": "Các ảnh của chế độ xem đã chọn ra sao: được vẽ, hoặc được giữ và vì sao; phán quyết không ảnh nào có sẽ bị làm xám."
+      },
+      "why.reasons": {
+        "label": "Chưa ổn định",
+        "hint": "Phần việc còn chưa ổn định khi quyết định giữ, trên các ảnh (một ảnh có thể nêu nhiều); tên không ảnh nào có sẽ bị làm xám."
+      },
+      "why.terms": {
+        "label": "Các số hạng mỗi ảnh",
+        "hint": "Số hạng đã vẽ lại một chế độ xem yên tĩnh, trên các ảnh nó vẽ; số hạng không ảnh nào có sẽ bị làm xám."
+      },
+      "why.causes": {
+        "label": "Nguyên nhân",
+        "hint": "Cái đã đẩy một bản sửa đổi hoặc yêu cầu một ảnh, trên các ảnh (một ảnh có thể nêu nhiều); nguyên nhân không ảnh nào có sẽ bị làm xám."
+      },
+      "why.sinceChange": {
+        "label": "Kể từ thay đổi",
+        "hint": "Số ảnh kể từ lần thay đổi cuối của chế độ xem chính, so với số ảnh mà lịch sử thời gian cần để quên chế độ xem trước; xám khi cửa sổ cuối không so sánh ảnh nào (một chế độ xem đang chuyển động hoặc đang giữ)."
+      },
+      "why.history": {
+        "label": "Lịch sử",
+        "hint": "Số ảnh lịch sử thời gian đã tích lũy, so với số ảnh làm đầy nó ở cuối chu kỳ jitter; xám khi cửa sổ cuối không so sánh ảnh nào."
+      },
+      "why.panelCost": {
+        "label": "Bảng, ms mỗi giây",
+        "hint": "Thời gian luồng chính của riêng bảng để đọc và vẽ trong giây vừa qua, ms mỗi giây."
+      },
+      "why.instrumentCpu": {
+        "label": "Công cụ đo, CPU",
+        "hint": "Thời gian luồng chính của riêng công cụ đo thời gian mỗi vòng (các dòng, các mẫu, các lần đọc): dòng Công cụ đo của thẻ CPU."
+      },
+      "why.instrumentGpu": {
+        "label": "Công cụ đo, GPU",
+        "hint": "Các pass GPU mà công cụ đo thêm vào mỗi vòng (giai đoạn chẩn đoán): dòng Công cụ đo của thẻ GPU."
+      },
+      "verdict.drawn": {
+        "label": "đã vẽ",
+        "hint": "Một ảnh mới đã được vẽ và hiển thị."
+      },
+      "verdict.still": {
+        "label": "tĩnh",
+        "hint": "Được giữ: ảnh trước đó, hiển thị lại đúng từng bit."
+      },
+      "verdict.heldOnAnswer": {
+        "label": "chờ phản hồi",
+        "hint": "Được giữ để chờ một phản hồi thiết bị còn nợ: một chương trình đang biên dịch, một bộ đệm."
+      },
+      "verdict.targetsAwaited": {
+        "label": "chờ đích",
+        "hint": "Được giữ để chờ các đích mà thiết bị chưa cấp."
+      },
+      "verdict.swapped": {
+        "label": "đã hoán đổi",
+        "hint": "Được vẽ vào các đích làm riêng rồi hoán đổi vào."
+      },
+      "verdict.noiseFinal": {
+        "label": "nhiễu cuối",
+        "hint": "Ảnh cuối cùng khi thiết lập một chế độ xem, vẽ ở pha chuẩn của nhiễu trước khi chế độ xem giữ."
+      },
+      "verdict.withheld": {
+        "label": "không hiển thị",
+        "hint": "Đã vẽ nhưng không hiển thị: trước khi chế độ xem tải xong, hoặc khi một lần tải chờ streaming chậm."
+      },
+      "image.frame": {
+        "label": "Ảnh",
+        "hint": "Ảnh mà các dòng bên dưới đọc: ảnh dưới con trỏ trên dải, nếu không thì ảnh cuối; số ảnh của nó trong phiên."
+      },
+      "image.view": {
+        "label": "Chế độ xem",
+        "hint": "Vai trò của chế độ xem và vị trí của nó giữa các chế độ xem cùng vai trò."
+      },
+      "image.verdict": {
+        "label": "Phán quyết",
+        "hint": "Ảnh đã ra sao."
+      },
+      "image.because": {
+        "label": "Được vẽ vì",
+        "hint": "Lý do duy nhất khiến quyết định giữ vẽ nó; không có với ảnh được giữ."
+      },
+      "image.reasons": {
+        "label": "Chưa ổn định",
+        "hint": "Phần việc còn chưa ổn định khi quyết định giữ."
+      },
+      "image.term": {
+        "label": "Số hạng",
+        "hint": "Số hạng vẽ một chế độ xem yên tĩnh mỗi ảnh và đã vẽ ảnh này."
+      },
+      "image.causes": {
+        "label": "Nguyên nhân",
+        "hint": "Cái đã chuyển động kể từ khi chế độ xem giữ một ảnh, theo nguồn."
+      },
+      "image.answer": {
+        "label": "Được giữ vì",
+        "hint": "Phản hồi mà ảnh được giữ để chờ; không có với ảnh đã vẽ."
+      },
+      "image.retryInMs": {
+        "label": "Thử lại sau",
+        "hint": "Được giữ vì các đích bị từ chối: số mili giây trước khi kích thước bị từ chối được yêu cầu lại."
+      },
+      "image.intervalMs": {
+        "label": "Khoảng",
+        "hint": "Thời gian ảnh ở trên màn hình."
+      },
+      "image.refreshes": {
+        "label": "Lần làm mới",
+        "hint": "Số lần làm mới màn hình trọn vẹn mà ảnh ở trên màn hình."
+      },
+      "image.bound": {
+        "label": "Giới hạn bởi",
+        "hint": "Điều đã quyết định số lần làm mới của nó: GPU, CPU hoặc nhịp màn hình."
+      },
+      "bound.gpu": {
+        "label": "GPU",
+        "hint": "Thời gian của bộ xử lý đồ họa đã quyết định."
+      },
+      "bound.cpu": {
+        "label": "CPU",
+        "hint": "Thời gian của luồng chính đã quyết định."
+      },
+      "bound.pacing": {
+        "label": "nhịp màn hình",
+        "hint": "Không bộ xử lý nào: tần số làm mới màn hình, trang hoặc mức trần khung hình đã quyết định."
+      },
+      "image.cpuMs": {
+        "label": "CPU",
+        "hint": "Thời gian luồng chính của vòng."
+      },
+      "image.gpuMs": {
+        "label": "GPU",
+        "hint": "Thời gian GPU của ảnh; không có khi bộ hẹn giờ không lấy mẫu nó."
+      },
+      "image.outsideMs": {
+        "label": "Ngoài ảnh",
+        "hint": "Phần việc GPU gửi kèm bên cạnh ảnh trong vòng của nó."
+      },
+      "image.waitMs": {
+        "label": "Chờ",
+        "hint": "Khoảng trừ bộ xử lý bận hơn: thời gian chờ một lần làm mới."
+      },
+      "image.toNextRefreshMs": {
+        "label": "Sớm một lần làm mới",
+        "hint": "Thời gian bộ xử lý giới hạn phải nhường để ảnh đến sớm hơn một lần làm mới."
+      },
+      "control.every": {
+        "label": "Đo GPU",
+        "hint": "Bộ hẹn giờ GPU đọc một hình thường xuyên thế nào: mặc định 1 trên {every}, nhẹ nhất; 1 trên 3 hoặc mọi hình đo nhiều hơn, mỗi hình tốn một truy vấn hẹn giờ và một lần đọc lại."
+      },
+      "control.everyImage": {
+        "label": "mọi khung hình",
+        "hint": "Mọi hình đều được đo trên GPU: nhiều mẫu nhất, tốn một truy vấn hẹn giờ và một lần đọc lại mỗi hình."
+      },
+      "control.still": {
+        "label": "Đo tư thế tĩnh",
+        "hint": "Khi bật, mọi ảnh mà chế độ xem sẽ giữ đều được vẽ lại, để đo được tư thế tĩnh; mỗi ảnh như vậy là một mẫu TAA mới (lý do forced). Nó tốn nguyên một hình mỗi khung hình."
+      },
+      "control.pause": {
+        "label": "Tạm dừng hiển thị",
+        "hint": "Đóng băng các con số đang hiện; công cụ đo vẫn đọc, và dải vẫn phản hồi con trỏ."
+      },
+      "control.reset": {
+        "label": "Đặt lại cửa sổ",
+        "hint": "Quên các ảnh và số đếm đã đọc đến giờ: cửa sổ bắt đầu lại từ bây giờ."
+      },
+      "control.export": {
+        "label": "Tải JSON",
+        "hint": "Các cửa sổ của phút vừa qua của công cụ đo vì sao và thời gian, như engine đưa ra, mỗi cửa sổ thời gian với các tùy chọn mà bộ đọc của nó được mở; địa chỉ trang, thế giới được đọc, trạng thái các bộ đọc và những gì đã yêu cầu."
+      },
+      "control.role": {
+        "label": "Góc nhìn được đếm",
+        "hint": "Thẻ này đếm hình của chế độ xem nào: chế độ xem chính, các chế độ xem của trang, của engine (một gương, một mặt bầu trời), một bản chụp; trong số các vai trò đã đọc."
+      },
+      "control.world": {
+        "label": "Thế giới",
+        "hint": "Thế giới của trang mà bảng đọc, theo vị trí của nó giữa các thế giới của trang (thế giới tạo đầu tiên là chế độ xem chính); mọi cửa sổ bắt đầu lại trên thế giới được chọn."
+      },
+      "control.view": {
+        "label": "Chế độ xem",
+        "hint": "Những gì thế giới vẽ: render, hoặc một chế độ xem cho thấy engine hoạt động thế nào (`world.diagnostic.mode`); mục bị làm xám không được cung cấp ở đây, hoặc thế giới đã từ chối."
+      },
+      "control.viewUnavailable": {
+        "label": "không vẽ ở đây",
+        "hint": "Phiên bản engine này chưa vẽ chế độ xem này."
+      },
+      "control.viewRefused": {
+        "label": "bị thế giới này từ chối",
+        "hint": "Thế giới giữ chế độ xem nó đang có khi chế độ này được yêu cầu; console cho biết lý do."
+      },
+      "control.freeze": {
+        "label": "Đóng băng loại bỏ",
+        "hint": "Giữ lát cắt (các cấp, HLOD, frustum và che khuất) ở camera của lúc này trong khi camera tiếp tục di chuyển (`world.diagnostic.freeze`): bước sang một bên trong chế độ xem tia X cho thấy nó đã gửi gì và bỏ gì."
+      },
+      "viewGroup.geometry": {
+        "label": "Hình học",
+        "hint": "Những gì lát cắt đã vẽ: tam giác, cụm, cấp chi tiết, HLOD, voxel, sai số màn hình và trang, nhìn xuyên qua hoặc đếm."
+      },
+      "viewGroup.materials": {
+        "label": "Vật liệu",
+        "hint": "Vật liệu của các bề mặt: lớp của chúng, thuộc tính dưới con trỏ, kích thước texture được đọc, hồ sơ tán xạ dưới bề mặt."
+      },
+      "viewGroup.lighting": {
+        "label": "Chiếu sáng",
+        "hint": "Ánh sáng các bề mặt nhận được, toàn bộ hay từng thành phần, và các atlas hình ảnh và hồ sơ của nguồn sáng."
+      },
+      "viewGroup.temporal": {
+        "label": "Khử răng cưa theo thời gian",
+        "hint": "Tích lũy theo thời gian: hình nó nhận, lịch sử của nó và điều loại bỏ lịch sử đó, và những gì thay đổi từ hình này sang hình kế tiếp."
+      },
+      "viewGroup.shadowMaps": {
+        "label": "Bản đồ bóng",
+        "hint": "Bản đồ bóng ảo: các cấp và trang mỗi điểm ảnh đọc, bộ đệm của chúng, vật đổ bóng và chi phí."
+      },
+      "viewGroup.surfaceCache": {
+        "label": "Bộ đệm bề mặt",
+        "hint": "Atlas các thẻ của lưới, các lần cập nhật ánh sáng của nó, và cảnh nhìn qua ánh sáng của nó."
+      },
+      "viewGroup.probes": {
+        "label": "Đầu dò",
+        "hint": "Đầu dò màn hình, đầu dò của thế giới và tia phản xạ: chúng ở đâu, dò theo gì, giữ gì."
+      },
+      "viewGroup.sampledLights": {
+        "label": "Nguồn sáng lấy mẫu",
+        "hint": "Chiếu sáng lấy mẫu của nhiều nguồn sáng: các bề mặt mà tia bóng của nó gặp, và chi phí của mỗi điểm ảnh."
+      },
+      "viewGroup.hair": {
+        "label": "Tóc",
+        "hint": "Các sợi tóc: khung bao, bóng sâu, khung trên màn hình và voxel."
+      },
+      "viewGroup.volumes": {
+        "label": "Thể tích",
+        "hint": "Lưới voxel của các thể tích không đồng nhất, theo từng cách tìm độ truyền qua chúng."
+      },
+      "viewGroup.other": {
+        "label": "Khác",
+        "hint": "Các chế độ xem chưa nhóm nào của bảng đặt tên."
+      },
+      "reader.opening": {
+        "label": "đang mở",
+        "hint": "Các bộ đọc của công cụ đo đang tải."
+      },
+      "reader.waiting": {
+        "label": "đang chờ thế giới {n}",
+        "hint": "Thế giới được chọn chưa vẽ vòng nào kể từ đó: các con số hiện là của thế giới trước cho đến khi nó vẽ một vòng."
+      },
+      "reader.missing": {
+        "label": "không có trong bản dựng này: {names}",
+        "hint": "Bản dựng engine này không có công cụ đo đó; không hiện gì của nó."
+      },
+      "reader.failed": {
+        "label": "thất bại",
+        "hint": "Bộ đọc của một công cụ đo không mở được (họ của nó không tải được)."
+      },
+      "reader.faulted": {
+        "label": "lỗi: {message}",
+        "hint": "Một lần đọc hoặc vẽ của bảng đã ném lỗi; nó vẫn tiếp tục đọc."
+      },
+      "gpu.outside": {
+        "label": "Ngoài ảnh",
+        "hint": "Phần việc engine gửi bên cạnh các ảnh (ô texture, trang được cài, chụp bầu trời), được đo khi thời gian đang được đọc."
+      },
+      "gpu.diagnostic": {
+        "label": "Công cụ đo",
+        "hint": "Các pass mà một chế độ xem hay một phép kiểm tra thêm vào để cho thấy engine hoạt động thế nào; không phải chi phí riêng của engine."
+      },
+      "gpu.views": {
+        "label": "Chế độ xem bên cạnh chế độ xem chính",
+        "hint": "Mỗi chế độ xem được vẽ bên cạnh ảnh chính (một chế độ xem của trang, một gương, độ sâu tùy chỉnh, một mặt bầu trời): thời gian GPU trung bình trên các ảnh của chính nó, cộng lại; không thuộc vòng ở trên."
+      },
+      "cpu.diagnostic": {
+        "label": "Công cụ đo",
+        "hint": "Phần việc luồng chính của riêng công cụ đo thời gian mỗi vòng khi được đọc (các dòng, các mẫu, các lần đọc); không phải chi phí của engine."
+      },
+      "control.everyN": {
+        "label": "1 trên {n}",
+        "hint": "Cứ {n} khung hình thì đo một khung trên GPU."
+      },
+      "control.actions": {
+        "label": "Thao tác",
+        "hint": "Những gì phần hiển thị làm với dữ liệu đọc được: tạm dừng, bắt đầu lại cửa sổ, tải xuống."
+      },
+      "role.main": {
+        "label": "góc nhìn chính",
+        "hint": "Góc nhìn chính của thế giới."
+      },
+      "role.pageView": {
+        "label": "góc nhìn của trang",
+        "hint": "Một góc nhìn do trang thêm vào (`world.addView`)."
+      },
+      "role.planarReflection": {
+        "label": "phản chiếu phẳng",
+        "hint": "Góc nhìn của một gương phẳng, được vẽ bên cạnh góc nhìn chính."
+      },
+      "role.customDepth": {
+        "label": "độ sâu tùy chỉnh",
+        "hint": "Góc nhìn độ sâu tùy chỉnh, được vẽ bên cạnh góc nhìn chính."
+      },
+      "role.skyFace": {
+        "label": "mặt bầu trời",
+        "hint": "Một mặt của khối lập phương lưới bầu trời, được vẽ bên cạnh góc nhìn chính."
+      },
+      "role.aside": {
+        "label": "ảnh chụp",
+        "hint": "Một góc nhìn được vẽ riêng: một ảnh chụp."
+      },
+      "gpu.surfaceCache": {
+        "label": "Bộ đệm bề mặt",
+        "hint": "Chụp các thẻ của lưới vào atlas mà tia đọc; tăng theo số trang được chụp trong một ảnh."
+      },
+      "shadows.pagesEmpty": {
+        "label": "Trang bóng trống",
+        "hint": "Các trang của pool không chứa gì, sẵn cho lần cấp tiếp theo; tăng khi bóng yêu cầu ít hơn."
+      },
+      "shadows.pagesWpoConsidered": {
+        "label": "Trang bóng có độ lệch",
+        "hint": "Các trang bóng trong bộ đệm được giữ dưới việc loại bỏ theo độ lệch cho phép trên chúng; tăng theo số vật liệu có độ lệch trong khung nhìn."
+      },
+      "shadows.rootsNoted": {
+        "label": "Vị trí đặt đã di chuyển",
+        "hint": "Tổng cộng dồn các thế giới đặt vị trí được ghi nhận là đã di chuyển; mức tăng mỗi ảnh là số vị trí đặt mà một lần di chuyển chạm tới."
+      },
+      "shadows.rootsBoxed": {
+        "label": "Hộp gốc đã suy ra",
+        "hint": "Tổng cộng dồn các hộp gốc mà lượt gốc đã suy ra; việc vô hiệu hóa bóng nhìn thấy một vị trí đặt qua chúng."
+      },
+      "pass.cluster measure": {
+        "label": "đo cluster",
+        "hint": "Đo cạnh dài nhất của các cluster có trang vừa đến; tăng theo số trang đến."
+      },
+      "pass.raster depth export": {
+        "label": "xuất độ sâu (raster)",
+        "hint": "Ghi độ sâu của cảnh từ mức đầu tiên của kim tự tháp độ sâu; tăng theo kích thước kết xuất."
+      },
+      "pass.material bins and shading": {
+        "label": "phân lô và tô bóng vật liệu",
+        "hint": "Xếp điểm ảnh theo vật liệu và tô bóng lô của từng vật liệu; tăng theo số vật liệu và điểm ảnh trong khung nhìn."
+      },
+      "pass.translucency modulation": {
+        "label": "điều biến trong mờ",
+        "hint": "Vẽ các lớp nhân với những gì phía sau chúng; tăng theo các lớp đó trong khung nhìn."
+      },
+      "pass.translucency compose": {
+        "label": "ghép trong mờ",
+        "hint": "Ghép các lớp trong mờ lên ảnh; tăng theo kích thước kết xuất."
+      },
+      "pass.reflection clear": {
+        "label": "xóa phản chiếu",
+        "hint": "Làm trống ảnh phản chiếu ở nơi không có tia nào được dò; tăng theo kích thước kết xuất."
+      },
+      "pass.reflection resolve": {
+        "label": "phân giải phản chiếu",
+        "hint": "Dùng lại tia của các điểm ảnh lân cận để lấp ảnh phản chiếu; tăng theo số điểm ảnh phản chiếu."
+      },
+      "pass.reflection temporal": {
+        "label": "phản chiếu theo thời gian",
+        "hint": "Tích lũy phản chiếu của các ảnh trước để làm sạch ảnh; tăng theo số điểm ảnh phản chiếu."
+      },
+      "pass.reflection bilateral": {
+        "label": "lọc song phương phản chiếu",
+        "hint": "Lọc các phản chiếu nhiễu hoặc mới với lân cận và ghi ảnh phản chiếu; tăng theo số điểm ảnh phản chiếu."
+      },
+      "pass.reflection keep depth": {
+        "label": "giữ độ sâu phản chiếu",
+        "hint": "Giữ độ sâu đục cho phản chiếu của ảnh kế tiếp; tăng theo kích thước kết xuất."
+      },
+      "pass.tile classification": {
+        "label": "phân loại ô",
+        "hint": "Xếp các ô màn hình theo loại bề mặt chúng chứa, để mỗi ô được chiếu sáng bằng chương trình nó cần; tăng theo kích thước kết xuất."
+      },
+      "pass.surface colour": {
+        "label": "màu bề mặt",
+        "hint": "Ghi màu đầu tiên của mỗi điểm ảnh: nền, các bề mặt hiển thị nguyên trạng và phát xạ; tăng theo kích thước kết xuất."
+      },
+      "pass.sun light": {
+        "label": "ánh nắng",
+        "hint": "Thêm ánh sáng mặt trời và các đèn định hướng khác, cùng bóng của chúng, vào bề mặt; tăng theo số điểm ảnh được chiếu và số đèn."
+      },
+      "pass.local lights": {
+        "label": "đèn cục bộ",
+        "hint": "Thêm các đèn trong ô lưới ánh sáng của mỗi điểm ảnh vào bề mặt; tăng theo số điểm ảnh được chiếu và số đèn chạm tới chúng."
+      },
+      "pass.indirect light": {
+        "label": "ánh sáng gián tiếp",
+        "hint": "Thêm ánh sáng môi trường và bầu trời, ánh sáng nảy, phản chiếu và mặt sau của bề mặt mỏng; tăng theo số điểm ảnh được chiếu."
+      },
+      "pass.height fog": {
+        "label": "sương mù theo độ cao",
+        "hint": "Phủ sương mù, các khối sương mù cục bộ và màn mù của không khí lên ảnh đã chiếu sáng; tăng theo kích thước kết xuất."
+      },
+      "pass.temporal dilate velocity": {
+        "label": "giãn vận tốc (thời gian)",
+        "hint": "Tìm bề mặt gần nhất của mỗi điểm ảnh và chuyển động của nó cho khử răng cưa theo thời gian; tăng theo kích thước kết xuất."
+      },
+      "pass.temporal decimate history": {
+        "label": "giảm mẫu lịch sử (thời gian)",
+        "hint": "Chiếu lại các lịch sử nhỏ của ảnh trước lên ảnh này; tăng theo kích thước kết xuất."
+      },
+      "pass.temporal detect thin geometry": {
+        "label": "phát hiện hình học mảnh (thời gian)",
+        "hint": "Tìm hình học mảnh mà lịch sử phải giữ; tăng theo kích thước kết xuất."
+      },
+      "pass.temporal reject shading": {
+        "label": "loại bỏ tô bóng (thời gian)",
+        "hint": "Sau khi đo điểm ảnh nào nhấp nháy từ ảnh này sang ảnh sau, đo nơi lịch sử không còn khớp với ảnh và phải bỏ đi; tăng theo kích thước kết xuất."
+      },
+      "pass.temporal spatial anti aliasing": {
+        "label": "khử răng cưa không gian (thời gian)",
+        "hint": "Làm mịn cạnh của các điểm ảnh có lịch sử đã bị bỏ; tăng theo kích thước kết xuất."
+      },
+      "pass.temporal update history": {
+        "label": "cập nhật lịch sử (thời gian)",
+        "hint": "Trộn ảnh vào lịch sử để làm mịn cạnh; tăng theo kích thước lịch sử."
+      },
+      "pass.temporal resolve history": {
+        "label": "phân giải lịch sử (thời gian)",
+        "hint": "Đưa lịch sử lớn hơn màn hình về kích thước màn hình; tăng theo kích thước hiển thị."
+      },
+      "pass.temporal resolve display layers": {
+        "label": "phân giải lớp hiển thị (thời gian)",
+        "hint": "Đưa lịch sử của các lớp hiển thị về màn hình; tăng theo kích thước hiển thị."
+      },
+      "control.details": {
+        "label": "Chi tiết",
+        "hint": "Mở cửa sổ chi tiết trên khung nhìn: khung dưới dạng sơ đồ, mọi giai đoạn và lượt, vì sao mỗi ảnh được vẽ, vài phút gần nhất, bộ nhớ và cảnh. Khi nó mở, GPU được đo ở mọi ảnh trừ khi bạn chọn cách lấy mẫu khác; khi đóng, nó không tốn gì."
+      },
+      "details.label": {
+        "label": "Chi tiết engine",
+        "hint": "Mọi thứ các công cụ đo đọc được từ engine, theo từng thẻ; Esc hoặc × để đóng."
+      },
+      "details.close": {
+        "label": "Đóng",
+        "hint": "Đóng cửa sổ chi tiết (Esc)."
+      },
+      "tab.overview": {
+        "label": "Tổng quan",
+        "hint": "Khung dưới dạng sơ đồ: mỗi giai đoạn GPU là một thanh dài bằng thời gian của nó, CPU bên dưới, ngân sách làm mới là một đường; điều giữ khung được nói bằng lời. Nhấp vào một giai đoạn để mở các hàng của nó."
+      },
+      "tab.history": {
+        "label": "Lịch sử",
+        "hint": "Năm phút gần nhất, mỗi giây một điểm: thời gian của ảnh, GPU và CPU, những giây bị giật và những giây có ảnh nêu nguyên nhân."
+      },
+      "stageGroup.scene": {
+        "label": "Thế giới",
+        "hint": "Những gì làm thế giới chuyển động: vật lý, hoạt ảnh, đèn."
+      },
+      "stageGroup.cut": {
+        "label": "Lát cắt và streaming",
+        "hint": "Những gì engine chọn vẽ và đưa lên GPU: lát cắt, các trang, tải lên, texture."
+      },
+      "stageGroup.commands": {
+        "label": "Lệnh",
+        "hint": "Ghi và gửi các lệnh GPU."
+      },
+      "stageGroup.surfaces": {
+        "label": "Bề mặt",
+        "hint": "Vẽ các bề mặt: kim tự tháp độ sâu, hình học, decal và vật trong suốt."
+      },
+      "stageGroup.light": {
+        "label": "Ánh sáng",
+        "hint": "Chiếu sáng bề mặt: bộ đệm bề mặt, bóng, danh sách đèn, nảy sáng, phản chiếu và chiếu sáng."
+      },
+      "stageGroup.image": {
+        "label": "Ảnh",
+        "hint": "Hoàn thiện ảnh: khử răng cưa, hiệu ứng và hiển thị."
+      },
+      "stageGroup.apart": {
+        "label": "Riêng",
+        "hint": "Việc GPU ngoài ảnh, việc của chính các công cụ đo, và các lượt không giai đoạn nào khai báo."
+      },
+      "overview.said": {
+        "label": "Ảnh mất {frame} ms, GPU {gpu} ms, CPU {cpu} ms; nó chờ {wait} ms trên một lần làm mới {budget} ms.",
+        "hint": "Khung trong một câu khi chưa có gì cho biết điều giữ nó: thời gian của các bộ xử lý và thời gian chờ màn hình."
+      },
+      "overview.said.gpu": {
+        "label": "Bị giới hạn bởi GPU — ảnh mất {frame} ms, GPU {gpu} ms, CPU {cpu} ms; nó chờ {wait} ms trên một lần làm mới {budget} ms.",
+        "hint": "Khung trong một câu: thời gian của GPU quyết định một ảnh ở lại trên màn hình bao nhiêu lần làm mới; sau đó là thời gian của các bộ xử lý và thời gian chờ màn hình."
+      },
+      "overview.said.cpu": {
+        "label": "Bị giới hạn bởi CPU — ảnh mất {frame} ms, GPU {gpu} ms, CPU {cpu} ms; nó chờ {wait} ms trên một lần làm mới {budget} ms.",
+        "hint": "Khung trong một câu: thời gian của luồng chính quyết định một ảnh ở lại trên màn hình bao nhiêu lần làm mới; sau đó là thời gian của các bộ xử lý và thời gian chờ màn hình."
+      },
+      "overview.said.pacing": {
+        "label": "Bị giới hạn bởi nhịp màn hình — ảnh mất {frame} ms, GPU {gpu} ms, CPU {cpu} ms; nó chờ {wait} ms trên một lần làm mới {budget} ms.",
+        "hint": "Khung trong một câu: không bộ xử lý nào quyết định một ảnh ở lại trên màn hình bao nhiêu lần làm mới, mà là tần số làm mới màn hình, trang hoặc mức trần khung hình; sau đó là thời gian của các bộ xử lý và thời gian chờ màn hình."
+      },
+      "overview.unread": {
+        "label": "Chưa đọc được thời gian nào",
+        "hint": "Các giai đoạn GPU và CPU xuất hiện khi bộ đọc thời gian khung đã đọc được một giây."
+      },
+      "overview.stage": {
+        "label": "{name}: {ms} ms · {share} % của ảnh",
+        "hint": "Một giai đoạn của khung, thời gian trung bình trong giây vừa qua và phần của nó trong ảnh của GPU; nhấp để mở các hàng của nó."
+      },
+      "table.name": {
+        "label": "Tên",
+        "hint": "Giai đoạn, và các lượt của nó bên dưới; nhấp để sắp theo thứ tự pipeline."
+      },
+      "table.avg": {
+        "label": "TB",
+        "hint": "Trung bình trong giây vừa qua; tô màu theo ngân sách làm mới: cam khi quá một phần tư, đỏ khi quá một nửa. Nhấp để sắp xếp."
+      },
+      "table.p95": {
+        "label": "p95",
+        "hint": "Phân vị thứ 95 trong giây vừa qua: 1 trong 20 ảnh mất lâu hơn. Nhấp để sắp xếp."
+      },
+      "table.max": {
+        "label": "Max",
+        "hint": "Lâu nhất trong giây vừa qua. Nhấp để sắp xếp."
+      },
+      "table.share": {
+        "label": "% của ảnh",
+        "hint": "Phần của ảnh GPU (hoặc khung CPU). Nhấp để sắp xếp."
+      },
+      "table.trend": {
+        "label": "Phút vừa qua",
+        "hint": "Trung bình của từng giây trong phút vừa qua."
+      },
+      "history.stutter": {
+        "label": "giật",
+        "hint": "Một giây có ít nhất một ảnh mà màn hình phải chờ lâu hơn nhịp thường lệ: một dấu đỏ ở trên."
+      },
+      "history.cause": {
+        "label": "nguyên nhân",
+        "hint": "Một giây có ảnh nêu ra điều làm chúng chuyển động: một dấu vàng ở dưới; trỏ vào để đọc nguyên nhân."
+      },
+      "history.point": {
+        "label": "{ago} giây trước · ảnh {frame} ms (max {max}) · GPU {gpu} ms · CPU {cpu} ms",
+        "hint": "Giây dưới con trỏ: thời gian trung bình và ảnh lâu nhất của nó."
+      },
+      "history.unread": {
+        "label": "Chưa đọc được gì",
+        "hint": "Mỗi giây một điểm, lấy từ những gì bộ đọc thời gian ảnh đọc được, dù bảng đang hiển thị gì: điểm đầu tiên có sau một giây."
+      },
+      "history.zoom": {
+        "label": "từ {from} giây trước đến {to} giây trước · nhấp đúp: năm phút gần nhất",
+        "hint": "Kéo ngang biểu đồ để phóng to một khoảng; nhấp đúp để xem lại năm phút gần nhất."
+      },
+      "history.clipped": {
+        "label": "▲ vượt thang đo",
+        "hint": "Một tam giác nhỏ ở mép trên biểu đồ, cùng màu với một đường: thời gian của giây đó vượt đỉnh thang đo, một đỉnh nhọn mà thang đo để ra ngoài; trỏ vào để đọc đầy đủ."
+      },
+      "pass.material bins": {
+        "label": "lô vật liệu",
+        "hint": "Xếp điểm ảnh vào một lô cho mỗi lớp vật liệu trước khi mỗi lớp tô bóng lô của mình; tăng theo kích thước kết xuất."
+      },
+      "pass.material shading": {
+        "label": "tô bóng vật liệu",
+        "hint": "Một lớp vật liệu tô bóng các điểm ảnh trong lô của nó, mỗi điểm giải mã tam giác của riêng nó; tăng theo số điểm ảnh của lớp đó."
+      },
+      "pass.blend responsiveness": {
+        "label": "độ phản hồi trong suốt",
+        "hint": "Đánh dấu nơi vật trong suốt yêu cầu bộ lọc thời gian bám theo nhanh hơn; tăng theo số điểm ảnh trong suốt."
+      },
+      "pass.alpha holdout start": {
+        "label": "bắt đầu holdout alpha",
+        "hint": "Khởi tạo đích holdout từ alpha của ảnh đã chiếu sáng; tăng theo kích thước kết xuất."
+      },
+      "pass.blend alpha holdout": {
+        "label": "holdout alpha trong suốt",
+        "hint": "Vẽ các lớp holdout vào đích của chúng; tăng theo số điểm ảnh của chúng."
+      },
+      "pass.alpha holdout apply": {
+        "label": "áp dụng holdout alpha",
+        "hint": "Đặt lại độ hiển thị của holdout lên alpha của ảnh đã chiếu sáng; tăng theo kích thước kết xuất."
+      },
+      "pass.translucent radiance mark": {
+        "label": "đánh dấu bức xạ trong mờ",
+        "hint": "Đánh dấu các ô bộ đệm bức xạ mà bề mặt trong mờ đọc; tăng theo số điểm ảnh trong mờ."
+      },
+      "pass.sorted translucency collect": {
+        "label": "thu thập trong mờ đã sắp",
+        "hint": "Thu thập các lớp trong mờ của mỗi điểm ảnh để sắp xếp; tăng theo số lớp mỗi điểm ảnh."
+      },
+      "pass.sorted translucency combine": {
+        "label": "kết hợp trong mờ đã sắp",
+        "hint": "Ghép các lớp đã sắp từ trước ra sau lên đích trong mờ; tăng theo số lớp mỗi điểm ảnh."
+      },
+      "pass.water": {
+        "label": "nước",
+        "hint": "Tô bóng nước một lớp; tăng theo số điểm ảnh nước trên màn hình."
+      },
+      "pass.water scene copy": {
+        "label": "sao chép cảnh (nước)",
+        "hint": "Sao chép cảnh không có nước cho khúc xạ của nó; tăng theo kích thước kết xuất."
+      },
+      "pass.water depth": {
+        "label": "độ sâu nước",
+        "hint": "Vẽ độ sâu của nước; tăng theo số điểm ảnh của nó."
+      },
+      "pass.water refraction mask": {
+        "label": "mặt nạ khúc xạ nước",
+        "hint": "Che những gì nước được phép khúc xạ; tăng theo số điểm ảnh của nó."
+      },
+      "pass.water tiles": {
+        "label": "ô nước",
+        "hint": "Liệt kê các ô màn hình có nước; tăng theo kích thước kết xuất."
+      },
+      "pass.water velocity": {
+        "label": "vận tốc nước",
+        "hint": "Ghi chuyển động của mặt nước cho bộ lọc thời gian; tăng theo số điểm ảnh của nó."
+      },
+      "pass.water sun shadow": {
+        "label": "bóng nắng trên nước",
+        "hint": "Đổ bóng lên nước từ mặt trời; tăng theo số điểm ảnh của nó."
+      },
+      "pass.water composite": {
+        "label": "ghép nước",
+        "hint": "Ghép phản chiếu và khúc xạ của nước lên ảnh; tăng theo số điểm ảnh của nó."
+      },
+      "pass.hzb occlusion roots": {
+        "label": "gốc che khuất HZB",
+        "hint": "Suy ra các góc của hộp gốc để kiểm tra với kim tự tháp độ sâu; tăng theo số gốc."
+      },
+      "pass.hardware occlusion boxes": {
+        "label": "hộp che khuất phần cứng",
+        "hint": "Vẽ các hộp gốc so với độ sâu, một truy vấn che khuất cho mỗi nhóm; tăng theo số hộp được kiểm tra."
+      },
+      "pass.hardware occlusion small depth": {
+        "label": "độ sâu nhỏ che khuất phần cứng",
+        "hint": "Dựng độ sâu nhỏ để vẽ các hộp che khuất lên; tăng theo kích thước kết xuất."
+      },
+      "pass.hardware occlusion verdicts": {
+        "label": "phán quyết che khuất phần cứng",
+        "hint": "Biến số đếm của truy vấn thành phán quyết hiện hoặc ẩn; tăng theo số hộp được kiểm tra."
+      },
+      "pass.surface cache": {
+        "label": "bộ đệm bề mặt",
+        "hint": "Cập nhật bộ đệm bề mặt: các thẻ của nó được chụp, xóa, phản hồi và hiển thị; tăng theo số thẻ cần cập nhật."
+      },
+      "pass.surface cache lighting": {
+        "label": "chiếu sáng bộ đệm bề mặt",
+        "hint": "Chiếu sáng các thẻ của bộ đệm bề mặt mà nảy sáng đọc; tăng theo số thẻ và số đèn."
+      },
+      "pass.card capture": {
+        "label": "chụp thẻ",
+        "hint": "Chụp các thẻ của bộ đệm bề mặt từ lưới; tăng theo số thẻ được chụp trong ảnh này."
+      },
+      "pass.screen probes": {
+        "label": "đầu dò màn hình",
+        "hint": "Đặt đầu dò trên ảnh, dò tia, lọc và trộn chúng cho ánh sáng nảy; tăng theo kích thước kết xuất và số tia."
+      },
+      "pass.reflection hit lighting": {
+        "label": "chiếu sáng điểm chạm phản chiếu",
+        "hint": "Chiếu sáng lại các điểm chạm của tia phản chiếu, sắp theo vật liệu; tăng theo số tia chạm."
+      },
+      "pass.sky surfaces": {
+        "label": "bề mặt bầu trời",
+        "hint": "Vẽ các bề mặt bầu trời vào ảnh đã chiếu sáng trước khí quyển, sương mù và mây; tăng theo số điểm ảnh bầu trời."
+      },
+      "pass.fog separate composition": {
+        "label": "ghép sương mù riêng",
+        "hint": "Phủ sương mù được vẽ trong texture riêng lên ảnh đã chiếu sáng; tăng theo kích thước kết xuất."
+      },
+      "pass.fog blur": {
+        "label": "làm mờ sương mù",
+        "hint": "Làm mờ các texture riêng của sương mù; tăng theo kích thước của chúng."
+      },
+      "pass.fog upsample": {
+        "label": "tăng mẫu sương mù",
+        "hint": "Đưa các texture sương mù trở lại kích thước ảnh; tăng theo kích thước kết xuất."
+      },
+      "pass.fog temporal": {
+        "label": "sương mù theo thời gian",
+        "hint": "Lọc mức thứ hai của sương mù theo thời gian; tăng theo kích thước của nó."
+      },
+      "pass.fog volume": {
+        "label": "khối sương mù",
+        "hint": "Dựng khối sương mù: độ sâu các ô, ánh sáng mỗi ô tán xạ, tổng dọc mỗi cột; tăng theo số ô và số đèn."
+      },
+      "pass.fog local volumes": {
+        "label": "khối sương mù cục bộ",
+        "hint": "Vẽ các khối sương mù cục bộ; tăng theo số khối trên màn hình."
+      },
+      "pass.fog sun light function": {
+        "label": "hàm ánh sáng mặt trời (sương mù)",
+        "hint": "Vẽ hàm ánh sáng của mặt trời cho sương mù thể tích; tăng theo kích thước của nó."
+      },
+      "pass.light function atlas": {
+        "label": "atlas hàm ánh sáng",
+        "hint": "Vẽ hàm ánh sáng của các đèn vào atlas của chúng; tăng theo số đèn có hàm."
+      },
+      "pass.toon profile bake": {
+        "label": "nướng hồ sơ toon",
+        "hint": "Nướng các ảnh của hồ sơ toon thành các mẫu mà đèn đọc; chạy khi một hồ sơ thay đổi."
+      },
+      "pass.rect light atlas add": {
+        "label": "thêm vào atlas đèn chữ nhật",
+        "hint": "Vẽ ảnh nguồn của đèn chữ nhật vào atlas của nó; chạy khi một đèn được thêm."
+      },
+      "pass.rect light atlas copy": {
+        "label": "sao chép atlas đèn chữ nhật",
+        "hint": "Chuyển chỗ của một đèn chữ nhật sang atlas mới; chạy khi atlas lớn lên."
+      },
+      "pass.rect light atlas filter": {
+        "label": "lọc atlas đèn chữ nhật",
+        "hint": "Lọc một mức của atlas đèn chữ nhật; chạy khi một ảnh thay đổi."
+      },
+      "pass.rect light atlas clear": {
+        "label": "xóa atlas đèn chữ nhật",
+        "hint": "Xóa atlas đèn chữ nhật; chạy khi nó được tạo lại."
+      },
+      "pass.rect light atlas debug": {
+        "label": "gỡ lỗi atlas đèn chữ nhật",
+        "hint": "Vẽ atlas đèn chữ nhật cho khung nhìn gỡ lỗi của nó; chỉ khi khung nhìn đó được hiển thị."
+      },
+      "pass.rect light atlas blit": {
+        "label": "blit atlas đèn chữ nhật",
+        "hint": "Phủ atlas đèn chữ nhật lên ảnh cho khung nhìn gỡ lỗi của nó; chỉ khi khung nhìn đó được hiển thị."
+      },
+      "pass.light profile atlas debug": {
+        "label": "gỡ lỗi atlas hồ sơ ánh sáng",
+        "hint": "Vẽ atlas hồ sơ ánh sáng cho khung nhìn gỡ lỗi của nó; chỉ khi khung nhìn đó được hiển thị."
+      },
+      "pass.light profile atlas blit": {
+        "label": "blit atlas hồ sơ ánh sáng",
+        "hint": "Phủ atlas hồ sơ ánh sáng lên ảnh cho khung nhìn gỡ lỗi của nó; chỉ khi khung nhìn đó được hiển thị."
+      },
+      "pass.light shapes": {
+        "label": "hình dạng đèn",
+        "hint": "Vẽ hình dạng đèn dạng khung dây lên ảnh đã chiếu sáng; chỉ khi chúng được hiển thị."
+      },
+      "pass.volumetric lightmap light": {
+        "label": "ánh sáng lightmap thể tích",
+        "hint": "Gom ánh sáng của lightmap thể tích lên điểm ảnh trước khi ánh sáng gián tiếp đọc nó; tăng theo kích thước kết xuất."
+      },
+      "pass.volumetric lightmap visualize": {
+        "label": "hiển thị lightmap thể tích",
+        "hint": "Vẽ một quả cầu cho mỗi mẫu của lightmap thể tích; chỉ khi khung nhìn đó được hiển thị."
+      },
+      "pass.translucency volume": {
+        "label": "khối trong mờ",
+        "hint": "Đưa từng đèn vào các ô quanh camera dùng để chiếu sáng các bề mặt nhìn xuyên; tăng theo số đèn."
+      },
+      "pass.translucency volume spheres": {
+        "label": "cầu khối trong mờ",
+        "hint": "Vẽ một quả cầu cho mỗi ô của khối trong mờ; chỉ khi khung nhìn đó được hiển thị."
+      },
+      "pass.translucency global illumination": {
+        "label": "chiếu sáng toàn cục trong mờ",
+        "hint": "Dò tia và lọc ánh sáng gián tiếp của các bề mặt nhìn xuyên vào một lưới khớp với khung nhìn; tăng theo số ô của nó."
+      },
+      "pass.traced translucency trace": {
+        "label": "dò tia trong mờ",
+        "hint": "Dò tia xuyên qua các bề mặt nhìn xuyên; tăng theo số điểm ảnh của chúng."
+      },
+      "pass.traced translucency denoise": {
+        "label": "khử nhiễu trong mờ dò tia",
+        "hint": "Khử nhiễu các tia đã dò của bề mặt nhìn xuyên; tăng theo số điểm ảnh của chúng."
+      },
+      "pass.traced translucency compose": {
+        "label": "ghép trong mờ dò tia",
+        "hint": "Ghép các bề mặt nhìn xuyên đã dò tia lên ảnh đã chiếu sáng; tăng theo số điểm ảnh của chúng."
+      },
+      "pass.ambient occlusion": {
+        "label": "che khuất môi trường",
+        "hint": "Tìm mức mỗi điểm ảnh bị che bởi xung quanh, ở nhiều độ phân giải; tăng theo kích thước kết xuất."
+      },
+      "pass.subsurface scattering": {
+        "label": "tán xạ dưới bề mặt",
+        "hint": "Lan ánh sáng dưới các bề mặt giống da; tăng theo số điểm ảnh của chúng."
+      },
+      "pass.responsiveness clear": {
+        "label": "xóa độ phản hồi",
+        "hint": "Xóa độ phản hồi mà vật trong suốt ghi và bộ lọc thời gian đọc; tăng theo kích thước kết xuất."
+      },
+      "pass.velocity": {
+        "label": "vận tốc",
+        "hint": "Ghi chuyển động của mọi điểm ảnh cho các lượt đọc nó; tăng theo kích thước kết xuất."
+      },
+      "pass.temporal measure flickering luma": {
+        "label": "đo độ sáng nhấp nháy (thời gian)",
+        "hint": "Đo nơi độ sáng nhấp nháy từ ảnh này sang ảnh khác; tăng theo kích thước kết xuất."
+      },
+      "pass.temporal measure thin geometry coverage": {
+        "label": "đo độ phủ hình học mảnh (thời gian)",
+        "hint": "Đo hình học mảnh phủ bao nhiêu phần mỗi điểm ảnh; tăng theo kích thước kết xuất."
+      },
+      "pass.temporal thin geometry weight relaxation": {
+        "label": "nới trọng số hình học mảnh (thời gian)",
+        "hint": "Nới trọng số của lịch sử ở nơi có hình học mảnh; tăng theo kích thước kết xuất."
+      },
+      "pass.tone table": {
+        "label": "bảng tông",
+        "hint": "Nướng màu mà màn hình hiển thị cho mỗi mức sáng vào một khối lập phương nhỏ mà bước ghép đọc; chạy khi thiết lập tông thay đổi."
+      },
+      "pass.motion blur": {
+        "label": "nhòe chuyển động",
+        "hint": "Làm nhòe theo chuyển động của điểm ảnh: các ô, độ lan và bộ lọc; tăng theo kích thước kết xuất và chuyển động."
+      },
+      "pass.depth of field": {
+        "label": "độ sâu trường ảnh",
+        "hint": "Làm mờ những gì ngoài tiêu điểm: vòng tròn, ô, gom mẫu và sprite; tăng theo kích thước kết xuất và độ mờ."
+      },
+      "pass.post process material": {
+        "label": "vật liệu hậu kỳ",
+        "hint": "Chạy một vật liệu hậu kỳ trên toàn ảnh; tăng theo kích thước kết xuất và khối lượng việc của vật liệu."
+      },
+      "pass.custom depth": {
+        "label": "độ sâu tùy chỉnh",
+        "hint": "Ghi độ sâu và stencil tùy chỉnh của các vật thể yêu cầu chúng; tăng theo số vật thể đó."
+      },
+      "pass.page install": {
+        "label": "cài đặt trang",
+        "hint": "Cài lên thiết bị các trang hình học vừa tải; tăng theo số trang đến."
+      },
+      "pass.ray query": {
+        "label": "truy vấn tia",
+        "hint": "Trả lời các tia chọn của trang trên GPU; tăng theo số tia được hỏi."
+      },
+      "pass.hair strands": {
+        "label": "sợi tóc",
+        "hint": "Bất kỳ lượt nào của sợi tóc: mô phỏng, bóng, voxel và vẽ; tăng theo số sợi."
+      },
+      "pass.sun distance field shadow": {
+        "label": "bóng nắng bằng trường khoảng cách",
+        "hint": "Dò bóng xa của mặt trời qua các trường khoảng cách; tăng theo kích thước kết xuất."
+      },
+      "pass.distance field occlusion": {
+        "label": "che khuất bằng trường khoảng cách",
+        "hint": "Dò che khuất môi trường qua các trường khoảng cách; tăng theo kích thước kết xuất."
+      },
+      "pass.global distance field": {
+        "label": "trường khoảng cách toàn cục",
+        "hint": "Dựng trường khoảng cách toàn cục mà các lần dò tia đọc; tăng theo số lưới di chuyển."
+      },
+      "pass.mesh distance field": {
+        "label": "trường khoảng cách lưới",
+        "hint": "Dựng trường khoảng cách riêng của một lưới; chạy khi một lưới cần."
+      },
+      "pass.path tracer": {
+        "label": "path tracer",
+        "hint": "Bất kỳ lượt nào của path tracer: mẫu, bảng và hiển thị; tăng theo số mẫu mỗi điểm ảnh."
+      },
+      "pass.air": {
+        "label": "không khí",
+        "hint": "Dựng các bảng tra của khí quyển; tăng theo chuyển động của mặt trời."
+      },
+      "pass.sky": {
+        "label": "bầu trời",
+        "hint": "Vẽ bầu trời lên ảnh, chụp ánh sáng bầu trời và lọc nó; tăng theo số điểm ảnh bầu trời và số lần chụp."
+      },
+      "pass.opaque haze": {
+        "label": "mù trên vật đục",
+        "hint": "Phủ màn mù khí quyển lên các bề mặt đục; tăng theo kích thước kết xuất."
+      },
+      "pass.cloud": {
+        "label": "mây",
+        "hint": "Bất kỳ lượt nào của mây thể tích; tăng theo số điểm ảnh mây và số bước."
+      },
+      "pass.light shafts": {
+        "label": "tia sáng",
+        "hint": "Vẽ các tia sáng của mặt trời; tăng theo kích thước kết xuất."
+      },
+      "pass.surface rewrite": {
+        "label": "ghi lại bề mặt",
+        "hint": "Ghi lại các bề mặt mà bầu trời và sương mù thay đổi; tăng theo kích thước kết xuất."
+      },
+      "pass.debug lines appended": {
+        "label": "thêm đường gỡ lỗi",
+        "hint": "Thêm các đường của một khung nhìn gỡ lỗi; chỉ khi khung nhìn đó được hiển thị."
+      },
+      "pass.inspection reflection": {
+        "label": "phản chiếu kiểm tra",
+        "hint": "Các kernel phản chiếu của chế độ kiểm tra; chỉ khi một phiên kiểm tra đang mở."
+      },
+      "reason.lost": {
+        "label": "mất thiết bị",
+        "hint": "Thiết bị GPU đã mất: ảnh được vẽ lại khi nó trở lại."
+      },
+      "reason.capturing": {
+        "label": "đang chụp",
+        "hint": "Một lần chụp đang diễn ra: các ảnh của nó được vẽ."
+      },
+      "reason.capturePending": {
+        "label": "đã yêu cầu chụp",
+        "hint": "Một lần chụp đã được yêu cầu và đang chờ ảnh của nó."
+      },
+      "reason.frameEncoder": {
+        "label": "bộ mã hóa khung",
+        "hint": "Các lệnh của khung vẫn đang được ghi: chưa thể giữ ảnh."
+      },
+      "reason.metricsPending": {
+        "label": "chờ số liệu",
+        "hint": "Số đếm của ảnh cuối chưa về từ GPU."
+      },
+      "reason.cutMoving": {
+        "label": "lát cắt đang đổi",
+        "hint": "Lát cắt hình học vẫn đang thay đổi."
+      },
+      "reason.overBudget": {
+        "label": "vượt ngân sách",
+        "hint": "Lát cắt muốn nhiều hơn ngân sách cho phép: nó tiếp tục tinh chỉnh."
+      },
+      "reason.noOccluderHistory": {
+        "label": "chưa có lịch sử vật che",
+        "hint": "Kiểm tra che khuất chưa có ảnh cuối để so."
+      },
+      "reason.deferredDrops": {
+        "label": "bỏ trì hoãn",
+        "hint": "Hình học mà lát cắt đã nhả vẫn đang chờ bị bỏ."
+      },
+      "reason.bootstrap": {
+        "label": "khởi động",
+        "hint": "Khung nhìn đang ở những ảnh đầu tiên."
+      },
+      "reason.residencyBusy": {
+        "label": "đang tải trang",
+        "hint": "Các trang hình học vẫn đang tải hoặc cài đặt."
+      },
+      "reason.clustersOwed": {
+        "label": "cluster còn nợ",
+        "hint": "Các cluster mà lát cắt yêu cầu chưa được vẽ."
+      },
+      "reason.texturesPending": {
+        "label": "chờ texture",
+        "hint": "Các ô texture mà khung nhìn yêu cầu vẫn đang tải."
+      },
+      "reason.shadowsPending": {
+        "label": "chờ bóng",
+        "hint": "Các trang bóng mà khung nhìn cần chưa được vẽ hết."
+      },
+      "reason.cutPending": {
+        "label": "chờ lát cắt",
+        "hint": "Một lát cắt mới đã được yêu cầu nhưng chưa được nhận."
+      },
+      "reason.bounceProbes": {
+        "label": "đầu dò nảy sáng",
+        "hint": "Các đầu dò của ánh sáng nảy vẫn đang hội tụ."
+      },
+      "reason.deforming": {
+        "label": "đang biến dạng",
+        "hint": "Hình học đang bị biến dạng trong ảnh này."
+      },
+      "reason.reflections": {
+        "label": "phản chiếu",
+        "hint": "Phản chiếu vẫn đang hội tụ."
+      },
+      "reason.hlodWarming": {
+        "label": "HLOD đang chuẩn bị",
+        "hint": "Các mức HLOD vẫn đang được chuẩn bị."
+      },
+      "reason.exposure": {
+        "label": "phơi sáng",
+        "hint": "Phơi sáng tự động vẫn đang thích nghi."
+      },
+      "reason.fogVolume": {
+        "label": "khối sương mù",
+        "hint": "Khối sương mù vẫn đang hội tụ."
+      },
+      "reason.translucencyVolume": {
+        "label": "khối trong mờ",
+        "hint": "Khối chiếu sáng trong mờ vẫn đang hội tụ."
+      },
+      "reason.translucencyGi": {
+        "label": "GI trong mờ",
+        "hint": "Ánh sáng gián tiếp của các bề mặt nhìn xuyên vẫn đang hội tụ."
+      },
+      "reason.screenProbes": {
+        "label": "đầu dò màn hình",
+        "hint": "Các đầu dò màn hình vẫn đang hội tụ."
+      },
+      "reason.occlusion": {
+        "label": "che khuất",
+        "hint": "Các phán quyết che khuất vẫn đang ổn định."
+      },
+      "reason.casterSettling": {
+        "label": "vật đổ bóng đang ổn định",
+        "hint": "Vật đổ bóng vừa di chuyển: bóng của chúng vẫn đang ổn định."
+      },
+      "reason.noisePhase": {
+        "label": "pha nhiễu",
+        "hint": "Ảnh này là một trong các pha nhiễu mà lịch sử thời gian cần để ổn định."
+      },
+      "term.taaConverging": {
+        "label": "TAA đang hội tụ",
+        "hint": "Khử răng cưa theo thời gian chưa gom đủ lịch sử: mỗi ảnh được vẽ cho đến khi đủ."
+      },
+      "term.frameDifference": {
+        "label": "chênh lệch khung",
+        "hint": "Khung nhìn chênh lệch khung vẽ mọi ảnh để so với ảnh trước."
+      },
+      "term.surfaceCache": {
+        "label": "bộ đệm bề mặt",
+        "hint": "Bộ đệm bề mặt đang cập nhật các thẻ."
+      },
+      "term.pathTracing": {
+        "label": "path tracing",
+        "hint": "Path tracer thêm mẫu ở mỗi ảnh."
+      },
+      "term.guides": {
+        "label": "đường dẫn",
+        "hint": "Các đường dẫn động được vẽ trên ảnh."
+      },
+      "term.hairDebug": {
+        "label": "gỡ lỗi tóc",
+        "hint": "Một khung nhìn gỡ lỗi tóc đang hiển thị."
+      },
+      "term.effects": {
+        "label": "hiệu ứng",
+        "hint": "Một hiệu ứng thay đổi theo thời gian."
+      },
+      "term.postProcessMaterialsAnimated": {
+        "label": "hậu kỳ động",
+        "hint": "Một vật liệu hậu kỳ đang chuyển động."
+      },
+      "term.particles": {
+        "label": "hạt",
+        "hint": "Có hạt đang sống."
+      },
+      "term.lightFunctions": {
+        "label": "hàm ánh sáng",
+        "hint": "Một hàm ánh sáng đang chuyển động."
+      },
+      "term.fogSunLightFunction": {
+        "label": "hàm ánh sáng mặt trời trong sương mù",
+        "hint": "Hàm ánh sáng mặt trời trong sương mù đang chuyển động."
+      },
+      "term.lightProfiles": {
+        "label": "hồ sơ ánh sáng",
+        "hint": "Một hồ sơ ánh sáng thay đổi."
+      },
+      "term.ambientCubemap": {
+        "label": "cubemap môi trường",
+        "hint": "Cubemap môi trường đang trộn."
+      },
+      "term.lightShapes": {
+        "label": "hình dạng đèn",
+        "hint": "Hình dạng đèn đang hiển thị."
+      },
+      "term.graphsAnimated": {
+        "label": "vật liệu động",
+        "hint": "Đồ thị của một vật liệu đang chuyển động."
+      },
+      "term.blendGraphsAnimated": {
+        "label": "trong suốt động",
+        "hint": "Đồ thị của một vật liệu trong suốt đang chuyển động."
+      },
+      "term.fogVolumeAnimated": {
+        "label": "sương mù động",
+        "hint": "Một khối sương mù đang chuyển động."
+      },
+      "term.clouds": {
+        "label": "mây",
+        "hint": "Mây đang di chuyển."
+      },
+      "term.skyCubemaps": {
+        "label": "cubemap bầu trời",
+        "hint": "Các cubemap bầu trời đang trộn."
+      },
+      "term.finishAnimated": {
+        "label": "hoàn thiện động",
+        "hint": "Phần hoàn thiện ảnh (hạt nhiễu, vignette…) đang chuyển động."
+      },
+      "answer.device refusal": {
+        "label": "thiết bị từ chối",
+        "hint": "Thiết bị đã từ chối công việc: ảnh chờ cho đến khi được yêu cầu lại."
+      },
+      "answer.targets in flight": {
+        "label": "đích đang dùng",
+        "hint": "Các đích của ảnh cuối vẫn đang được GPU sử dụng."
+      },
+      "answer.lit program": {
+        "label": "chương trình chiếu sáng",
+        "hint": "Chương trình của ảnh đã chiếu sáng vẫn đang biên dịch."
+      },
+      "answer.sorted translucency buffers": {
+        "label": "bộ đệm trong mờ đã sắp",
+        "hint": "Các bộ đệm của trong mờ đã sắp vẫn đang được tạo."
+      },
+      "answer.translucent object shadow table": {
+        "label": "bảng bóng trong mờ",
+        "hint": "Bảng bóng của các vật thể trong mờ vẫn đang được tạo."
+      },
+      "answer.pipelines": {
+        "label": "pipeline",
+        "hint": "Các pipeline GPU vẫn đang biên dịch."
+      },
+      "answer.targets refused": {
+        "label": "đích bị từ chối",
+        "hint": "Thiết bị đã từ chối kích thước đích; nó được yêu cầu lại sau một khoảng chờ."
+      },
+      "because.firstImage": {
+        "label": "ảnh đầu tiên",
+        "hint": "Ảnh đầu tiên của khung nhìn."
+      },
+      "because.scene": {
+        "label": "cảnh thay đổi",
+        "hint": "Có gì đó trong cảnh đã di chuyển kể từ ảnh được giữ."
+      },
+      "because.view": {
+        "label": "khung nhìn thay đổi",
+        "hint": "Khung nhìn đã di chuyển kể từ ảnh được giữ."
+      },
+      "because.resources": {
+        "label": "tài nguyên thay đổi",
+        "hint": "Một tài nguyên mà ảnh đọc đã thay đổi kể từ ảnh được giữ."
+      },
+      "because.confirming": {
+        "label": "xác nhận",
+        "hint": "Ảnh sau một thay đổi, được vẽ thêm một lần để xác nhận."
+      },
+      "because.unstable": {
+        "label": "không ổn định",
+        "hint": "Công việc của hai ảnh cuối khác nhau."
+      },
+      "because.noiseClock": {
+        "label": "đồng hồ nhiễu",
+        "hint": "Đồng hồ của nhiễu đã thay đổi."
+      },
+      "because.swapped": {
+        "label": "đã hoán đổi",
+        "hint": "Một ảnh yên tĩnh được vẽ vào các đích đã hoán đổi."
+      },
+      "because.forced": {
+        "label": "bị ép",
+        "hint": "Phép đo tư thế tĩnh đã yêu cầu nó."
+      },
+      "cause.sceneWritten": {
+        "label": "cảnh được ghi",
+        "hint": "Trang đã ghi một tư thế, độ hiển thị hoặc đèn của cảnh."
+      },
+      "cause.sceneReshaped": {
+        "label": "cảnh được sắp lại",
+        "hint": "Trang đã thêm, xóa hoặc di chuyển một nút."
+      },
+      "cause.diagnosticView": {
+        "label": "chế độ xem",
+        "hint": "Chế độ xem chẩn đoán đã thay đổi."
+      },
+      "cause.materialChanged": {
+        "label": "vật liệu thay đổi",
+        "hint": "Trang đã thay đổi một vật liệu."
+      },
+      "cause.shadingModels": {
+        "label": "mô hình tô bóng",
+        "hint": "Các mô hình tô bóng đã thay đổi."
+      },
+      "cause.sceneLights": {
+        "label": "đặt đèn",
+        "hint": "Trang đã đặt các đèn."
+      },
+      "cause.fogVolumes": {
+        "label": "khối sương mù",
+        "hint": "Trang đã đặt các khối sương mù."
+      },
+      "cause.posesMoved": {
+        "label": "tư thế di chuyển",
+        "hint": "Engine đã di chuyển các tư thế."
+      },
+      "cause.verticesRewritten": {
+        "label": "đỉnh được ghi lại",
+        "hint": "Engine đã ghi lại các đỉnh."
+      },
+      "cause.placementsMoved": {
+        "label": "vị trí đặt di chuyển",
+        "hint": "Engine đã di chuyển các vị trí đặt."
+      },
+      "cause.placementsGrown": {
+        "label": "vị trí đặt tăng",
+        "hint": "Bảng vị trí đặt đã lớn lên."
+      },
+      "cause.placementsComposed": {
+        "label": "vị trí đặt được ghép",
+        "hint": "Các vị trí đặt đã được ghép lại."
+      },
+      "cause.cameraCut": {
+        "label": "chuyển camera",
+        "hint": "Một camera khác, hoặc một lần cắt lịch sử khung nhìn."
+      },
+      "cause.viewMoved": {
+        "label": "khung nhìn di chuyển",
+        "hint": "Tư thế, phép chiếu hoặc viewport của khung nhìn đã thay đổi."
+      },
+      "cause.viewQuality": {
+        "label": "chất lượng khung nhìn",
+        "hint": "Dải độ sâu hoặc chất lượng của khung nhìn đã thay đổi."
+      },
+      "cause.simpleLights": {
+        "label": "đèn đơn giản",
+        "hint": "Các đèn đơn giản đã thay đổi."
+      },
+      "cause.skyFaceWaiting": {
+        "label": "mặt bầu trời chờ vẽ",
+        "hint": "Một mặt của khối lập phương bầu trời đang chờ được vẽ."
+      },
+      "cause.skyMeshesDrawn": {
+        "label": "lưới bầu trời đã vẽ",
+        "hint": "Các lưới bầu trời đã được vẽ."
+      },
+      "cause.reflectionDrawn": {
+        "label": "gương đã vẽ",
+        "hint": "Một phản chiếu phẳng đã được vẽ."
+      },
+      "cause.reflectionChanged": {
+        "label": "gương thay đổi",
+        "hint": "Thiết lập của một phản chiếu phẳng đã thay đổi."
+      },
+      "cause.customDepthMoved": {
+        "label": "jitter độ sâu tùy chỉnh",
+        "hint": "Jitter của độ sâu tùy chỉnh đã dịch chuyển."
+      },
+      "cause.shadowSettings": {
+        "label": "thiết lập bóng",
+        "hint": "Thiết lập bóng đã thay đổi."
+      },
+      "cause.shadowOrigin": {
+        "label": "gốc bóng",
+        "hint": "Gốc của bóng đã di chuyển."
+      },
+      "cause.captureAccumulation": {
+        "label": "tích lũy chụp",
+        "hint": "Một lần chụp đang tích lũy các ảnh của nó."
+      },
+      "cause.targetsMade": {
+        "label": "tạo đích",
+        "hint": "Các đích của ảnh đã được tạo lại."
+      },
+      "cause.taaLevel": {
+        "label": "mức TAA",
+        "hint": "Mức khử răng cưa theo thời gian đã thay đổi."
+      },
+      "cause.taaRigged": {
+        "label": "TAA dựng lại",
+        "hint": "Khử răng cưa theo thời gian đã được thiết lập lại."
+      },
+      "cause.vertexPoolGrown": {
+        "label": "pool đỉnh tăng",
+        "hint": "Pool đỉnh đã lớn lên."
+      },
+      "cause.inspection": {
+        "label": "kiểm tra",
+        "hint": "Một phiên kiểm tra đã thay đổi."
+      },
+      "cause.litProgram": {
+        "label": "chương trình chiếu sáng",
+        "hint": "Chương trình của ảnh đã chiếu sáng đã thay đổi."
+      },
+      "cause.feedbackVariant": {
+        "label": "biến thể phản hồi",
+        "hint": "Phản hồi texture đã đổi biến thể."
+      },
+      "cause.catalogueCover": {
+        "label": "bìa danh mục",
+        "hint": "Bìa của danh mục đã thay đổi."
+      },
+      "cause.worldCover": {
+        "label": "bìa thế giới",
+        "hint": "Bìa của thế giới đã thay đổi."
+      },
+      "cause.materialGraphs": {
+        "label": "đồ thị vật liệu",
+        "hint": "Các đồ thị vật liệu đã thay đổi."
+      },
+      "cause.targetsResized": {
+        "label": "đổi kích thước đích",
+        "hint": "Các đích của ảnh đã được đổi kích thước."
+      },
+      "cause.textureColor": {
+        "label": "màu texture",
+        "hint": "Màu của một texture đã thay đổi."
+      },
+      "cause.tilesServed": {
+        "label": "ô đã gửi",
+        "hint": "Các ô texture đã đến."
+      },
+      "cause.layersGrown": {
+        "label": "lớp tăng",
+        "hint": "Các lớp texture đã lớn lên."
+      },
+      "cause.bounceSwitched": {
+        "label": "chuyển nảy sáng",
+        "hint": "Ánh sáng nảy đã được chuyển."
+      },
+      "cause.screenProbes": {
+        "label": "đầu dò màn hình",
+        "hint": "Các đầu dò màn hình đã thay đổi."
+      },
+      "cause.bounceProbes": {
+        "label": "đầu dò nảy sáng",
+        "hint": "Các đầu dò nảy sáng đã thay đổi."
+      },
+      "cause.memoryBudget": {
+        "label": "ngân sách bộ nhớ",
+        "hint": "Ngân sách bộ nhớ đã thay đổi."
+      },
+      "cause.texturePoolGrown": {
+        "label": "pool texture tăng",
+        "hint": "Pool texture đã lớn lên."
+      },
+      "cause.cutReleased": {
+        "label": "lát cắt giải phóng",
+        "hint": "Hình học của lát cắt đã được giải phóng."
+      },
+      "cause.residentSynced": {
+        "label": "đồng bộ thường trú",
+        "hint": "Hình học thường trú đã được đồng bộ."
+      },
+      "cause.clearColor": {
+        "label": "màu xóa",
+        "hint": "Màu xóa đã thay đổi."
+      },
+      "cause.textureAppended": {
+        "label": "thêm texture",
+        "hint": "Một texture đã được thêm."
+      },
+      "cause.textureReleased": {
+        "label": "giải phóng texture",
+        "hint": "Một texture đã được giải phóng."
+      },
+      "cause.pageLanded": {
+        "label": "trang đến",
+        "hint": "Một trang hình học đã đến."
+      },
+      "cause.pageDropped": {
+        "label": "trang bị bỏ",
+        "hint": "Một trang hình học đã bị bỏ."
+      },
+      "cause.pageResidence": {
+        "label": "thường trú trang",
+        "hint": "Trạng thái thường trú của một trang đã thay đổi."
+      },
+      "cause.cutAdopted": {
+        "label": "nhận lát cắt",
+        "hint": "Một lát cắt hình học mới đã được nhận."
+      },
+      "cause.cutFrozen": {
+        "label": "đóng băng lát cắt",
+        "hint": "Lát cắt đã được đóng băng hoặc thả ra."
+      },
+      "cause.deviceGone": {
+        "label": "mất thiết bị",
+        "hint": "Thiết bị GPU đã mất."
+      },
+      "cause.coverPending": {
+        "label": "chờ bìa",
+        "hint": "Một bìa đang chờ được vẽ."
+      },
+      "cause.renderScale": {
+        "label": "tỷ lệ kết xuất",
+        "hint": "Tỷ lệ kết xuất đã thay đổi."
+      },
+      "cause.worldCells": {
+        "label": "ô thế giới",
+        "hint": "Các ô của thế giới đã thay đổi."
+      },
+      "cause.blendPipelines": {
+        "label": "pipeline trong suốt",
+        "hint": "Các pipeline trong suốt đã được tạo."
+      },
+      "cause.shadowSetLost": {
+        "label": "mất bộ bóng",
+        "hint": "Một bộ trang bóng đã bị mất."
+      },
+      "cause.skinTable": {
+        "label": "bảng skinning",
+        "hint": "Bảng skinning đã thay đổi."
+      },
+      "cause.volumePrograms": {
+        "label": "chương trình khối",
+        "hint": "Các chương trình khối đã thay đổi."
+      },
+      "cause.volumeGrid": {
+        "label": "lưới khối",
+        "hint": "Một lưới khối đã thay đổi."
+      },
+      "cause.hairStrands": {
+        "label": "sợi tóc",
+        "hint": "Các sợi tóc đã thay đổi."
+      },
+      "cause.animation": {
+        "label": "hoạt ảnh",
+        "hint": "Một clip đã tiến lên."
+      },
+      "cause.physics": {
+        "label": "vật lý",
+        "hint": "Một vật thể đã bước."
+      },
+      "cause.invalidate": {
+        "label": "vô hiệu hóa",
+        "hint": "Trang đã yêu cầu một ảnh: world.invalidate()."
       }
     },
     "failure": {
@@ -753,8 +2659,7 @@
       "waiting": "Đang chờ engine (#{issue})"
     },
     "views": {
-      "beauty": "hình ảnh",
-      "wireframe": "tam giác",
+      "beauty": "Render",
       "triangles": "tam giác màu",
       "xray": "tia X",
       "clusters": "cụm",
@@ -763,7 +2668,6 @@
       "screen-error": "sai số trên màn hình",
       "materials": "vật liệu",
       "visibility": "trang được thấy",
-      "pages": "trang trong bộ nhớ",
       "texture-mip": "kích thước texture",
       "overdraw": "vẽ chồng",
       "frame-difference": "chênh lệch khung hình",
@@ -779,10 +2683,68 @@
       "taa-reprojection": "tái chiếu TAA",
       "taa-motion": "chuyển động TAA",
       "taa-thin": "hình học mảnh TAA",
-      "taa-material-history": "lịch sử TAA theo vật liệu"
+      "taa-material-history": "lịch sử TAA theo vật liệu",
+      "voxels": "voxel",
+      "indirect-diffuse": "ánh sáng gián tiếp",
+      "surface-cache-albedo": "bộ đệm bề mặt: albedo",
+      "surface-cache-normal": "bộ đệm bề mặt: pháp tuyến",
+      "surface-cache-depth": "bộ đệm bề mặt: độ sâu",
+      "surface-cache-cards": "bộ đệm bề mặt: thẻ",
+      "surface-cache-fill": "bộ đệm bề mặt: lấp đầy",
+      "surface-cache-age": "bộ đệm bề mặt: tuổi",
+      "hair-light-bounds": "tóc: khung bao",
+      "hair-deep-opacity-maps": "tóc: bóng sâu",
+      "hair-macro-group-screen-rect": "tóc: khung trên màn hình",
+      "hair-voxels-density": "tóc: mật độ voxel",
+      "sampled-lights-overview": "nhiều nguồn sáng: tổng quan",
+      "sampled-lights-shadow-casters": "nhiều nguồn sáng: vật đổ bóng",
+      "sampled-lights-shadow-caster-quality": "nhiều nguồn sáng: chất lượng vật đổ bóng",
+      "sampled-lights-complexity-opaque": "nhiều nguồn sáng: chi phí trên bề mặt",
+      "sampled-lights-complexity-hair-strands": "nhiều nguồn sáng: chi phí trên tóc",
+      "sampled-lights-complexity-front-layer": "nhiều nguồn sáng: chi phí trên lớp trước",
+      "sampled-lights-complexity-volume": "nhiều nguồn sáng: chi phí trong sương mù",
+      "sampled-lights-complexity-translucency-volume": "nhiều nguồn sáng: chi phí trong vùng trong mờ",
+      "subsurface-profiles": "hồ sơ tán xạ dưới bề mặt",
+      "virtual-shadow-map-shadow-casters": "bản đồ bóng: vật đổ bóng",
+      "virtual-shadow-map-clipmap-virtual-space": "bản đồ bóng: clipmap mặt trời",
+      "virtual-shadow-map-shadow-factor": "bản đồ bóng: ánh sáng tới",
+      "virtual-shadow-map-clipmap-or-mip": "bản đồ bóng: cấp được đọc",
+      "virtual-shadow-map-virtual-page": "bản đồ bóng: trang được đọc",
+      "virtual-shadow-map-cached-page": "bản đồ bóng: trang trong bộ đệm",
+      "virtual-shadow-map-ray-count": "bản đồ bóng: số tia",
+      "virtual-shadow-map-general-debug": "bản đồ bóng: khoảng cách vật che",
+      "virtual-shadow-map-dirty-page": "bản đồ bóng: trang đã vẽ",
+      "virtual-shadow-map-gpu-invalidated-page": "bản đồ bóng: trang bị vô hiệu",
+      "virtual-shadow-map-merged-page": "bản đồ bóng: trang đã gộp",
+      "virtual-shadow-map-overdraw": "bản đồ bóng: vẽ chồng",
+      "rect-light-atlas": "atlas đèn chữ nhật",
+      "light-profile-atlas": "atlas hồ sơ ánh sáng",
+      "surface-cache-direct-stats": "bộ đệm bề mặt: cập nhật trực tiếp",
+      "surface-cache-indirect-stats": "bộ đệm bề mặt: cập nhật gián tiếp",
+      "surface-cache-direct-lighting-stats": "bộ đệm bề mặt: nguồn sáng thu thập",
+      "surface-cache-scene-stats": "bộ đệm bề mặt: số đếm",
+      "surface-cache-primitive-groups": "bộ đệm bề mặt: hộp vật thể",
+      "radiance-cache-stats": "bộ đệm bức xạ: số liệu",
+      "screen-probe-gather-debug": "đầu dò màn hình: số lượng",
+      "screen-probe-tile-stats": "đầu dò màn hình: ô",
+      "screen-probe-placement": "đầu dò màn hình: vị trí",
+      "screen-probe-traces": "đầu dò màn hình: tia",
+      "reflection-traces": "tia phản xạ",
+      "radiance-cache-probes": "bộ đệm bức xạ: đầu dò",
+      "scene-visualization": "cảnh được dò tia",
+      "material-properties": "vật liệu dưới con trỏ",
+      "heterogeneous-volumes-dda-marching": "thể tích: duyệt DDA",
+      "heterogeneous-volumes-sample-marching": "thể tích: duyệt theo mẫu",
+      "heterogeneous-volumes-sample-majorant": "thể tích: mẫu cận trên",
+      "heterogeneous-volumes-sample-max-majorant": "thể tích: mẫu cận trên lớn nhất",
+      "heterogeneous-volumes-sample-majorant-dda": "thể tích: mẫu DDA cận trên",
+      "heterogeneous-volumes-delta-tracking": "thể tích: delta tracking",
+      "heterogeneous-volumes-ratio-tracking": "thể tích: ratio tracking",
+      "heterogeneous-volumes-spectral-ratio-tracking": "thể tích: ratio tracking phổ",
+      "heterogeneous-volumes-tracking-majorant-dda": "thể tích: tracking DDA cận trên"
     },
     "viewHints": {
-      "wireframe": "Các cạnh của mỗi tam giác được vẽ, chỉ đường nét: ở xa, ít tam giác hơn và lớn hơn.",
+      "beauty": "Ảnh bình thường.",
       "triangles": "Mỗi tam giác được vẽ một màu đặc.",
       "xray": "Các cạnh của mọi tam giác mà engine gửi đi, nhìn xuyên tường: phần bị loại bỏ không hiện. Đóng băng loại bỏ rồi bước sang bên để kiểm tra.",
       "clusters": "Mỗi cụm một màu: nhóm tam giác mà lát cắt thay bằng nhóm thô hơn.",
@@ -791,7 +2753,6 @@
       "screen-error": "Xanh lá: chính xác. Vàng: gần sai số pixel cho phép. Đỏ: ở giới hạn.",
       "materials": "Mỗi loại vật liệu một màu.",
       "visibility": "Xanh lá: mỗi trang được vẽ trong khung hình này.",
-      "pages": "Xanh lá: mỗi trang trong bộ nhớ được vẽ.",
       "frame-difference": "Đen: điểm ảnh không đổi so với khung trước. Xám đến trắng: đã thay đổi, khuếch đại tám lần — cái gì nhấp nháy sẽ sáng lên.",
       "reflections": "Chỉ ánh sáng mà bề mặt phản chiếu, từ dò tia trên màn hình và các đầu dò; đen ở nơi không có phản chiếu.",
       "shadows": "Lượng ánh nắng tới từng bề mặt — trắng: được chiếu sáng, đen: trong bóng. Không có màu vật liệu.",
@@ -805,7 +2766,67 @@
       "taa-reprojection": "Vì sao lịch sử bắt đầu lại — đỏ: lộ ra, xanh lá: lộ ra và lấp bằng chuyển động của vật che, xanh dương: ngoài màn hình trước.",
       "taa-motion": "Chuyển động mà phép tích lũy thấy — đỏ: đang chuyển động với phép đo nhấp nháy, xanh lá: hoạt ảnh điểm ảnh, xanh dương: cạnh tái chiếu (trắng: chuyển động đều).",
       "taa-thin": "Hình học mảnh — đỏ: mức nới giới hạn lịch sử, xanh lá: vùng lỗ cụm, xanh dương: lịch sử độ phủ.",
-      "taa-material-history": "Phần lịch sử mỗi vật liệu được giữ, hiện bằng màu xám — trắng: 1, làm mịn đầy đủ; đen: 0, chỉ ảnh hiện tại."
+      "taa-material-history": "Phần lịch sử mỗi vật liệu được giữ, hiện bằng màu xám — trắng: 1, làm mịn đầy đủ; đen: 0, chỉ ảnh hiện tại.",
+      "voxels": "Những gì được vẽ bằng voxel, mỗi cấp một màu; tam giác màu xám.",
+      "indirect-diffuse": "Chỉ ánh sáng gián tiếp (nảy, môi trường, bầu trời) trên một bề mặt xám trung tính.",
+      "surface-cache-albedo": "Atlas các thẻ bề mặt: màu mà chúng đã ghi lại.",
+      "surface-cache-normal": "Atlas: các pháp tuyến mà thẻ đã ghi lại.",
+      "surface-cache-depth": "Atlas: độ sâu của mỗi texel trong thẻ của nó, màu xám.",
+      "surface-cache-cards": "Atlas: mỗi thẻ một màu.",
+      "surface-cache-fill": "Atlas: xanh lá cấp thô nhất luôn giữ, xanh dương các trang mịn hơn, đen là trống.",
+      "surface-cache-age": "Atlas: số hình kể từ khi mỗi trang được ghi, trắng là mới, xanh dương là cũ.",
+      "hair-light-bounds": "Khung bao các sợi tóc và hình chóp bóng của chúng trên hình.",
+      "hair-deep-opacity-maps": "Độ sâu và các lớp của một bản đồ bóng sâu của tóc trên hình.",
+      "hair-macro-group-screen-rect": "Một khung xanh lá quanh các điểm ảnh mà mỗi nhóm sợi tóc phủ.",
+      "hair-voxels-density": "Tia của mỗi điểm ảnh đi qua bao nhiêu sợi tóc, từ xanh lá đến đỏ.",
+      "sampled-lights-overview": "Chế độ xem vật đổ bóng và chế độ xem chất lượng của chúng cạnh nhau.",
+      "sampled-lights-shadow-casters": "Tia bóng chạm vào gì tại mỗi điểm ảnh, mỗi vật thể một màu.",
+      "sampled-lights-shadow-caster-quality": "Đỏ: thiếu một vật đổ bóng; xanh dương: một vật ở trước bề mặt.",
+      "sampled-lights-complexity-opaque": "Các nguồn sáng của ô dưới con trỏ, và bản đồ nhiệt chi phí lấy mẫu của chúng.",
+      "sampled-lights-complexity-hair-strands": "Chi phí lấy mẫu các nguồn sáng trên sợi tóc.",
+      "sampled-lights-complexity-front-layer": "Các nguồn sáng trên lớp trong suốt gần nhất, và bản đồ nhiệt chi phí của chúng.",
+      "sampled-lights-complexity-volume": "Chi phí lấy mẫu các nguồn sáng trong thể tích sương mù.",
+      "sampled-lights-complexity-translucency-volume": "Chi phí lấy mẫu các nguồn sáng trong thể tích chiếu sáng của vùng trong mờ.",
+      "subsurface-profiles": "Hồ sơ tán xạ dưới bề mặt của mỗi điểm ảnh, mỗi hồ sơ một màu.",
+      "virtual-shadow-map-shadow-casters": "Hộp của mỗi vật thể mà chuyển động của nó vẽ lại các trang bóng.",
+      "virtual-shadow-map-clipmap-virtual-space": "Clipmap bóng của mặt trời trong không gian ảo của nó.",
+      "virtual-shadow-map-shadow-factor": "Vàng: được chiếu sáng; xanh đậm: trong bóng.",
+      "virtual-shadow-map-clipmap-or-mip": "Cấp bóng mà mỗi điểm ảnh đọc, mỗi cấp một màu.",
+      "virtual-shadow-map-virtual-page": "Trang bóng mà mỗi điểm ảnh đọc, mỗi trang một màu.",
+      "virtual-shadow-map-cached-page": "Trang bóng mà mỗi điểm ảnh đọc được giữ lại hay vẽ lại.",
+      "virtual-shadow-map-ray-count": "Số tia bóng dò trên mỗi điểm ảnh, từ xanh lá đến đỏ.",
+      "virtual-shadow-map-general-debug": "Khoảng cách tới vật che bóng của mỗi điểm ảnh, màu xám.",
+      "virtual-shadow-map-dirty-page": "Các trang bóng được vẽ trong hình này.",
+      "virtual-shadow-map-gpu-invalidated-page": "Các trang bóng bị vật thể chuyển động làm vô hiệu.",
+      "virtual-shadow-map-merged-page": "Các trang bóng có lớp tĩnh đã được gộp.",
+      "virtual-shadow-map-overdraw": "Số lần bộ raster bóng vẽ mỗi texel.",
+      "rect-light-atlas": "Atlas các hình ảnh của đèn chữ nhật.",
+      "light-profile-atlas": "Atlas các hồ sơ IES của đèn.",
+      "surface-cache-direct-stats": "Số liệu cập nhật ánh sáng trực tiếp của bộ đệm bề mặt.",
+      "surface-cache-indirect-stats": "Số liệu cập nhật ánh sáng gián tiếp của bộ đệm bề mặt.",
+      "surface-cache-direct-lighting-stats": "Các nguồn sáng mà bản cập nhật trực tiếp của bộ đệm bề mặt thu thập, và kích thước của nó.",
+      "surface-cache-scene-stats": "Số vật thể và thẻ trong bộ đệm bề mặt.",
+      "surface-cache-primitive-groups": "Hộp của mỗi vật thể có thẻ bề mặt.",
+      "radiance-cache-stats": "Số liệu cập nhật các đầu dò ánh sáng của thế giới.",
+      "screen-probe-gather-debug": "Có bao nhiêu đầu dò màn hình, đều và thích ứng.",
+      "screen-probe-tile-stats": "Các ô của mỗi chế độ tích phân của đầu dò màn hình.",
+      "screen-probe-placement": "Vị trí các đầu dò màn hình, mỗi đầu dò một quad.",
+      "screen-probe-traces": "Các tia của đầu dò gần con trỏ nhất, tô màu theo ánh sáng của chúng.",
+      "reflection-traces": "Tia phản xạ của điểm ảnh dưới con trỏ, kèm khoảng cách và ánh sáng.",
+      "radiance-cache-probes": "Một quả cầu tại mỗi đầu dò ánh sáng, tô bằng ánh sáng nó giữ.",
+      "scene-visualization": "Cảnh được dò tia từ camera, chiếu sáng bởi bộ đệm bề mặt.",
+      "material-properties": "Vật liệu của điểm ảnh dưới con trỏ, dạng bảng.",
+      "texture-mip": "Kích thước texture mà mỗi bề mặt đọc.",
+      "overdraw": "Số lần mỗi điểm ảnh được vẽ.",
+      "heterogeneous-volumes-dda-marching": "Ánh sáng xuyên qua lưới voxel của thể tích, tìm bằng duyệt DDA; cần một thể tích không đồng nhất.",
+      "heterogeneous-volumes-sample-marching": "Ánh sáng xuyên qua lưới voxel của thể tích, tìm bằng duyệt theo mẫu; cần một thể tích không đồng nhất.",
+      "heterogeneous-volumes-sample-majorant": "Ánh sáng xuyên qua lưới voxel của thể tích, tìm bằng mẫu cận trên; cần một thể tích không đồng nhất.",
+      "heterogeneous-volumes-sample-max-majorant": "Ánh sáng xuyên qua lưới voxel của thể tích, tìm bằng mẫu cận trên lớn nhất; cần một thể tích không đồng nhất.",
+      "heterogeneous-volumes-sample-majorant-dda": "Ánh sáng xuyên qua lưới voxel của thể tích, tìm bằng mẫu DDA cận trên; cần một thể tích không đồng nhất.",
+      "heterogeneous-volumes-delta-tracking": "Ánh sáng xuyên qua lưới voxel của thể tích, tìm bằng delta tracking; cần một thể tích không đồng nhất.",
+      "heterogeneous-volumes-ratio-tracking": "Ánh sáng xuyên qua lưới voxel của thể tích, tìm bằng ratio tracking; cần một thể tích không đồng nhất.",
+      "heterogeneous-volumes-spectral-ratio-tracking": "Ánh sáng xuyên qua lưới voxel của thể tích, tìm bằng ratio tracking phổ; cần một thể tích không đồng nhất.",
+      "heterogeneous-volumes-tracking-majorant-dda": "Ánh sáng xuyên qua lưới voxel của thể tích, tìm bằng tracking DDA cận trên; cần một thể tích không đồng nhất."
     }
   },
   "a-city-from-rules": {
@@ -1514,16 +3535,7 @@
   "detail-by-pixel-error": {
     "banner": "Kéo để đi dọc đại lộ. Lại gần một chiếc bình, rồi lùi ra xa.",
     "controls": {
-      "pixelError": "Sai số điểm ảnh",
-      "view": "Chế độ xem"
-    },
-    "choices": {
-      "view": {
-        "beauty": "ảnh hoàn chỉnh",
-        "lod": "mức chi tiết",
-        "screen-error": "sai số màn hình",
-        "triangles": "tam giác"
-      }
+      "pixelError": "Sai số điểm ảnh"
     },
     "readouts": {
       "trianglesDrawn": "Tam giác đã vẽ",
@@ -1841,6 +3853,16 @@
       "step": "Bước"
     }
   },
+  "engine-workbench": {
+    "banner": "Kéo để nhìn xung quanh. Mỗi nút bật một cơ chế; thẻ Vì sao của bảng thống kê cho biết nó đã vẽ những ảnh nào, vì sao và tốn bao nhiêu.",
+    "controls": {
+      "invalidate": "Vô hiệu hóa một lần",
+      "nudge": "Đẩy nhẹ máy quay",
+      "moving": "Một chiếc hộp chuyển động",
+      "taa": "Khử răng cưa theo thời gian",
+      "scale": "Tỉ lệ kết xuất"
+    }
+  },
   "helpers-to-see-the-scene": {
     "banner": "Kéo để đi quanh. Tắt các công cụ trợ giúp để xem bức hình trơn.",
     "controls": {
@@ -2124,15 +4146,7 @@
   "memory-on-a-budget": {
     "banner": "Kéo để nhìn quanh. Cho ít bộ nhớ hơn và xem thứ gì vẫn sắc nét.",
     "controls": {
-      "memory": "Bộ nhớ",
-      "view": "Chế độ xem"
-    },
-    "choices": {
-      "view": {
-        "beauty": "ảnh hoàn chỉnh",
-        "lod": "mức chi tiết",
-        "clusters": "cụm"
-      }
+      "memory": "Bộ nhớ"
     }
   },
   "a-walk-through-the-city": {
@@ -2177,9 +4191,8 @@
     }
   },
   "a-map-of-what-the-engine-draws": {
-    "banner": "Nhấp vào khung nhìn bên trái và đi bằng W A S D; bản đồ bên phải cho thấy từ trên cao những gì khung nhìn đó đã tính trong khung hình này. Hãy đóng băng phần chọn rồi đi ra khỏi nó.",
+    "banner": "Nhấp vào khung nhìn bên trái và đi bằng W A S D; bản đồ bên phải cho thấy từ trên cao những gì khung nhìn đó đã tính trong khung hình này. Hãy bật Đóng băng loại bỏ trong bảng thống kê, góc dưới bên trái, rồi đi ra khỏi phần chọn.",
     "controls": {
-      "freeze": "Đóng băng",
       "frustum": "Hình chóp nhìn",
       "clusters": "Cụm",
       "shadows": "Trang bóng",
@@ -2276,19 +4289,9 @@
     }
   },
   "observatory-streamed": {
-    "banner": "Kéo để nhìn quanh. Đổi chế độ xem để thấy mô hình được cắt ra sao.",
+    "banner": "Kéo để nhìn quanh. Đổi chế độ xem trong menu Chế độ xem của bảng thống kê, góc dưới bên trái, để thấy mô hình được cắt ra sao.",
     "controls": {
-      "view": "Chế độ xem",
       "pixelError": "Sai số điểm ảnh"
-    },
-    "choices": {
-      "view": {
-        "clusters": "cụm",
-        "beauty": "ảnh hoàn chỉnh",
-        "pages": "trang",
-        "lod": "mức chi tiết",
-        "triangles": "tam giác"
-      }
     }
   },
   "one-clip-many-objects": {
@@ -2403,7 +4406,7 @@
         "triangles": "tam giác",
         "clusters": "cụm",
         "lod": "mức chi tiết",
-        "pages": "trang",
+        "visibility": "trang",
         "beauty": "ảnh hoàn chỉnh"
       }
     },
@@ -2636,16 +4639,8 @@
   "ten-thousand-objects": {
     "banner": "Kéo để xoay quanh hành tinh. Cuộn vào trong vành đá.",
     "controls": {
-      "view": "Chế độ xem",
       "pixelError": "Sai số điểm ảnh",
       "drift": "Trôi"
-    },
-    "choices": {
-      "view": {
-        "beauty": "ảnh hoàn chỉnh",
-        "clusters": "cụm",
-        "lod": "mức chi tiết"
-      }
     },
     "readouts": {
       "objectsScene": "Vật trong cảnh",
@@ -2908,14 +4903,7 @@
     "banner": "Kéo để nhìn quanh. Hàng rào cây che những nút thắt vàng.",
     "controls": {
       "hedgeHeight": "Chiều cao hàng rào",
-      "view": "Chế độ xem",
       "aboveOrInside": "Trên cao hoặc bên trong"
-    },
-    "choices": {
-      "view": {
-        "beauty": "ảnh hoàn chỉnh",
-        "visibility": "khả năng nhìn thấy"
-      }
     },
     "readouts": {
       "gildedKnots": "Nút thắt mạ vàng",

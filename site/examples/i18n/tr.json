@@ -17,9 +17,7 @@
   },
   "kit": {
     "panel": {
-      "controls": "Ayarlar",
-      "view": "Görünüm",
-      "freeze": "Elemeyi dondur"
+      "controls": "Ayarlar"
     },
     "menu": {
       "play": "Oyna",
@@ -53,11 +51,11 @@
       },
       "tab.cpu": {
         "label": "CPU",
-        "hint": "Motorun bir karenin CPU süresini nerede harcadığı, son saniyenin medyanları; başlıktaki CPU ana iş parçacığının tüm karesidir. Kare başına iş artınca yükselir."
+        "hint": "Motorun bir görüntünün CPU süresini nerede harcadığı, son saniyenin ortalamaları olarak; başlıktaki CPU değeri ana iş parçacığının tüm karesidir. Kare başına daha çok iş onu artırır."
       },
       "tab.shadows": {
         "label": "Gölgeler",
-        "hint": "Gölge geçişleri ve sayfa sayaçları; süreleri GPU süresinin parçasıdır."
+        "hint": "Gölge geçişleri ve sayfa sayaçları, son karenin; süreleri GPU süresinin parçasıdır."
       },
       "tab.memory": {
         "label": "Bellek",
@@ -101,7 +99,7 @@
       },
       "summary.frame": {
         "label": "Kare",
-        "hint": "Gösterilen iki görüntü arasındaki süre; bir işlemci yenilemeden uzun sürerse artar."
+        "hint": "Son saniyede gösterilen iki görüntü arasındaki ortalama süre, hızın tersi; bir işlemci bir yenilemeden uzun sürdüğünde artar."
       },
       "summary.gpu": {
         "label": "GPU",
@@ -109,15 +107,19 @@
       },
       "summary.cpu": {
         "label": "CPU",
-        "hint": "Son saniyede ana iş parçacığının medyan kare süresi; GPU'ya gönderilen işle artar."
+        "hint": "Son saniyede kare başına ortalama ana iş parçacığı süresi; GPU'ya gönderilen işle artar."
       },
       "summary.wait": {
         "label": "Bekleme",
-        "hint": "Yavaş işlemci bitirdikten sonra karenin ekranı beklediği süre."
+        "hint": "Ortalama kareden daha meşgul işlemcinin çıkarılmışı: iki işlemci yan yana çalışırken bir sonraki yenilemeyi beklemekle geçen süre."
       },
-      "summary.bottleneck": {
+      "summary.toNext": {
+        "label": "Bir yenileme erken",
+        "hint": "Kareyi tutan işlemcinin, görüntülerinin bir yenileme erken gelmesi için bırakması gereken süre ve o zaman ulaşacakları hız."
+      },
+      "summary.bound": {
         "label": "Sınırlayan",
-        "hint": "Motorun kareyi neyin tuttuğuna dair kararı: pencerenin vurduğu ilk sınır."
+        "hint": "Son saniyede kareyi tutan: tipik bir görüntünün ekranda kaç yenileme kaldığını süresiyle belirleyen işlemci, ya da hiçbiri belirlemediğinde ekranın ritmi."
       },
       "summary.screen": {
         "label": "Ekran {hz} Hz",
@@ -137,7 +139,7 @@
       },
       "summary.gpuIdle": {
         "label": "GPU boşta",
-        "hint": "GPU'nun ölçülen son görüntüsünden önce boşta kaldığı süre; CPU onu geç beslediğinde artar."
+        "hint": "Son saniyede GPU'nun bir görüntüden önce boşta kaldığı ortalama süre, en fazla: görüntüler arasında ölçülen iş dışarıda, kimsenin ölçmediği iş dahil; CPU onu geç beslediğinde artar."
       },
       "summary.mainView": {
         "label": "ana görünüm",
@@ -150,30 +152,6 @@
       "summary.budget": {
         "label": "bütçe",
         "hint": "Bir ekran yenilemesinin bir kareye tanıdığı süre; grafikteki kesikli çizgi."
-      },
-      "bottleneck.healthy": {
-        "label": "Ekran",
-        "hint": "Kare bir yenilemeye sığıyor: kare hızı ekranınkidir."
-      },
-      "bottleneck.memory_pressure": {
-        "label": "Takılma",
-        "hint": "Kareler takılma sınırından uzun sürdü: belleği boşaltın veya akışı azaltın."
-      },
-      "bottleneck.gpu_bound": {
-        "label": "GPU",
-        "hint": "GPU bir yenilemeden uzun sürüyor ve kareyi tutuyor: çözünürlüğü veya aydınlatmayı düşürün."
-      },
-      "bottleneck.cpu_bound": {
-        "label": "CPU",
-        "hint": "Ana iş parçacığı bir yenilemeden uzun sürüyor ve kareyi tutuyor: kare başına işi azaltın."
-      },
-      "bottleneck.gpu_submit_bound": {
-        "label": "GPU gönderimi",
-        "hint": "Komutları GPU'ya göndermek yarım yenilemeyi aşıyor: çizim çağrılarını ve geçişleri azaltın."
-      },
-      "bottleneck.streaming_bound": {
-        "label": "Akış",
-        "hint": "Getirme işçilerinin sunabileceğinden fazla sayfa yolda: ağ veya disk sahneyi tutuyor."
       },
       "panel.label": {
         "label": "İstatistik",
@@ -246,10 +224,6 @@
       "gpu.textures": {
         "label": "Dokular",
         "hint": "Doku seviyelerinin akışı ve çözülmesi; yeni dokular yüklendikçe artar."
-      },
-      "gpu.partition": {
-        "label": "Bölümleme",
-        "hint": "Çizilen kümelerin çizim gruplarına sıralanması; çizilen kümelerle artar."
       },
       "gpu.encode": {
         "label": "Kodlama",
@@ -379,10 +353,6 @@
         "label": "İzdüşüm",
         "hint": "Gölge haritalarının görüntüye yansıtılması; gölgeli ışıklar ve çözünürlükle artar."
       },
-      "shadows.transmission": {
-        "label": "İletim",
-        "hint": "Yarı saydam gölge düşürenlerin atlası; yarı saydam nesnelerle artar."
-      },
       "shadows.lights": {
         "label": "Gölgeli ışıklar",
         "hint": "Bu karede sanal gölge haritaları atan ışıklar; Sahne'deki sayı tüm etkin ışıkları sayar."
@@ -507,14 +477,6 @@
         "label": "DAG seçimi",
         "hint": "Geometri grafiğini gezer ve her görünümün ihtiyaç duyduğu ayrıntıyı seçer; görünümdeki ayrıntıyla artar."
       },
-      "pass.DAG mask swap": {
-        "label": "DAG maske takası",
-        "hint": "Seçim maskelerini görüntüler arasında değiştirir; küçük ve sabit."
-      },
-      "pass.partition": {
-        "label": "bölümleme",
-        "hint": "Seçilen kümeleri görüntünün çizim çağrılarına sıkıştırır; seçilen kümelerle artar."
-      },
       "pass.HiZ": {
         "label": "HiZ",
         "hint": "Örtülenleri gizlemek için kullanılan derinlik piramidini kurar; render boyutuyla artar."
@@ -527,41 +489,33 @@
         "label": "görünürlük ikincil",
         "hint": "Geometrinin sınanan yarısını örtücülerin derinliğine karşı çizer; sınavı geçen geometriyle artar."
       },
-      "pass.visibility identifiers": {
-        "label": "görünürlük kimlikleri",
-        "hint": "Her pikselin altındaki yüzeyin kimliğini çizer; render boyutu ve çizilen geometriyle artar."
-      },
       "pass.raster binning": {
         "label": "raster gruplama",
-        "hint": "Yazılım rasterinin küçük üçgenlerini ekran karolarına sıralar; görünümdeki küçük üçgenlerle artar."
+        "hint": "Görünür kümeleri çözer, donanım rasterinin çizim gruplarına ayırır ve yazılım rasterininkileri listeler; görünümdeki kümelerle artar."
       },
       "pass.raster occluder depth": {
         "label": "raster örtücü derinliği",
-        "hint": "Örtücülerin derinliğinin yazılım rasteri; küçük örtücü üçgenlerle artar."
+        "hint": "Örtücülerin derinliğinin yazılım rasteri, küme başına bir şerit grubu; küçük örtücü üçgenlerle artar."
       },
       "pass.raster tested depth": {
         "label": "raster sınanan derinlik",
         "hint": "Sınanan geometrinin derinliğinin yazılım rasteri; sınanan küçük üçgenlerle artar."
       },
       "pass.raster identifiers": {
-        "label": "raster kimlikleri",
-        "hint": "Yüzey kimliklerinin yazılım rasteri; çizilen küçük üçgenlerle artar."
+        "label": "raster tanımlayıcıları",
+        "hint": "Yüzey tanımlayıcılarının yazılım rasteri, 64 bit atomik maksimumu olmayan bir cihazda; çizilen küçük üçgenlerle artar."
       },
       "pass.raster occluder hiz": {
-        "label": "raster örtücü HiZ",
-        "hint": "Yazılım rasterinin örtücülerinden derinlik piramidini kurar; render boyutuyla artar."
+        "label": "raster örtücü Hi-Z",
+        "hint": "Görünürlük arabelleğinin örtücü derinliğini derinlik piramidinin ilk seviyesine yazar; render boyutuyla artar."
       },
       "pass.raster resolve": {
         "label": "raster çözümleme",
-        "hint": "Yazılım rasterinin piksellerini görünürlük arabelleğinde birleştirir; render boyutuyla artar."
+        "hint": "Görünürlük arabelleğinin yüzey tanımlayıcılarını malzemelerin okuduğu görüntüye yazar; render boyutuyla artar."
       },
       "pass.empty surfaces": {
         "label": "boş yüzeyler",
         "hint": "Görüntü hiç malzeme çizmediğinde yüzey görüntülerini temizler; küçük ve sabit."
-      },
-      "pass.material cache, bins and shading": {
-        "label": "malzeme önbelleği, kutuları ve gölgeleme",
-        "hint": "Karenin paylaştığını oluşturur, pikselleri malzemeye göre sıralar ve her malzemenin kutusunu gölgeler; görünümdeki malzeme ve piksellerle artar."
       },
       "pass.material surfaces": {
         "label": "malzeme yüzeyleri",
@@ -627,10 +581,6 @@
         "label": "sekme",
         "hint": "Sekmiş ışığı günceller: görünümdeki hücreleri işaretler, tabloyu yazar ve probları tazeler; görünümdeki aydınlanmış hücrelerle artar."
       },
-      "pass.bounce light lists": {
-        "label": "sekme ışık listeleri",
-        "hint": "Sekmenin dünya kafesi üzerinde ışık listelerini kurar; aydınlanmış hücrelere yakın ışıklarla artar."
-      },
       "pass.proxy pose": {
         "label": "vekil pozu",
         "hint": "Yansımalar ve sekme için şekli bozulmuş yerleşimlerin vekillerini konumlar; şekli bozulmuş yerleşimlerle artar."
@@ -647,29 +597,13 @@
         "label": "yansıma sahnesi",
         "hint": "Ekranın yanıtlayamadığı ışınları sahne boyunca izler; ekranın kaçırdığı yansıtıcı piksellerle artar."
       },
-      "pass.reflection denoise": {
-        "label": "yansıma gürültü giderme",
-        "hint": "Görüntüyü temizlemek için komşu ve önceki yansımaları yeniden kullanır; render boyutuyla artar."
-      },
-      "pass.reflection radiance": {
-        "label": "yansıma parlaklığı",
-        "hint": "Sonraki görüntünün yansımaları için aydınlatılmış görüntünün parlaklık piramidini kurar; render boyutuyla artar."
-      },
       "pass.particles": {
         "label": "parçacıklar",
         "hint": "Parçacıkların adımını simüle eder; canlı parçacıklarla artar."
       },
-      "pass.deferred lighting": {
-        "label": "ertelenmiş aydınlatma",
-        "hint": "Her pikseli yüzeylerden, ışıklardan ve gölgelerden aydınlatır; render boyutu ve ışıklarla artar."
-      },
       "pass.as is share seed": {
         "label": "değişmeyen pay tohumu",
         "hint": "Zamansal çözümlemenin olduğu gibi bıraktığı görüntü payını tohumlar; render boyutuyla artar."
-      },
-      "pass.temporal antialiasing": {
-        "label": "zamansal kenar yumuşatma",
-        "hint": "Kenarları yumuşatmak için görüntüyü öncekilerle karıştırır; render boyutuyla artar."
       },
       "pass.exposure": {
         "label": "pozlama",
@@ -742,6 +676,1978 @@
       "pass.vsm": {
         "label": "VSM",
         "hint": "Sanal gölge haritalarının herhangi bir geçişi: gölge sayfalarının çizimi, temizlenmesi, izdüşümü ve birleştirilmesi; gölgeli ışıklarla ve gereken sayfalarla artar."
+      },
+      "pass.vsm castDiff": {
+        "label": "VSM gölge düşüren değişimleri",
+        "hint": "Son görüntüden beri hareket eden, beliren ya da ayrılan gölge düşürenleri bulur, böylece yalnızca onların sayfaları yeniden çizilir; gölge düşürenlerle artar."
+      },
+      "pass.vsm marking": {
+        "label": "VSM sayfa işaretleme",
+        "hint": "Görünür piksellerin ihtiyaç duyduğu gölge sayfalarını ışık ışık işaretler; render boyutuyla ve gölgeli ışıklarla artar."
+      },
+      "pass.vsm pageMapping": {
+        "label": "VSM sayfa eşleme",
+        "hint": "İşaretlenen her gölge sayfasına sayfa havuzunda bir yer verir, önbellektekileri korur; işaretlenen sayfalarla artar."
+      },
+      "pass.vsm afterRaster": {
+        "label": "VSM raster sonrası",
+        "hint": "Sayfalar çizildikten sonra sayfa tablolarını günceller: neyin önbellekte, neyin çizilmiş olduğu; sayfalarla artar."
+      },
+      "pass.vsm filterable": {
+        "label": "VSM filtrelenebilir sayfalar",
+        "hint": "Çizilen sayfaları yumuşak gölgelerin filtreli okumalarına hazırlar; çizilen sayfalarla artar."
+      },
+      "pass.vsm invalidateCastPages": {
+        "label": "VSM sayfa geçersiz kılma",
+        "hint": "Hareket eden gölge düşürenlerin dokunduğu önbellekteki sayfaları eskimiş olarak işaretler, böylece yeniden çizilirler; hareket eden gölge düşürenlerle artar."
+      },
+      "pass.vsm occlusion build": {
+        "label": "VSM örtme piramidi",
+        "hint": "İkinci elemenin gölge düşürenleri karşısında sınadığı, çizilen sayfaların derinlik piramidini kurar; sayfalarla artar."
+      },
+      "pass.vsm projection": {
+        "label": "VSM izdüşümü",
+        "hint": "Gölge sayfalarını görüntüye yansıtır: her ışığın gölge maskesi; render boyutuyla ve gölgeli ışıklarla artar."
+      },
+      "pass.vsm projection hair": {
+        "label": "VSM saç izdüşümü",
+        "hint": "Gölge sayfalarını saç tellerine yansıtır; ekrandaki tellerle artar."
+      },
+      "pass.vsm projection perLight clear": {
+        "label": "VSM ışık başına maske temizleme",
+        "hint": "Işık başına gölge maskelerini yansıtılmadan önce temizler; render boyutuyla ve ışıklarla artar."
+      },
+      "pass.vsm projection perLight project": {
+        "label": "VSM ışık başına izdüşüm",
+        "hint": "Her ışığın gölge sayfalarını kendi maskesine yansıtır; render boyutuyla ve gölgeli ışıklarla artar."
+      },
+      "pass.vsm accumulateStats": {
+        "label": "VSM sayfa istatistikleri",
+        "hint": "Enstrümanlar için istenen, ayrılan ve önbellekteki gölge sayfalarını toplar; küçük, sabit bir maliyet."
+      },
+      "pass.vsm visualize": {
+        "label": "VSM sayfa görünümü",
+        "hint": "Sanal gölge haritalarının sayfalarını gösteren hata ayıklama görünümünü çizer; yalnızca o görünüm gösterilirken."
+      },
+      "pass.vsm render cull": {
+        "label": "VSM eleme",
+        "hint": "Gölge düşürenleri, içlerine çizilmeden önce işaretlenen sayfalara karşı eler; gölge düşürenlerle ve sayfalarla artar."
+      },
+      "pass.vsm render raster": {
+        "label": "VSM raster",
+        "hint": "Gölge düşürenleri donanım rasteriyle işaretlenen gölge sayfalarına çizer; çizilen üçgenlerle artar."
+      },
+      "pass.vsm render software": {
+        "label": "VSM yazılım rasteri",
+        "hint": "Gölge düşürenlerin küçük üçgenlerini hesaplama rasteriyle sayfalara çizer; küçük üçgenlerle artar."
+      },
+      "pass.vsm render cullSecond": {
+        "label": "VSM ikinci eleme",
+        "hint": "İlk geçişin dışarıda bıraktığı gölge düşürenleri örtme piramidine karşı sınayarak yeniden eler; gölge düşürenlerle artar."
+      },
+      "pass.vsm render rasterSecond": {
+        "label": "VSM ikinci raster",
+        "hint": "İkinci elemenin tuttuğu gölge düşürenleri donanım rasteriyle çizer; üçgenleriyle artar."
+      },
+      "pass.vsm render softwareSecond": {
+        "label": "VSM ikinci yazılım rasteri",
+        "hint": "İkinci elemenin tuttuğu küçük üçgenleri hesaplama rasteriyle çizer; onlarla artar."
+      },
+      "pass.vsm render atlas clear": {
+        "label": "gölge atlası temizleme",
+        "hint": "Klasik gölge atlasının katmanlarını, gölge düşürenler içlerine çizilmeden önce temizler; atlas boyutuyla artar."
+      },
+      "pass.vsm render atlas raster": {
+        "label": "gölge atlası raster",
+        "hint": "Gölge düşürenleri klasik gölge atlasına katman katman çizer; çizilen üçgenlerle artar."
+      },
+      "pass.vsm render atlas sort": {
+        "label": "gölge atlası sıralama",
+        "hint": "Atlas çizilmeden önce gölge düşürenlerin çizimlerini atlas karosuna göre sıralar; çizimlerle artar."
+      },
+      "pass.vsm render atlas out": {
+        "label": "gölge atlası kopyalama",
+        "hint": "Klasik gölge atlasının karolarını sayfa havuzuna kopyalar; karolarla artar."
+      },
+      "pass.vsm denoise": {
+        "label": "VSM gürültü giderme",
+        "hint": "Gölge maskelerinin gürültüsünü derinlik ve normallerin rehberliğinde filtreler; render boyutuyla ve yumuşak gölgelerle artar."
+      },
+      "pass.vsm denoise tiles": {
+        "label": "VSM gürültü giderme karoları",
+        "hint": "Görüntüde gölgelerin yumuşak olduğu karoları, gürültü gidermenin filtrelediği tek karoları bulur; ekrandaki yarı gölgelerle artar."
+      },
+      "pass.vsm firstPersonSelfShadow": {
+        "label": "birinci şahıs öz gölgesi",
+        "hint": "Birinci şahıs gövdesinin kendi üzerine düşen gölgesini izler; yalnızca birinci şahıs görünümüyle."
+      },
+      "pass.vsm firstPersonSelfShadow merge": {
+        "label": "birinci şahıs gölge birleştirme",
+        "hint": "Birinci şahıs öz gölgesini yerel ışıkların maskelerine birleştirir; yalnızca birinci şahıs görünümüyle."
+      },
+      "pass.vsm rayTracedShadow": {
+        "label": "ışın izlemeli gölgeler",
+        "hint": "Işın izlenmesi istenen ışıkların gölgelerini mesafe alanlarına karşı izler; render boyutuyla ve bu ışıklarla artar."
+      },
+      "pass.vsm rayTracedShadow merge": {
+        "label": "ışın izlemeli gölge birleştirme",
+        "hint": "Işın izlemeli gölgeleri yerel ışıkların maskelerine birleştirir; render boyutuyla artar."
+      },
+      "pass.hair strands bounds and tangents": {
+        "label": "saç sınırları ve teğetleri",
+        "hint": "Tellerin teğetlerini ve gruplarının sınırlarını hesaplar; tellerle artar."
+      },
+      "pass.hair strands voxelization": {
+        "label": "saç vokselleştirme",
+        "hint": "Tellerin yoğunluğunu aydınlatmanın ve gölgelerin okuduğu voksel hacmine yazar; tellerle ve hacimle artar."
+      },
+      "pass.hair strands scattering table": {
+        "label": "saç saçılım tablosu",
+        "hint": "Işığın bir saç lifinde nasıl saçıldığının tablosunu kurar; bir kez, saçın ayarları değiştiğinde."
+      },
+      "pass.hair strands visibility": {
+        "label": "saç görünürlüğü",
+        "hint": "Tellerin görünürlük örneklerini rasterleştirir ve piksel başına sıkıştırır; ekrandaki tellerle artar."
+      },
+      "pass.hair strands visibility draw": {
+        "label": "saç görünürlük çizimi",
+        "hint": "Telleri çoklu örneklenmiş görünürlük hedefine çizer; ekrandaki tellerle artar."
+      },
+      "pass.hair strands visibility resolve": {
+        "label": "saç görünürlük çözümleme",
+        "hint": "Çoklu örneklenmiş görünürlüğü piksel başına tel örneklerine çözümler; render boyutuyla artar."
+      },
+      "pass.hair strands depth under full coverage": {
+        "label": "saç tam kapsama derinliği",
+        "hint": "Tellerin tamamen kapladığı piksellerin derinliğini yazar, böylece arkadaki yüzeyler gölgelendirilmez; ekrandaki tellerle artar."
+      },
+      "pass.hair strands coverage count": {
+        "label": "saç kapsama sayımı",
+        "hint": "Her pikseli kaplayan telleri sayar; ekrandaki tellerle artar."
+      },
+      "pass.hair strands coverage mapping": {
+        "label": "saç kapsama eşleme",
+        "hint": "Sayıları birleştirmenin karıştırırken kullandığı kapsamaya çevirir; render boyutuyla artar."
+      },
+      "pass.hair strands forward visibility": {
+        "label": "saç ileri görünürlüğü",
+        "hint": "İleri yolun tellerini gruplara ayırır ve derinlik ızgarasına rasterleştirir; ekrandaki tellerle artar."
+      },
+      "pass.hair strands forward colour raster": {
+        "label": "saç ileri rengi",
+        "hint": "İleri yolun tellerini aydınlatılmış renkleriyle rasterleştirir; ekrandaki tellerle artar."
+      },
+      "pass.hair strands curve raster clear output": {
+        "label": "saç eğri raster temizleme",
+        "hint": "Teller çizilmeden önce eğri rasterinin çıktısını temizler; render boyutuyla artar."
+      },
+      "pass.hair strands curve raster pipeline": {
+        "label": "saç eğri raster",
+        "hint": "Telleri karolar içinde eğriler olarak rasterleştirir; ekrandaki tellerle artar."
+      },
+      "pass.hair strands curve raster compose": {
+        "label": "saç eğri birleştirme",
+        "hint": "Eğri rasterinin çıktısını görüntünün üzerine serer; render boyutuyla artar."
+      },
+      "pass.hair strands transmittance": {
+        "label": "saç geçirgenliği",
+        "hint": "Her ışığa doğru tellerin içinden ne kadar ışık geçtiğini çizer; tellerle ve ışıklarla artar."
+      },
+      "pass.hair strands transmittance resolve": {
+        "label": "saç geçirgenlik çözümleme",
+        "hint": "Çoklu örneklenmiş geçirgenliği piksel başına çözümler; render boyutuyla artar."
+      },
+      "pass.hair strands deep shadow allocate": {
+        "label": "saç derin gölge ayırma",
+        "hint": "Her ışığın derin gölge haritasına atlasta yerini verir; gölgeli ışıklarla artar."
+      },
+      "pass.hair strands deep shadow front depth": {
+        "label": "saç derin gölge ön yüzü",
+        "hint": "Her ışığın derin gölge haritasının en yakın tel derinliğini çizer; tellerle ve ışıklarla artar."
+      },
+      "pass.hair strands deep shadow layers": {
+        "label": "saç derin gölge katmanları",
+        "hint": "Tellerin yoğunluğunu o ön yüzün arkasında katmanlar halinde çizer; tellerle ve ışıklarla artar."
+      },
+      "pass.hair strands light": {
+        "label": "saç aydınlatması",
+        "hint": "Tellerin örneklerini sahnenin ışıklarıyla aydınlatır; ekrandaki tellerle ve ışıklarla artar."
+      },
+      "pass.hair strands light transmittance": {
+        "label": "saç ışık geçirgenliği",
+        "hint": "Her ışığın teller içinden geçirgenliğini onların aydınlatmasına okur; tellerle ve ışıklarla artar."
+      },
+      "pass.hair strands sampled lights": {
+        "label": "saç örneklenen ışıkları",
+        "hint": "Telleri çok sayıda ışığın örneklemesinin seçtiği ışıklarla aydınlatır; ekrandaki tellerle artar."
+      },
+      "pass.hair strands static light": {
+        "label": "saç statik ışığı",
+        "hint": "Tellerin statik aydınlatmasını ışık haritalarından ve hacimlerden toplar; tellerle artar."
+      },
+      "pass.hair strands environment sh sky": {
+        "label": "saç gökyüzü (harmonikler)",
+        "hint": "Telleri gökyüzüyle, onun küresel harmonikleri üzerinden aydınlatır; tellerle artar."
+      },
+      "pass.hair strands environment adhoc sky": {
+        "label": "saç gökyüzü (yaklaşık)",
+        "hint": "Telleri gökyüzüyle, yaklaşık integral üzerinden aydınlatır; tellerle artar."
+      },
+      "pass.hair strands environment uniform sky": {
+        "label": "saç gökyüzü (örneklenmiş)",
+        "hint": "Telleri gökyüzüyle, onu vokseller boyunca düzgün örnekleyerek aydınlatır; tellerle artar."
+      },
+      "pass.hair strands sky occlusion": {
+        "label": "saç gökyüzü örtmesi",
+        "hint": "Tellerin altındaki yüzeylerin gökyüzü ışığını karartır; render boyutuyla artar."
+      },
+      "pass.hair strands shadow on the surfaces": {
+        "label": "yüzeylerde saç gölgesi",
+        "hint": "Tellerin gölgesini yüzeylere düşürür; render boyutuyla ve gölgeli ışıklarla artar."
+      },
+      "pass.hair strands g buffer override": {
+        "label": "saç yüzey üzerine yazma",
+        "hint": "Telleri yüzeylerin arabelleklerine yazar, böylece aydınlatma onları yüzey olarak işler; ekrandaki tellerle artar."
+      },
+      "pass.hair strands g buffer override depth": {
+        "label": "saç yüzey üzerine yazma derinliği",
+        "hint": "Yüzeylerin arabelleklerine yazılan tellerin derinliğini yazar; ekrandaki tellerle artar."
+      },
+      "pass.hair strands composition": {
+        "label": "saç birleştirme",
+        "hint": "Aydınlatılmış telleri kapsamalarıyla görüntünün üzerine serer; render boyutuyla artar."
+      },
+      "pass.hair strands custom depth": {
+        "label": "saç özel derinliği",
+        "hint": "Telleri dış hattın ve son işlem malzemelerinin okuduğu özel derinliğe yazar; yalnızca istendiği yerde."
+      },
+      "pass.hair strands debug lines": {
+        "label": "saç hata ayıklama çizgileri",
+        "hint": "Saçın hata ayıklama görünümünün çizgilerini çizer; yalnızca o görünüm gösterilirken."
+      },
+      "pass.hair strands debug lines frusta": {
+        "label": "saç hata ayıklama frustumları",
+        "hint": "Saçın hata ayıklama görünümünde ışık frustumlarının çizgilerini yazar; yalnızca o görünüm gösterilirken."
+      },
+      "pass.hair strands debug lines macro": {
+        "label": "saç hata ayıklama grupları",
+        "hint": "Saçın hata ayıklama görünümünde tel gruplarının kutularının çizgilerini yazar; yalnızca o görünüm gösterilirken."
+      },
+      "pass.hair strands debug lines nodes": {
+        "label": "saç hata ayıklama düğümleri",
+        "hint": "Saçın hata ayıklama görünümünde tellerin ağaç düğümlerinin çizgilerini yazar; yalnızca o görünüm gösterilirken."
+      },
+      "pass.hair strands debug panels atlas": {
+        "label": "saç hata ayıklama atlası",
+        "hint": "Saçın derin gölge atlasını gösteren hata ayıklama panelini çizer; yalnızca o görünüm gösterilirken."
+      },
+      "pass.hair strands debug panels voxels": {
+        "label": "saç hata ayıklama vokselleri",
+        "hint": "Saçın voksel hacmini gösteren hata ayıklama panelini çizer; yalnızca o görünüm gösterilirken."
+      },
+      "pass.sun distance field shadow cull": {
+        "label": "güneş alan gölgesi eleme",
+        "hint": "Ağların mesafe alanlarını güneşin gölge karolarına karşı eler; ağlarla artar."
+      },
+      "pass.sun distance field shadow offsets": {
+        "label": "güneş alan gölgesi ofsetleri",
+        "hint": "Her karo için onu gölgeleyen ağların listesini yerleştirir; karolarla artar."
+      },
+      "pass.sun distance field shadow count tiles": {
+        "label": "güneş alan gölgesi karo sayımı",
+        "hint": "Her gölge karosunun tuttuğu ağları sayar; ağlarla artar."
+      },
+      "pass.sun distance field shadow write tiles": {
+        "label": "güneş alan gölgesi karo yazımı",
+        "hint": "Ağları her gölge karosunun listesine yazar; ağlarla artar."
+      },
+      "pass.distance field occlusion grid": {
+        "label": "alan örtmesi ızgarası",
+        "hint": "Mesafe alanı örtmesinin izlediği ağların ızgarasını kurar; ağlarla artar."
+      },
+      "pass.distance field occlusion cull": {
+        "label": "alan örtmesi eleme",
+        "hint": "Ağların mesafe alanlarını ekran karolarına karşı eler; ağlarla artar."
+      },
+      "pass.distance field occlusion offsets": {
+        "label": "alan örtmesi ofsetleri",
+        "hint": "Her ekran karosunun ağ listesini yerleştirir; karolarla artar."
+      },
+      "pass.distance field occlusion count tiles": {
+        "label": "alan örtmesi karo sayımı",
+        "hint": "Her ekran karosunun tuttuğu ağları sayar; ağlarla artar."
+      },
+      "pass.distance field occlusion write tiles": {
+        "label": "alan örtmesi karo yazımı",
+        "hint": "Ağları her ekran karosunun listesine yazar; ağlarla artar."
+      },
+      "pass.distance field occlusion cones": {
+        "label": "alan örtmesi konileri",
+        "hint": "Örtme konilerini mesafe alanları içinden izler; render boyutuyla artar."
+      },
+      "pass.distance field occlusion history": {
+        "label": "alan örtmesi geçmişi",
+        "hint": "Örtmeyi önceki görüntülerinkiyle karıştırır; render boyutuyla artar."
+      },
+      "pass.distance field occlusion pack": {
+        "label": "alan örtmesi paketleme",
+        "hint": "Örtmeyi aydınlatmanın okuması için paketler; render boyutuyla artar."
+      },
+      "pass.global distance field reset": {
+        "label": "küresel alan sıfırlama",
+        "hint": "Küresel mesafe alanının sayfalarını yeniden kurulmadan önce temizler; alan sıfırlandığında."
+      },
+      "pass.global distance field update, static": {
+        "label": "küresel alan güncelleme (durağan)",
+        "hint": "Küresel mesafe alanının durağan ağların değiştirdiği sayfalarını yeniden kurar; güncellenen sayfalarla artar."
+      },
+      "pass.global distance field update, movable": {
+        "label": "küresel alan güncelleme (hareketli)",
+        "hint": "Küresel mesafe alanının hareket eden ağların dokunduğu sayfalarını yeniden kurar; bu ağlarla artar."
+      },
+      "pass.global distance field page statistics": {
+        "label": "küresel alan istatistikleri",
+        "hint": "Hata ayıklama görünümü için küresel mesafe alanının sayfalarını sayar; yalnızca o görünüm gösterilirken."
+      },
+      "pass.mesh distance field streaming": {
+        "label": "ağ alanı akışı",
+        "hint": "Ağların mesafe alanlarını atlasa alır ve atlastan çıkarır; akışı yapılan alanlarla artar."
+      },
+      "pass.sky light face": {
+        "label": "gökyüzü ışığı yakalama yüzü",
+        "hint": "Gökyüzü ışığının küp yakalamasının bir yüzünü çizer; yakalamanın boyutuyla artar."
+      },
+      "pass.sky light clouds": {
+        "label": "gökyüzü ışığı bulutları",
+        "hint": "Bulutları gökyüzü ışığının yakalamasına izler; yakalamanın boyutuyla artar."
+      },
+      "pass.sky light sky table": {
+        "label": "gökyüzü ışığı gökyüzü tablosu",
+        "hint": "Gökyüzü ışığının yakalamasının okuduğu gökyüzü tablosunu kurar; tablonun boyutuyla artar."
+      },
+      "pass.sky light copy": {
+        "label": "gökyüzü ışığı kopyalama",
+        "hint": "Yakalanan küpü filtrelenmesi için kopyalar; yakalamanın boyutuyla artar."
+      },
+      "pass.sky light mips": {
+        "label": "gökyüzü ışığı mipleri",
+        "hint": "Yakalanan küpün daha küçük düzeylerini kurar; boyutuyla artar."
+      },
+      "pass.sky light filter": {
+        "label": "gökyüzü ışığı filtresi",
+        "hint": "Yakalanan küpü pürüzlü yansımalar için filtreler; boyutuyla artar."
+      },
+      "pass.sky light harmonics": {
+        "label": "gökyüzü ışığı harmonikleri",
+        "hint": "Yakalanan küpü dağınık gökyüzü ışığı için küresel harmoniklerde toplar; küçük, sabit bir maliyet."
+      },
+      "pass.sky light table": {
+        "label": "izlenen gökyüzü ışığı tablosu",
+        "hint": "İzlenen gökyüzü ışığının okuduğu gökyüzü tablosunu kurar; tablonun boyutuyla artar."
+      },
+      "pass.sky light directions": {
+        "label": "izlenen gökyüzü ışığı yönleri",
+        "hint": "İzlenen gökyüzü ışığının örneklediği yönleri seçer; render boyutuyla artar."
+      },
+      "pass.sky light trace": {
+        "label": "izlenen gökyüzü ışığı",
+        "hint": "Gökyüzü ışığının örtülmesini sahne boyunca izler; render boyutuyla artar."
+      },
+      "pass.sky light composite": {
+        "label": "izlenen gökyüzü ışığı birleştirme",
+        "hint": "İzlenen gökyüzü ışığını görüntünün üzerine serer; render boyutuyla artar."
+      },
+      "pass.sky meshes face": {
+        "label": "gökyüzü ağları yüzü",
+        "hint": "Gökyüzü ağlarını gökyüzü yakalamasının bir yüzüne çizer; gökyüzü ağlarıyla artar."
+      },
+      "pass.sky meshes copy": {
+        "label": "gökyüzü ağları kopyalama",
+        "hint": "Gökyüzü ağlarının yakalamasını gökyüzünün okuması için kopyalar; boyutuyla artar."
+      },
+      "pass.cloud depth range": {
+        "label": "bulut derinlik aralığı",
+        "hint": "Bulutların boyunca izlendiği derinlik aralığını bulur; render boyutuyla artar."
+      },
+      "pass.cloud empty space": {
+        "label": "bulut boş alanı",
+        "hint": "Bulut izlemesinin atlayabileceği boş alanı bulur; render boyutuyla artar."
+      },
+      "pass.cloud trace": {
+        "label": "bulut izleme",
+        "hint": "Işınları bulut katmanı boyunca adım adım ilerletir; render boyutuyla ve bulutların kalitesiyle artar."
+      },
+      "pass.cloud haze": {
+        "label": "bulut pusu",
+        "hint": "Bulutların içindeki ve altındaki pusu izler; render boyutuyla artar."
+      },
+      "pass.cloud reconstruction": {
+        "label": "bulut yeniden oluşturma",
+        "hint": "Bulutların tamamını izlenen piksellerden ve önceki görüntülerden yeniden oluşturur; render boyutuyla artar."
+      },
+      "pass.cloud composition": {
+        "label": "bulut birleştirme",
+        "hint": "Bulutları görüntünün üzerine serer; render boyutuyla artar."
+      },
+      "pass.cloud composition behind water": {
+        "label": "su arkasındaki bulutlar",
+        "hint": "Bulutları suyun içinden görülen görüntünün üzerine serer; ekrandaki suyla artar."
+      },
+      "pass.cloud holdout": {
+        "label": "bulut holdout",
+        "hint": "Görüntünün alfasının holdout olduğu yerde bulutları keser; render boyutuyla artar."
+      },
+      "pass.cloud shadow": {
+        "label": "bulut gölgesi",
+        "hint": "Güneş için bulutların gölge haritasını izler; haritanın boyutuyla artar."
+      },
+      "pass.cloud sky occlusion": {
+        "label": "bulut gökyüzü örtmesi",
+        "hint": "Gökyüzü ışığı için bulutların gökyüzünün ne kadarını gizlediğini izler; haritanın boyutuyla artar."
+      },
+      "pass.cloud lightning volume": {
+        "label": "bulut şimşek hacmi",
+        "hint": "Şimşeğin bulutları aydınlattığı hacmi kurar; bulutlar değiştiğinde."
+      },
+      "pass.cloud layout pattern": {
+        "label": "bulut dağılım deseni",
+        "hint": "Bulutların dağılımının okuduğu deseni kurar; bulutlar değiştiğinde."
+      },
+      "pass.fog local volumes cull": {
+        "label": "sis hacimleri eleme",
+        "hint": "Yerel sis hacimlerini froxel karolarına karşı eler; hacimlerle artar."
+      },
+      "pass.fog local volumes sky": {
+        "label": "sis hacimleri gökyüzü",
+        "hint": "Yerel sis hacimlerini gökyüzüyle aydınlatır; hacimlerle artar."
+      },
+      "pass.path tracer light grid": {
+        "label": "yol izleyici ışık ızgarası",
+        "hint": "Yol izleyicinin örneklediği ışıkların ızgarasını kurar; ışıklar değiştiğinde."
+      },
+      "pass.path tracer air optical depth": {
+        "label": "yol izleyici hava derinliği",
+        "hint": "Yol izleyicinin okuduğu havanın optik derinlik tablosunu kurar; atmosfer değiştiğinde."
+      },
+      "pass.path tracer cloud acceleration map": {
+        "label": "yol izleyici bulut haritası",
+        "hint": "Yol izleyicinin boş bulutları atlamak için kullandığı haritayı kurar; bulutlar değiştiğinde."
+      },
+      "pass.path tracer sky table": {
+        "label": "yol izleyici gökyüzü tablosu",
+        "hint": "Yol izleyicinin örneklediği gökyüzü tablosunu kurar; gökyüzü değiştiğinde."
+      },
+      "pass.path tracer sample": {
+        "label": "yol izleyici örnekleme",
+        "hint": "Yol izleyicinin görüntü için örneklerini izler; render boyutuyla ve sekmelerle artar."
+      },
+      "pass.path tracer error mips": {
+        "label": "yol izleyici hata mipleri",
+        "hint": "Uyarlamalı örneklemenin okuduğu örnek hatası düzeylerini kurar; render boyutuyla artar."
+      },
+      "pass.path tracer normal space": {
+        "label": "yol izleyici normal uzayı",
+        "hint": "Gürültü gidericiye yol gösteren normalleri ve derinliği yazar; render boyutuyla artar."
+      },
+      "pass.path tracer denoiser": {
+        "label": "yol izleyici gürültü giderici",
+        "hint": "Yol izlemeli görüntünün gürültüsünü giderir; render boyutuyla artar."
+      },
+      "pass.path tracer denoiser motion view": {
+        "label": "yol izleyici hareket görünümü",
+        "hint": "Gürültü gidericinin hareket hata ayıklama görünümünü çizer; yalnızca o görünüm gösterilirken."
+      },
+      "pass.path tracer denoiser warp view": {
+        "label": "yol izleyici çarpıtma görünümü",
+        "hint": "Gürültü gidericinin çarpıtma hata ayıklama görünümünü çizer; yalnızca o görünüm gösterilirken."
+      },
+      "pass.path tracer display": {
+        "label": "yol izleyici gösterimi",
+        "hint": "Yol izlemeli görüntüyü ekranda gösterir; render boyutuyla artar."
+      },
+      "pass.card capture clear": {
+        "label": "kart yakalama temizleme",
+        "hint": "Yakalanmak üzere olan yüzey önbelleği kartlarını temizler; yakalanan kartlarla artar."
+      },
+      "pass.card capture cull": {
+        "label": "kart yakalama eleme",
+        "hint": "Ağları yakalanmak üzere olan kartlara karşı eler; kartlarla ve ağlarla artar."
+      },
+      "pass.card capture raster": {
+        "label": "kart yakalama raster",
+        "hint": "Ağları kartların yakalamalarına çizer; yakalanan üçgenlerle artar."
+      },
+      "pass.card capture export": {
+        "label": "kart yakalama aktarımı",
+        "hint": "Yakalanan kartları yüzey önbelleğinin atlasına yazar; yakalanan kartlarla artar."
+      },
+      "pass.surface cache atlas clear": {
+        "label": "yüzey önbelleği atlası temizleme",
+        "hint": "Yüzey önbelleği atlasının katmanlarını temizler; atlas oluşturulduğunda ya da sıfırlandığında."
+      },
+      "pass.surface cache feedback table arguments": {
+        "label": "yüzey önbelleği geri bildirim argümanları",
+        "hint": "Yüzey önbelleğinin geri bildirim tablosunun çalıştırılmasını hazırlar; küçük, sabit bir maliyet."
+      },
+      "pass.surface cache feedback table": {
+        "label": "yüzey önbelleği geri bildirim tablosu",
+        "hint": "Görüntünün istediği kartların tablosunu kurar; görülen kartlarla artar."
+      },
+      "pass.surface cache feedback compaction": {
+        "label": "yüzey önbelleği geri bildirim sıkıştırma",
+        "hint": "Görüntünün istediği kartları bir listeye sıkıştırır; görülen kartlarla artar."
+      },
+      "pass.surface cache atlas view": {
+        "label": "yüzey önbelleği atlas görünümü",
+        "hint": "Yüzey önbelleği atlasının hata ayıklama görünümünü çizer; yalnızca o görünüm gösterilirken."
+      },
+      "pass.inspection reflections": {
+        "label": "inceleme yansımaları",
+        "hint": "İncelemenin çizdiği yansıma ışınlarını izler; yalnızca gösterilirken."
+      },
+      "tab.why": {
+        "label": "Neden",
+        "hint": "Her görüntünün neden çizildiği ya da tutulduğu, neyin hareket ettiği, ana görünümün ne kadar oturduğu ve araçların maliyeti; motor bunu panel açıkken kaydeder."
+      },
+      "summary.still": {
+        "label": "Durağan görünüm",
+        "hint": "Son saniyenin her turu görüntüsünü tuttu: hiçbir şey çizilmedi, bu yüzden hiçbir şey ölçülmedi."
+      },
+      "summary.stillValue": {
+        "label": "hiçbir şey çizilmedi",
+        "hint": "\"Durağan pozu ölç\" açıkken her durağan görüntüyü yeniden çizer, böylece maliyeti ölçülür."
+      },
+      "summary.stillMeasured": {
+        "label": "durağan ölçülüyor",
+        "hint": "Durağan poz ölçülüyor: görünümün tutacağı her görüntü yeniden çizilir (neden forced)."
+      },
+      "summary.paused": {
+        "label": "duraklatıldı",
+        "hint": "Gösterim duraklatıldı: rakamlar olduğu gibi kalır, enstrümanlar okumaya devam eder."
+      },
+      "detail.median": {
+        "label": "p50 {p50} ms = {n} × {refresh} ms",
+        "hint": "Ekranın ızgarasındaki medyan aralık: tam yenileme sayısı çarpı yenileme."
+      },
+      "detail.held": {
+        "label": "tutulan {n}",
+        "hint": "Pencerenin hiçbir görüntü çizmeyen turları."
+      },
+      "detail.stutters": {
+        "label": "takılmalar {n}",
+        "hint": "50 ms'yi ve medyanın iki katını aşan aralıklar."
+      },
+      "detail.samples": {
+        "label": "örneklenen {n} · bırakılan {d}",
+        "hint": "GPU zamanlayıcısının pencere boyunca örneklediği görüntüler ve okunmadan bırakılan örnekler."
+      },
+      "detail.gpuClock": {
+        "label": "GPU zamanlayıcı {us} µs",
+        "hint": "GPU zamanlayıcısının adımı, zaman damgalarından bulunur."
+      },
+      "detail.cpuClock": {
+        "label": "CPU saati {us} µs",
+        "hint": "CPU saatinin adımı: kaynaklar arası yalıtımda 5 µs, değilse 100 µs."
+      },
+      "why.strip": {
+        "label": "Görüntüler",
+        "hint": "Ana görünümün her görüntüsü için grafiğin zaman ekseninde bir hücre, her biri kendi çeyrek saniyesinin noktasının altında, kararına göre renkli; durağan poz ölçümünün zorladığı görüntüde üstte bir işaret, bir neden belirtende altta bir işaret. O görüntüyü adlandırmak ve yakın tarihli birini Neden sekmesinde okumak için bir hücreye gelin."
+      },
+      "why.forced": {
+        "label": "zorlanmış",
+        "hint": "Durağan poz ölçümünün yeniden çizdiği bir görüntü."
+      },
+      "why.caused": {
+        "label": "nedenler",
+        "hint": "Görünüm bir görüntü tuttuğundan beri neyin hareket ettiğini adlandıran bir görüntü."
+      },
+      "why.roles": {
+        "label": "Görünüme göre görüntüler",
+        "hint": "Pencere sıfırlandığından beri okunan görüntüler, görünümün rolüne göre: ana görünüm, sayfanın görünümleri, motorun kendi görünümleri (bir ayna, özel derinlik, bir gök yüzü), bir yakalama."
+      },
+      "why.frames": {
+        "label": "Okunan turlar",
+        "hint": "Okuyucunun pencere sıfırlandığından beri kaydettiği ilk ve son görüntü, kaydın kendi numaralarıyla."
+      },
+      "why.verdicts": {
+        "label": "Kararlar",
+        "hint": "Seçili görünümün görüntülerine ne oldu: çizildi ya da tutuldu ve neden; hiçbir görüntünün almadığı bir karar gridir."
+      },
+      "why.reasons": {
+        "label": "Oturmamış",
+        "hint": "Tutma kararı verildiğinde hâlâ oturmamış iş, görüntüler üzerinden (bir görüntü birkaçını adlandırabilir); hiçbir görüntünün almadığı bir ad gridir."
+      },
+      "why.terms": {
+        "label": "Her görüntünün terimleri",
+        "hint": "Sakin bir görünümü yeniden çizen terim, çizdiği görüntüler üzerinden; hiçbir görüntünün almadığı bir terim gridir."
+      },
+      "why.causes": {
+        "label": "Nedenler",
+        "hint": "Bir revizyonu ilerleten ya da bir görüntü isteyen şey, görüntüler üzerinden (bir görüntü birkaçını adlandırabilir); hiçbir görüntünün almadığı bir neden gridir."
+      },
+      "why.sinceChange": {
+        "label": "Değişiklikten beri",
+        "hint": "Ana görünümün son değişikliğinden beri görüntüler, zamansal geçmişinin önceki görünümü unutması için gereken görüntülere karşı; son pencere hiçbirini karşılaştırmadıysa gri (hareket eden ya da tutulan bir görünüm)."
+      },
+      "why.history": {
+        "label": "Geçmiş",
+        "hint": "Zamansal geçmişin biriktirdiği görüntüler, jitter döngüsünün sonunda dolduğu görüntülere karşı; son pencere hiçbirini karşılaştırmadıysa gri."
+      },
+      "why.panelCost": {
+        "label": "Panel, saniyede ms",
+        "hint": "Panelin son saniyede okumak ve çizmek için harcadığı kendi ana iş parçacığı süresi, saniyede ms."
+      },
+      "why.instrumentCpu": {
+        "label": "Enstrümanlar, CPU",
+        "hint": "Zaman enstrümanının tur başına kendi ana iş parçacığı süresi (satırları, örnekleri, okumaları): CPU sekmesinin Enstrümanlar satırı."
+      },
+      "why.instrumentGpu": {
+        "label": "Enstrümanlar, GPU",
+        "hint": "Enstrümanların tur başına eklediği GPU geçişleri (tanılama aşaması): GPU sekmesinin Enstrümanlar satırı."
+      },
+      "verdict.drawn": {
+        "label": "çizildi",
+        "hint": "Yeni bir görüntü çizildi ve gösterildi."
+      },
+      "verdict.still": {
+        "label": "durağan",
+        "hint": "Tutuldu: önceki görüntü, bit bit yeniden gösterildi."
+      },
+      "verdict.heldOnAnswer": {
+        "label": "yanıt bekliyor",
+        "hint": "Aygıtın hâlâ borçlu olduğu bir yanıt için tutuldu: derlenen bir program, bir arabellek."
+      },
+      "verdict.targetsAwaited": {
+        "label": "hedefler bekleniyor",
+        "hint": "Aygıtın henüz vermediği hedefler için tutuldu."
+      },
+      "verdict.swapped": {
+        "label": "değiştirildi",
+        "hint": "Bir kenarda hazırlanan hedeflere çizildi ve yerine takıldı."
+      },
+      "verdict.noiseFinal": {
+        "label": "son gürültü",
+        "hint": "Bir görünümün kuruluşunun son görüntüsü, görünüm tutulmadan önce gürültünün kanonik fazında çizilir."
+      },
+      "verdict.withheld": {
+        "label": "gösterilmedi",
+        "hint": "Çizildi ama gösterilmedi: görünüm yüklenmeden önce ya da bir yükleme yavaş akışı beklerken."
+      },
+      "image.frame": {
+        "label": "Görüntü",
+        "hint": "Aşağıdaki satırların okuduğu görüntü: şeritte işaretçinin altındaki, değilse sonuncusu; oturumdaki görüntü numarası."
+      },
+      "image.view": {
+        "label": "Görünüm",
+        "hint": "Görünümün rolü ve o roldeki görünümler arasındaki yeri."
+      },
+      "image.verdict": {
+        "label": "Karar",
+        "hint": "Görüntüye ne olduğu."
+      },
+      "image.because": {
+        "label": "Çizilme nedeni",
+        "hint": "Tutma kararının onu çizdiği tek neden; tutulan bir görüntüde yok."
+      },
+      "image.reasons": {
+        "label": "Oturmamış",
+        "hint": "Tutma kararı verildiğinde hâlâ oturmamış iş."
+      },
+      "image.term": {
+        "label": "Terim",
+        "hint": "Sakin bir görünümü her görüntüde çizen ve bunu çizen terim."
+      },
+      "image.causes": {
+        "label": "Nedenler",
+        "hint": "Görünüm bir görüntü tuttuğundan beri neyin hareket ettiği, kaynağına göre."
+      },
+      "image.answer": {
+        "label": "Bekletildiği yanıt",
+        "hint": "Görüntünün beklediği yanıt; çizilen bir görüntüde yok."
+      },
+      "image.retryInMs": {
+        "label": "Yeniden deneme",
+        "hint": "Reddedilen hedefler için tutuldu: reddedilen boyut yeniden istenmeden önceki milisaniyeler."
+      },
+      "image.intervalMs": {
+        "label": "Aralık",
+        "hint": "Görüntünün ekranda kaldığı süre."
+      },
+      "image.refreshes": {
+        "label": "Yenilemeler",
+        "hint": "Görüntünün ekranda kaldığı tam ekran yenilemeleri."
+      },
+      "image.bound": {
+        "label": "Sınırlayan",
+        "hint": "Yenilemelerini belirleyen: GPU, CPU ya da ekranın ritmi."
+      },
+      "bound.gpu": {
+        "label": "GPU",
+        "hint": "Bunu grafik işlemcinin süresi belirledi."
+      },
+      "bound.cpu": {
+        "label": "CPU",
+        "hint": "Bunu ana iş parçacığının süresi belirledi."
+      },
+      "bound.pacing": {
+        "label": "ekran ritmi",
+        "hint": "Hiçbir işlemci: bunu ekranın yenilemesi, sayfa ya da bir kare sınırı belirledi."
+      },
+      "image.cpuMs": {
+        "label": "CPU",
+        "hint": "Turun ana iş parçacığı süresi."
+      },
+      "image.gpuMs": {
+        "label": "GPU",
+        "hint": "Görüntünün GPU süresi; zamanlayıcı onu örneklemediyse yok."
+      },
+      "image.outsideMs": {
+        "label": "Görüntünün dışında",
+        "hint": "Turunda görüntünün yanında gönderilen GPU işi."
+      },
+      "image.waitMs": {
+        "label": "Bekleme",
+        "hint": "Aralık eksi daha meşgul işlemci: bir yenilemeyi bekleyerek geçen süre."
+      },
+      "image.toNextRefreshMs": {
+        "label": "Bir yenileme erken",
+        "hint": "Görüntünün bir yenileme erken gelmesi için sınırlayan işlemcinin bırakması gereken süre."
+      },
+      "control.every": {
+        "label": "GPU ölçümü",
+        "hint": "GPU zamanlayıcısının bir görüntüyü ne sıklıkla okuduğu: varsayılan {every} görüntüde 1, en hafifi; 3 görüntüde 1 ya da her görüntü daha fazlasını ölçer, her biri bir zamanlayıcı sorgusu ve bir geri okuma karşılığında."
+      },
+      "control.everyImage": {
+        "label": "her kare",
+        "hint": "Her görüntü GPU üzerinde ölçülür: en çok örnek, görüntü başına bir zamanlayıcı sorgusu ve bir geri okuma karşılığında."
+      },
+      "control.still": {
+        "label": "Durağan pozu ölç",
+        "hint": "Açıkken görünümün tutacağı her görüntü yeniden çizilir, böylece durağan poz ölçülür; her biri yeni bir TAA örneğidir (neden forced). Her karede tam bir görüntüye mal olur."
+      },
+      "control.pause": {
+        "label": "Gösterimi duraklat",
+        "hint": "Gösterilen rakamları dondurur; enstrümanlar okumaya devam eder ve şerit işaretçiye yanıt vermeyi sürdürür."
+      },
+      "control.reset": {
+        "label": "Pencereyi sıfırla",
+        "hint": "Şimdiye kadar okunan görüntüleri ve sayımları unutur: pencere şimdi yeniden başlar."
+      },
+      "control.export": {
+        "label": "JSON indir",
+        "hint": "Neden ve zaman enstrümanlarının son dakikadaki pencereleri, motorun verdiği gibi, her zaman penceresi okuyucusunun açıldığı seçeneklerle; sayfanın adresi, okunan dünya, okuyucuların durumu ve istenenler."
+      },
+      "control.role": {
+        "label": "Sayılan görünüm",
+        "hint": "Bu sekmenin hangi görünümün görüntülerini saydığı: ana görünüm, sayfanın görünümleri, motorunkiler (bir ayna, bir gökyüzü yüzü), bir yakalama; okunan roller arasından."
+      },
+      "control.world": {
+        "label": "Dünya",
+        "hint": "Panelin okuduğu sayfa dünyası, sayfanın dünyaları arasındaki yerine göre (ilk oluşturulan ana görünümdür); her pencere seçilen dünyada yeniden başlar."
+      },
+      "control.view": {
+        "label": "Görünüm",
+        "hint": "Dünyanın çizdiği: render ya da motorun nasıl çalıştığını gösteren bir görünüm (`world.diagnostic.mode`); gri olan burada sunulmaz ya da dünya onu reddetti."
+      },
+      "control.viewUnavailable": {
+        "label": "burada çizilmez",
+        "hint": "Bu motor sürümü bu görünümü henüz çizmiyor."
+      },
+      "control.viewRefused": {
+        "label": "bu dünya reddetti",
+        "hint": "Dünya, bu istendiğinde sahip olduğu görünümü korudu; konsol nedenini söyler."
+      },
+      "control.freeze": {
+        "label": "Elemeyi dondur",
+        "hint": "Kamera ilerlerken kesiti (seviyelerini, HLOD'u, frustumu ve örtmeyi) şimdiki kamerada tutar (`world.diagnostic.freeze`): röntgen görünümünde bir adım yana çekilmek neyi gönderdiğini ve neyi attığını gösterir."
+      },
+      "viewGroup.geometry": {
+        "label": "Geometri",
+        "hint": "Kesitin çizdikleri: üçgenleri, kümeleri, ayrıntı seviyeleri, HLOD, vokseller, ekran hatası ve sayfalar; içinden görülerek ya da sayılarak."
+      },
+      "viewGroup.materials": {
+        "label": "Malzemeler",
+        "hint": "Yüzeylerin malzemeleri: sınıfları, imlecin altındaki özellikler, okunan doku boyutu, yüzey altı profilleri."
+      },
+      "viewGroup.lighting": {
+        "label": "Aydınlatma",
+        "hint": "Yüzeylerin aldığı ışık, bütün olarak ya da terim terim, ve ışıkların resim ve profil atlasları."
+      },
+      "viewGroup.temporal": {
+        "label": "Zamansal kenar yumuşatma",
+        "hint": "Zamansal birikim: aldığı görüntü, geçmişi ve onu reddeden, ve bir görüntüden sonrakine neyin değiştiği."
+      },
+      "viewGroup.shadowMaps": {
+        "label": "Gölge haritaları",
+        "hint": "Sanal gölge haritaları: her pikselin okuduğu seviyeler ve sayfalar, önbellekleri, düşürenleri ve maliyetleri."
+      },
+      "viewGroup.surfaceCache": {
+        "label": "Yüzey önbelleği",
+        "hint": "Mesh kartlarının atlası, ışık güncellemeleri ve onun ışığıyla görülen sahne."
+      },
+      "viewGroup.probes": {
+        "label": "Sondalar",
+        "hint": "Ekran sondaları, dünyanın sondaları ve yansıma ışınları: nerede durdukları, neyi izledikleri, neyi tuttukları."
+      },
+      "viewGroup.sampledLights": {
+        "label": "Örneklenen ışıklar",
+        "hint": "Çok sayıda ışığın örneklenen aydınlatması: gölge ışınlarının karşılaştığı yüzeyler ve her pikselin maliyeti."
+      },
+      "viewGroup.hair": {
+        "label": "Saç",
+        "hint": "Saç telleri: sınırları, derin gölgeleri, ekran çerçeveleri ve vokselleri."
+      },
+      "viewGroup.volumes": {
+        "label": "Hacimler",
+        "hint": "Heterojen hacimlerin voksel ızgaraları, içlerinden geçirgenliği bulmanın her yoluna göre."
+      },
+      "viewGroup.other": {
+        "label": "Diğer",
+        "hint": "Panelin hiçbir grubunun henüz adlandırmadığı görünümler."
+      },
+      "reader.opening": {
+        "label": "açılıyor",
+        "hint": "Enstrümanların okuyucuları yükleniyor."
+      },
+      "reader.waiting": {
+        "label": "dünya {n} bekleniyor",
+        "hint": "Seçilen dünya o zamandan beri hiç tur çizmedi: gösterilen rakamlar, bir tur çizene kadar önceki dünyanınkilerdir."
+      },
+      "reader.missing": {
+        "label": "bu derlemede yok: {names}",
+        "hint": "Bu motor derlemesinde böyle bir enstrüman yok; ondan hiçbir şey gösterilmez."
+      },
+      "reader.failed": {
+        "label": "başarısız",
+        "hint": "Bir enstrümanın okuyucusu açılmadı (ailesi yüklenmedi)."
+      },
+      "reader.faulted": {
+        "label": "hata: {message}",
+        "hint": "Panelin bir okuması ya da çizimi hata fırlattı; okumaya devam ediyor."
+      },
+      "gpu.outside": {
+        "label": "Görüntünün dışında",
+        "hint": "Motorun görüntülerin yanında gönderdiği iş (doku karoları, kurulan sayfalar, gök yakalamaları), zaman okunurken ölçülür."
+      },
+      "gpu.diagnostic": {
+        "label": "Enstrümanlar",
+        "hint": "Bir görünümün ya da incelemenin motorun nasıl çalıştığını göstermek için eklediği geçişler; motorun kendi maliyeti değil."
+      },
+      "gpu.views": {
+        "label": "Ana görünümün yanındaki görünümler",
+        "hint": "Ana görüntünün yanında çizilen her görünüm (bir sayfa görünümü, bir ayna, özel derinlik, bir gök yüzü): kendi görüntüleri üzerindeki ortalama GPU süresi, toplanmış; yukarıdaki turun parçası değil."
+      },
+      "cpu.diagnostic": {
+        "label": "Enstrümanlar",
+        "hint": "Zaman enstrümanının okunurken tur başına kendi ana iş parçacığı işi (satırları, örnekleri, okumaları); motorun maliyeti değil."
+      },
+      "control.everyN": {
+        "label": "{n} karede 1",
+        "hint": "Her {n} kareden biri GPU'da ölçülür."
+      },
+      "control.actions": {
+        "label": "Eylemler",
+        "hint": "Gösterimin okunanla yaptığı: duraklatmak, pencereyi yeniden başlatmak, indirmek."
+      },
+      "role.main": {
+        "label": "ana görünüm",
+        "hint": "Dünyanın ana görünümü."
+      },
+      "role.pageView": {
+        "label": "sayfa görünümü",
+        "hint": "Sayfanın eklediği bir görünüm (`world.addView`)."
+      },
+      "role.planarReflection": {
+        "label": "düzlem yansıma",
+        "hint": "Düz bir aynanın görünümü, ana görünümün yanında çizilir."
+      },
+      "role.customDepth": {
+        "label": "özel derinlik",
+        "hint": "Özel derinlik görünümü, ana görünümün yanında çizilir."
+      },
+      "role.skyFace": {
+        "label": "gök yüzü",
+        "hint": "Gökyüzü ağlarının küpünün bir yüzü, ana görünümün yanında çizilir."
+      },
+      "role.aside": {
+        "label": "yakalama",
+        "hint": "Ayrıca çizilen bir görünüm: bir yakalama."
+      },
+      "gpu.surfaceCache": {
+        "label": "Yüzey önbelleği",
+        "hint": "Ağların kartlarını ışınların okuduğu atlasa yakalar; bir görüntüde yakalanan sayfalarla artar."
+      },
+      "shadows.pagesEmpty": {
+        "label": "Boş gölge sayfaları",
+        "hint": "Hiçbir şey tutmayan, bir sonraki tahsis için boş havuz sayfaları; gölgeler daha az istediğinde artar."
+      },
+      "shadows.pagesWpoConsidered": {
+        "label": "Ofsetli gölge sayfaları",
+        "hint": "Üzerlerinde izin verilen ofsetlerin elemesi altında tutulan önbellekteki gölge sayfaları; görünümdeki ofsetli malzemelerle artar."
+      },
+      "shadows.rootsNoted": {
+        "label": "Taşınan yerleşimler",
+        "hint": "Taşındığı not edilen yerleşim dünyalarının birikmiş toplamı; görüntü başına artışı bir taşımanın ulaştığı yerleşimlerdir."
+      },
+      "shadows.rootsBoxed": {
+        "label": "Türetilen kök kutuları",
+        "hint": "Kök geçişinin türettiği kök kutularının birikmiş toplamı; gölge geçersizleştirme bir yerleşimi bunlar üzerinden görür."
+      },
+      "pass.cluster measure": {
+        "label": "küme ölçümü",
+        "hint": "Sayfaları gelen kümelerin en uzun kenarını ölçer; gelen sayfalarla artar."
+      },
+      "pass.raster depth export": {
+        "label": "raster derinlik aktarımı",
+        "hint": "Sahnenin derinlik ekini derinlik piramidinin ilk seviyesinden yazar; render boyutuyla artar."
+      },
+      "pass.material bins and shading": {
+        "label": "malzeme grupları ve gölgelendirme",
+        "hint": "Pikselleri malzemeye göre sıralar ve her malzemenin grubunu gölgelendirir; görünümdeki malzeme ve piksellerle artar."
+      },
+      "pass.translucency modulation": {
+        "label": "yarı saydamlık modülasyonu",
+        "hint": "Arkalarındakini çarpan katmanları çizer; görünümdeki bu katmanlarla artar."
+      },
+      "pass.translucency compose": {
+        "label": "yarı saydamlık birleştirme",
+        "hint": "Yarı saydam katmanları görüntünün üzerine birleştirir; render boyutuyla artar."
+      },
+      "pass.reflection clear": {
+        "label": "yansıma temizleme",
+        "hint": "Hiçbir ışının izlenmediği yerde yansıma görüntüsünü boşaltır; render boyutuyla artar."
+      },
+      "pass.reflection resolve": {
+        "label": "yansıma çözümleme",
+        "hint": "Yansıma görüntüsünü doldurmak için komşu piksellerin ışınlarını yeniden kullanır; yansıtıcı piksellerle artar."
+      },
+      "pass.reflection temporal": {
+        "label": "zamansal yansıma",
+        "hint": "Görüntüyü temizlemek için önceki görüntülerin yansımalarını biriktirir; yansıtıcı piksellerle artar."
+      },
+      "pass.reflection bilateral": {
+        "label": "çift yönlü yansıma filtresi",
+        "hint": "Gürültülü veya yeni yansımaları komşularıyla filtreler ve yansıma görüntüsünü yazar; yansıtıcı piksellerle artar."
+      },
+      "pass.reflection keep depth": {
+        "label": "yansıma derinliğini tut",
+        "hint": "Sonraki görüntünün yansımaları için opak derinliği tutar; render boyutuyla artar."
+      },
+      "pass.tile classification": {
+        "label": "karo sınıflandırma",
+        "hint": "Ekran karolarını tuttukları yüzey türüne göre sıralar, böylece her biri ihtiyaç duyduğu programla aydınlatılır; render boyutuyla artar."
+      },
+      "pass.surface colour": {
+        "label": "yüzey rengi",
+        "hint": "Her pikselin ilk rengini yazar: arka plan, olduğu gibi gösterilen yüzeyler ve emisyon; render boyutuyla artar."
+      },
+      "pass.sun light": {
+        "label": "güneş ışığı",
+        "hint": "Güneşin ve diğer yönlü ışıkların ışığını gölgeleriyle birlikte yüzeylere ekler; aydınlatılan piksellerle ve ışıklarla artar."
+      },
+      "pass.local lights": {
+        "label": "yerel ışıklar",
+        "hint": "Her pikselin ışık ızgarası hücresindeki lambaları yüzeylere ekler; aydınlatılan piksellerle ve onlara ulaşan ışıklarla artar."
+      },
+      "pass.indirect light": {
+        "label": "dolaylı ışık",
+        "hint": "Ortamın ve gökyüzünün ışığını, seken ışığı, yansımaları ve ince bir yüzeyin arkasını ekler; aydınlatılan piksellerle artar."
+      },
+      "pass.height fog": {
+        "label": "yükseklik sisi",
+        "hint": "Sisi, yerel sis hacimlerini ve havanın puslarını aydınlatılmış görüntünün üzerine serer; render boyutuyla artar."
+      },
+      "pass.temporal dilate velocity": {
+        "label": "zamansal hız genişletme",
+        "hint": "Zamansal kenar yumuşatma için her pikselin en yakın yüzeyini ve hareketini bulur; render boyutuyla artar."
+      },
+      "pass.temporal decimate history": {
+        "label": "zamansal geçmiş seyreltme",
+        "hint": "Önceki görüntülerin küçük geçmişlerini bu görüntüye yeniden yansıtır; render boyutuyla artar."
+      },
+      "pass.temporal detect thin geometry": {
+        "label": "zamansal ince geometri tespiti",
+        "hint": "Geçmişin tutması gereken ince geometriyi bulur; render boyutuyla artar."
+      },
+      "pass.temporal reject shading": {
+        "label": "zamansal gölgelendirme reddi",
+        "hint": "Hangi piksellerin görüntüden görüntüye titreştiğini ölçtükten sonra, geçmişin görüntüyle artık uyuşmadığı ve atılması gereken yerleri ölçer; render boyutuyla artar."
+      },
+      "pass.temporal spatial anti aliasing": {
+        "label": "zamansal uzamsal kenar yumuşatma",
+        "hint": "Geçmişi atılan piksellerin kenarlarını yumuşatır; render boyutuyla artar."
+      },
+      "pass.temporal update history": {
+        "label": "zamansal geçmiş güncelleme",
+        "hint": "Kenarları yumuşatmak için görüntüyü geçmişe karıştırır; geçmiş boyutuyla artar."
+      },
+      "pass.temporal resolve history": {
+        "label": "zamansal geçmiş çözümleme",
+        "hint": "Ekrandan büyük bir geçmişi ekran boyutuna indirir; ekran boyutuyla artar."
+      },
+      "pass.temporal resolve display layers": {
+        "label": "zamansal ekran katmanı çözümleme",
+        "hint": "Ekran katmanlarının geçmişini ekrana indirir; ekran boyutuyla artar."
+      },
+      "control.details": {
+        "label": "Ayrıntılar",
+        "hint": "Görünümün üzerinde ayrıntılar penceresini açar: diyagram olarak kare, her aşama ve geçiş, her görüntünün neden çizildiği, son dakikalar, bellek ve sahne. Açıkken, başka bir örnekleme seçmediyseniz GPU her görüntüde ölçülür; kapalıyken hiçbir maliyeti yoktur."
+      },
+      "details.label": {
+        "label": "Motor ayrıntıları",
+        "hint": "Ölçüm araçlarının motordan okuduğu her şey, sekme sekme; Esc veya × kapatır."
+      },
+      "details.close": {
+        "label": "Kapat",
+        "hint": "Ayrıntılar penceresini kapatır (Esc)."
+      },
+      "tab.overview": {
+        "label": "Genel bakış",
+        "hint": "Diyagram olarak kare: her GPU aşaması süresi kadar uzun bir çubuk, altında CPU, yenileme bütçesi bir çizgi; kareyi neyin tuttuğu sözcüklerle. Satırlarını açmak için bir aşamaya tıklayın."
+      },
+      "tab.history": {
+        "label": "Geçmiş",
+        "hint": "Son beş dakika, saniyede bir nokta: görüntünün, GPU'nun ve CPU'nun süresi, takılan saniyeler ve görüntüleri bir neden belirten saniyeler."
+      },
+      "stageGroup.scene": {
+        "label": "Dünya",
+        "hint": "Dünyayı hareket ettiren: fizik, animasyonlar, ışıklar."
+      },
+      "stageGroup.cut": {
+        "label": "Kesim ve akış",
+        "hint": "Motorun çizmeyi seçtiği ve GPU'ya getirdiği: kesim, sayfalar, yüklemeler, dokular."
+      },
+      "stageGroup.commands": {
+        "label": "Komutlar",
+        "hint": "GPU komutlarını kaydetmek ve göndermek."
+      },
+      "stageGroup.surfaces": {
+        "label": "Yüzeyler",
+        "hint": "Yüzeyleri çizmek: derinlik piramidi, geometri, çıkartmalar ve saydamlar."
+      },
+      "stageGroup.light": {
+        "label": "Işık",
+        "hint": "Yüzeyleri aydınlatmak: yüzey önbelleği, gölgeler, ışık listeleri, sekme, yansımalar ve aydınlatma."
+      },
+      "stageGroup.image": {
+        "label": "Görüntü",
+        "hint": "Görüntüyü bitirmek: kenar yumuşatma, efektler ve sunum."
+      },
+      "stageGroup.apart": {
+        "label": "Ayrı",
+        "hint": "Görüntü dışındaki GPU işi, ölçüm araçlarının kendi işi ve hiçbir aşamanın bildirmediği geçişler."
+      },
+      "overview.said": {
+        "label": "Görüntü {frame} ms sürüyor, GPU {gpu} ms, CPU {cpu} ms; {budget} ms'lik bir yenilemede {wait} ms bekliyor.",
+        "hint": "Onu neyin tuttuğu henüz söylenmemişken tek cümlede kare: işlemcilerin süreleri ve ekran için bekleme."
+      },
+      "overview.said.gpu": {
+        "label": "GPU tarafından sınırlanıyor — görüntü {frame} ms sürüyor, GPU {gpu} ms, CPU {cpu} ms; {budget} ms'lik bir yenilemede {wait} ms bekliyor.",
+        "hint": "Tek cümlede kare: bir görüntünün ekranda kaç yenileme kaldığını GPU'nun süresi belirledi; ardından işlemcilerin süreleri ve ekran için bekleme."
+      },
+      "overview.said.cpu": {
+        "label": "CPU tarafından sınırlanıyor — görüntü {frame} ms sürüyor, GPU {gpu} ms, CPU {cpu} ms; {budget} ms'lik bir yenilemede {wait} ms bekliyor.",
+        "hint": "Tek cümlede kare: bir görüntünün ekranda kaç yenileme kaldığını ana iş parçacığının süresi belirledi; ardından işlemcilerin süreleri ve ekran için bekleme."
+      },
+      "overview.said.pacing": {
+        "label": "Ekran ritmi tarafından sınırlanıyor — görüntü {frame} ms sürüyor, GPU {gpu} ms, CPU {cpu} ms; {budget} ms'lik bir yenilemede {wait} ms bekliyor.",
+        "hint": "Tek cümlede kare: bir görüntünün ekranda kaç yenileme kaldığını hiçbir işlemci değil, ekranın yenilemesi, sayfa ya da bir kare sınırı belirledi; ardından işlemcilerin süreleri ve ekran için bekleme."
+      },
+      "overview.unread": {
+        "label": "Henüz süre okunmadı",
+        "hint": "GPU ve CPU aşamaları, kare süresi okuyucusu bir saniye okuduğunda görünür."
+      },
+      "overview.stage": {
+        "label": "{name}: {ms} ms · görüntünün % {share}'i",
+        "hint": "Karenin bir aşaması, son saniyedeki ortalama süresi ve GPU görüntüsündeki payı; satırlarını açmak için tıklayın."
+      },
+      "table.name": {
+        "label": "Ad",
+        "hint": "Aşama ve altında geçişleri; boru hattı sırasına göre sıralamak için tıklayın."
+      },
+      "table.avg": {
+        "label": "Ort.",
+        "hint": "Son saniyenin ortalaması; yenileme bütçesine göre renklenir: çeyreği aşınca turuncu, yarıyı aşınca kırmızı. Sıralamak için tıklayın."
+      },
+      "table.p95": {
+        "label": "p95",
+        "hint": "Son saniyenin 95. yüzdeliği: 20 görüntüden 1'i daha uzun sürer. Sıralamak için tıklayın."
+      },
+      "table.max": {
+        "label": "Maks",
+        "hint": "Son saniyenin en uzunu. Sıralamak için tıklayın."
+      },
+      "table.share": {
+        "label": "Görüntünün %'si",
+        "hint": "GPU görüntüsündeki (veya CPU karesindeki) pay. Sıralamak için tıklayın."
+      },
+      "table.trend": {
+        "label": "Son dakika",
+        "hint": "Son dakikadaki her saniyenin ortalaması."
+      },
+      "history.stutter": {
+        "label": "takılma",
+        "hint": "Ekranın olağan temposundan daha uzun beklemek zorunda kaldığı en az bir görüntü içeren bir saniye: üstte kırmızı bir işaret."
+      },
+      "history.cause": {
+        "label": "neden",
+        "hint": "Görüntüleri onları neyin hareket ettirdiğini belirten bir saniye: altta sarı bir işaret; nedenleri okumak için üzerine gelin."
+      },
+      "history.point": {
+        "label": "{ago} sn önce · görüntü {frame} ms (maks {max}) · GPU {gpu} ms · CPU {cpu} ms",
+        "hint": "İmlecin altındaki saniye: ortalama süreleri ve en uzun görüntüsü."
+      },
+      "history.unread": {
+        "label": "Henüz bir şey okunmadı",
+        "hint": "Panel ne gösterirse göstersin, kare süresi okuyucusunun okuduklarından saniyede bir nokta: ilki bir saniye sonra gelir."
+      },
+      "history.zoom": {
+        "label": "{from} sn önceden {to} sn önceye · çift tıklama: son beş dakika",
+        "hint": "Bir aralığa yakınlaşmak için grafik üzerinde sürükleyin; son beş dakikayı yeniden görmek için çift tıklayın."
+      },
+      "history.clipped": {
+        "label": "▲ ölçeğin üstünde",
+        "hint": "Grafiğin üst kenarında, bir çizginin renginde küçük bir üçgen: o saniyenin süresi ölçeğin tepesini aştı, ölçeğin dışarıda bıraktığı bir sıçrama; tamamını okumak için üzerine gelin."
+      },
+      "pass.material bins": {
+        "label": "malzeme grupları",
+        "hint": "Her sınıf kendi grubunu gölgelendirmeden önce pikselleri malzeme sınıfı başına bir gruba ayırır; render boyutuyla artar."
+      },
+      "pass.material shading": {
+        "label": "malzeme gölgelendirme",
+        "hint": "Bir malzeme sınıfı grubundaki pikselleri gölgelendirir, her biri kendi üçgenini çözer; o sınıfın pikselleriyle artar."
+      },
+      "pass.blend responsiveness": {
+        "label": "saydam tepkiselliği",
+        "hint": "Saydamların zamansal filtreden onları daha hızlı izlemesini istediği yerleri işaretler; saydam piksellerle artar."
+      },
+      "pass.alpha holdout start": {
+        "label": "alfa holdout başlangıcı",
+        "hint": "Holdout hedefini aydınlatılmış görüntünün alfasından başlatır; render boyutuyla artar."
+      },
+      "pass.blend alpha holdout": {
+        "label": "saydam alfa holdout",
+        "hint": "Holdout katmanlarını hedeflerine çizer; pikselleriyle artar."
+      },
+      "pass.alpha holdout apply": {
+        "label": "alfa holdout uygulama",
+        "hint": "Holdout'un görünürlüğünü aydınlatılmış görüntünün alfasına geri koyar; render boyutuyla artar."
+      },
+      "pass.translucent radiance mark": {
+        "label": "yarı saydam ışınım işaretleme",
+        "hint": "Yarı saydam yüzeylerin okuduğu ışınım önbelleği hücrelerini işaretler; yarı saydam piksellerle artar."
+      },
+      "pass.sorted translucency collect": {
+        "label": "sıralı yarı saydamlık toplama",
+        "hint": "Sıralama için her pikselin yarı saydam katmanlarını toplar; piksel başına katmanlarla artar."
+      },
+      "pass.sorted translucency combine": {
+        "label": "sıralı yarı saydamlık birleştirme",
+        "hint": "Sıralı katmanları önden arkaya yarı saydamlık hedefine birleştirir; piksel başına katmanlarla artar."
+      },
+      "pass.water": {
+        "label": "su",
+        "hint": "Tek katmanlı suyu gölgelendirir; ekrandaki su pikselleriyle artar."
+      },
+      "pass.water scene copy": {
+        "label": "su sahne kopyası",
+        "hint": "Kırılması için sahneyi susuz kopyalar; render boyutuyla artar."
+      },
+      "pass.water depth": {
+        "label": "su derinliği",
+        "hint": "Suyun derinliğini çizer; pikselleriyle artar."
+      },
+      "pass.water refraction mask": {
+        "label": "su kırılma maskesi",
+        "hint": "Suyun neyi kırabileceğini maskeler; pikselleriyle artar."
+      },
+      "pass.water tiles": {
+        "label": "su karoları",
+        "hint": "Su içeren ekran karolarını listeler; render boyutuyla artar."
+      },
+      "pass.water velocity": {
+        "label": "su hızı",
+        "hint": "Zamansal filtre için su yüzeyinin hareketini yazar; pikselleriyle artar."
+      },
+      "pass.water sun shadow": {
+        "label": "su güneş gölgesi",
+        "hint": "Suyu güneşten gölgelendirir; pikselleriyle artar."
+      },
+      "pass.water composite": {
+        "label": "su birleştirme",
+        "hint": "Suyun yansımasını ve kırılmasını görüntünün üzerine birleştirir; pikselleriyle artar."
+      },
+      "pass.hzb occlusion roots": {
+        "label": "HZB örtme kökleri",
+        "hint": "Kök kutularının köşelerini derinlik piramidine karşı testleri için türetir; köklerle artar."
+      },
+      "pass.hardware occlusion boxes": {
+        "label": "donanım örtme kutuları",
+        "hint": "Kök kutularını derinliğe karşı çizer, grup başına bir örtme sorgusu; test edilen kutularla artar."
+      },
+      "pass.hardware occlusion small depth": {
+        "label": "donanım örtme küçük derinliği",
+        "hint": "Örtme kutularının karşısına çizildiği küçük derinliği kurar; render boyutuyla artar."
+      },
+      "pass.hardware occlusion verdicts": {
+        "label": "donanım örtme kararları",
+        "hint": "Sorguların sayılarını görünür veya gizli kararlarına çevirir; test edilen kutularla artar."
+      },
+      "pass.surface cache": {
+        "label": "yüzey önbelleği",
+        "hint": "Yüzey önbelleğini günceller: kartları yakalanır, temizlenir, geri beslenir ve gösterilir; güncellenecek kartlarla artar."
+      },
+      "pass.surface cache lighting": {
+        "label": "yüzey önbelleği aydınlatma",
+        "hint": "Sekmenin okuduğu yüzey önbelleği kartlarını aydınlatır; kartlarla ve ışıklarla artar."
+      },
+      "pass.card capture": {
+        "label": "kart yakalama",
+        "hint": "Yüzey önbelleğinin kartlarını ağlardan yakalar; bu görüntüde yakalanan kartlarla artar."
+      },
+      "pass.screen probes": {
+        "label": "ekran sondaları",
+        "hint": "Görüntüye sondalar yerleştirir, seken ışık için onları izler, filtreler ve karıştırır; render boyutuyla ve ışınlarla artar."
+      },
+      "pass.reflection hit lighting": {
+        "label": "yansıma isabet aydınlatması",
+        "hint": "Yansıma ışınlarının isabetlerini malzemeye göre sıralı olarak yeniden aydınlatır; isabet eden ışınlarla artar."
+      },
+      "pass.sky surfaces": {
+        "label": "gökyüzü yüzeyleri",
+        "hint": "Gökyüzü yüzeylerini atmosfer, sis ve bulutlardan önce aydınlatılmış görüntüye çizer; gökyüzü pikselleriyle artar."
+      },
+      "pass.fog separate composition": {
+        "label": "sis ayrı birleştirme",
+        "hint": "Kendi dokularında çizilen sisi aydınlatılmış görüntünün üzerine serer; render boyutuyla artar."
+      },
+      "pass.fog blur": {
+        "label": "sis bulanıklaştırma",
+        "hint": "Sisin kendi dokularını bulanıklaştırır; boyutlarıyla artar."
+      },
+      "pass.fog upsample": {
+        "label": "sis üst örnekleme",
+        "hint": "Sisin dokularını görüntü boyutuna geri getirir; render boyutuyla artar."
+      },
+      "pass.fog temporal": {
+        "label": "zamansal sis",
+        "hint": "Sisin ikinci seviyesini zaman içinde filtreler; boyutuyla artar."
+      },
+      "pass.fog volume": {
+        "label": "sis hacmi",
+        "hint": "Sisin hacmini kurar: hücrelerinin derinliği, her birinin saçtığı ışık, her sütun boyunca toplam; hücrelerle ve ışıklarla artar."
+      },
+      "pass.fog local volumes": {
+        "label": "yerel sis hacimleri",
+        "hint": "Yerel sis hacimlerini çizer; ekrandaki hacimlerle artar."
+      },
+      "pass.fog sun light function": {
+        "label": "sis güneş ışık fonksiyonu",
+        "hint": "Hacimsel sis için güneşin ışık fonksiyonunu çizer; boyutuyla artar."
+      },
+      "pass.light function atlas": {
+        "label": "ışık fonksiyonu atlası",
+        "hint": "Işıkların ışık fonksiyonlarını atlaslarına çizer; bir tane olan ışıklarla artar."
+      },
+      "pass.toon profile bake": {
+        "label": "toon profili pişirme",
+        "hint": "Bir toon profilinin görüntülerini ışıkların okuduğu desenlere pişirir; bir profil değiştiğinde çalışır."
+      },
+      "pass.rect light atlas add": {
+        "label": "dikdörtgen ışık atlasına ekleme",
+        "hint": "Bir dikdörtgen ışığın kaynak resmini atlasına çizer; bir tane eklendiğinde çalışır."
+      },
+      "pass.rect light atlas copy": {
+        "label": "dikdörtgen ışık atlası kopyalama",
+        "hint": "Bir dikdörtgen ışığın yuvasını yeni bir atlasa taşır; atlas büyüdüğünde çalışır."
+      },
+      "pass.rect light atlas filter": {
+        "label": "dikdörtgen ışık atlası filtresi",
+        "hint": "Dikdörtgen ışık atlasının bir seviyesini filtreler; bir resim değiştiğinde çalışır."
+      },
+      "pass.rect light atlas clear": {
+        "label": "dikdörtgen ışık atlası temizleme",
+        "hint": "Dikdörtgen ışık atlasını temizler; yeniden yapıldığında çalışır."
+      },
+      "pass.rect light atlas debug": {
+        "label": "dikdörtgen ışık atlası hata ayıklama",
+        "hint": "Hata ayıklama görünümü için dikdörtgen ışık atlasını çizer; yalnızca o görünüm gösterilirken."
+      },
+      "pass.rect light atlas blit": {
+        "label": "dikdörtgen ışık atlası blit",
+        "hint": "Hata ayıklama görünümü için dikdörtgen ışık atlasını görüntünün üzerine serer; yalnızca o görünüm gösterilirken."
+      },
+      "pass.light profile atlas debug": {
+        "label": "ışık profili atlası hata ayıklama",
+        "hint": "Hata ayıklama görünümü için ışık profili atlasını çizer; yalnızca o görünüm gösterilirken."
+      },
+      "pass.light profile atlas blit": {
+        "label": "ışık profili atlası blit",
+        "hint": "Hata ayıklama görünümü için ışık profili atlasını görüntünün üzerine serer; yalnızca o görünüm gösterilirken."
+      },
+      "pass.light shapes": {
+        "label": "ışık şekilleri",
+        "hint": "Işıkların şekillerini aydınlatılmış görüntünün üzerine tel kafes olarak çizer; yalnızca gösterilirken."
+      },
+      "pass.volumetric lightmap light": {
+        "label": "hacimsel ışık haritası ışığı",
+        "hint": "Dolaylı ışık okumadan önce hacimsel ışık haritasının ışığını piksellerde toplar; render boyutuyla artar."
+      },
+      "pass.volumetric lightmap visualize": {
+        "label": "hacimsel ışık haritası görselleştirme",
+        "hint": "Hacimsel ışık haritasının her örneği için bir küre çizer; yalnızca o görünüm gösterilirken."
+      },
+      "pass.translucency volume": {
+        "label": "yarı saydamlık hacmi",
+        "hint": "Her ışığı, saydam yüzeylerin aydınlatıldığı kamera çevresindeki hücrelere enjekte eder; ışıklarla artar."
+      },
+      "pass.translucency volume spheres": {
+        "label": "yarı saydamlık hacmi küreleri",
+        "hint": "Yarı saydamlık hacminin her hücresi için bir küre çizer; yalnızca o görünüm gösterilirken."
+      },
+      "pass.translucency global illumination": {
+        "label": "yarı saydamlık küresel aydınlatma",
+        "hint": "Saydam yüzeylerin dolaylı ışığını görünüme uydurulmuş bir ızgaraya izler ve filtreler; hücreleriyle artar."
+      },
+      "pass.traced translucency trace": {
+        "label": "izlenen yarı saydamlık izleme",
+        "hint": "Saydam yüzeylerin içinden ışın izler; pikselleriyle artar."
+      },
+      "pass.traced translucency denoise": {
+        "label": "izlenen yarı saydamlık gürültü giderme",
+        "hint": "Saydam yüzeylerin izlenen ışınlarının gürültüsünü giderir; pikselleriyle artar."
+      },
+      "pass.traced translucency compose": {
+        "label": "izlenen yarı saydamlık birleştirme",
+        "hint": "İzlenen saydam yüzeyleri aydınlatılmış görüntüye birleştirir; pikselleriyle artar."
+      },
+      "pass.ambient occlusion": {
+        "label": "ortam örtmesi",
+        "hint": "Her pikselin çevresinden ne kadar gizlendiğini birkaç çözünürlükte bulur; render boyutuyla artar."
+      },
+      "pass.subsurface scattering": {
+        "label": "yüzey altı saçılımı",
+        "hint": "Işığı cilt benzeri yüzeylerin altına yayar; pikselleriyle artar."
+      },
+      "pass.responsiveness clear": {
+        "label": "tepkisellik temizleme",
+        "hint": "Saydamların yazdığı ve zamansal filtrenin okuduğu tepkiselliği temizler; render boyutuyla artar."
+      },
+      "pass.velocity": {
+        "label": "hız",
+        "hint": "Okuyan geçişler için her pikselin hareketini yazar; render boyutuyla artar."
+      },
+      "pass.temporal measure flickering luma": {
+        "label": "zamansal titreşen parlaklık ölçümü",
+        "hint": "Parlaklığın görüntüden görüntüye nerede titrediğini ölçer; render boyutuyla artar."
+      },
+      "pass.temporal measure thin geometry coverage": {
+        "label": "zamansal ince geometri kapsama ölçümü",
+        "hint": "İnce geometrinin her pikselin ne kadarını kapladığını ölçer; render boyutuyla artar."
+      },
+      "pass.temporal thin geometry weight relaxation": {
+        "label": "zamansal ince geometri ağırlık gevşetme",
+        "hint": "İnce geometrinin bulunduğu yerde geçmişin ağırlığını gevşetir; render boyutuyla artar."
+      },
+      "pass.tone table": {
+        "label": "ton tablosu",
+        "hint": "Ekranın her ışık için gösterdiği rengi birleştirmenin okuduğu küçük bir küpe pişirir; ton ayarları değiştiğinde çalışır."
+      },
+      "pass.motion blur": {
+        "label": "hareket bulanıklığı",
+        "hint": "Piksellerin hareketi boyunca bulanıklaştırır: karoları, yayılımları ve filtre; render boyutuyla ve hareketle artar."
+      },
+      "pass.depth of field": {
+        "label": "alan derinliği",
+        "hint": "Odak dışını bulanıklaştırır: daireleri, karoları, toplamaları ve sprite'ları; render boyutuyla ve bulanıklıkla artar."
+      },
+      "pass.post process material": {
+        "label": "son işlem malzemesi",
+        "hint": "Tüm görüntü üzerinde bir son işlem malzemesi çalıştırır; render boyutuyla ve malzemenin işiyle artar."
+      },
+      "pass.custom depth": {
+        "label": "özel derinlik",
+        "hint": "İsteyen nesnelerin özel derinliğini ve stencil'ini yazar; bu nesnelerle artar."
+      },
+      "pass.page install": {
+        "label": "sayfa kurulumu",
+        "hint": "Yeni yüklenen geometri sayfalarını cihaza kurar; gelen sayfalarla artar."
+      },
+      "pass.ray query": {
+        "label": "ışın sorgusu",
+        "hint": "Sayfanın seçim ışınlarını GPU'da yanıtlar; istenen ışınlarla artar."
+      },
+      "pass.hair strands": {
+        "label": "saç telleri",
+        "hint": "Saç tellerinin herhangi bir geçişi: simülasyonları, gölgeleri, vokselleri ve çizimleri; tellerle artar."
+      },
+      "pass.sun distance field shadow": {
+        "label": "mesafe alanıyla güneş gölgesi",
+        "hint": "Güneşin uzak gölgelerini mesafe alanları içinden izler; render boyutuyla artar."
+      },
+      "pass.distance field occlusion": {
+        "label": "mesafe alanı örtmesi",
+        "hint": "Ortam örtmesini mesafe alanları içinden izler; render boyutuyla artar."
+      },
+      "pass.global distance field": {
+        "label": "küresel mesafe alanı",
+        "hint": "İzlemelerin okuduğu küresel mesafe alanını kurar; hareket eden ağlarla artar."
+      },
+      "pass.mesh distance field": {
+        "label": "ağ mesafe alanı",
+        "hint": "Bir ağın kendi mesafe alanını kurar; bir ağın ihtiyacı olduğunda çalışır."
+      },
+      "pass.path tracer": {
+        "label": "yol izleyici",
+        "hint": "Yol izleyicinin herhangi bir geçişi: örnekleri, tabloları ve gösterimi; piksel başına örneklerle artar."
+      },
+      "pass.air": {
+        "label": "hava",
+        "hint": "Atmosferin arama tablolarını kurar; güneşin hareketleriyle artar."
+      },
+      "pass.sky": {
+        "label": "gökyüzü",
+        "hint": "Gökyüzünü görüntünün üzerine çizer, gökyüzü ışığını yakalar ve filtreler; gökyüzü pikselleriyle ve yakalamalarıyla artar."
+      },
+      "pass.opaque haze": {
+        "label": "opak üzerinde pus",
+        "hint": "Atmosferin pusunu opak yüzeylerin üzerine serer; render boyutuyla artar."
+      },
+      "pass.cloud": {
+        "label": "bulut",
+        "hint": "Hacimsel bulutların herhangi bir geçişi; bulut pikselleriyle ve adımlarıyla artar."
+      },
+      "pass.light shafts": {
+        "label": "ışık hüzmeleri",
+        "hint": "Güneşin ışık hüzmelerini çizer; render boyutuyla artar."
+      },
+      "pass.surface rewrite": {
+        "label": "yüzey yeniden yazma",
+        "hint": "Gökyüzünün ve sisin değiştirdiği yüzeyleri yeniden yazar; render boyutuyla artar."
+      },
+      "pass.debug lines appended": {
+        "label": "eklenen hata ayıklama çizgileri",
+        "hint": "Bir hata ayıklama görünümünün çizgilerini ekler; yalnızca o görünüm gösterilirken."
+      },
+      "pass.inspection reflection": {
+        "label": "inceleme yansıması",
+        "hint": "İncelemenin yansıma çekirdekleri; yalnızca bir inceleme açıkken."
+      },
+      "reason.lost": {
+        "label": "cihaz kayboldu",
+        "hint": "GPU cihazı kayboldu: döndüğünde görüntü yeniden çizilir."
+      },
+      "reason.capturing": {
+        "label": "yakalanıyor",
+        "hint": "Bir yakalama sürüyor: görüntüleri çiziliyor."
+      },
+      "reason.capturePending": {
+        "label": "yakalama istendi",
+        "hint": "Bir yakalama istendi ve görüntüsünü bekliyor."
+      },
+      "reason.frameEncoder": {
+        "label": "kare kodlayıcı",
+        "hint": "Karenin komutları hâlâ kaydediliyor: görüntü henüz tutulamaz."
+      },
+      "reason.metricsPending": {
+        "label": "ölçümler bekliyor",
+        "hint": "Son görüntünün sayıları henüz GPU'dan dönmedi."
+      },
+      "reason.cutMoving": {
+        "label": "kesim değişiyor",
+        "hint": "Geometrinin kesimi hâlâ değişiyor."
+      },
+      "reason.overBudget": {
+        "label": "bütçe aşımı",
+        "hint": "Kesim bütçesinin izin verdiğinden fazlasını istiyor: inceltmeye devam ediyor."
+      },
+      "reason.noOccluderHistory": {
+        "label": "örtücü geçmişi yok",
+        "hint": "Örtme testinin henüz karşılaştıracağı son bir görüntüsü yok."
+      },
+      "reason.deferredDrops": {
+        "label": "ertelenen bırakmalar",
+        "hint": "Kesimin bıraktığı geometri hâlâ atılmayı bekliyor."
+      },
+      "reason.bootstrap": {
+        "label": "başlıyor",
+        "hint": "Görünüm ilk görüntülerinde."
+      },
+      "reason.residencyBusy": {
+        "label": "sayfalar yükleniyor",
+        "hint": "Geometri sayfaları hâlâ yükleniyor veya kuruluyor."
+      },
+      "reason.clustersOwed": {
+        "label": "borçlu kümeler",
+        "hint": "Kesimin istediği kümeler henüz çizilmedi."
+      },
+      "reason.texturesPending": {
+        "label": "dokular bekliyor",
+        "hint": "Görünümün istediği doku karoları hâlâ yükleniyor."
+      },
+      "reason.shadowsPending": {
+        "label": "gölgeler bekliyor",
+        "hint": "Görünümün ihtiyaç duyduğu gölge sayfalarının hepsi henüz çizilmedi."
+      },
+      "reason.cutPending": {
+        "label": "kesim bekliyor",
+        "hint": "Yeni bir kesim istendi ve henüz benimsenmedi."
+      },
+      "reason.bounceProbes": {
+        "label": "sekme sondaları",
+        "hint": "Seken ışığın sondaları hâlâ yakınsıyor."
+      },
+      "reason.deforming": {
+        "label": "deforme ediliyor",
+        "hint": "Bu görüntüde geometri deforme ediliyor."
+      },
+      "reason.reflections": {
+        "label": "yansımalar",
+        "hint": "Yansımalar hâlâ yakınsıyor."
+      },
+      "reason.hlodWarming": {
+        "label": "HLOD hazırlanıyor",
+        "hint": "HLOD seviyeleri hâlâ hazırlanıyor."
+      },
+      "reason.exposure": {
+        "label": "pozlama",
+        "hint": "Otomatik pozlama hâlâ uyum sağlıyor."
+      },
+      "reason.fogVolume": {
+        "label": "sis hacmi",
+        "hint": "Sisin hacmi hâlâ yakınsıyor."
+      },
+      "reason.translucencyVolume": {
+        "label": "yarı saydamlık hacmi",
+        "hint": "Yarı saydamlık aydınlatma hacmi hâlâ yakınsıyor."
+      },
+      "reason.translucencyGi": {
+        "label": "yarı saydamlık GI",
+        "hint": "Saydam yüzeylerin dolaylı ışığı hâlâ yakınsıyor."
+      },
+      "reason.screenProbes": {
+        "label": "ekran sondaları",
+        "hint": "Ekran sondaları hâlâ yakınsıyor."
+      },
+      "reason.occlusion": {
+        "label": "örtme",
+        "hint": "Örtme kararları hâlâ oturuyor."
+      },
+      "reason.casterSettling": {
+        "label": "gölge düşürenler oturuyor",
+        "hint": "Gölge düşürenler yakın zamanda hareket etti: gölgeleri hâlâ oturuyor."
+      },
+      "reason.noisePhase": {
+        "label": "gürültü fazı",
+        "hint": "Görüntü, zamansal geçmişin oturmak için ihtiyaç duyduğu gürültü fazlarından biri."
+      },
+      "term.taaConverging": {
+        "label": "TAA yakınsıyor",
+        "hint": "Zamansal kenar yumuşatma henüz geçmişini toplamadı: toplayana kadar her görüntü çizilir."
+      },
+      "term.frameDifference": {
+        "label": "kare farkı",
+        "hint": "Kare farkı görünümü her görüntüyü bir öncekiyle karşılaştırmak için çizer."
+      },
+      "term.surfaceCache": {
+        "label": "yüzey önbelleği",
+        "hint": "Yüzey önbelleği kartlarını güncelliyor."
+      },
+      "term.pathTracing": {
+        "label": "yol izleme",
+        "hint": "Yol izleyici her görüntüde örnek ekler."
+      },
+      "term.guides": {
+        "label": "kılavuzlar",
+        "hint": "Görüntünün üzerine hareketli kılavuzlar çizilir."
+      },
+      "term.hairDebug": {
+        "label": "saç hata ayıklama",
+        "hint": "Bir saç hata ayıklama görünümü gösteriliyor."
+      },
+      "term.effects": {
+        "label": "efektler",
+        "hint": "Bir efekt zamanla değişiyor."
+      },
+      "term.postProcessMaterialsAnimated": {
+        "label": "hareketli son işlem",
+        "hint": "Bir son işlem malzemesi hareketli."
+      },
+      "term.particles": {
+        "label": "parçacıklar",
+        "hint": "Canlı parçacıklar var."
+      },
+      "term.lightFunctions": {
+        "label": "ışık fonksiyonları",
+        "hint": "Bir ışık fonksiyonu hareketli."
+      },
+      "term.fogSunLightFunction": {
+        "label": "sisin güneş ışık fonksiyonu",
+        "hint": "Sisteki güneşin ışık fonksiyonu hareketli."
+      },
+      "term.lightProfiles": {
+        "label": "ışık profilleri",
+        "hint": "Bir ışık profili değişiyor."
+      },
+      "term.ambientCubemap": {
+        "label": "ortam küp haritası",
+        "hint": "Ortam küp haritası karışıyor."
+      },
+      "term.lightShapes": {
+        "label": "ışık şekilleri",
+        "hint": "Işıkların şekilleri gösteriliyor."
+      },
+      "term.graphsAnimated": {
+        "label": "hareketli malzemeler",
+        "hint": "Bir malzemenin grafiği hareketli."
+      },
+      "term.blendGraphsAnimated": {
+        "label": "hareketli saydamlar",
+        "hint": "Saydam bir malzemenin grafiği hareketli."
+      },
+      "term.fogVolumeAnimated": {
+        "label": "hareketli sis",
+        "hint": "Bir sis hacmi hareketli."
+      },
+      "term.clouds": {
+        "label": "bulutlar",
+        "hint": "Bulutlar hareket ediyor."
+      },
+      "term.skyCubemaps": {
+        "label": "gökyüzü küp haritaları",
+        "hint": "Gökyüzü küp haritaları karışıyor."
+      },
+      "term.finishAnimated": {
+        "label": "hareketli son rötuş",
+        "hint": "Görüntünün son rötuşu (gren, vinyet…) hareketli."
+      },
+      "answer.device refusal": {
+        "label": "cihaz reddi",
+        "hint": "Cihaz işi reddetti: görüntü yeniden istenene kadar bekler."
+      },
+      "answer.targets in flight": {
+        "label": "kullanımdaki hedefler",
+        "hint": "Son görüntünün hedefleri hâlâ GPU tarafından kullanılıyor."
+      },
+      "answer.lit program": {
+        "label": "aydınlatma programı",
+        "hint": "Aydınlatılmış görüntünün programı hâlâ derleniyor."
+      },
+      "answer.sorted translucency buffers": {
+        "label": "sıralı yarı saydamlık arabellekleri",
+        "hint": "Sıralı yarı saydamlığın arabellekleri hâlâ oluşturuluyor."
+      },
+      "answer.translucent object shadow table": {
+        "label": "yarı saydam gölge tablosu",
+        "hint": "Yarı saydam nesnelerin gölge tablosu hâlâ oluşturuluyor."
+      },
+      "answer.pipelines": {
+        "label": "boru hatları",
+        "hint": "GPU boru hatları hâlâ derleniyor."
+      },
+      "answer.targets refused": {
+        "label": "hedefler reddedildi",
+        "hint": "Cihaz hedeflerin boyutunu reddetti; bir gecikmeden sonra yeniden istenir."
+      },
+      "because.firstImage": {
+        "label": "ilk görüntü",
+        "hint": "Görünümün ilk görüntüsü."
+      },
+      "because.scene": {
+        "label": "sahne değişti",
+        "hint": "Tutulan görüntüden beri sahnede bir şey hareket etti."
+      },
+      "because.view": {
+        "label": "görünüm değişti",
+        "hint": "Tutulan görüntüden beri görünüm hareket etti."
+      },
+      "because.resources": {
+        "label": "kaynaklar değişti",
+        "hint": "Görüntünün okuduğu bir kaynak, tutulan görüntüden beri değişti."
+      },
+      "because.confirming": {
+        "label": "doğrulanıyor",
+        "hint": "Bir değişiklikten sonraki görüntü, doğrulamak için bir kez daha çizildi."
+      },
+      "because.unstable": {
+        "label": "kararsız",
+        "hint": "Son iki görüntünün işi farklıydı."
+      },
+      "because.noiseClock": {
+        "label": "gürültü saati",
+        "hint": "Gürültünün saati değişti."
+      },
+      "because.swapped": {
+        "label": "değiştirildi",
+        "hint": "Yer değiştirilen hedeflere çizilen sakin bir görüntü."
+      },
+      "because.forced": {
+        "label": "zorlandı",
+        "hint": "Durağan pozun ölçümü bunu istedi."
+      },
+      "cause.sceneWritten": {
+        "label": "sahne yazıldı",
+        "hint": "Sayfa sahnenin bir pozunu, görünürlüğünü veya ışığını yazdı."
+      },
+      "cause.sceneReshaped": {
+        "label": "sahne yeniden şekillendi",
+        "hint": "Sayfa bir düğüm ekledi, kaldırdı veya taşıdı."
+      },
+      "cause.diagnosticView": {
+        "label": "görünüm modu",
+        "hint": "Tanı görünüm modu değişti."
+      },
+      "cause.materialChanged": {
+        "label": "malzeme değişti",
+        "hint": "Sayfa bir malzemeyi değiştirdi."
+      },
+      "cause.shadingModels": {
+        "label": "gölgelendirme modelleri",
+        "hint": "Gölgelendirme modelleri değişti."
+      },
+      "cause.sceneLights": {
+        "label": "ışıklar ayarlandı",
+        "hint": "Sayfa ışıkları ayarladı."
+      },
+      "cause.fogVolumes": {
+        "label": "sis hacimleri",
+        "hint": "Sayfa sis hacimlerini ayarladı."
+      },
+      "cause.posesMoved": {
+        "label": "pozlar taşındı",
+        "hint": "Motor pozları taşıdı."
+      },
+      "cause.verticesRewritten": {
+        "label": "köşeler yeniden yazıldı",
+        "hint": "Motor köşeleri yeniden yazdı."
+      },
+      "cause.placementsMoved": {
+        "label": "yerleşimler taşındı",
+        "hint": "Motor yerleşimleri taşıdı."
+      },
+      "cause.placementsGrown": {
+        "label": "yerleşimler büyüdü",
+        "hint": "Yerleşim tablosu büyüdü."
+      },
+      "cause.placementsComposed": {
+        "label": "yerleşimler birleştirildi",
+        "hint": "Yerleşimler yeniden birleştirildi."
+      },
+      "cause.cameraCut": {
+        "label": "kamera geçişi",
+        "hint": "Başka bir kamera veya görünüm geçmişinde bir kesinti."
+      },
+      "cause.viewMoved": {
+        "label": "görünüm taşındı",
+        "hint": "Görünümün pozu, izdüşümü veya görüntü alanı değişti."
+      },
+      "cause.viewQuality": {
+        "label": "görünüm kalitesi",
+        "hint": "Görünümün derinlik aralığı veya kalitesi değişti."
+      },
+      "cause.simpleLights": {
+        "label": "basit ışıklar",
+        "hint": "Basit ışıklar değişti."
+      },
+      "cause.skyFaceWaiting": {
+        "label": "gökyüzü yüzü bekliyor",
+        "hint": "Gökyüzü küpünün bir yüzü çizilmeyi bekliyor."
+      },
+      "cause.skyMeshesDrawn": {
+        "label": "gökyüzü ağları çizildi",
+        "hint": "Gökyüzü ağları çizildi."
+      },
+      "cause.reflectionDrawn": {
+        "label": "ayna çizildi",
+        "hint": "Bir düzlem yansıma çizildi."
+      },
+      "cause.reflectionChanged": {
+        "label": "ayna değişti",
+        "hint": "Bir düzlem yansımanın ayarları değişti."
+      },
+      "cause.customDepthMoved": {
+        "label": "özel derinlik titreşimi",
+        "hint": "Özel derinliğin titreşimi kaydı."
+      },
+      "cause.shadowSettings": {
+        "label": "gölge ayarları",
+        "hint": "Gölge ayarları değişti."
+      },
+      "cause.shadowOrigin": {
+        "label": "gölge orijini",
+        "hint": "Gölgelerin orijini taşındı."
+      },
+      "cause.captureAccumulation": {
+        "label": "yakalama birikimi",
+        "hint": "Bir yakalama görüntülerini biriktiriyor."
+      },
+      "cause.targetsMade": {
+        "label": "hedefler oluşturuldu",
+        "hint": "Görüntü hedefleri yeniden oluşturuldu."
+      },
+      "cause.taaLevel": {
+        "label": "TAA seviyesi",
+        "hint": "Zamansal kenar yumuşatmanın seviyesi değişti."
+      },
+      "cause.taaRigged": {
+        "label": "TAA yeniden kuruldu",
+        "hint": "Zamansal kenar yumuşatma yeniden kuruldu."
+      },
+      "cause.vertexPoolGrown": {
+        "label": "köşe havuzu büyüdü",
+        "hint": "Köşe havuzu büyüdü."
+      },
+      "cause.inspection": {
+        "label": "inceleme",
+        "hint": "Bir inceleme değişti."
+      },
+      "cause.litProgram": {
+        "label": "aydınlatma programı",
+        "hint": "Aydınlatılmış görüntünün programı değişti."
+      },
+      "cause.feedbackVariant": {
+        "label": "geri bildirim varyantı",
+        "hint": "Doku geri bildirimi varyantını değiştirdi."
+      },
+      "cause.catalogueCover": {
+        "label": "katalog kapağı",
+        "hint": "Kataloğun kapağı değişti."
+      },
+      "cause.worldCover": {
+        "label": "dünya kapağı",
+        "hint": "Dünyanın kapağı değişti."
+      },
+      "cause.materialGraphs": {
+        "label": "malzeme grafikleri",
+        "hint": "Malzeme grafikleri değişti."
+      },
+      "cause.targetsResized": {
+        "label": "hedefler yeniden boyutlandı",
+        "hint": "Görüntü hedefleri yeniden boyutlandırıldı."
+      },
+      "cause.textureColor": {
+        "label": "doku rengi",
+        "hint": "Bir dokunun rengi değişti."
+      },
+      "cause.tilesServed": {
+        "label": "karolar sunuldu",
+        "hint": "Doku karoları geldi."
+      },
+      "cause.layersGrown": {
+        "label": "katmanlar büyüdü",
+        "hint": "Doku katmanları büyüdü."
+      },
+      "cause.bounceSwitched": {
+        "label": "sekme değiştirildi",
+        "hint": "Seken ışık değiştirildi."
+      },
+      "cause.screenProbes": {
+        "label": "ekran sondaları",
+        "hint": "Ekran sondaları değişti."
+      },
+      "cause.bounceProbes": {
+        "label": "sekme sondaları",
+        "hint": "Sekmenin sondaları değişti."
+      },
+      "cause.memoryBudget": {
+        "label": "bellek bütçesi",
+        "hint": "Bellek bütçesi değişti."
+      },
+      "cause.texturePoolGrown": {
+        "label": "doku havuzu büyüdü",
+        "hint": "Doku havuzu büyüdü."
+      },
+      "cause.cutReleased": {
+        "label": "kesim serbest bırakıldı",
+        "hint": "Kesimin geometrisi serbest bırakıldı."
+      },
+      "cause.residentSynced": {
+        "label": "yerleşik eşitlendi",
+        "hint": "Yerleşik geometri eşitlendi."
+      },
+      "cause.clearColor": {
+        "label": "temizleme rengi",
+        "hint": "Temizleme rengi değişti."
+      },
+      "cause.textureAppended": {
+        "label": "doku eklendi",
+        "hint": "Bir doku eklendi."
+      },
+      "cause.textureReleased": {
+        "label": "doku serbest bırakıldı",
+        "hint": "Bir doku serbest bırakıldı."
+      },
+      "cause.pageLanded": {
+        "label": "sayfa geldi",
+        "hint": "Bir geometri sayfası geldi."
+      },
+      "cause.pageDropped": {
+        "label": "sayfa atıldı",
+        "hint": "Bir geometri sayfası atıldı."
+      },
+      "cause.pageResidence": {
+        "label": "sayfa yerleşikliği",
+        "hint": "Bir sayfanın yerleşikliği değişti."
+      },
+      "cause.cutAdopted": {
+        "label": "kesim benimsendi",
+        "hint": "Geometrinin yeni bir kesimi benimsendi."
+      },
+      "cause.cutFrozen": {
+        "label": "kesim donduruldu",
+        "hint": "Kesim donduruldu veya bırakıldı."
+      },
+      "cause.deviceGone": {
+        "label": "cihaz gitti",
+        "hint": "GPU cihazı kayboldu."
+      },
+      "cause.coverPending": {
+        "label": "kapak bekliyor",
+        "hint": "Bir kapak çizilmeyi bekliyor."
+      },
+      "cause.renderScale": {
+        "label": "render ölçeği",
+        "hint": "Render ölçeği değişti."
+      },
+      "cause.worldCells": {
+        "label": "dünya hücreleri",
+        "hint": "Dünyanın hücreleri değişti."
+      },
+      "cause.blendPipelines": {
+        "label": "saydam boru hatları",
+        "hint": "Saydam boru hatları oluşturuldu."
+      },
+      "cause.shadowSetLost": {
+        "label": "gölge kümesi kayboldu",
+        "hint": "Bir gölge sayfası kümesi kayboldu."
+      },
+      "cause.skinTable": {
+        "label": "deri tablosu",
+        "hint": "Deri (skinning) tablosu değişti."
+      },
+      "cause.volumePrograms": {
+        "label": "hacim programları",
+        "hint": "Hacim programları değişti."
+      },
+      "cause.volumeGrid": {
+        "label": "hacim ızgarası",
+        "hint": "Bir hacim ızgarası değişti."
+      },
+      "cause.hairStrands": {
+        "label": "saç telleri",
+        "hint": "Saç telleri değişti."
+      },
+      "cause.animation": {
+        "label": "animasyon",
+        "hint": "Bir klip ilerledi."
+      },
+      "cause.physics": {
+        "label": "fizik",
+        "hint": "Bir cisim bir adım attı."
+      },
+      "cause.invalidate": {
+        "label": "geçersiz kılma",
+        "hint": "Sayfa bir görüntü istedi: world.invalidate()."
       }
     },
     "failure": {
@@ -753,8 +2659,7 @@
       "waiting": "Motoru bekliyor (#{issue})"
     },
     "views": {
-      "beauty": "görüntü",
-      "wireframe": "üçgenler",
+      "beauty": "Render",
       "triangles": "renkli üçgenler",
       "xray": "röntgen",
       "clusters": "kümeler",
@@ -763,7 +2668,6 @@
       "screen-error": "ekran hatası",
       "materials": "malzemeler",
       "visibility": "görülen sayfalar",
-      "pages": "bellekteki sayfalar",
       "texture-mip": "doku boyutu",
       "overdraw": "yeniden çizim",
       "frame-difference": "kare farkı",
@@ -779,10 +2683,68 @@
       "taa-reprojection": "TAA yeniden izdüşüm",
       "taa-motion": "TAA hareket",
       "taa-thin": "TAA ince geometri",
-      "taa-material-history": "malzemeye göre TAA geçmişi"
+      "taa-material-history": "malzemeye göre TAA geçmişi",
+      "voxels": "vokseller",
+      "indirect-diffuse": "dolaylı ışık",
+      "surface-cache-albedo": "yüzey önbelleği: albedo",
+      "surface-cache-normal": "yüzey önbelleği: normaller",
+      "surface-cache-depth": "yüzey önbelleği: derinlik",
+      "surface-cache-cards": "yüzey önbelleği: kartlar",
+      "surface-cache-fill": "yüzey önbelleği: doluluk",
+      "surface-cache-age": "yüzey önbelleği: yaş",
+      "hair-light-bounds": "saç: sınırlar",
+      "hair-deep-opacity-maps": "saç: derin gölgeler",
+      "hair-macro-group-screen-rect": "saç: ekran çerçeveleri",
+      "hair-voxels-density": "saç: voksel yoğunluğu",
+      "sampled-lights-overview": "çok ışık: genel bakış",
+      "sampled-lights-shadow-casters": "çok ışık: gölge düşürenler",
+      "sampled-lights-shadow-caster-quality": "çok ışık: düşürenlerin kalitesi",
+      "sampled-lights-complexity-opaque": "çok ışık: yüzeylerde maliyet",
+      "sampled-lights-complexity-hair-strands": "çok ışık: saçta maliyet",
+      "sampled-lights-complexity-front-layer": "çok ışık: ön katmanda maliyet",
+      "sampled-lights-complexity-volume": "çok ışık: siste maliyet",
+      "sampled-lights-complexity-translucency-volume": "çok ışık: yarı saydamlıkta maliyet",
+      "subsurface-profiles": "yüzey altı profilleri",
+      "virtual-shadow-map-shadow-casters": "gölge haritaları: düşürenler",
+      "virtual-shadow-map-clipmap-virtual-space": "gölge haritaları: güneş clipmap",
+      "virtual-shadow-map-shadow-factor": "gölge haritaları: ulaşan ışık",
+      "virtual-shadow-map-clipmap-or-mip": "gölge haritaları: okunan seviye",
+      "virtual-shadow-map-virtual-page": "gölge haritaları: okunan sayfa",
+      "virtual-shadow-map-cached-page": "gölge haritaları: önbellekteki sayfalar",
+      "virtual-shadow-map-ray-count": "gölge haritaları: ışın sayısı",
+      "virtual-shadow-map-general-debug": "gölge haritaları: engel uzaklığı",
+      "virtual-shadow-map-dirty-page": "gölge haritaları: çizilen sayfalar",
+      "virtual-shadow-map-gpu-invalidated-page": "gölge haritaları: geçersiz sayfalar",
+      "virtual-shadow-map-merged-page": "gölge haritaları: birleşen sayfalar",
+      "virtual-shadow-map-overdraw": "gölge haritaları: fazla çizim",
+      "rect-light-atlas": "dikdörtgen ışık atlası",
+      "light-profile-atlas": "ışık profili atlası",
+      "surface-cache-direct-stats": "yüzey önbelleği: doğrudan güncelleme",
+      "surface-cache-indirect-stats": "yüzey önbelleği: dolaylı güncelleme",
+      "surface-cache-direct-lighting-stats": "yüzey önbelleği: toplanan ışıklar",
+      "surface-cache-scene-stats": "yüzey önbelleği: sayılar",
+      "surface-cache-primitive-groups": "yüzey önbelleği: nesne kutuları",
+      "radiance-cache-stats": "parlaklık önbelleği: rakamlar",
+      "screen-probe-gather-debug": "ekran sondaları: sayı",
+      "screen-probe-tile-stats": "ekran sondaları: karolar",
+      "screen-probe-placement": "ekran sondaları: yerleşim",
+      "screen-probe-traces": "ekran sondaları: ışınlar",
+      "reflection-traces": "yansıma ışını",
+      "radiance-cache-probes": "parlaklık önbelleği: sondalar",
+      "scene-visualization": "izlenen sahne",
+      "material-properties": "imleç altındaki malzeme",
+      "heterogeneous-volumes-dda-marching": "hacimler: DDA yürüyüşü",
+      "heterogeneous-volumes-sample-marching": "hacimler: örnek yürüyüşü",
+      "heterogeneous-volumes-sample-majorant": "hacimler: majorant örnekleri",
+      "heterogeneous-volumes-sample-max-majorant": "hacimler: en büyük majorant örnekleri",
+      "heterogeneous-volumes-sample-majorant-dda": "hacimler: majorant DDA örnekleri",
+      "heterogeneous-volumes-delta-tracking": "hacimler: delta takibi",
+      "heterogeneous-volumes-ratio-tracking": "hacimler: oran takibi",
+      "heterogeneous-volumes-spectral-ratio-tracking": "hacimler: spektral oran takibi",
+      "heterogeneous-volumes-tracking-majorant-dda": "hacimler: majorant DDA takibi"
     },
     "viewHints": {
-      "wireframe": "Çizilen her üçgenin kenarları, yalnızca çizgiler: uzakta daha az ve daha büyük üçgenler.",
+      "beauty": "Normal görüntü.",
       "triangles": "Çizilen her üçgene düz bir renk.",
       "xray": "Motorun gönderdiği her üçgenin kenarları, duvarların ardından görünür: elemenin attığı şey yoktur. Elemeyi dondurun, sonra kontrol için kenara çekilin.",
       "clusters": "Her kümeye bir renk: kesimin daha kaba biriyle değiştirdiği üçgen grubu.",
@@ -791,7 +2753,6 @@
       "screen-error": "Yeşil: tam. Sarı: izin verilen piksel hatasına yakın. Kırmızı: sınırda.",
       "materials": "Her malzeme türüne bir renk.",
       "visibility": "Yeşil: bu karede çizilen her sayfa.",
-      "pages": "Yeşil: bellekte tutulan ve çizilen her sayfa.",
       "frame-difference": "Siyah: piksel önceki kareden beri değişmedi. Griden beyaza: değişti, sekiz kat güçlendirildi — titreyen her şey parlar.",
       "reflections": "Yalnızca yüzeylerin yansıttığı ışık, ekran izlemesinden ve sondalardan; hiçbir şey yansımayan yerde siyah.",
       "shadows": "Her yüzeye ne kadar güneş ışığı ulaştığı — beyaz: aydınlık, siyah: gölgede. Malzeme rengi yok.",
@@ -805,7 +2766,67 @@
       "taa-reprojection": "Geçmiş neden yeniden başlar — kırmızı: açığa çıktı, yeşil: açığa çıktı ve örtenin hareketiyle dolduruldu, mavi: önceki ekranın dışında.",
       "taa-motion": "Birikimin gördüğü hareket — kırmızı: titreme ölçüsü için hareketli, yeşil: piksel animasyonu, mavi: yeniden izdüşüm kenarı (beyaz: düz hareket).",
       "taa-thin": "İnce geometri — kırmızı: geçmiş sınırının ne kadar gevşediği, yeşil: küme boşluğu bölgesi, mavi: kaplama geçmişi.",
-      "taa-material-history": "Her malzemenin geçmiş payı gri tonla — beyaz: 1, tam yumuşatma; siyah: 0, yalnızca güncel kare."
+      "taa-material-history": "Her malzemenin geçmiş payı gri tonla — beyaz: 1, tam yumuşatma; siyah: 0, yalnızca güncel kare.",
+      "voxels": "Voksel olarak çizilenler, seviye başına bir renk; üçgenler gri.",
+      "indirect-diffuse": "Yalnızca dolaylı ışık (sekmeler, ortam, gökyüzü) orta gri bir yüzeyde.",
+      "surface-cache-albedo": "Yüzey kartlarının atlası: yakaladıkları renk.",
+      "surface-cache-normal": "Atlas: kartların yakaladığı normaller.",
+      "surface-cache-depth": "Atlas: her tekselin kartındaki derinliği, gri.",
+      "surface-cache-cards": "Atlas: kart başına bir renk.",
+      "surface-cache-fill": "Atlas: yeşil her zaman tutulan en kaba seviye, mavi daha ince sayfalar, siyah boş.",
+      "surface-cache-age": "Atlas: her sayfanın yakalanmasından beri geçen görüntüler, beyaz yeni, mavi eski.",
+      "hair-light-bounds": "Saç tutamlarının kutuları ve gölge frustumları görüntünün üzerinde.",
+      "hair-deep-opacity-maps": "Bir saç derin gölge haritasının derinliği ve katmanları görüntünün üzerinde.",
+      "hair-macro-group-screen-rect": "Her tutam grubunun kapladığı piksellerin çevresinde yeşil bir çerçeve.",
+      "hair-voxels-density": "Her pikselin ışınının kaç tutamı geçtiği, yeşilden kırmızıya.",
+      "sampled-lights-overview": "Gölge düşürenler görünümü ve kalite görünümü yan yana.",
+      "sampled-lights-shadow-casters": "Gölge ışınlarının her pikselde neye çarptığı, nesne başına bir renk.",
+      "sampled-lights-shadow-caster-quality": "Kırmızı: eksik bir gölge düşüren; mavi: yüzeyin önünde biri.",
+      "sampled-lights-complexity-opaque": "İmleç altındaki hücrenin ışıkları ve örnekleme maliyetlerinin ısı haritası.",
+      "sampled-lights-complexity-hair-strands": "Işıkların saç tutamları üzerindeki örnekleme maliyeti.",
+      "sampled-lights-complexity-front-layer": "En yakın saydam katmandaki ışıklar ve maliyetlerinin ısı haritası.",
+      "sampled-lights-complexity-volume": "Işıkların sis hacmindeki örnekleme maliyeti.",
+      "sampled-lights-complexity-translucency-volume": "Işıkların yarı saydamlık aydınlatma hacmindeki örnekleme maliyeti.",
+      "subsurface-profiles": "Her pikselin yüzey altı profili, profil başına bir renk.",
+      "virtual-shadow-map-shadow-casters": "Hareketi gölge sayfalarını yeniden çizen her nesnenin kutusu.",
+      "virtual-shadow-map-clipmap-virtual-space": "Güneşin gölge clipmap'i kendi sanal uzayında.",
+      "virtual-shadow-map-shadow-factor": "Sarı: aydınlık; koyu mavi: gölgede.",
+      "virtual-shadow-map-clipmap-or-mip": "Her pikselin okuduğu gölge seviyesi, seviye başına bir renk.",
+      "virtual-shadow-map-virtual-page": "Her pikselin okuduğu gölge sayfası, sayfa başına bir renk.",
+      "virtual-shadow-map-cached-page": "Her pikselin okuduğu gölge sayfasının tutulup tutulmadığı ya da yeniden çizildiği.",
+      "virtual-shadow-map-ray-count": "Piksel başına izlenen gölge ışınları, yeşilden kırmızıya.",
+      "virtual-shadow-map-general-debug": "Her pikselin gölge engeline uzaklığı, gri.",
+      "virtual-shadow-map-dirty-page": "Bu görüntüde çizilen gölge sayfaları.",
+      "virtual-shadow-map-gpu-invalidated-page": "Hareket eden nesnelerin geçersiz kıldığı gölge sayfaları.",
+      "virtual-shadow-map-merged-page": "Durağan katmanı birleştirilen gölge sayfaları.",
+      "virtual-shadow-map-overdraw": "Gölge rasterının her tekseli kaç kez çizdiği.",
+      "rect-light-atlas": "Dikdörtgen ışıkların resimlerinin atlası.",
+      "light-profile-atlas": "Işıkların IES profillerinin atlası.",
+      "surface-cache-direct-stats": "Yüzey önbelleğinin doğrudan ışık güncellemesinin rakamları.",
+      "surface-cache-indirect-stats": "Yüzey önbelleğinin dolaylı ışık güncellemesinin rakamları.",
+      "surface-cache-direct-lighting-stats": "Yüzey önbelleğinin doğrudan güncellemesinin topladığı ışıklar ve boyutları.",
+      "surface-cache-scene-stats": "Yüzey önbelleğindeki nesne ve kart sayıları.",
+      "surface-cache-primitive-groups": "Yüzey kartları olan her nesnenin kutusu.",
+      "radiance-cache-stats": "Dünyanın ışık sondalarının güncelleme rakamları.",
+      "screen-probe-gather-debug": "Kaç ekran sondası var, düzenli ve uyarlanır.",
+      "screen-probe-tile-stats": "Ekran sondalarının her tümleme kipinin karoları.",
+      "screen-probe-placement": "Ekran sondalarının durduğu yerler, her biri bir dörtgen.",
+      "screen-probe-traces": "İmlece en yakın sondanın ışınları, ışıklarına göre renkli.",
+      "reflection-traces": "İmleç altındaki pikselin yansıma ışını, uzaklığı ve ışığıyla.",
+      "radiance-cache-probes": "Her ışık sondasında, tuttuğu ışıkla renklenen bir küre.",
+      "scene-visualization": "Kameradan izlenen sahne, yüzey önbelleğiyle aydınlatılmış.",
+      "material-properties": "İmleç altındaki pikselin malzemesi, tablo olarak.",
+      "texture-mip": "Her yüzeyin okuduğu doku boyutu.",
+      "overdraw": "Her pikselin kaç kez çizildiği.",
+      "heterogeneous-volumes-dda-marching": "Hacmin voksel ızgarasından geçen ışık, DDA yürüyüşü ile bulunur; heterojen bir hacim gerekir.",
+      "heterogeneous-volumes-sample-marching": "Hacmin voksel ızgarasından geçen ışık, örnek yürüyüşü ile bulunur; heterojen bir hacim gerekir.",
+      "heterogeneous-volumes-sample-majorant": "Hacmin voksel ızgarasından geçen ışık, majorant örnekleri ile bulunur; heterojen bir hacim gerekir.",
+      "heterogeneous-volumes-sample-max-majorant": "Hacmin voksel ızgarasından geçen ışık, en büyük majorant örnekleri ile bulunur; heterojen bir hacim gerekir.",
+      "heterogeneous-volumes-sample-majorant-dda": "Hacmin voksel ızgarasından geçen ışık, majorant DDA örnekleri ile bulunur; heterojen bir hacim gerekir.",
+      "heterogeneous-volumes-delta-tracking": "Hacmin voksel ızgarasından geçen ışık, delta takibi ile bulunur; heterojen bir hacim gerekir.",
+      "heterogeneous-volumes-ratio-tracking": "Hacmin voksel ızgarasından geçen ışık, oran takibi ile bulunur; heterojen bir hacim gerekir.",
+      "heterogeneous-volumes-spectral-ratio-tracking": "Hacmin voksel ızgarasından geçen ışık, spektral oran takibi ile bulunur; heterojen bir hacim gerekir.",
+      "heterogeneous-volumes-tracking-majorant-dda": "Hacmin voksel ızgarasından geçen ışık, majorant DDA takibi ile bulunur; heterojen bir hacim gerekir."
     }
   },
   "a-city-from-rules": {
@@ -1514,16 +3535,7 @@
   "detail-by-pixel-error": {
     "banner": "Caddede yürümek için sürükle. Bir vazoya yaklaş, sonra uzaklaş.",
     "controls": {
-      "pixelError": "Piksel hatası",
-      "view": "Görünüm"
-    },
-    "choices": {
-      "view": {
-        "beauty": "görüntü",
-        "lod": "ayrıntı düzeyleri",
-        "screen-error": "ekran hatası",
-        "triangles": "üçgen"
-      }
+      "pixelError": "Piksel hatası"
     },
     "readouts": {
       "trianglesDrawn": "Çizilen üçgenler",
@@ -1841,6 +3853,16 @@
       "step": "Adım"
     }
   },
+  "engine-workbench": {
+    "banner": "Etrafa bakmak için sürükleyin. Her düğme bir mekanizmayı açar; istatistik panelinin Neden sekmesi hangi görüntüleri çizdiğini, nedenini ve maliyetini söyler.",
+    "controls": {
+      "invalidate": "Bir kez geçersiz kıl",
+      "nudge": "Kamerayı dürt",
+      "moving": "Hareket eden bir kutu",
+      "taa": "Zamansal kenar yumuşatma",
+      "scale": "Görüntü ölçeği"
+    }
+  },
   "helpers-to-see-the-scene": {
     "banner": "Etrafta dolaşmak için sürükle. Sade resmi görmek için yardımcıları kapat.",
     "controls": {
@@ -2124,15 +4146,7 @@
   "memory-on-a-budget": {
     "banner": "Etrafa bakmak için sürükle. Daha az bellek ver ve neyin net kaldığını gör.",
     "controls": {
-      "memory": "Bellek",
-      "view": "Görünüm"
-    },
-    "choices": {
-      "view": {
-        "beauty": "görüntü",
-        "lod": "ayrıntı düzeyleri",
-        "clusters": "kümeler"
-      }
+      "memory": "Bellek"
     }
   },
   "a-walk-through-the-city": {
@@ -2177,9 +4191,8 @@
     }
   },
   "a-map-of-what-the-engine-draws": {
-    "banner": "Soldaki görünüme tıkla ve W A S D ile yürü; sağdaki harita, o görünümün bu karede hesapladığını yukarıdan gösterir. Seçimi dondur, sonra dışına yürü.",
+    "banner": "Soldaki görünüme tıkla ve W A S D ile yürü; sağdaki harita, o görünümün bu karede hesapladığını yukarıdan gösterir. Sol alttaki istatistik panelinde Elemeyi dondur'u aç, sonra seçimin dışına yürü.",
     "controls": {
-      "freeze": "Dondur",
       "frustum": "Görüş hacmi",
       "clusters": "Kümeler",
       "shadows": "Gölge sayfaları",
@@ -2276,19 +4289,9 @@
     }
   },
   "observatory-streamed": {
-    "banner": "Etrafa bakmak için sürükle. Modelin nasıl bölündüğünü görmek için görünümü değiştir.",
+    "banner": "Etrafa bakmak için sürükle. Modelin nasıl bölündüğünü görmek için sol alttaki istatistik panelinin Görünüm menüsünden görünümü değiştir.",
     "controls": {
-      "view": "Görünüm",
       "pixelError": "Piksel hatası"
-    },
-    "choices": {
-      "view": {
-        "clusters": "kümeler",
-        "beauty": "görüntü",
-        "pages": "sayfa",
-        "lod": "ayrıntı düzeyleri",
-        "triangles": "üçgen"
-      }
     }
   },
   "one-clip-many-objects": {
@@ -2403,7 +4406,7 @@
         "triangles": "üçgen",
         "clusters": "kümeler",
         "lod": "ayrıntı düzeyleri",
-        "pages": "sayfa",
+        "visibility": "sayfa",
         "beauty": "görüntü"
       }
     },
@@ -2636,16 +4639,8 @@
   "ten-thousand-objects": {
     "banner": "Gezegenin etrafında dönmek için sürükle. Kaya halkasının içine kaydır.",
     "controls": {
-      "view": "Görünüm",
       "pixelError": "Piksel hatası",
       "drift": "Sürüklenme"
-    },
-    "choices": {
-      "view": {
-        "beauty": "görüntü",
-        "clusters": "kümeler",
-        "lod": "ayrıntı düzeyleri"
-      }
     },
     "readouts": {
       "objectsScene": "Sahnedeki nesneler",
@@ -2908,14 +4903,7 @@
     "banner": "Etrafa bakmak için sürükle. Çitler altın düğümleri saklıyor.",
     "controls": {
       "hedgeHeight": "Çit yüksekliği",
-      "view": "Görünüm",
       "aboveOrInside": "Üstten ya da içeriden"
-    },
-    "choices": {
-      "view": {
-        "beauty": "görüntü",
-        "visibility": "görünürlük"
-      }
     },
     "readouts": {
       "gildedKnots": "Altın düğümler",

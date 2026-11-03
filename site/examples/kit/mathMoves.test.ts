@@ -116,8 +116,11 @@ const finite = (lo: number, hi: number) =>
   sweep(lo, hi).filter((x) => Number.isFinite(x) && !Object.is(x, -0))
 
 test("the colour demo's bytes are unorm8's, the clamp after the round", () => {
-  for (const c of sweep(-2, 3))
+  // A slider gives no NaN: there the two part, unorm8 giving 0 as its Rust twin does, while the
+  // comparison clamp keeps the NaN.
+  for (const c of sweep(-2, 3).filter((x) => !Number.isNaN(x)))
     assert.ok(Object.is(unorm8(c), Math.round(saturate(c) * 255)), `channel ${c}`)
+  assert.equal(unorm8(NaN), 0)
 })
 
 // The pages' clamps were `Math.min(hi, Math.max(lo, v))` or `Math.max(lo, Math.min(hi, v))`; the

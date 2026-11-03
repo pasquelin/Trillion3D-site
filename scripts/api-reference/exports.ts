@@ -3,7 +3,7 @@ import type { PortalEntry } from '../../site/content/model.ts'
 import { apiProgram, entryModules, PUBLIC_ENTRIES, type ExportEntry } from '../sdk-api-model.ts'
 import { Shapes } from './collect.ts'
 import { documented } from './documented.ts'
-import { sectionOf } from './sections.ts'
+import { familyHome, sectionOf } from './sections.ts'
 
 /** Types whose members a page reaches through one object, and the name it reaches them by. */
 const INSTANCE_MEMBERS: Record<string, string> = { World: 'world' }
@@ -20,10 +20,11 @@ const heritageOf = (node: ts.Node | undefined) =>
 class ReferenceWalk {
   readonly entries: PortalEntry[] = []
   private readonly shapes: Shapes
-  private readonly families: ReadonlySet<string>
-  constructor(shapes: Shapes, families: ReadonlySet<string>) {
+  /** Each family, by where the engine keeps it (`familyHome`). */
+  private readonly homes: ReadonlyMap<string, string>
+  constructor(shapes: Shapes, homes: ReadonlyMap<string, string>) {
     this.shapes = shapes
-    this.families = families
+    this.homes = homes
   }
 
   /** Every member of a family object, or of the world, as an entry of its own. */
@@ -59,7 +60,7 @@ class ReferenceWalk {
     const { checker } = shapes
     const node = shapes.declarationOf(symbol)
     const module = shapes.moduleOf(symbol)
-    const base = { id, module, exports: [name], section: sectionOf(module, this.families) }
+    const base = { id, module, exports: [name], section: sectionOf(module, this.homes) }
     // The engine contract a page word shadows reads apart, and leads to its own page.
     const title = id === name ? name : `${name} (engine contract)`
     const doc = shapes.doc(symbol)
@@ -103,7 +104,7 @@ class ReferenceWalk {
           first,
         )
       }
-      const family = this.families.has(name) && module.includes('/world/')
+      const family = this.homes.has(id)
       const rows = family ? [] : shapes.inlineMembers(type).map((row) => shapes.row(row, symbol))
       const shape = rows.length || family ? '' : `: ${shapes.text(type, node, false)}`
       entry({ kind: 'Constant', title, signature: `const ${name}${shape}`, members: rows })
@@ -153,7 +154,14 @@ export function buildReference(families: ReadonlySet<string>): PortalEntry[] {
       if (type && type.flags & ts.TypeFlags.Object && !type.aliasSymbol?.declarations?.length)
         shapes.names.set(type, symbol.name)
     }
-  const walk = new ReferenceWalk(shapes, families)
+  // A family is the object the browser entry binds its name to, wherever the engine keeps it.
+  const homes = new Map(
+    [...families].flatMap((family) => {
+      const binding = bindings.get(family)?.find(({ entries }) => entries.includes('browser'))
+      return binding ? [[family, familyHome(shapes.moduleOf(binding.symbol))] as const] : []
+    }),
+  )
+  const walk = new ReferenceWalk(shapes, homes)
   for (const [name, list] of [...bindings].sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
     for (const { symbol, entries } of list)
       walk.add(

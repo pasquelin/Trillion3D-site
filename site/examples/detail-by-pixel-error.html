@@ -63,14 +63,10 @@
       // a coarse version is already exact to the eye there, and it is the one drawn.
       const OPENING = 24;
       let settling = true;
-      const ui = controls({
-        pixelError: [0, OPENING, 1, 0.5],
-        view: ['beauty', 'lod', 'screen-error', 'triangles'],
-      }, (values, key) => {
+      const ui = controls({ pixelError: [0, OPENING, 1, 0.5] }, (values, key) => {
         // A hand on the slider ends the opening sweep: the slider leads from then on.
         if (key === 'pixelError') settling = false;
         if (!settling) world.pixelError = values.pixelError;
-        world.diagnostic.mode = values.view;
         world.invalidate();
       });
       const drawn = readout('trianglesDrawn'), share = readout('shareAvenue');
