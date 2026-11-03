@@ -1,4 +1,4 @@
-// The site's static server: the engine's (`scripts/test/static-server.ts`), whose content types,
+// The site's static server: the engine's (`scripts/check/static-server.ts`), whose content types,
 // byte ranges, replies and port it reads, with the brotli encoding the docs portal serves its scene
 // caches in (`compress`). What sets one use apart is an option, never a copy.
 import { once } from 'node:events'
@@ -13,7 +13,7 @@ import {
   contentType,
   reply,
   type StaticOptions as EngineStaticOptions,
-} from '#engine/scripts/test/static-server.ts'
+} from '#engine/scripts/check/static-server.ts'
 
 /** The file the URL-encoded `path` names under `dir`, or `null` when it leaves `dir`. */
 function fileUnder(dir: string, path: string): string | null {

@@ -1,7 +1,7 @@
 import { resultRow, type Measurement, type ResultRow } from '#engine/bench/kit/measureTypes.ts'
 import { failures } from './failure.ts'
 import { ms } from './measure.ts'
-import { frameStatistics } from '#engine/packages/sdk-core/src/runtime/stats.ts'
+import { frameStatistics } from '#engine/packages/sdk-core/src/diagnostic/frameStatistics.ts'
 import { spread } from '#engine/packages/math/src/scalar/quantile.ts'
 import { statsCard } from './card.ts'
 import { exampleId, kitWord } from './words.ts'

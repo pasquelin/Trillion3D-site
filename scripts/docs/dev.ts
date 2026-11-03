@@ -9,7 +9,7 @@ import { inHead } from './measurement.ts'
 import { buildSite, ENGINE_PACKAGES, SITE_OUTPUT, SITE_STEPS } from './site.ts'
 import { ROOT } from '../engine.ts'
 import { ignoredPaths } from '../git-paths.ts'
-import { contentType, listen } from '#engine/scripts/test/static-server.ts'
+import { contentType, listen } from '#engine/scripts/check/static-server.ts'
 
 /** The event stream an open page listens on. Only this server adds it, to the pages it serves:
  *  the built tree never holds it (checked by `scripts/docs/measurement.test.ts`). */

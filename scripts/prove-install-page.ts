@@ -24,7 +24,7 @@ import { createInstalledFixture, packArchive } from '#engine/scripts/release/ins
 import { packPlatformPackages } from '#engine/scripts/release/installed-package/platforms.ts'
 import { ENGINE, ROOT } from './engine.ts'
 import { codeBlocks, installPageHtml, walkthrough } from './install-page.ts'
-import { listen } from '#engine/scripts/test/static-server.ts'
+import { listen } from '#engine/scripts/check/static-server.ts'
 import { staticServer } from './static-server.ts'
 
 /** The CDN the page's `importmap` names, and where the fixture server plays it. */

@@ -2,7 +2,7 @@ import test from 'node:test'
 import assert from 'node:assert/strict'
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
-import { byteRange, listen } from '#engine/scripts/test/static-server.ts'
+import { byteRange, listen } from '#engine/scripts/check/static-server.ts'
 import { staticServer } from './static-server.ts'
 
 const LOGS = resolve(import.meta.dirname, '../.worktrees/logs')
