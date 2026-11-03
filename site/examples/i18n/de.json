@@ -1251,7 +1251,7 @@
       },
       "why.strip": {
         "label": "Bilder",
-        "hint": "Ein Feld pro Bild der Hauptansicht auf der Zeitachse des Graphen, jedes unter dem Punkt seiner Viertelsekunde, gefärbt nach seinem Urteil; eine Marke oben bei einem Bild, das die Messung der stillen Pose erzwungen hat, eine Marke unten bei einem, das eine Ursache nennt. Zeige auf ein Feld, um dieses Bild zu benennen und ein jüngeres im Tab Warum zu lesen."
+        "hint": "Ein Feld pro Bild der Hauptansicht auf der Zeitachse des Graphen, jedes unter dem Punkt seiner Viertelsekunde, gefärbt nach seinem Urteil, schraffiert für eine Viertelsekunde, die kein neues Bild erreichte; eine Marke oben bei einem Bild, das die Messung der stillen Pose erzwungen hat, eine Marke unten bei einem, das eine Ursache nennt. Zeige auf ein Feld, um dieses Bild zu benennen und ein jüngeres im Tab Warum zu lesen."
       },
       "why.forced": {
         "label": "erzwungen",
@@ -1426,16 +1426,16 @@
         "hint": "Solange an, wird jedes Bild, das die Ansicht halten würde, erneut gezeichnet, damit die stille Pose gemessen wird; jedes solche Bild ist eine neue TAA-Probe (Grund forced). Es kostet ein ganzes Bild pro Frame."
       },
       "control.pause": {
-        "label": "Anzeige pausieren",
+        "label": "Pause",
         "hint": "Friert die gezeigten Zahlen ein; die Instrumente lesen weiter, und der Streifen antwortet weiter auf den Zeiger."
       },
       "control.reset": {
-        "label": "Fenster zurücksetzen",
+        "label": "Zurücksetzen",
         "hint": "Vergisst die bisher gelesenen Bilder und Zählungen: das Fenster beginnt jetzt neu."
       },
       "control.export": {
-        "label": "JSON herunterladen",
-        "hint": "Die Fenster der letzten Minute der Warum- und Zeitinstrumente, wie die Engine sie gab, jedes Zeitfenster mit den Optionen, mit denen sein Leser geöffnet wurde; die Adresse der Seite, die gelesene Welt, der Zustand der Leser und was angefragt wurde."
+        "label": "JSON",
+        "hint": "Lädt die Fenster der letzten Minute der Warum- und Zeitinstrumente herunter, wie die Engine sie gab, jedes Zeitfenster mit den Optionen, mit denen sein Leser geöffnet wurde; die Adresse der Seite, die gelesene Welt, den Zustand der Leser und was angefragt wurde."
       },
       "control.role": {
         "label": "Gezählte Ansicht",
@@ -2648,6 +2648,106 @@
       "cause.invalidate": {
         "label": "Invalidierung",
         "hint": "Die Seite hat ein Bild angefordert: world.invalidate()."
+      },
+      "control.resolution": {
+        "label": "Auflösung",
+        "hint": "Der Anteil der Anzeige, pro Achse, mit dem das Bild gezeichnet wird (`world.quality.resolution`); das temporale Antialiasing rekonstruiert es auf die Größe der Anzeige. Auto lässt das Frame-Budget die Skalierung wählen."
+      },
+      "control.quality": {
+        "label": "Qualität",
+        "hint": "Die Stufe aller Qualitätsgruppen auf einmal (`world.quality.preset`); Auto nimmt die Stufen, die der Benchmark für diese Maschine behalten hat."
+      },
+      "control.resolutionBelow": {
+        "label": "nicht verfügbar",
+        "hint": "Eine feste Auflösung wird mit mindestens {least} % der Anzeige pro Achse gezeichnet: dieser Modus würde mit {least} % gezeichnet, nicht mit seinen {pct} %."
+      },
+      "resolution.native": {
+        "label": "Native",
+        "hint": "Die eigene Auflösung der Anzeige: ein gezeichnetes Pixel pro angezeigtem Pixel."
+      },
+      "resolution.sharp": {
+        "label": "Sharp",
+        "hint": "{pct} % der Anzeige pro Achse, ein gezeichnetes Pixel pro {ratio} angezeigten, von der temporalen Hochskalierung rekonstruiert: nah am nativen Bild."
+      },
+      "resolution.mixed": {
+        "label": "Mixed",
+        "hint": "{pct} % der Anzeige pro Achse, ein gezeichnetes Pixel pro {ratio} angezeigten, von der temporalen Hochskalierung rekonstruiert: Schärfe und Tempo im Gleichgewicht."
+      },
+      "resolution.fast": {
+        "label": "Fast",
+        "hint": "{pct} % der Anzeige pro Achse, ein gezeichnetes Pixel pro {ratio} angezeigten, von der temporalen Hochskalierung rekonstruiert: ein Viertel der Pixel."
+      },
+      "resolution.turbo": {
+        "label": "Turbo",
+        "hint": "{pct} % der Anzeige pro Achse, ein gezeichnetes Pixel pro {ratio} angezeigten, von der temporalen Hochskalierung rekonstruiert: das Schnellste."
+      },
+      "quality.smooth": {
+        "label": "Smooth",
+        "hint": "Die leichtesten Stufen: die Bildrate zuerst."
+      },
+      "quality.balanced": {
+        "label": "Balanced",
+        "hint": "Stufen zwischen Bildrate und Detail."
+      },
+      "quality.fine": {
+        "label": "Fine",
+        "hint": "Feine Stufen: mehr Detail für mehr Zeit."
+      },
+      "quality.max": {
+        "label": "Max",
+        "hint": "Die höchsten Echtzeit-Stufen."
+      },
+      "quality.cinematic": {
+        "label": "Cinematic",
+        "hint": "Stufen jenseits der Echtzeit, für Standbilder und Aufnahmen."
+      },
+      "control.everyAuto": {
+        "label": "Auto",
+        "hint": "Jetzt {cadence}: die eigene Abtastung des Panels, keine gewählt — 1 von {every}, solange das Detailfenster geschlossen ist, jedes Bild, solange es offen ist, damit seine Tabellen jeden Pass messen."
+      },
+      "control.state": {
+        "label": "Instrumente",
+        "hint": "Der eigene Zustand der Instrumente: ok, solange beide lesen, sonst was sie am Lesen hindert (Laden, eine noch nicht gezeichnete Welt, ein fehlender oder fehlgeschlagener Leser, ein Fehler)."
+      },
+      "reader.ok": {
+        "label": "ok",
+        "hint": "Beide Instrumente lesen die Welt."
+      },
+      "reader.closed": {
+        "label": "geschlossen",
+        "hint": "Ein Instrument liest gerade nicht: es öffnet sich, sobald das Panel es liest, aufgeklappt auf einer sichtbaren Seite."
+      },
+      "control.resolutionAuto": {
+        "label": "Auto",
+        "hint": "Die eigene Auflösung der Engine: das Frame-Budget wählt die Skalierung, solange sich das Bild bewegt, höchstens die Standardauflösung der Anzeige (der native Modus, dynamisch)."
+      },
+      "control.qualityAuto": {
+        "label": "Auto",
+        "hint": "Jede Gruppe auf der Stufe, die der Hardware-Benchmark für diese Maschine behalten hat; ist keine behalten, läuft der Benchmark einmal (einige Sekunden GPU), und bis zu seiner Antwort wird Max gezeichnet."
+      },
+      "control.custom": {
+        "label": "Angepasst",
+        "hint": "Die Seite verlangt etwas außerhalb dieser Auswahl: eine eigene Auflösungsskalierung oder einen eigenen dynamischen Modus, die eine Wahl hier ersetzt; oder Gruppen auf eigenen Stufen (`world.quality.set`), die ein hier gewähltes Preset auf ihrer Stufe lässt."
+      },
+      "control.customOver": {
+        "label": "Angepasst · {preset}",
+        "hint": "Das hier gewählte Preset {preset}, und Gruppen, die die Seite auf eigene Stufen gesetzt hat (`world.quality.set`), die ein Preset auf ihrer Stufe lässt."
+      },
+      "control.resolutionChoice": {
+        "label": "{name} {pct} %",
+        "hint": "Ein Auflösungsmodus, dann der Anteil der Anzeige, den er pro Achse verlangt."
+      },
+      "control.resume": {
+        "label": "Weiter",
+        "hint": "Die gezeigten Zahlen folgen wieder den Instrumenten."
+      },
+      "row.reached": {
+        "label": "{n} ≥ {target} ✓",
+        "hint": "Die Zählung hat erreicht, was sie muss; sie zählt darüber hinaus weiter."
+      },
+      "strip.none": {
+        "label": "kein Bild",
+        "hint": "Eine Viertelsekunde, in der kein neues Bild der Hauptansicht die Lesung des Panels erreichte: die Anzeige zeigte das vorige. Die nächste Lesung kann die Bilder zweier Felder tragen: der Streifen platziert Bilder nach der Lesung, die sie brachte, noch nicht nach ihrer eigenen Zeit."
       }
     },
     "failure": {

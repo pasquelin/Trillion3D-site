@@ -1251,7 +1251,7 @@
       },
       "why.strip": {
         "label": "图像",
-        "hint": "主视图的每张图像一格，位于图表的时间轴上，每格在其四分之一秒对应的点下方，按其判定着色；顶部标记表示静止姿态测量强制绘制的图像，底部标记表示给出原因的图像。指向某格可显示该图像的名称，较近的图像可在“原因”标签页中读取。"
+        "hint": "主视图的每张图像一格，位于图表的时间轴上，每格在其四分之一秒对应的点下方，按其判定着色，没有新图像到达的四分之一秒以斜线填充；顶部标记表示静止姿态测量强制绘制的图像，底部标记表示给出原因的图像。指向某格可显示该图像的名称，较近的图像可在“原因”标签页中读取。"
       },
       "why.forced": {
         "label": "强制",
@@ -1426,16 +1426,16 @@
         "hint": "开启时，视图本会保持的每张图像都会重绘，从而计时静止姿态；每张这样的图像都是一个新的 TAA 样本（原因 forced）。每帧开销一整张图像。"
       },
       "control.pause": {
-        "label": "暂停显示",
+        "label": "暂停",
         "hint": "冻结显示的数字；仪表继续读取，条带仍响应指针。"
       },
       "control.reset": {
-        "label": "重置窗口",
+        "label": "重置",
         "hint": "忘掉迄今读取的图像和计数：窗口从现在重新开始。"
       },
       "control.export": {
-        "label": "下载 JSON",
-        "hint": "原因与时间仪表最近一分钟的窗口，按引擎给出的原样，每个时间窗口附带其读取器打开时的选项；以及页面地址、所读世界、读取器状态和请求内容。"
+        "label": "JSON",
+        "hint": "下载原因与时间仪表最近一分钟的窗口，按引擎给出的原样，每个时间窗口附带其读取器打开时的选项；以及页面地址、所读世界、读取器状态和请求内容。"
       },
       "control.role": {
         "label": "计数的视图",
@@ -2648,6 +2648,106 @@
       "cause.invalidate": {
         "label": "失效",
         "hint": "页面请求了一张图像：world.invalidate()。"
+      },
+      "control.resolution": {
+        "label": "分辨率",
+        "hint": "图像按每个轴绘制时占显示器的比例（`world.quality.resolution`）；时间抗锯齿将其重建到显示器尺寸。自动则由帧预算选择缩放。"
+      },
+      "control.quality": {
+        "label": "画质",
+        "hint": "所有质量组的级别一次设定（`world.quality.preset`）；自动采用基准测试为这台机器保留的级别。"
+      },
+      "control.resolutionBelow": {
+        "label": "不可用",
+        "hint": "固定分辨率在每个轴上至少按显示器的 {least} % 绘制：此模式将按 {least} % 绘制，而不是其 {pct} %。"
+      },
+      "resolution.native": {
+        "label": "Native",
+        "hint": "显示器自身的分辨率：每个显示像素对应一个绘制像素。"
+      },
+      "resolution.sharp": {
+        "label": "Sharp",
+        "hint": "每个轴为显示器的 {pct} %，每 {ratio} 个显示像素对应一个绘制像素，由时间放大重建：接近原生图像。"
+      },
+      "resolution.mixed": {
+        "label": "Mixed",
+        "hint": "每个轴为显示器的 {pct} %，每 {ratio} 个显示像素对应一个绘制像素，由时间放大重建：清晰度与速度平衡。"
+      },
+      "resolution.fast": {
+        "label": "Fast",
+        "hint": "每个轴为显示器的 {pct} %，每 {ratio} 个显示像素对应一个绘制像素，由时间放大重建：四分之一的像素。"
+      },
+      "resolution.turbo": {
+        "label": "Turbo",
+        "hint": "每个轴为显示器的 {pct} %，每 {ratio} 个显示像素对应一个绘制像素，由时间放大重建：最快。"
+      },
+      "quality.smooth": {
+        "label": "Smooth",
+        "hint": "最轻的级别：帧率优先。"
+      },
+      "quality.balanced": {
+        "label": "Balanced",
+        "hint": "介于帧率与细节之间的级别。"
+      },
+      "quality.fine": {
+        "label": "Fine",
+        "hint": "精细的级别：用更多时间换更多细节。"
+      },
+      "quality.max": {
+        "label": "Max",
+        "hint": "实时下最高的级别。"
+      },
+      "quality.cinematic": {
+        "label": "Cinematic",
+        "hint": "超越实时的级别，用于静帧和截图。"
+      },
+      "control.everyAuto": {
+        "label": "自动",
+        "hint": "当前 {cadence}：面板自己的采样，未作选择 — 详情窗口关闭时每 {every} 张取 1 张，打开时每张图像都取，以便其表格为每个通道计时。"
+      },
+      "control.state": {
+        "label": "仪表",
+        "hint": "仪表自身的状态：两者都在读取时为 ok，否则是阻止它们读取的原因（加载中、尚未绘制的世界、缺失或失败的读取器、故障）。"
+      },
+      "reader.ok": {
+        "label": "ok",
+        "hint": "两个仪表都在读取世界。"
+      },
+      "reader.closed": {
+        "label": "已关闭",
+        "hint": "某个仪表当前未在读取：面板在可见页面上展开并读取它时，它才会打开。"
+      },
+      "control.resolutionAuto": {
+        "label": "自动",
+        "hint": "引擎自己的分辨率：图像运动时由帧预算选择缩放，最高为显示器的默认值（原生模式，动态）。"
+      },
+      "control.qualityAuto": {
+        "label": "自动",
+        "hint": "每个组处于硬件基准测试为这台机器保留的级别；若尚无保留，基准测试运行一次（占用 GPU 几秒），在得出结果前以 Max 绘制。"
+      },
+      "control.custom": {
+        "label": "自定义",
+        "hint": "页面要求超出这些选项：自己的分辨率缩放或动态模式，在此处选择会替换它；或处于自己级别的组（`world.quality.set`），在此处选择的预设会保留它们的级别。"
+      },
+      "control.customOver": {
+        "label": "自定义 · {preset}",
+        "hint": "此处选择的预设 {preset}，以及页面设为自己级别的组（`world.quality.set`），预设会保留它们的级别。"
+      },
+      "control.resolutionChoice": {
+        "label": "{name} {pct} %",
+        "hint": "一种分辨率模式，然后是它在每个轴上要求的显示器比例。"
+      },
+      "control.resume": {
+        "label": "继续",
+        "hint": "显示的数字重新跟随仪表。"
+      },
+      "row.reached": {
+        "label": "{n} ≥ {target} ✓",
+        "hint": "计数已达到应达的值；超过后仍继续计数。"
+      },
+      "strip.none": {
+        "label": "无图像",
+        "hint": "主视图没有新图像到达面板读取的四分之一秒：显示器显示的是上一张。下一次读取可能带来两格的图像：条带按带来图像的那次读取放置图像，尚未按它们自己的时间。"
       }
     },
     "failure": {

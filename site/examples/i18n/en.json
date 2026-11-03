@@ -1251,7 +1251,7 @@
       },
       "why.strip": {
         "label": "Images",
-        "hint": "One cell per image of the main view on the graph's time axis, each under the point of its quarter second, coloured by its verdict; a top mark on an image the still pose's measurement forced, a foot mark on one that names a cause. Point at a cell to name that image, and to read a recent one in the Why tab."
+        "hint": "One cell per image of the main view on the graph's time axis, each under the point of its quarter second, coloured by its verdict, a quarter second no new image reached hatched; a top mark on an image the still pose's measurement forced, a foot mark on one that names a cause. Point at a cell to name that image, and to read a recent one in the Why tab."
       },
       "why.forced": {
         "label": "forced",
@@ -1426,16 +1426,16 @@
         "hint": "While on, every image the view would hold is drawn again, so the still pose is timed; each such image is a new TAA sample (reason forced). It costs a whole image each frame."
       },
       "control.pause": {
-        "label": "Pause display",
+        "label": "Pause",
         "hint": "Freezes the figures shown; the instruments read on, and the strip still answers the pointer."
       },
       "control.reset": {
-        "label": "Reset window",
+        "label": "Reset",
         "hint": "Forgets the images and counts read so far: the window starts again now."
       },
       "control.export": {
-        "label": "Download JSON",
-        "hint": "The why and time instruments' windows of the last minute, as the engine gave them, each time window with the options its reader was opened with; the page's address, the world read, the readers' state and what was asked."
+        "label": "JSON",
+        "hint": "Downloads the why and time instruments' windows of the last minute, as the engine gave them, each time window with the options its reader was opened with; the page's address, the world read, the readers' state and what was asked."
       },
       "control.role": {
         "label": "View counted",
@@ -2648,6 +2648,106 @@
       "cause.invalidate": {
         "label": "invalidate",
         "hint": "The page asked an image: world.invalidate()."
+      },
+      "control.resolution": {
+        "label": "Resolution",
+        "hint": "The share of the display, per axis, the image is drawn at (`world.quality.resolution`); temporal antialiasing rebuilds it to the display. Auto lets the frame budget pick the scale."
+      },
+      "control.quality": {
+        "label": "Quality",
+        "hint": "The level of every quality group at once (`world.quality.preset`); Auto takes the levels the benchmark kept for this machine."
+      },
+      "control.resolutionBelow": {
+        "label": "unavailable",
+        "hint": "A fixed resolution is drawn at {least} % of the display per axis at least: this mode would be drawn at {least} %, not at its {pct} %."
+      },
+      "resolution.native": {
+        "label": "Native",
+        "hint": "The display's own resolution: one drawn pixel per displayed pixel."
+      },
+      "resolution.sharp": {
+        "label": "Sharp",
+        "hint": "{pct} % of the display per axis, one drawn pixel per {ratio} displayed, rebuilt by the temporal upscale: close to the native image."
+      },
+      "resolution.mixed": {
+        "label": "Mixed",
+        "hint": "{pct} % of the display per axis, one drawn pixel per {ratio} displayed, rebuilt by the temporal upscale: sharpness and speed balanced."
+      },
+      "resolution.fast": {
+        "label": "Fast",
+        "hint": "{pct} % of the display per axis, one drawn pixel per {ratio} displayed, rebuilt by the temporal upscale: a quarter of the pixels."
+      },
+      "resolution.turbo": {
+        "label": "Turbo",
+        "hint": "{pct} % of the display per axis, one drawn pixel per {ratio} displayed, rebuilt by the temporal upscale: the fastest."
+      },
+      "quality.smooth": {
+        "label": "Smooth",
+        "hint": "The lightest levels: the frame rate first."
+      },
+      "quality.balanced": {
+        "label": "Balanced",
+        "hint": "Levels between the frame rate and the detail."
+      },
+      "quality.fine": {
+        "label": "Fine",
+        "hint": "Fine levels: more detail for more time."
+      },
+      "quality.max": {
+        "label": "Max",
+        "hint": "The highest real-time levels."
+      },
+      "quality.cinematic": {
+        "label": "Cinematic",
+        "hint": "Levels beyond real time, for stills and captures."
+      },
+      "control.everyAuto": {
+        "label": "Auto",
+        "hint": "Now {cadence}: the panel's own sampling, none chosen — 1 in {every} while the details window is closed, every image while it is open, so its tables time each pass."
+      },
+      "control.state": {
+        "label": "Instruments",
+        "hint": "The instruments' own state: ok while both read, else what keeps them from reading (loading, a world not drawn yet, a reader missing or failed, a fault)."
+      },
+      "reader.ok": {
+        "label": "ok",
+        "hint": "Both instruments read the world."
+      },
+      "reader.closed": {
+        "label": "closed",
+        "hint": "An instrument is not reading now: it opens as the panel reads it, unfolded on a visible page."
+      },
+      "control.resolutionAuto": {
+        "label": "Auto",
+        "hint": "The engine's own resolution: the frame budget picks the scale while the image moves, the display's default at most (the native mode, dynamic)."
+      },
+      "control.qualityAuto": {
+        "label": "Auto",
+        "hint": "Each group at the level the hardware benchmark kept for this machine; with none kept, the benchmark runs once (a few seconds of the GPU) and max draws until it answers."
+      },
+      "control.custom": {
+        "label": "Custom",
+        "hint": "The page asks beyond these choices: a resolution scale or a dynamic mode of its own, which a choice here replaces; or groups at levels of their own (`world.quality.set`), which a preset chosen here leaves at their level."
+      },
+      "control.customOver": {
+        "label": "Custom · {preset}",
+        "hint": "The preset {preset} chosen here, and groups the page set to levels of their own (`world.quality.set`), which a preset leaves at their level."
+      },
+      "control.resolutionChoice": {
+        "label": "{name} {pct} %",
+        "hint": "A resolution mode, then the share of the display it asks per axis."
+      },
+      "control.resume": {
+        "label": "Resume",
+        "hint": "The figures shown follow the instruments again."
+      },
+      "row.reached": {
+        "label": "{n} ≥ {target} ✓",
+        "hint": "The count has reached what it must; it goes on counting past it."
+      },
+      "strip.none": {
+        "label": "no image",
+        "hint": "A quarter second in which no new image of the main view reached the panel's read: the display showed the previous one. The next read may carry two slots' images: the strip places images by the read that brought them, not yet by their own time."
       }
     },
     "failure": {

@@ -1251,7 +1251,7 @@
       },
       "why.strip": {
         "label": "Imagens",
-        "hint": "Uma célula por imagem da vista principal no eixo de tempo do gráfico, cada uma sob o ponto do seu quarto de segundo, colorida pelo seu veredito; uma marca em cima numa imagem forçada pela medição da pose parada, uma marca embaixo numa que nomeia uma causa. Aponte uma célula para nomear essa imagem e ler uma recente na aba Por quê."
+        "hint": "Uma célula por imagem da vista principal no eixo de tempo do gráfico, cada uma sob o ponto do seu quarto de segundo, colorida pelo seu veredito, hachurada num quarto de segundo que nenhuma imagem nova alcançou; uma marca em cima numa imagem forçada pela medição da pose parada, uma marca embaixo numa que nomeia uma causa. Aponte uma célula para nomear essa imagem e ler uma recente na aba Por quê."
       },
       "why.forced": {
         "label": "forçada",
@@ -1426,16 +1426,16 @@
         "hint": "Enquanto ligado, cada imagem que a vista manteria é desenhada de novo, para cronometrar a pose parada; cada uma é uma nova amostra de TAA (razão forced). Custa uma imagem inteira a cada quadro."
       },
       "control.pause": {
-        "label": "Pausar a exibição",
+        "label": "Pausar",
         "hint": "Congela os números mostrados; os instrumentos continuam lendo, e a faixa ainda responde ao ponteiro."
       },
       "control.reset": {
-        "label": "Zerar a janela",
+        "label": "Zerar",
         "hint": "Esquece as imagens e as contagens lidas até agora: a janela recomeça agora."
       },
       "control.export": {
-        "label": "Baixar JSON",
-        "hint": "As janelas do último minuto dos instrumentos do porquê e do tempo, como o motor as deu, cada janela de tempo com as opções com que seu leitor foi aberto; o endereço da página, o mundo lido, o estado dos leitores e o que foi pedido."
+        "label": "JSON",
+        "hint": "Baixa as janelas do último minuto dos instrumentos do porquê e do tempo, como o motor as deu, cada janela de tempo com as opções com que seu leitor foi aberto; o endereço da página, o mundo lido, o estado dos leitores e o que foi pedido."
       },
       "control.role": {
         "label": "Vista contada",
@@ -2648,6 +2648,106 @@
       "cause.invalidate": {
         "label": "invalidação",
         "hint": "A página pediu uma imagem: world.invalidate()."
+      },
+      "control.resolution": {
+        "label": "Resolução",
+        "hint": "A parte da tela, por eixo, em que a imagem é desenhada (`world.quality.resolution`); o antialiasing temporal a reconstrói no tamanho da tela. Auto deixa o orçamento do quadro escolher a escala."
+      },
+      "control.quality": {
+        "label": "Qualidade",
+        "hint": "O nível de todos os grupos de qualidade de uma vez (`world.quality.preset`); Auto usa os níveis que o benchmark guardou para esta máquina."
+      },
+      "control.resolutionBelow": {
+        "label": "indisponível",
+        "hint": "Uma resolução fixa é desenhada a pelo menos {least} % da tela por eixo: este modo seria desenhado a {least} %, não aos seus {pct} %."
+      },
+      "resolution.native": {
+        "label": "Native",
+        "hint": "A resolução própria da tela: um pixel desenhado por pixel exibido."
+      },
+      "resolution.sharp": {
+        "label": "Sharp",
+        "hint": "{pct} % da tela por eixo, um pixel desenhado para cada {ratio} exibidos, reconstruído pelo upscaling temporal: perto da imagem nativa."
+      },
+      "resolution.mixed": {
+        "label": "Mixed",
+        "hint": "{pct} % da tela por eixo, um pixel desenhado para cada {ratio} exibidos, reconstruído pelo upscaling temporal: nitidez e velocidade equilibradas."
+      },
+      "resolution.fast": {
+        "label": "Fast",
+        "hint": "{pct} % da tela por eixo, um pixel desenhado para cada {ratio} exibidos, reconstruído pelo upscaling temporal: um quarto dos pixels."
+      },
+      "resolution.turbo": {
+        "label": "Turbo",
+        "hint": "{pct} % da tela por eixo, um pixel desenhado para cada {ratio} exibidos, reconstruído pelo upscaling temporal: o mais rápido."
+      },
+      "quality.smooth": {
+        "label": "Smooth",
+        "hint": "Os níveis mais leves: a fluidez primeiro."
+      },
+      "quality.balanced": {
+        "label": "Balanced",
+        "hint": "Níveis entre a fluidez e o detalhe."
+      },
+      "quality.fine": {
+        "label": "Fine",
+        "hint": "Níveis finos: mais detalhe por mais tempo."
+      },
+      "quality.max": {
+        "label": "Max",
+        "hint": "Os níveis em tempo real mais altos."
+      },
+      "quality.cinematic": {
+        "label": "Cinematic",
+        "hint": "Níveis além do tempo real, para imagens estáticas e capturas."
+      },
+      "control.everyAuto": {
+        "label": "Auto",
+        "hint": "Agora {cadence}: a amostragem própria do painel, nenhuma escolhida — 1 em {every} enquanto a janela de detalhes está fechada, cada imagem enquanto está aberta, para que suas tabelas cronometrem cada passe."
+      },
+      "control.state": {
+        "label": "Instrumentos",
+        "hint": "O estado dos próprios instrumentos: ok enquanto os dois leem, senão o que os impede de ler (carregamento, um mundo ainda não desenhado, um leitor ausente ou com falha, um erro)."
+      },
+      "reader.ok": {
+        "label": "ok",
+        "hint": "Os dois instrumentos leem o mundo."
+      },
+      "reader.closed": {
+        "label": "fechado",
+        "hint": "Um instrumento não está lendo agora: ele abre quando o painel o lê, expandido numa página visível."
+      },
+      "control.resolutionAuto": {
+        "label": "Auto",
+        "hint": "A resolução própria do motor: o orçamento do quadro escolhe a escala enquanto a imagem se move, no máximo a padrão da tela (o modo nativo, dinâmico)."
+      },
+      "control.qualityAuto": {
+        "label": "Auto",
+        "hint": "Cada grupo no nível que o benchmark de hardware guardou para esta máquina; se nenhum foi guardado, o benchmark roda uma vez (alguns segundos de GPU) e Max é desenhado até ele responder."
+      },
+      "control.custom": {
+        "label": "Personalizado",
+        "hint": "A página pede algo fora destas opções: uma escala de resolução ou um modo dinâmico próprios, que uma escolha aqui substitui; ou grupos em níveis próprios (`world.quality.set`), que uma predefinição escolhida aqui deixa no seu nível."
+      },
+      "control.customOver": {
+        "label": "Personalizado · {preset}",
+        "hint": "A predefinição {preset} escolhida aqui, e grupos que a página pôs em níveis próprios (`world.quality.set`), que uma predefinição deixa no seu nível."
+      },
+      "control.resolutionChoice": {
+        "label": "{name} {pct} %",
+        "hint": "Um modo de resolução, depois a parte da tela que ele pede por eixo."
+      },
+      "control.resume": {
+        "label": "Continuar",
+        "hint": "Os números mostrados voltam a seguir os instrumentos."
+      },
+      "row.reached": {
+        "label": "{n} ≥ {target} ✓",
+        "hint": "A contagem atingiu o que deve; ela continua contando além disso."
+      },
+      "strip.none": {
+        "label": "nenhuma imagem",
+        "hint": "Um quarto de segundo em que nenhuma imagem nova da vista principal chegou à leitura do painel: a tela mostrava a anterior. A leitura seguinte pode trazer as imagens de duas células: a faixa posiciona as imagens pela leitura que as trouxe, ainda não pelo seu próprio tempo."
       }
     },
     "failure": {

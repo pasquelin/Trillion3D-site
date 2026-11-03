@@ -1251,7 +1251,7 @@
       },
       "why.strip": {
         "label": "Gambar",
-        "hint": "Satu sel per gambar tampilan utama pada sumbu waktu grafik, masing-masing di bawah titik seperempat detiknya, diwarnai menurut putusannya; tanda atas pada gambar yang dipaksa pengukuran pose diam, tanda bawah pada gambar yang menyebut suatu sebab. Arahkan ke sel untuk menamai gambar itu dan membaca yang baru di tab Mengapa."
+        "hint": "Satu sel per gambar tampilan utama pada sumbu waktu grafik, masing-masing di bawah titik seperempat detiknya, diwarnai menurut putusannya, diarsir untuk seperempat detik yang tidak dicapai gambar baru; tanda atas pada gambar yang dipaksa pengukuran pose diam, tanda bawah pada gambar yang menyebut suatu sebab. Arahkan ke sel untuk menamai gambar itu dan membaca yang baru di tab Mengapa."
       },
       "why.forced": {
         "label": "dipaksa",
@@ -1426,16 +1426,16 @@
         "hint": "Selama aktif, setiap gambar yang akan ditahan tampilan digambar ulang, agar pose diam terukur; setiap gambar itu adalah sampel TAA baru (alasan forced). Biayanya satu gambar penuh setiap frame."
       },
       "control.pause": {
-        "label": "Jeda tampilan",
+        "label": "Jeda",
         "hint": "Membekukan angka yang ditampilkan; instrumen terus membaca, dan pita tetap menanggapi penunjuk."
       },
       "control.reset": {
-        "label": "Atur ulang jendela",
+        "label": "Atur ulang",
         "hint": "Melupakan gambar dan hitungan yang dibaca sejauh ini: jendela dimulai lagi sekarang."
       },
       "control.export": {
-        "label": "Unduh JSON",
-        "hint": "Jendela satu menit terakhir dari instrumen mengapa dan waktu, sebagaimana diberikan mesin, setiap jendela waktu dengan opsi pembacanya saat dibuka; alamat halaman, dunia yang dibaca, keadaan pembaca, dan apa yang diminta."
+        "label": "JSON",
+        "hint": "Mengunduh jendela satu menit terakhir dari instrumen mengapa dan waktu, sebagaimana diberikan mesin, setiap jendela waktu dengan opsi pembacanya saat dibuka; alamat halaman, dunia yang dibaca, keadaan pembaca, dan apa yang diminta."
       },
       "control.role": {
         "label": "Tampilan dihitung",
@@ -2648,6 +2648,106 @@
       "cause.invalidate": {
         "label": "invalidasi",
         "hint": "Halaman meminta gambar: world.invalidate()."
+      },
+      "control.resolution": {
+        "label": "Resolusi",
+        "hint": "Bagian layar, per sumbu, tempat gambar digambar (`world.quality.resolution`); antialiasing temporal membangunnya kembali ke ukuran layar. Otomatis membiarkan anggaran frame memilih skala."
+      },
+      "control.quality": {
+        "label": "Kualitas",
+        "hint": "Tingkat semua grup kualitas sekaligus (`world.quality.preset`); Otomatis mengambil tingkat yang disimpan benchmark untuk perangkat ini."
+      },
+      "control.resolutionBelow": {
+        "label": "tidak tersedia",
+        "hint": "Resolusi tetap digambar setidaknya pada {least} % layar per sumbu: mode ini akan digambar pada {least} %, bukan pada {pct} % miliknya."
+      },
+      "resolution.native": {
+        "label": "Native",
+        "hint": "Resolusi layar itu sendiri: satu piksel digambar per piksel yang ditampilkan."
+      },
+      "resolution.sharp": {
+        "label": "Sharp",
+        "hint": "{pct} % layar per sumbu, satu piksel digambar per {ratio} yang ditampilkan, dibangun kembali oleh upscale temporal: dekat dengan gambar native."
+      },
+      "resolution.mixed": {
+        "label": "Mixed",
+        "hint": "{pct} % layar per sumbu, satu piksel digambar per {ratio} yang ditampilkan, dibangun kembali oleh upscale temporal: ketajaman dan kecepatan seimbang."
+      },
+      "resolution.fast": {
+        "label": "Fast",
+        "hint": "{pct} % layar per sumbu, satu piksel digambar per {ratio} yang ditampilkan, dibangun kembali oleh upscale temporal: seperempat piksel."
+      },
+      "resolution.turbo": {
+        "label": "Turbo",
+        "hint": "{pct} % layar per sumbu, satu piksel digambar per {ratio} yang ditampilkan, dibangun kembali oleh upscale temporal: yang tercepat."
+      },
+      "quality.smooth": {
+        "label": "Smooth",
+        "hint": "Tingkat paling ringan: laju frame lebih dulu."
+      },
+      "quality.balanced": {
+        "label": "Balanced",
+        "hint": "Tingkat antara laju frame dan detail."
+      },
+      "quality.fine": {
+        "label": "Fine",
+        "hint": "Tingkat halus: lebih banyak detail dengan lebih banyak waktu."
+      },
+      "quality.max": {
+        "label": "Max",
+        "hint": "Tingkat real-time tertinggi."
+      },
+      "quality.cinematic": {
+        "label": "Cinematic",
+        "hint": "Tingkat melampaui real-time, untuk gambar diam dan tangkapan."
+      },
+      "control.everyAuto": {
+        "label": "Otomatis",
+        "hint": "Kini {cadence}: sampling milik panel sendiri, tidak ada yang dipilih — 1 dari {every} selama jendela detail tertutup, setiap gambar selama terbuka, agar tabelnya mengukur setiap pass."
+      },
+      "control.state": {
+        "label": "Instrumen",
+        "hint": "Keadaan instrumen itu sendiri: ok selama keduanya membaca, jika tidak, apa yang menghalanginya membaca (memuat, dunia yang belum digambar, pembaca yang hilang atau gagal, sebuah galat)."
+      },
+      "reader.ok": {
+        "label": "ok",
+        "hint": "Kedua instrumen membaca dunia."
+      },
+      "reader.closed": {
+        "label": "tertutup",
+        "hint": "Sebuah instrumen tidak sedang membaca: ia terbuka saat panel membacanya, terbentang di halaman yang terlihat."
+      },
+      "control.resolutionAuto": {
+        "label": "Otomatis",
+        "hint": "Resolusi milik mesin sendiri: anggaran frame memilih skala selama gambar bergerak, paling tinggi bawaan layar (mode native, dinamis)."
+      },
+      "control.qualityAuto": {
+        "label": "Otomatis",
+        "hint": "Setiap grup pada tingkat yang disimpan benchmark perangkat keras untuk perangkat ini; jika belum ada, benchmark berjalan sekali (beberapa detik GPU) dan Max digambar sampai ia menjawab."
+      },
+      "control.custom": {
+        "label": "Kustom",
+        "hint": "Halaman meminta di luar pilihan ini: skala resolusi atau mode dinamis miliknya sendiri, yang diganti oleh pilihan di sini; atau grup pada tingkatnya sendiri (`world.quality.set`), yang dibiarkan pada tingkatnya oleh preset yang dipilih di sini."
+      },
+      "control.customOver": {
+        "label": "Kustom · {preset}",
+        "hint": "Preset {preset} yang dipilih di sini, dan grup yang diatur halaman ke tingkatnya sendiri (`world.quality.set`), yang dibiarkan preset pada tingkatnya."
+      },
+      "control.resolutionChoice": {
+        "label": "{name} {pct} %",
+        "hint": "Sebuah mode resolusi, lalu bagian layar yang dimintanya per sumbu."
+      },
+      "control.resume": {
+        "label": "Lanjutkan",
+        "hint": "Angka yang ditampilkan kembali mengikuti instrumen."
+      },
+      "row.reached": {
+        "label": "{n} ≥ {target} ✓",
+        "hint": "Hitungan telah mencapai yang semestinya; ia terus menghitung melewatinya."
+      },
+      "strip.none": {
+        "label": "tanpa gambar",
+        "hint": "Seperempat detik saat tidak ada gambar baru dari tampilan utama yang mencapai pembacaan panel: layar menampilkan yang sebelumnya. Pembacaan berikutnya bisa membawa gambar dua sel: pita menempatkan gambar menurut pembacaan yang membawanya, belum menurut waktunya sendiri."
       }
     },
     "failure": {

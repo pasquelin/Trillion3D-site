@@ -1251,7 +1251,7 @@
       },
       "why.strip": {
         "label": "Ảnh",
-        "hint": "Mỗi hình của chế độ xem chính là một ô trên trục thời gian của biểu đồ, mỗi ô nằm dưới điểm của phần tư giây của nó, tô màu theo kết luận; dấu trên cho hình bị phép đo tư thế tĩnh ép vẽ, dấu dưới cho hình nêu một nguyên nhân. Trỏ vào một ô để gọi tên hình đó và đọc một hình gần đây trong thẻ Vì sao."
+        "hint": "Mỗi hình của chế độ xem chính là một ô trên trục thời gian của biểu đồ, mỗi ô nằm dưới điểm của phần tư giây của nó, tô màu theo kết luận, gạch chéo cho một phần tư giây không có hình mới nào đến; dấu trên cho hình bị phép đo tư thế tĩnh ép vẽ, dấu dưới cho hình nêu một nguyên nhân. Trỏ vào một ô để gọi tên hình đó và đọc một hình gần đây trong thẻ Vì sao."
       },
       "why.forced": {
         "label": "bị ép",
@@ -1426,16 +1426,16 @@
         "hint": "Khi bật, mọi ảnh mà chế độ xem sẽ giữ đều được vẽ lại, để đo được tư thế tĩnh; mỗi ảnh như vậy là một mẫu TAA mới (lý do forced). Nó tốn nguyên một hình mỗi khung hình."
       },
       "control.pause": {
-        "label": "Tạm dừng hiển thị",
+        "label": "Tạm dừng",
         "hint": "Đóng băng các con số đang hiện; công cụ đo vẫn đọc, và dải vẫn phản hồi con trỏ."
       },
       "control.reset": {
-        "label": "Đặt lại cửa sổ",
+        "label": "Đặt lại",
         "hint": "Quên các ảnh và số đếm đã đọc đến giờ: cửa sổ bắt đầu lại từ bây giờ."
       },
       "control.export": {
-        "label": "Tải JSON",
-        "hint": "Các cửa sổ của phút vừa qua của công cụ đo vì sao và thời gian, như engine đưa ra, mỗi cửa sổ thời gian với các tùy chọn mà bộ đọc của nó được mở; địa chỉ trang, thế giới được đọc, trạng thái các bộ đọc và những gì đã yêu cầu."
+        "label": "JSON",
+        "hint": "Tải về các cửa sổ của phút vừa qua của công cụ đo vì sao và thời gian, như engine đưa ra, mỗi cửa sổ thời gian với các tùy chọn mà bộ đọc của nó được mở; địa chỉ trang, thế giới được đọc, trạng thái các bộ đọc và những gì đã yêu cầu."
       },
       "control.role": {
         "label": "Góc nhìn được đếm",
@@ -2648,6 +2648,106 @@
       "cause.invalidate": {
         "label": "vô hiệu hóa",
         "hint": "Trang đã yêu cầu một ảnh: world.invalidate()."
+      },
+      "control.resolution": {
+        "label": "Độ phân giải",
+        "hint": "Tỉ lệ màn hình, theo mỗi trục, mà hình được vẽ ở đó (`world.quality.resolution`); khử răng cưa theo thời gian dựng lại nó về kích thước màn hình. Tự động để ngân sách khung hình chọn tỉ lệ."
+      },
+      "control.quality": {
+        "label": "Chất lượng",
+        "hint": "Mức của mọi nhóm chất lượng cùng lúc (`world.quality.preset`); Tự động lấy các mức mà bài đo hiệu năng đã giữ cho máy này."
+      },
+      "control.resolutionBelow": {
+        "label": "không khả dụng",
+        "hint": "Một độ phân giải cố định được vẽ ở ít nhất {least} % màn hình theo mỗi trục: chế độ này sẽ được vẽ ở {least} %, không phải {pct} % của nó."
+      },
+      "resolution.native": {
+        "label": "Native",
+        "hint": "Độ phân giải riêng của màn hình: một pixel được vẽ cho mỗi pixel hiển thị."
+      },
+      "resolution.sharp": {
+        "label": "Sharp",
+        "hint": "{pct} % màn hình theo mỗi trục, một pixel được vẽ cho {ratio} pixel hiển thị, được dựng lại bởi phép phóng to theo thời gian: gần với ảnh gốc."
+      },
+      "resolution.mixed": {
+        "label": "Mixed",
+        "hint": "{pct} % màn hình theo mỗi trục, một pixel được vẽ cho {ratio} pixel hiển thị, được dựng lại bởi phép phóng to theo thời gian: độ nét và tốc độ cân bằng."
+      },
+      "resolution.fast": {
+        "label": "Fast",
+        "hint": "{pct} % màn hình theo mỗi trục, một pixel được vẽ cho {ratio} pixel hiển thị, được dựng lại bởi phép phóng to theo thời gian: một phần tư số pixel."
+      },
+      "resolution.turbo": {
+        "label": "Turbo",
+        "hint": "{pct} % màn hình theo mỗi trục, một pixel được vẽ cho {ratio} pixel hiển thị, được dựng lại bởi phép phóng to theo thời gian: nhanh nhất."
+      },
+      "quality.smooth": {
+        "label": "Smooth",
+        "hint": "Các mức nhẹ nhất: tốc độ khung hình trước hết."
+      },
+      "quality.balanced": {
+        "label": "Balanced",
+        "hint": "Các mức giữa tốc độ khung hình và chi tiết."
+      },
+      "quality.fine": {
+        "label": "Fine",
+        "hint": "Các mức tinh: thêm chi tiết với thêm thời gian."
+      },
+      "quality.max": {
+        "label": "Max",
+        "hint": "Các mức thời gian thực cao nhất."
+      },
+      "quality.cinematic": {
+        "label": "Cinematic",
+        "hint": "Các mức vượt quá thời gian thực, cho ảnh tĩnh và ảnh chụp."
+      },
+      "control.everyAuto": {
+        "label": "Tự động",
+        "hint": "Hiện là {cadence}: cách lấy mẫu riêng của bảng, không chọn gì — 1 trên {every} khi cửa sổ chi tiết đóng, mọi ảnh khi nó mở, để các bảng của nó đo từng lượt."
+      },
+      "control.state": {
+        "label": "Công cụ đo",
+        "hint": "Trạng thái của chính các công cụ đo: ok khi cả hai đều đọc, nếu không thì là điều ngăn chúng đọc (đang tải, một thế giới chưa được vẽ, một bộ đọc thiếu hoặc thất bại, một lỗi)."
+      },
+      "reader.ok": {
+        "label": "ok",
+        "hint": "Cả hai công cụ đo đều đọc thế giới."
+      },
+      "reader.closed": {
+        "label": "đã đóng",
+        "hint": "Một công cụ đo hiện không đọc: nó mở ra khi bảng đọc nó, lúc bảng được mở rộng trên một trang đang hiển thị."
+      },
+      "control.resolutionAuto": {
+        "label": "Tự động",
+        "hint": "Độ phân giải riêng của engine: ngân sách khung hình chọn tỉ lệ khi hình chuyển động, tối đa là mặc định của màn hình (chế độ gốc, động)."
+      },
+      "control.qualityAuto": {
+        "label": "Tự động",
+        "hint": "Mỗi nhóm ở mức mà bài đo hiệu năng phần cứng đã giữ cho máy này; nếu chưa có, bài đo chạy một lần (vài giây GPU) và Max được vẽ cho đến khi có kết quả."
+      },
+      "control.custom": {
+        "label": "Tùy chỉnh",
+        "hint": "Trang yêu cầu ngoài các lựa chọn này: một tỉ lệ độ phân giải hoặc một chế độ động của riêng nó, mà một lựa chọn ở đây sẽ thay thế; hoặc các nhóm ở mức riêng (`world.quality.set`), mà một thiết lập sẵn chọn ở đây vẫn để nguyên mức của chúng."
+      },
+      "control.customOver": {
+        "label": "Tùy chỉnh · {preset}",
+        "hint": "Thiết lập sẵn {preset} được chọn ở đây, và các nhóm mà trang đặt ở mức riêng (`world.quality.set`), mà một thiết lập sẵn vẫn để nguyên mức của chúng."
+      },
+      "control.resolutionChoice": {
+        "label": "{name} {pct} %",
+        "hint": "Một chế độ độ phân giải, rồi tỉ lệ màn hình nó yêu cầu theo mỗi trục."
+      },
+      "control.resume": {
+        "label": "Tiếp tục",
+        "hint": "Các con số đang hiện lại theo các công cụ đo."
+      },
+      "row.reached": {
+        "label": "{n} ≥ {target} ✓",
+        "hint": "Số đếm đã đạt mức cần đạt; nó vẫn tiếp tục đếm vượt qua."
+      },
+      "strip.none": {
+        "label": "không có ảnh",
+        "hint": "Một phần tư giây mà không có ảnh mới nào của chế độ xem chính đến được lần đọc của bảng: màn hình hiện ảnh trước đó. Lần đọc tiếp theo có thể mang ảnh của hai ô: dải đặt ảnh theo lần đọc đã mang chúng đến, chưa theo thời gian của chính chúng."
       }
     },
     "failure": {

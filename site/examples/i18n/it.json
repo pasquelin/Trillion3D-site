@@ -1251,7 +1251,7 @@
       },
       "why.strip": {
         "label": "Immagini",
-        "hint": "Una cella per immagine della vista principale sull'asse del tempo del grafico, ciascuna sotto il punto del suo quarto di secondo, colorata secondo il suo verdetto; un segno in alto su un'immagine forzata dalla misura della posa ferma, un segno in basso su una che nomina una causa. Punta una cella per nominare quell'immagine e leggerne una recente nella scheda Perché."
+        "hint": "Una cella per immagine della vista principale sull'asse del tempo del grafico, ciascuna sotto il punto del suo quarto di secondo, colorata secondo il suo verdetto, tratteggiata per un quarto di secondo che nessuna nuova immagine ha raggiunto; un segno in alto su un'immagine forzata dalla misura della posa ferma, un segno in basso su una che nomina una causa. Punta una cella per nominare quell'immagine e leggerne una recente nella scheda Perché."
       },
       "why.forced": {
         "label": "forzata",
@@ -1426,16 +1426,16 @@
         "hint": "Finché è attiva, ogni immagine che la vista terrebbe viene ridisegnata, così la posa ferma è cronometrata; ognuna è un nuovo campione TAA (motivo forced). Costa un'immagine intera a ogni fotogramma."
       },
       "control.pause": {
-        "label": "Metti in pausa la visualizzazione",
+        "label": "Pausa",
         "hint": "Congela le cifre mostrate; gli strumenti continuano a leggere e la striscia risponde ancora al puntatore."
       },
       "control.reset": {
-        "label": "Azzera la finestra",
+        "label": "Azzera",
         "hint": "Dimentica le immagini e i conteggi letti finora: la finestra ricomincia da adesso."
       },
       "control.export": {
-        "label": "Scarica JSON",
-        "hint": "Le finestre dell'ultimo minuto degli strumenti del perché e del tempo, come il motore le ha date, ogni finestra di tempo con le opzioni con cui è stato aperto il suo lettore; l'indirizzo della pagina, il mondo letto, lo stato dei lettori e cosa è stato chiesto."
+        "label": "JSON",
+        "hint": "Scarica le finestre dell'ultimo minuto degli strumenti del perché e del tempo, come il motore le ha date, ogni finestra di tempo con le opzioni con cui è stato aperto il suo lettore; l'indirizzo della pagina, il mondo letto, lo stato dei lettori e cosa è stato chiesto."
       },
       "control.role": {
         "label": "Vista contata",
@@ -2648,6 +2648,106 @@
       "cause.invalidate": {
         "label": "invalidazione",
         "hint": "La pagina ha chiesto un'immagine: world.invalidate()."
+      },
+      "control.resolution": {
+        "label": "Risoluzione",
+        "hint": "La quota dello schermo, per asse, a cui l'immagine è disegnata (`world.quality.resolution`); l'antialiasing temporale la ricostruisce alla dimensione dello schermo. Auto lascia che il budget del fotogramma scelga la scala."
+      },
+      "control.quality": {
+        "label": "Qualità",
+        "hint": "Il livello di tutti i gruppi di qualità insieme (`world.quality.preset`); Auto prende i livelli che il benchmark ha tenuto per questa macchina."
+      },
+      "control.resolutionBelow": {
+        "label": "non disponibile",
+        "hint": "Una risoluzione fissa è disegnata ad almeno il {least} % dello schermo per asse: questa modalità sarebbe disegnata al {least} %, non al suo {pct} %."
+      },
+      "resolution.native": {
+        "label": "Native",
+        "hint": "La risoluzione propria dello schermo: un pixel disegnato per pixel mostrato."
+      },
+      "resolution.sharp": {
+        "label": "Sharp",
+        "hint": "{pct} % dello schermo per asse, un pixel disegnato ogni {ratio} mostrati, ricostruito dall'upscaling temporale: vicino all'immagine nativa."
+      },
+      "resolution.mixed": {
+        "label": "Mixed",
+        "hint": "{pct} % dello schermo per asse, un pixel disegnato ogni {ratio} mostrati, ricostruito dall'upscaling temporale: nitidezza e velocità bilanciate."
+      },
+      "resolution.fast": {
+        "label": "Fast",
+        "hint": "{pct} % dello schermo per asse, un pixel disegnato ogni {ratio} mostrati, ricostruito dall'upscaling temporale: un quarto dei pixel."
+      },
+      "resolution.turbo": {
+        "label": "Turbo",
+        "hint": "{pct} % dello schermo per asse, un pixel disegnato ogni {ratio} mostrati, ricostruito dall'upscaling temporale: il più veloce."
+      },
+      "quality.smooth": {
+        "label": "Smooth",
+        "hint": "I livelli più leggeri: prima la fluidità."
+      },
+      "quality.balanced": {
+        "label": "Balanced",
+        "hint": "Livelli tra la fluidità e il dettaglio."
+      },
+      "quality.fine": {
+        "label": "Fine",
+        "hint": "Livelli fini: più dettaglio per più tempo."
+      },
+      "quality.max": {
+        "label": "Max",
+        "hint": "I livelli in tempo reale più alti."
+      },
+      "quality.cinematic": {
+        "label": "Cinematic",
+        "hint": "Livelli oltre il tempo reale, per immagini fisse e catture."
+      },
+      "control.everyAuto": {
+        "label": "Auto",
+        "hint": "Ora {cadence}: il campionamento proprio del pannello, nessuno scelto — 1 su {every} finché la finestra dei dettagli è chiusa, ogni immagine finché è aperta, così le sue tabelle cronometrano ogni passaggio."
+      },
+      "control.state": {
+        "label": "Strumenti",
+        "hint": "Lo stato degli strumenti stessi: ok finché entrambi leggono, altrimenti ciò che impedisce loro di leggere (caricamento, un mondo non ancora disegnato, un lettore assente o fallito, un errore)."
+      },
+      "reader.ok": {
+        "label": "ok",
+        "hint": "Entrambi gli strumenti leggono il mondo."
+      },
+      "reader.closed": {
+        "label": "chiuso",
+        "hint": "Uno strumento non sta leggendo ora: si apre quando il pannello lo legge, espanso su una pagina visibile."
+      },
+      "control.resolutionAuto": {
+        "label": "Auto",
+        "hint": "La risoluzione propria del motore: il budget del fotogramma sceglie la scala mentre l'immagine si muove, al massimo quella predefinita dello schermo (la modalità nativa, dinamica)."
+      },
+      "control.qualityAuto": {
+        "label": "Auto",
+        "hint": "Ogni gruppo al livello che il benchmark hardware ha tenuto per questa macchina; se non ne è stato tenuto nessuno, il benchmark gira una volta (qualche secondo di GPU) e si disegna Max finché non risponde."
+      },
+      "control.custom": {
+        "label": "Personalizzato",
+        "hint": "La pagina chiede oltre queste scelte: una scala di risoluzione o una modalità dinamica sua, che una scelta qui sostituisce; o gruppi a livelli suoi (`world.quality.set`), che un preset scelto qui lascia al loro livello."
+      },
+      "control.customOver": {
+        "label": "Personalizzato · {preset}",
+        "hint": "Il preset {preset} scelto qui, e gruppi che la pagina ha messo a livelli suoi (`world.quality.set`), che un preset lascia al loro livello."
+      },
+      "control.resolutionChoice": {
+        "label": "{name} {pct} %",
+        "hint": "Una modalità di risoluzione, poi la quota dello schermo che chiede per asse."
+      },
+      "control.resume": {
+        "label": "Riprendi",
+        "hint": "Le cifre mostrate seguono di nuovo gli strumenti."
+      },
+      "row.reached": {
+        "label": "{n} ≥ {target} ✓",
+        "hint": "Il conteggio ha raggiunto ciò che deve; continua a contare oltre."
+      },
+      "strip.none": {
+        "label": "nessuna immagine",
+        "hint": "Un quarto di secondo in cui nessuna nuova immagine della vista principale ha raggiunto la lettura del pannello: lo schermo mostrava la precedente. La lettura successiva può portare le immagini di due celle: la striscia colloca le immagini secondo la lettura che le ha portate, non ancora secondo il loro tempo."
       }
     },
     "failure": {

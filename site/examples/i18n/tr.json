@@ -1251,7 +1251,7 @@
       },
       "why.strip": {
         "label": "Görüntüler",
-        "hint": "Ana görünümün her görüntüsü için grafiğin zaman ekseninde bir hücre, her biri kendi çeyrek saniyesinin noktasının altında, kararına göre renkli; durağan poz ölçümünün zorladığı görüntüde üstte bir işaret, bir neden belirtende altta bir işaret. O görüntüyü adlandırmak ve yakın tarihli birini Neden sekmesinde okumak için bir hücreye gelin."
+        "hint": "Ana görünümün her görüntüsü için grafiğin zaman ekseninde bir hücre, her biri kendi çeyrek saniyesinin noktasının altında, kararına göre renkli, yeni görüntünün ulaşmadığı çeyrek saniye taralı; durağan poz ölçümünün zorladığı görüntüde üstte bir işaret, bir neden belirtende altta bir işaret. O görüntüyü adlandırmak ve yakın tarihli birini Neden sekmesinde okumak için bir hücreye gelin."
       },
       "why.forced": {
         "label": "zorlanmış",
@@ -1426,16 +1426,16 @@
         "hint": "Açıkken görünümün tutacağı her görüntü yeniden çizilir, böylece durağan poz ölçülür; her biri yeni bir TAA örneğidir (neden forced). Her karede tam bir görüntüye mal olur."
       },
       "control.pause": {
-        "label": "Gösterimi duraklat",
+        "label": "Duraklat",
         "hint": "Gösterilen rakamları dondurur; enstrümanlar okumaya devam eder ve şerit işaretçiye yanıt vermeyi sürdürür."
       },
       "control.reset": {
-        "label": "Pencereyi sıfırla",
+        "label": "Sıfırla",
         "hint": "Şimdiye kadar okunan görüntüleri ve sayımları unutur: pencere şimdi yeniden başlar."
       },
       "control.export": {
-        "label": "JSON indir",
-        "hint": "Neden ve zaman enstrümanlarının son dakikadaki pencereleri, motorun verdiği gibi, her zaman penceresi okuyucusunun açıldığı seçeneklerle; sayfanın adresi, okunan dünya, okuyucuların durumu ve istenenler."
+        "label": "JSON",
+        "hint": "Neden ve zaman enstrümanlarının son dakikadaki pencerelerini motorun verdiği gibi indirir, her zaman penceresini okuyucusunun açıldığı seçeneklerle; ayrıca sayfanın adresini, okunan dünyayı, okuyucuların durumunu ve istenenleri."
       },
       "control.role": {
         "label": "Sayılan görünüm",
@@ -2648,6 +2648,106 @@
       "cause.invalidate": {
         "label": "geçersiz kılma",
         "hint": "Sayfa bir görüntü istedi: world.invalidate()."
+      },
+      "control.resolution": {
+        "label": "Çözünürlük",
+        "hint": "Görüntünün çizildiği, eksen başına ekran payı (`world.quality.resolution`); zamansal kenar yumuşatma onu ekran boyutuna yeniden kurar. Otomatik, ölçeği kare bütçesinin seçmesine bırakır."
+      },
+      "control.quality": {
+        "label": "Kalite",
+        "hint": "Tüm kalite gruplarının seviyesi bir arada (`world.quality.preset`); Otomatik, kıyaslama testinin bu makine için tuttuğu seviyeleri alır."
+      },
+      "control.resolutionBelow": {
+        "label": "kullanılamaz",
+        "hint": "Sabit bir çözünürlük eksen başına en az ekranın %{least} kadarında çizilir: bu mod kendi %{pct} değerinde değil, %{least} değerinde çizilirdi."
+      },
+      "resolution.native": {
+        "label": "Native",
+        "hint": "Ekranın kendi çözünürlüğü: gösterilen her piksel için bir çizilen piksel."
+      },
+      "resolution.sharp": {
+        "label": "Sharp",
+        "hint": "Eksen başına ekranın %{pct} kadarı, gösterilen {ratio} piksel başına bir çizilen piksel, zamansal ölçek büyütmeyle yeniden kurulur: yerel görüntüye yakın."
+      },
+      "resolution.mixed": {
+        "label": "Mixed",
+        "hint": "Eksen başına ekranın %{pct} kadarı, gösterilen {ratio} piksel başına bir çizilen piksel, zamansal ölçek büyütmeyle yeniden kurulur: netlik ve hız dengede."
+      },
+      "resolution.fast": {
+        "label": "Fast",
+        "hint": "Eksen başına ekranın %{pct} kadarı, gösterilen {ratio} piksel başına bir çizilen piksel, zamansal ölçek büyütmeyle yeniden kurulur: piksellerin dörtte biri."
+      },
+      "resolution.turbo": {
+        "label": "Turbo",
+        "hint": "Eksen başına ekranın %{pct} kadarı, gösterilen {ratio} piksel başına bir çizilen piksel, zamansal ölçek büyütmeyle yeniden kurulur: en hızlısı."
+      },
+      "quality.smooth": {
+        "label": "Smooth",
+        "hint": "En hafif seviyeler: önce kare hızı."
+      },
+      "quality.balanced": {
+        "label": "Balanced",
+        "hint": "Kare hızı ile ayrıntı arasında seviyeler."
+      },
+      "quality.fine": {
+        "label": "Fine",
+        "hint": "İnce seviyeler: daha fazla süreye daha fazla ayrıntı."
+      },
+      "quality.max": {
+        "label": "Max",
+        "hint": "Gerçek zamanlı en yüksek seviyeler."
+      },
+      "quality.cinematic": {
+        "label": "Cinematic",
+        "hint": "Gerçek zamanın ötesinde seviyeler, durağan görüntüler ve yakalamalar için."
+      },
+      "control.everyAuto": {
+        "label": "Otomatik",
+        "hint": "Şu an {cadence}: panelin kendi örneklemesi, hiçbiri seçilmedi — ayrıntılar penceresi kapalıyken {every} görüntüde 1, açıkken her görüntü, böylece tabloları her geçişi ölçer."
+      },
+      "control.state": {
+        "label": "Enstrümanlar",
+        "hint": "Enstrümanların kendi durumu: ikisi de okurken ok, değilse onları okumaktan alıkoyan şey (yükleme, henüz çizilmemiş bir dünya, eksik ya da başarısız bir okuyucu, bir hata)."
+      },
+      "reader.ok": {
+        "label": "ok",
+        "hint": "İki enstrüman da dünyayı okuyor."
+      },
+      "reader.closed": {
+        "label": "kapalı",
+        "hint": "Bir enstrüman şu an okumuyor: panel onu görünür bir sayfada açık hâldeyken okuduğunda açılır."
+      },
+      "control.resolutionAuto": {
+        "label": "Otomatik",
+        "hint": "Motorun kendi çözünürlüğü: görüntü hareket ederken ölçeği kare bütçesi seçer, en fazla ekranın varsayılanı kadar (yerel mod, dinamik)."
+      },
+      "control.qualityAuto": {
+        "label": "Otomatik",
+        "hint": "Her grup, donanım kıyaslama testinin bu makine için tuttuğu seviyede; tutulan yoksa test bir kez çalışır (GPU'nun birkaç saniyesi) ve yanıt verene kadar Max çizilir."
+      },
+      "control.custom": {
+        "label": "Özel",
+        "hint": "Sayfa bu seçeneklerin dışında bir şey istiyor: kendine ait bir çözünürlük ölçeği ya da dinamik mod, ki buradaki bir seçim onun yerini alır; ya da kendi seviyelerindeki gruplar (`world.quality.set`), ki burada seçilen bir ön ayar onları kendi seviyelerinde bırakır."
+      },
+      "control.customOver": {
+        "label": "Özel · {preset}",
+        "hint": "Burada seçilen {preset} ön ayarı ve sayfanın kendi seviyelerine koyduğu gruplar (`world.quality.set`); bir ön ayar onları kendi seviyelerinde bırakır."
+      },
+      "control.resolutionChoice": {
+        "label": "{name} %{pct}",
+        "hint": "Bir çözünürlük modu, ardından eksen başına istediği ekran payı."
+      },
+      "control.resume": {
+        "label": "Devam et",
+        "hint": "Gösterilen rakamlar yeniden enstrümanları izler."
+      },
+      "row.reached": {
+        "label": "{n} ≥ {target} ✓",
+        "hint": "Sayım ulaşması gerekene ulaştı; ötesini saymaya devam eder."
+      },
+      "strip.none": {
+        "label": "görüntü yok",
+        "hint": "Ana görünümün hiçbir yeni görüntüsünün panelin okumasına ulaşmadığı bir çeyrek saniye: ekran öncekini gösterdi. Sonraki okuma iki hücrenin görüntülerini taşıyabilir: şerit görüntüleri, henüz kendi zamanlarına göre değil, onları getiren okumaya göre yerleştirir."
       }
     },
     "failure": {
