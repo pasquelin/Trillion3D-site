@@ -114,7 +114,7 @@
         "hint": "L'image moyenne moins le processeur le plus occupé : le temps passé à attendre le prochain rafraîchissement, les deux processeurs travaillant côte à côte."
       },
       "summary.toNext": {
-        "label": "Un rafraîchissement plus tôt",
+        "label": "À gagner",
         "hint": "Le temps que le processeur qui retient l'image doit rendre pour que ses images arrivent un rafraîchissement plus tôt, et la cadence qu'elles atteindraient alors."
       },
       "summary.bound": {
@@ -126,11 +126,11 @@
         "hint": "Durée d'affichage de chaque image, comptée en rafraîchissements de l'écran : 1 est chaque rafraîchissement, plus signifie des images en retard."
       },
       "summary.screenValue": {
-        "label": "1 image / {n} rafraîchissements",
+        "label": "1 image / {n} rafr.",
         "hint": "Les rafraîchissements pendant lesquels une image typique de la dernière seconde est restée à l'écran."
       },
       "summary.screenShare": {
-        "label": "{share} % des images en {n} rafraîchissements",
+        "label": "{share} % en {n} rafr.",
         "hint": "Une tranche de la distribution d'écran : sa part des images de la dernière seconde."
       },
       "summary.screenShareOrMore": {
@@ -403,7 +403,7 @@
       },
       "memory.geometry": {
         "label": "Géométrie",
-        "hint": "La réserve de pages de géométrie réservée sur le GPU, utilisée ou non ; son usage est dans Scène."
+        "hint": "La mémoire de la réserve de pages de géométrie sur le GPU : une place par page que la scène peut tenir à la fois, dans son budget (Scène)."
       },
       "memory.textures": {
         "label": "Réserve de textures",
@@ -438,12 +438,12 @@
         "hint": "Pages de géométrie résidant en mémoire ; augmente avec le détail chargé."
       },
       "scene.poolUsed": {
-        "label": "Réserve de géométrie utilisée",
-        "hint": "Octets de la réserve de géométrie occupés par des pages ; augmente au chargement des pages."
+        "label": "Réserve de géométrie tenue",
+        "hint": "Les octets que la mémoire de la réserve de géométrie tient sur le GPU : ses places, autant que les pages de la scène en demandent dans le budget et les limites du périphérique."
       },
       "scene.poolCapacity": {
-        "label": "Capacité de la réserve de géométrie",
-        "hint": "Octets réservés pour la réserve de géométrie ; fixés par la scène et les limites du périphérique."
+        "label": "Budget de la réserve de géométrie",
+        "hint": "Les octets que la réserve de géométrie peut tenir au plus (`geometryPoolBytes`) ; une scène de moins de pages en tient moins."
       },
       "scene.lights": {
         "label": "Lumières",
@@ -1410,7 +1410,7 @@
         "hint": "L'intervalle moins le processeur le plus occupé : le temps passé à attendre un rafraîchissement."
       },
       "image.toNextRefreshMs": {
-        "label": "Un rafraîchissement plus tôt",
+        "label": "À gagner",
         "hint": "Le temps que le processeur limitant doit rendre pour que l'image arrive un rafraîchissement plus tôt."
       },
       "control.every": {
@@ -1430,7 +1430,7 @@
         "hint": "Fige les chiffres affichés ; les instruments continuent de lire, et la bande répond toujours au pointeur."
       },
       "control.reset": {
-        "label": "Réinitialiser",
+        "label": "Effacer",
         "hint": "Oublie les images et les comptes lus jusqu'ici : la fenêtre repart de maintenant."
       },
       "control.export": {

@@ -403,7 +403,7 @@
       },
       "memory.geometry": {
         "label": "Geometry",
-        "hint": "The geometry page pool reserved on the GPU, used or not; its use is in Scene."
+        "hint": "The geometry page pool's buffer on the GPU: a slot for each page the scene can hold at once, within its budget (Scene)."
       },
       "memory.textures": {
         "label": "Texture pool",
@@ -438,12 +438,12 @@
         "hint": "Geometry pages resident in memory; rises with the detail loaded."
       },
       "scene.poolUsed": {
-        "label": "Geometry pool used",
-        "hint": "Bytes of the geometry pool that hold pages; rises as pages load."
+        "label": "Geometry pool held",
+        "hint": "Bytes the geometry pool's buffer holds on the GPU: its slots, as many as the scene's pages need within the budget and the device's limits."
       },
       "scene.poolCapacity": {
-        "label": "Geometry pool capacity",
-        "hint": "Bytes reserved for the geometry pool; set by the scene and the device limits."
+        "label": "Geometry pool budget",
+        "hint": "Bytes the geometry pool may hold at most (`geometryPoolBytes`); a scene with fewer pages holds less."
       },
       "scene.lights": {
         "label": "Lights",

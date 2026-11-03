@@ -403,7 +403,7 @@
       },
       "memory.geometry": {
         "label": "Geometrie",
-        "hint": "Der auf der GPU reservierte Geometrieseiten-Pool, benutzt oder nicht; seine Nutzung steht unter Szene."
+        "hint": "Der Puffer des Geometrieseiten-Pools auf der GPU: ein Platz für jede Seite, die die Szene gleichzeitig halten kann, innerhalb seines Budgets (Szene)."
       },
       "memory.textures": {
         "label": "Texturpool",
@@ -438,12 +438,12 @@
         "hint": "Im Speicher residente Geometrieseiten; steigt mit dem geladenen Detail."
       },
       "scene.poolUsed": {
-        "label": "Geometriepool belegt",
-        "hint": "Bytes des Geometriepools, die Seiten halten; steigt beim Laden von Seiten."
+        "label": "Geometriepool gehalten",
+        "hint": "Bytes, die der Puffer des Geometriepools auf der GPU hält: seine Plätze, so viele, wie die Seiten der Szene innerhalb des Budgets und der Gerätegrenzen brauchen."
       },
       "scene.poolCapacity": {
-        "label": "Geometriepool-Kapazität",
-        "hint": "Für den Geometriepool reservierte Bytes; bestimmt durch Szene und Gerätegrenzen."
+        "label": "Geometriepool-Budget",
+        "hint": "Bytes, die der Geometriepool höchstens halten darf (`geometryPoolBytes`); eine Szene mit weniger Seiten hält weniger."
       },
       "scene.lights": {
         "label": "Lichter",

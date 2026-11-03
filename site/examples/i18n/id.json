@@ -403,7 +403,7 @@
       },
       "memory.geometry": {
         "label": "Geometri",
-        "hint": "Pool halaman geometri yang dicadangkan di GPU, terpakai atau tidak; pemakaiannya ada di Adegan."
+        "hint": "Buffer pool halaman geometri di GPU: satu slot untuk tiap halaman yang dapat ditampung adegan sekaligus, dalam anggarannya (Adegan)."
       },
       "memory.textures": {
         "label": "Pool tekstur",
@@ -438,12 +438,12 @@
         "hint": "Halaman geometri yang berada di memori; naik dengan detail yang dimuat."
       },
       "scene.poolUsed": {
-        "label": "Pool geometri terpakai",
-        "hint": "Byte pool geometri yang berisi halaman; naik saat halaman dimuat."
+        "label": "Pool geometri teralokasi",
+        "hint": "Byte yang ditempati buffer pool geometri di GPU: slot-slotnya, sebanyak yang dibutuhkan halaman adegan dalam anggaran dan batas perangkat."
       },
       "scene.poolCapacity": {
-        "label": "Kapasitas pool geometri",
-        "hint": "Byte yang dicadangkan untuk pool geometri; ditentukan adegan dan batas perangkat."
+        "label": "Anggaran pool geometri",
+        "hint": "Byte terbanyak yang boleh ditempati pool geometri (`geometryPoolBytes`); adegan dengan lebih sedikit halaman menempati lebih sedikit."
       },
       "scene.lights": {
         "label": "Lampu",

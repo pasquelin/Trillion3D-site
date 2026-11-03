@@ -403,7 +403,7 @@
       },
       "memory.geometry": {
         "label": "Geometria",
-        "hint": "Il pool di pagine di geometria riservato sulla GPU, usato o no; l'uso è in Scena."
+        "hint": "Il buffer del pool di pagine di geometria sulla GPU: un posto per ogni pagina che la scena può contenere insieme, entro il suo budget (Scena)."
       },
       "memory.textures": {
         "label": "Pool di texture",
@@ -438,12 +438,12 @@
         "hint": "Pagine di geometria residenti in memoria; sale con il dettaglio caricato."
       },
       "scene.poolUsed": {
-        "label": "Pool di geometria usato",
-        "hint": "Byte del pool di geometria che contengono pagine; sale con il caricamento delle pagine."
+        "label": "Pool di geometria allocato",
+        "hint": "Byte che il buffer del pool di geometria occupa sulla GPU: i suoi posti, tanti quanti ne servono alle pagine della scena entro il budget e i limiti del dispositivo."
       },
       "scene.poolCapacity": {
-        "label": "Capacità del pool di geometria",
-        "hint": "Byte riservati al pool di geometria; fissati da scena e limiti del dispositivo."
+        "label": "Budget del pool di geometria",
+        "hint": "Byte che il pool di geometria può occupare al massimo (`geometryPoolBytes`); una scena con meno pagine ne occupa meno."
       },
       "scene.lights": {
         "label": "Luci",
