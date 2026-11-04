@@ -2748,6 +2748,78 @@
       "strip.none": {
         "label": "no image",
         "hint": "A quarter second in which no new image of the main view reached the panel's read: the display showed the previous one. The next read may carry two slots' images: the strip places images by the read that brought them, not yet by their own time."
+      },
+      "summary.clock": {
+        "label": "Image and time",
+        "hint": "The image shown: its number in the world, and its time since the world started (minutes:seconds.milliseconds). A screenshot of the page carries it: the image's record in the data is found by it."
+      },
+      "control.capture": {
+        "label": "Capture",
+        "hint": "A snap of the next image, or a series of them over a time: each picture with its record, in one zip named by the first image's number and time."
+      },
+      "control.snap": {
+        "label": "Snap",
+        "hint": "Takes the next image the view shows, at the definition chosen beside, and its record — its number and time, its metrics, why it was drawn, its time on each processor, the report shown — in one zip: a PNG and a JSON of the same name."
+      },
+      "control.definition": {
+        "label": "Definition",
+        "hint": "The height of the pictures a snap or a series takes, and of a record's video, the view's aspect kept (720p by default: to see, not to read a pixel); native, the canvas's own."
+      },
+      "definition.native": {
+        "label": "native",
+        "hint": "The canvas's own size, every pixel drawn."
+      },
+      "control.series": {
+        "label": "Series",
+        "hint": "Takes a picture of the view at the cadence chosen below, for the time chosen, each with its record; then one zip: the PNGs and index.json, the records grouped by image in time order. At every image, it records a video instead, each image a frame. Pressed again, it stops: the zip is made of what it took. Past {most} pictures, or {frames} images of video, it stops and says so."
+      },
+      "control.seriesRow": {
+        "label": "Series",
+        "hint": "How often the series takes a picture, and for how long."
+      },
+      "control.seriesEvery": {
+        "label": "Every",
+        "hint": "How often the series takes a picture; every image records a video, each image a frame of it."
+      },
+      "control.seriesFor": {
+        "label": "For",
+        "hint": "How long the series runs, or until it is stopped."
+      },
+      "series.every": {
+        "label": "every {s} s",
+        "hint": "The time between two pictures of the series."
+      },
+      "series.for": {
+        "label": "for {s} s",
+        "hint": "How long the series runs."
+      },
+      "series.untilStopped": {
+        "label": "until stopped",
+        "hint": "The series runs until its button is pressed again."
+      },
+      "series.running": {
+        "label": "⏹︎ {n} · {time}",
+        "hint": "The pictures taken and the time since the first. Press to stop: the zip is made of what it took."
+      },
+      "series.saving": {
+        "label": "⏳︎ {n} · zip",
+        "hint": "The images ended: their zip is being made, saved once made."
+      },
+      "capture.cut": {
+        "label": "Cut at {kept} images · {time}",
+        "hint": "The capture was cut short of what it was asked, its zip saved all the same: {why}."
+      },
+      "capture.cut.most": {
+        "label": "it reached the most it keeps",
+        "hint": "A series keeps so many pictures at most, a record so many images: past them it ends."
+      },
+      "capture.cut.stall": {
+        "label": "no image was drawn for {s} s (the page hidden, or the view held)",
+        "hint": "The view drew nothing for that long: the capture ended with what it had."
+      },
+      "series.everyImage": {
+        "label": "every image (video)",
+        "hint": "Every image the view draws, each a frame of a video (record.webm, or record.mp4 where the browser encodes no WebM), its number and time shown in the frame's corner, the key to its record in index.json; the first one also as a PNG."
       }
     },
     "failure": {

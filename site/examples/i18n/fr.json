@@ -2748,6 +2748,78 @@
       "strip.none": {
         "label": "aucune image",
         "hint": "Un quart de seconde où aucune nouvelle image de la vue principale n'a atteint la lecture du panneau : l'écran montrait la précédente. La lecture suivante peut porter les images de deux cases : la bande place les images selon la lecture qui les a apportées, pas encore selon leur propre temps."
+      },
+      "summary.clock": {
+        "label": "Image et temps",
+        "hint": "L'image affichée : son numéro dans le monde et son temps depuis le début du monde (minutes:secondes.millisecondes). Une capture d'écran de la page le porte : on retrouve par lui l'enregistrement de l'image dans les données."
+      },
+      "control.capture": {
+        "label": "Capture",
+        "hint": "Un snap de la prochaine image, ou une série d'images sur une durée : chaque image avec son enregistrement, dans un zip nommé par le numéro et le temps de la première image."
+      },
+      "control.snap": {
+        "label": "Snap",
+        "hint": "Prend la prochaine image affichée, à la définition choisie à côté, et son enregistrement — son numéro et son temps, ses métriques, pourquoi elle a été dessinée, son temps sur chaque processeur, le rapport affiché — dans un zip : un PNG et un JSON du même nom."
+      },
+      "control.definition": {
+        "label": "Définition",
+        "hint": "La hauteur des images d'un snap ou d'une série, et de la vidéo d'un enregistrement, le format de la vue gardé (720p par défaut : pour voir, pas pour lire un pixel) ; native, celle du canvas."
+      },
+      "definition.native": {
+        "label": "native",
+        "hint": "La taille du canvas, chaque pixel dessiné."
+      },
+      "control.series": {
+        "label": "Série",
+        "hint": "Prend une image de la vue à la cadence choisie dessous, pendant la durée choisie, chacune avec son enregistrement ; puis un zip : les PNG et index.json, les enregistrements groupés par image dans l'ordre du temps. À chaque image, elle enregistre une vidéo à la place, chaque image une trame. Appuyée de nouveau, elle s'arrête : le zip est fait de ce qu'elle a pris. Au-delà de {most} images, ou de {frames} images de vidéo, elle s'arrête et le dit."
+      },
+      "control.seriesRow": {
+        "label": "Série",
+        "hint": "À quelle fréquence la série prend une image, et pendant combien de temps."
+      },
+      "control.seriesEvery": {
+        "label": "Toutes les",
+        "hint": "À quelle fréquence la série prend une image ; chaque image enregistre une vidéo, chaque image une trame."
+      },
+      "control.seriesFor": {
+        "label": "Pendant",
+        "hint": "Combien de temps dure la série, ou jusqu'à ce qu'on l'arrête."
+      },
+      "series.every": {
+        "label": "toutes les {s} s",
+        "hint": "Le temps entre deux images de la série."
+      },
+      "series.for": {
+        "label": "pendant {s} s",
+        "hint": "Combien de temps dure la série."
+      },
+      "series.untilStopped": {
+        "label": "jusqu'à l'arrêt",
+        "hint": "La série dure jusqu'à ce qu'on appuie de nouveau sur son bouton."
+      },
+      "series.running": {
+        "label": "⏹︎ {n} · {time}",
+        "hint": "Les images prises et le temps depuis la première. Appuyer pour arrêter : le zip est fait de ce qu'elle a pris."
+      },
+      "series.saving": {
+        "label": "⏳︎ {n} · zip",
+        "hint": "Les images sont finies : leur zip se fait, enregistré une fois fait."
+      },
+      "capture.cut": {
+        "label": "Coupée à {kept} images · {time}",
+        "hint": "La capture a été coupée avant ce qui était demandé, son zip enregistré quand même : {why}."
+      },
+      "capture.cut.most": {
+        "label": "elle a atteint le maximum qu'elle garde",
+        "hint": "Une série garde au plus tant d'images, un enregistrement tant d'images de vidéo : au-delà, elle s'arrête."
+      },
+      "capture.cut.stall": {
+        "label": "aucune image dessinée pendant {s} s (page cachée, ou vue figée)",
+        "hint": "La vue n'a rien dessiné pendant ce temps : la capture s'est arrêtée avec ce qu'elle avait."
+      },
+      "series.everyImage": {
+        "label": "chaque image (vidéo)",
+        "hint": "Chaque image que la vue dessine, chacune une trame d'une vidéo (record.webm, ou record.mp4 si le navigateur n'encode pas le WebM), son numéro et son temps affichés dans le coin de la trame, la clé de son enregistrement dans index.json ; la première aussi en PNG."
       }
     },
     "failure": {

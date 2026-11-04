@@ -2,6 +2,7 @@ import {
   startStats,
   type StatsCorner,
   type StatsHandle,
+  type StatsInstruments,
   type StatsSource,
 } from '#engine/packages/sdk-browser/src/modules/stats/index.ts'
 import { statsParts } from '#engine/packages/sdk-core/src/modules/stats/descriptor.ts'
@@ -113,16 +114,29 @@ export function statsOnPageWorlds() {
 /** Asks for the instruments: every panel from now on opens on its `why` tab, and the page
  *  publishes `window.__workbench`, as `window.__verdict` is, for a script that drives it: the
  *  shown panel's instruments (`StatsInstruments`), `read()` their last windows and `report` the
- *  last minute's; null while no panel is mounted. */
+ *  last minute's, null while no panel is mounted; `snap`, `series` and `record` a capture with
+ *  its records (refused while none is). */
 function askInstruments() {
   whyAsked = true
   const instruments = () => shown?.handle.instruments ?? null
+  const shownOnes = () => {
+    const one = instruments()
+    if (!one) throw new Error('WORKBENCH_NO_PANEL: no instruments panel is mounted')
+    return one
+  }
   Object.assign(globalThis, {
     __workbench: {
       read: () => instruments()?.read() ?? null,
       get report() {
         return instruments()?.report ?? null
       },
+      // A capture with its records, to read at once: a snap, a series, a record as a video;
+      // refused (a rejected promise, as any capture's failure) with no panel mounted.
+      snap: async (...args: Parameters<StatsInstruments['snap']>) => shownOnes().snap(...args),
+      series: async (...args: Parameters<StatsInstruments['series']>) =>
+        shownOnes().series(...args),
+      record: async (...args: Parameters<StatsInstruments['record']>) =>
+        shownOnes().record(...args),
     },
   })
 }
