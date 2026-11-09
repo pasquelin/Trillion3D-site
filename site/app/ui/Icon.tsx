@@ -10,6 +10,7 @@ const PATHS = {
   controls: 'M4 6h10m4 0h2M4 12h4m4 0h8M4 18h12m4 0h0M16 4v4M10 10v4M18 16v4',
   fullscreen: 'M4 9V4h5m6 0h5v5m0 6v5h-5m-6 0H4v-5',
   restart: 'M4 12a8 8 0 1 0 3-6.2M4 4v5h5',
+  download: 'M12 4v11m-5-5 5 5 5-5M5 20h14',
 } as const
 
 export type IconName = keyof typeof PATHS

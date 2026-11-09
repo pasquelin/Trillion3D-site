@@ -26,15 +26,18 @@ interface DemoPageProps {
   sandbox?: ReactNode
   /** In the modal of the source, the link that opens it in the sandbox. */
   sandboxHref?: string
+  /** The example the demo is, when it is one: an action makes the project ZIP of its scene for
+   *  the editor and downloads it. */
+  project?: string
 }
 
 /**
  * The page of a live demo: the demo fills the content area, and one floating button carries its
- * actions — its source (in a modal, to read and copy), the link to share, the demo's own controls
- * panel, fullscreen and restart. In the sandbox, the source is edited beside the demo instead —
+ * actions — its source (in a modal, to read and copy), the link to share, its scene as an editor
+ * project when it has one, the demo's own controls panel, fullscreen and restart. In the sandbox, the source is edited beside the demo instead —
  * left of it on wide screens, above it on narrow ones — and runs when asked.
  */
-export function DemoPage({ file, title, sandbox, sandboxHref }: DemoPageProps) {
+export function DemoPage({ file, title, sandbox, sandboxHref, project }: DemoPageProps) {
   const { locale } = usePortal().route
   const t = useWords(locale)
   const demo = useDemo(file)
@@ -48,6 +51,21 @@ export function DemoPage({ file, title, sandbox, sandboxHref }: DemoPageProps) {
       () => showToast(t('demo.copyFailed')),
     )
   const editing = sandbox !== undefined
+  // The project is cut and zipped in the page, by a chunk loaded on the first download.
+  const download = (example: string) => {
+    showToast(t('demo.projectPreparing'))
+    import('../projects/editorProject.ts')
+      .then(({ downloadEditorProject }) =>
+        downloadEditorProject(example, title, demo.frame.current),
+      )
+      .then((left) => {
+        if (left.length) console.info(`The editor project leaves out: ${left.join(', ')}`)
+      })
+      .catch((error: unknown) => {
+        console.warn('The editor project could not be made:', error)
+        showToast(t('demo.projectFailed'))
+      })
+  }
   // Run and Reset render again even an unchanged source: the frame restarts.
   const rerun = (change: () => void) => () => {
     change()
@@ -132,6 +150,16 @@ export function DemoPage({ file, title, sandbox, sandboxHref }: DemoPageProps) {
             onClick: () => setReading(true),
           },
           { id: 'share', icon: 'share' as const, label: t('demo.share'), onClick: share },
+          ...(project
+            ? [
+                {
+                  id: 'download',
+                  icon: 'download' as const,
+                  label: t('demo.download'),
+                  onClick: () => download(project),
+                },
+              ]
+            : []),
           {
             id: 'controls',
             icon: 'controls' as const,

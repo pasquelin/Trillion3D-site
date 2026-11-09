@@ -12,12 +12,14 @@
  * build, made with the engine families the page hands them: vehicles to drive (`vehicles.ts`), a
  * robot and its clips (`robot.ts`), and pictures painted pixel by pixel (`painted.ts`). The
  * engine's instruments are the stats panel's (`stats.ts`): its `why` tab, opened on the engine
- * workbench page (`workbench`) and on any example asked `?workbench`.
+ * workbench page (`workbench`) and on any example asked `?workbench`. The page's scene goes to
+ * the hosting page as glTF when it asks, for an editor project (`projectExport.ts`).
  */
 import { announceWhatToDo } from './banner.ts'
 import { watchFailures } from './failure.ts'
 import { statsOnPageWorlds, workbenchOnPageWorlds } from './stats.ts'
 import { loadWords } from './words.ts'
+import './projectExport.ts'
 
 watchFailures()
 statsOnPageWorlds()

@@ -3,7 +3,8 @@ import { DemoPage } from '../layout/DemoPage.tsx'
 import { routeHref } from '../portal/routes.ts'
 import { exampleTitle, writtenEntries } from './list.ts'
 
-/** One example: its file, live, on the demo page; its source opens in the sandbox. */
+/** One example: its file, live, on the demo page; its source opens in the sandbox; its scene
+ *  downloads as an editor project. */
 export function Example({ id, locale }: { id: string; locale: Locale }) {
   const entry = writtenEntries.find((candidate) => candidate.id === id)!
   return (
@@ -12,6 +13,7 @@ export function Example({ id, locale }: { id: string; locale: Locale }) {
       file={entry.file}
       title={exampleTitle(entry.id, locale)}
       sandboxHref={routeHref({ locale, area: 'sandbox', id })}
+      project={id}
     />
   )
 }

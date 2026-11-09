@@ -26,6 +26,26 @@ export function announceWorld(world: PageWorld, made: boolean) {
 /** The page's live worlds, in the order it made them. */
 export const pageWorlds = (): readonly PageWorld[] => live
 
+/** Each world's compiled models still loading (`scene.load`), told by the examples' engine entry. */
+const loading = new WeakMap<PageWorld, Set<Promise<unknown>>>()
+
+/** Tells the kit `world` is loading a model until `load` settles; gives `load` back. */
+export function announceLoad<T>(world: PageWorld, load: Promise<T>): Promise<T> {
+  const pending = loading.get(world) ?? new Set()
+  loading.set(world, pending)
+  const settled = load.then(
+    () => void pending.delete(settled),
+    () => void pending.delete(settled),
+  )
+  pending.add(settled)
+  return load
+}
+
+/** Settles once every model `world` was loading has: what loads meanwhile is waited for too. */
+export async function loadsSettled(world: PageWorld) {
+  for (let pending = loading.get(world); pending?.size;) await Promise.all(pending)
+}
+
 /** Hears every world the page makes or disposes from now on, beside every other listener; what
  *  it returns stops hearing. */
 export function onWorld(listen: WorldListener) {
