@@ -58,12 +58,15 @@ export async function buildRuntime(root: string, outdir: string) {
   )
   if (folded.length)
     throw new Error(`the runtime folds in a rendering library:\n${folded.join('\n')}`)
-  // The binary resources the engine reads beside its modules: the kernels, the physics, the blue noise.
+  // The binary resources the engine reads beside its modules: the kernels, the physics, the blue noise, the skin table and the clouds' pattern and noise volume.
   for (const resource of [
     'wasm/kernels.wasm',
     'physics/joltPhysics.wasm',
     'physics/joltPhysicsThreads.wasm',
     'gpu/noise/blueNoise.bin',
+    'lighting/direct/skinTable.bin',
+    'modules/sky/clouds/cloudPattern.bin',
+    'modules/sky/clouds/cloudNoise.bin',
   ])
     await copyFile(sdk(resource), resolve(outdir, resource.slice(resource.lastIndexOf('/') + 1)))
   // Jolt's licence travels with the physics modules it is built into.

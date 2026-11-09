@@ -109,7 +109,7 @@
       drone.add(
         object.mesh(geometry.sphere(0.45, 32, 16), material.meshStandard({ color: '#d8fbff', emissive: '#7fe9ff', emissiveIntensity: 3 })),
         object.mesh(geometry.torus(0.9, 0.06, 8, 48).rotateX(Math.PI / 2), paint('#2a2f38', 0.4, 0.6)),
-        light.point({ color: '#8feaff', intensity: 45, intensityUnits: 'candelas', distance: 26 }),
+        light.point({ color: '#8feaff', intensity: 45, intensityUnits: 'candelas', distance: 26, castShadow: false }),
       );
       world.scene.add(drone);
       // A soft glow round the drone's lamp, so the eye finds it among the dishes.

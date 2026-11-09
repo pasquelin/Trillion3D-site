@@ -53,8 +53,8 @@
       world.scene.add(
         light.directional({ color: '#fff3e2', intensity: 2.6, position: [4, 8, 5], castShadow: true }),
         light.hemisphere({ color: '#a9c4ff', groundColor: '#1a1410', intensity: 0.9 }),
-        light.point({ color: '#ff8a5c', intensity: 45, intensityUnits: 'candelas', position: [-3.5, 2.5, -3], distance: 14 }),
-        light.point({ color: '#5cc8ff', intensity: 30, intensityUnits: 'candelas', position: [3.5, 1, -2.5], distance: 12 }),
+        light.point({ color: '#ff8a5c', intensity: 45, intensityUnits: 'candelas', position: [-3.5, 2.5, -3], distance: 14, castShadow: false }),
+        light.point({ color: '#5cc8ff', intensity: 30, intensityUnits: 'candelas', position: [3.5, 1, -2.5], distance: 12, castShadow: false }),
       );
       const softbox = light.rectArea({ color: '#fff6ea', intensity: 3.5, intensityUnits: 'nits', width: 2.6, height: 1.2, position: [-2.4, 3.6, 3.2] });
       softbox.lookAt(0, 1.2, 0);

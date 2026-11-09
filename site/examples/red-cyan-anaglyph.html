@@ -142,7 +142,7 @@
         // Warm lamps down the colonnade, a cool fill from above, a key that casts the shadows.
         for (let k = 0; k < 6; k++) {
           const z = 7.5 - k * 10;
-          world.scene.add(light.point({ color: '#ffb46b', intensity: 30, intensityUnits: 'candelas', distance: 12, position: [0, 5.5, z] }));
+          world.scene.add(light.point({ color: '#ffb46b', intensity: 30, intensityUnits: 'candelas', distance: 12, position: [0, 5.5, z], castShadow: false }));
           add(geometry.sphere(0.18, 16, 12), glass[1], 0, 5.5, z);
         }
         world.scene.add(

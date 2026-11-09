@@ -68,7 +68,7 @@
           const line = loop ? math.curve(points, true) : math.path(points);
           world.scene.add(object.mesh(geometry.tube(line, Math.ceil(line.getLength() * 90), 0.04, 12, loop), tube));
         }
-        const glow = light.point({ position: centre, color: colour, intensity: 3, intensityUnits: 'candelas', distance: 9 });
+        const glow = light.point({ position: centre, color: colour, intensity: 3, intensityUnits: 'candelas', distance: 9, castShadow: false });
         world.scene.add(glow);
         return { tube, glow };
       }

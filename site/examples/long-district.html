@@ -49,6 +49,9 @@
       // The surface cache keeps its colour layers in blocks (BC), a quarter of their memory:
       // WebGPU has no lossless compression of a render target to stand in for it.
       world.surfaceCache = { surfaceCacheCompress: 2 };
+      // The cars leave no streak on the road under them: a pixel's indirect light keeps no history
+      // of a surface that faced another way (a wheel, a bumper) where it stood the image before.
+      world.indirectLight = { screenProbeRejectBasedOnNormal: true };
       const district = await world.scene.load('../assets/examples/long-district/cache/native/full/manifest.json');
       const [clip] = district.animations;
       const motion = clip ? animation.createMixer(district).clipAction(clip).play() : null;

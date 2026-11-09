@@ -47,7 +47,7 @@
 
       // The spotlight: a stand, a housing turned toward the sculpture, and the light inside it.
       const SPOT = [-3.4, 3.3, 1.6], AIM = [0, 1.5, 0];
-      const spot = light.spot({ color: '#dfe8ff', intensity: 160, intensityUnits: 'candelas', distance: 5.5, outerConeAngle: 0.36, innerConeAngle: 0.198, position: SPOT });
+      const spot = light.spot({ color: '#dfe8ff', intensity: 160, intensityUnits: 'candelas', distance: 5.5, outerConeAngle: 0.36, innerConeAngle: 0.198, position: SPOT, castShadow: false });
       spot.lookAt(...AIM);
       const metal = matte('#2a2c33', 0.4, 0.7);
       const pole = object.mesh(geometry.cylinder(0.05, 0.05, SPOT[1], 16), metal);
@@ -91,7 +91,7 @@
       const sun = light.directional({ color: '#ffc27a', intensity: 3, position: [6.2, 3.6, 3.4], castShadow: true });
       sun.lookAt(0, 0, 0);
       const sky = light.hemisphere({ color: '#8fb0ff', groundColor: '#3a2e28', intensity: 0.6, position: [0, 5.2, 0] });
-      const bulb = light.point({ color: '#ff5ab4', intensity: 10, intensityUnits: 'candelas', distance: 6 });
+      const bulb = light.point({ color: '#ff5ab4', intensity: 10, intensityUnits: 'candelas', distance: 6, castShadow: false });
       const glass = object.mesh(geometry.sphere(0.09, 24, 12), material.meshStandard({ color: '#000000', emissive: '#ff5ab4', emissiveIntensity: 4 }));
       world.scene.add(sun, sky, bulb, glass);
 

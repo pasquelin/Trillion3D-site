@@ -54,7 +54,7 @@
       const ball = geometry.sphere(0.08, 16, 12);
       const lamps = Array.from({ length: 64 }, (_, index) => {
         const colour = math.color().setHSL((index * 0.618) % 1, 0.9, 0.55);
-        const glow = light.point({ color: colour, intensity: 14, intensityUnits: 'candelas', distance: 6, radius: 0.08 });
+        const glow = light.point({ color: colour, intensity: 14, intensityUnits: 'candelas', distance: 6, radius: 0.08, castShadow: false });
         const bulb = object.mesh(ball, material.meshStandard({ color: '#000000', emissive: colour, emissiveIntensity: 6 }));
         bulb.castShadow = false;
         world.scene.add(glow, bulb);

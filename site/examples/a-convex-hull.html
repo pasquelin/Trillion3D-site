@@ -196,10 +196,10 @@
       floor.position.y = -0.05;
       world.scene.add(
         floor,
-        light.directional({ color: '#dfe8ff', intensity: 2.2, position: [3, 6, 4] }),
-        light.directional({ color: '#ffb27a', intensity: 1.4, position: [-4, 5, -3] }),
+        light.directional({ color: '#dfe8ff', intensity: 2.2, position: [3, 6, 4], castShadow: false }),
+        light.directional({ color: '#ffb27a', intensity: 1.4, position: [-4, 5, -3], castShadow: false }),
         light.hemisphere({ color: '#6f7fb8', groundColor: '#120e18', intensity: 0.5 }),
-        light.point({ color: '#7fa0ff', intensity: 12, intensityUnits: 'candelas', distance: 6, position: CENTRE }),
+        light.point({ color: '#7fa0ff', intensity: 12, intensityUnits: 'candelas', distance: 6, position: CENTRE, castShadow: false }),
       );
       world.effects.add(effect.bloom({ intensity: 0.1 }));
       world.camera.position.set(0.4, 2.5, 4.6);

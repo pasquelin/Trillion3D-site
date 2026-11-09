@@ -49,7 +49,7 @@
       world.scene.add(light.directional({ intensity: 3, color: '#fff1dd', position: [9, 5, 3], castShadow: true }));
       const lamps = ['#ffb070', '#70b8ff'].map((colour) => {
         // They cast no shadow: a moving shadow caster redraws its whole shadow map every frame.
-        const lamp = light.point({ color: colour, intensity: 40, intensityUnits: 'candelas', distance: 16, radius: 0.1 });
+        const lamp = light.point({ color: colour, intensity: 40, intensityUnits: 'candelas', distance: 16, radius: 0.1, castShadow: false });
         world.scene.add(lamp);
         return lamp;
       });

@@ -139,7 +139,7 @@
       const meridian = object.mesh(geometry.torus(R * 1.22, 0.06, 16, 160), brass);
       sky.add(equator, meridian);
       world.scene.add(
-        light.directional({ intensity: 2.4, color: '#fff0d8', position: [6, 8, 7] }),
+        light.directional({ intensity: 2.4, color: '#fff0d8', position: [6, 8, 7], castShadow: false }),
         light.hemisphere({ intensity: 0.5, color: '#7d95d8', groundColor: '#1a1206' }),
       );
       world.effects.add(effect.bloom({ intensity: 0.12, sizeScale: 3.6 }));

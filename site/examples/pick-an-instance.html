@@ -68,7 +68,7 @@
         light.hemisphere({ color: '#9ec4ff', groundColor: '#1a2233', intensity: 0.9 }),
       );
       // A pink lamp hangs over the picked hex and follows each new pick.
-      const beacon = light.point({ color: '#ff6fae', intensity: 0, intensityUnits: 'candelas', distance: 7, position: [0, 3, 0] });
+      const beacon = light.point({ color: '#ff6fae', intensity: 0, intensityUnits: 'candelas', distance: 7, position: [0, 3, 0], castShadow: false });
       world.scene.add(beacon);
       world.effects.add(effect.bloom({ intensity: 0.07 }));
       world.camera.position.set(0, 19, 23);

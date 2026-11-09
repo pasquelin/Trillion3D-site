@@ -42,11 +42,11 @@
       const lane = geometry.box(1.6, 0.04, 16), tube = geometry.cylinder(0.06, 0.06, 3.2, 16);
       const lanes = ['#ff3d6e', '#ff8a3d', '#ffd23d', '#6cff5a', '#3de0ff', '#5a7bff', '#c45aff'].map((colour, k) => {
         put(object.mesh(tube, material.meshStandard({ color: '#000000', emissive: colour, emissiveIntensity: 9 })), laneX(k), 1.7, -8.6)
-          .add(light.point({ color: colour, intensity: 7, intensityUnits: 'candelas', distance: 5 }));
+          .add(light.point({ color: colour, intensity: 7, intensityUnits: 'candelas', distance: 5, castShadow: false }));
         return put(object.mesh(lane, material.meshStandard()), laneX(k), 0, -1).material;
       });
       const globe = put(object.mesh(geometry.sphere(0.32, 48, 24), material.meshStandard({ color: '#000000', emissive: '#fff4e6', emissiveIntensity: 14 })), 0, 1.1, -6);
-      globe.add(light.point({ color: '#fff4e6', intensity: 10, intensityUnits: 'candelas', distance: 9 }));
+      globe.add(light.point({ color: '#fff4e6', intensity: 10, intensityUnits: 'candelas', distance: 9, castShadow: false }));
       world.scene.add(light.hemisphere({ color: '#3a4560', groundColor: '#050506', intensity: 0.8 }));
       world.effects.add(effect.bloom({ intensity: 0.07 }));
 

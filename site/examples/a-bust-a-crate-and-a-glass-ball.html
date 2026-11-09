@@ -70,7 +70,7 @@
       // Shadows are virtual pages sized by the screen: no map size, no shadow camera, no bias.
       world.scene.add(light.ambient({ color: 0xffffff, intensity: 0.3 }));
       const sun = light.directional({ color: 0xfff2e0, intensity: 2.5, position: [4, 6, 5], castShadow: true });
-      const lamp = light.point({ color: 0xffc27a, intensity: 3, intensityUnits: 'candelas', distance: 5, position: [-1.1, 0.6, -1.4] });
+      const lamp = light.point({ color: 0xffc27a, intensity: 3, intensityUnits: 'candelas', distance: 5, position: [-1.1, 0.6, -1.4], castShadow: false });
       // The target is written at creation and is never added to the scene.
       const spot = light.spot({
         color: 0xdde8ff, intensity: 20, intensityUnits: 'candelas', distance: 8, outerConeAngle: 0.35, innerConeAngle: 0.21,

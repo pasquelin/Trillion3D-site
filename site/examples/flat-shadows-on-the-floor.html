@@ -130,7 +130,7 @@
 
       // The sun lights the stone but casts nothing itself: the shadows are the twins. A cool sky
       // fills the sides the sun misses.
-      const sun = light.directional({ intensity: 3.2 });
+      const sun = light.directional({ intensity: 3.2, castShadow: false });
       world.scene.add(sun, light.hemisphere({ color: '#a9c2ee', groundColor: '#8a6d48', intensity: 0.9 }));
       world.camera.position.set(14, 9.5, 16);
       world.camera.lookAt(0, 1, -1);

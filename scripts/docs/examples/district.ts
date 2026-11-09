@@ -928,15 +928,29 @@ const spin = (axis: Vec3, phase: number, turns: number, step: number) =>
  *  rotors, the flags, the lift — is never placed in a cell, so it enters no HLOD. The last level is
  *  always loaded (`spatiallyLoaded: false`, on by choice here, streamed by default): the district is
  *  seen whole to the horizon, never cut at a loading range. */
-const { layers, default: fallback } = resolveHlod({ levels: 4 })!
-export const DISTRICT_HLOD: HlodOptions = {
-  layers: layers.map((layer, i) => ({
-    ...layer,
-    ...(layer.builder === 'merge' ? { allowDistanceField: true } : {}),
-    ...(i === layers.length - 1 ? { spatiallyLoaded: false } : {}),
-  })),
-  ...(fallback === undefined ? {} : { default: fallback }),
+type Layer = Record<string, unknown> & { builder?: string }
+const { layers, default: fallback } = resolveHlod({ levels: 4 }) as {
+  layers?: Layer[]
+  default?: string
 }
+// An engine whose compiler writes the simple form out as its chain (`hlod/options/simple.rs`)
+// gives it back as it is, without layers: the district keeps it, its merged levels without their
+// distance field and its last level streamed, until its chain is written in the expert form.
+export const DISTRICT_HLOD: HlodOptions = !layers
+  ? { levels: 4 }
+  : ({
+      layers: layers.map((layer, i) => {
+        const merged: Layer = {
+          ...layer,
+          ...(layer.builder === 'merge' ? { allowDistanceField: true } : {}),
+        }
+        if (i !== layers.length - 1) return merged
+        // An always-loaded layer has no cells and no loading range: the compiler refuses them on it.
+        const { cellSize: _cell, loadingRange: _range, ...always } = merged
+        return { ...always, spatiallyLoaded: false }
+      }),
+      ...(fallback === undefined ? {} : { default: fallback }),
+    } as HlodOptions)
 
 /** Writes `district.gltf`, `district.bin` and the textures into `directory`. */
 export async function writeDistrict(directory: string) {

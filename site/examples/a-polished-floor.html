@@ -40,7 +40,7 @@
       // across the floor.
       const slit = geometry.box(0.14, 5.5, 0.06), glow = material.meshStandard({ color: '#000000', emissive: '#ffd9a8', emissiveIntensity: 6 });
       for (let x = -10.5; x <= 10.5; x += 3)
-        put(object.mesh(slit, glow), x, 3.4, -7.83).add(light.point({ position: [0, 0, 0.6], color: '#ffd9a8', intensity: 10, intensityUnits: 'candelas', distance: 5 }));
+        put(object.mesh(slit, glow), x, 3.4, -7.83).add(light.point({ position: [0, 0, 0.6], color: '#ffd9a8', intensity: 10, intensityUnits: 'candelas', distance: 5, castShadow: false }));
 
       // Three plinths and their pieces — gold, glazed ceramic, chrome —, each under its own spot.
       const stone = material.meshStandard({ color: '#e6e1d8', roughness: 0.6 }), block = geometry.box(1.1, 1, 1.1);

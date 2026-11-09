@@ -131,8 +131,8 @@
 
       world.scene.add(
         light.hemisphere({ color: '#9fc2ff', groundColor: '#0d1118', intensity: 0.6 }),
-        light.directional({ color: '#bcd6ff', intensity: 0.8, position: [-6, 9, -4] }),
-        light.directional({ color: '#e8eeff', intensity: 1.4, position: [5, 7, 6] }),
+        light.directional({ color: '#bcd6ff', intensity: 0.8, position: [-6, 9, -4], castShadow: false }),
+        light.directional({ color: '#e8eeff', intensity: 1.4, position: [5, 7, 6], castShadow: false }),
       );
       const bloom = effect.bloom({ intensity: 0.12, sizeScale: 4.8 });
       world.effects.add(bloom);

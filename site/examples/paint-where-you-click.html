@@ -86,7 +86,7 @@
       world.scene.add(
         light.directional({ color: '#fff0dc', intensity: 2.4, position: [4, 7, 5], castShadow: true }),
         light.hemisphere({ color: '#c9d6ff', groundColor: '#2a1d16', intensity: 0.55 }),
-        light.point({ color: '#ff9a5c', intensity: 40, intensityUnits: 'candelas', position: [-1.5, 3, -3.5], distance: 12 }),
+        light.point({ color: '#ff9a5c', intensity: 40, intensityUnits: 'candelas', position: [-1.5, 3, -3.5], distance: 12, castShadow: false }),
       );
       const softbox = light.rectArea({ color: '#dfe9ff', intensity: 3, intensityUnits: 'nits', width: 1.4, height: 2.6, position: [-3.6, 2.2, 2.4] });
       softbox.lookAt(0, 1.2, 0);
@@ -98,26 +98,117 @@
       world.controls.minDistance = 2.5;
       world.controls.maxDistance = 10;
 
-      // From a hit to a pixel. The ray names the triangle it met (`face`, its rank in the index
-      // list) and the world point; carried back into the vase's own frame (`toLocal`, the vase's
-      // inverse world matrix when the ray was cast: the wheel turns on while the answer comes),
-      // the point's barycentric weights in that triangle blend its three corners' texture
-      // coordinates. The same corners give how many world units one unit of u and of v spans
-      // there, so a dab is drawn as an ellipse that lands round on the surface, narrow at the
-      // belly, wide at the foot.
+      // From a hit to a pixel. The ray answers the world point it met; its `face` names the triangle
+      // the engine drew there (its cluster and its rank in it), not a rank of this shape's index
+      // list, and that drawing may be a coarser version of the vase, off the shape by a few
+      // centimetres. So the ray is followed again on the shape itself: carried back into the vase's
+      // own frame (`toLocal`, the vase's inverse world matrix when the ray was cast: the wheel turns
+      // on while the answer comes), from the eye through the point, it meets the shape's triangles
+      // around the point, found through a grid of its triangles made once, and the first met is the
+      // one painted — the outer wall, never the inner one a few centimetres behind it. The point's
+      // barycentric weights in that triangle blend its three corners' texture coordinates.
+      // The same corners give how many world units one unit of u and of v spans there, so a dab is
+      // drawn as an ellipse that lands round on the surface, narrow at the belly, wide at the foot.
       const corners = shape.index.array, position = shape.attributes.position.array, uvs = shape.attributes.uv.array;
       const at = (i) => [position[3 * i], position[3 * i + 1], position[3 * i + 2]];
       const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
       const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
       const len = (a) => Math.sqrt(dot(a, a));
-      function surfaceAt(hit, toLocal) {
-        const p = hit.point.clone().applyMatrix4(toLocal).toArray();
-        const [i0, i1, i2] = [corners[3 * hit.face], corners[3 * hit.face + 1], corners[3 * hit.face + 2]];
-        const [p0, p1, p2] = [at(i0), at(i1), at(i2)];
+      const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+
+      // The grid: the shape's box cut in `CELLS` a side, each cell listing the triangles whose box
+      // reaches it.
+      const CELLS = 24, triangles = corners.length / 3;
+      const low = [Infinity, Infinity, Infinity], high = [-Infinity, -Infinity, -Infinity];
+      for (let i = 0; i < position.length; i += 3)
+        for (let k = 0; k < 3; k++) {
+          low[k] = Math.min(low[k], position[i + k]);
+          high[k] = Math.max(high[k], position[i + k]);
+        }
+      const cellOf = (v, k) => Math.min(CELLS - 1, Math.max(0, Math.floor(((v - low[k]) / (high[k] - low[k] || 1)) * CELLS)));
+      const grid = new Map();
+      for (let t = 0; t < triangles; t++) {
+        const p = [at(corners[3 * t]), at(corners[3 * t + 1]), at(corners[3 * t + 2])];
+        const from = [0, 1, 2].map((k) => cellOf(Math.min(p[0][k], p[1][k], p[2][k]), k));
+        const to = [0, 1, 2].map((k) => cellOf(Math.max(p[0][k], p[1][k], p[2][k]), k));
+        for (let x = from[0]; x <= to[0]; x++)
+          for (let y = from[1]; y <= to[1]; y++)
+            for (let z = from[2]; z <= to[2]; z++) {
+              const key = (x * CELLS + y) * CELLS + z;
+              (grid.get(key) ?? grid.set(key, []).get(key)).push(t);
+            }
+      }
+      // The point of triangle `p0 p1 p2` nearest `p`, by its barycentric weights, and its squared
+      // distance: inside the triangle the foot of the perpendicular, else the nearest point of an edge.
+      function nearestOn(p, p0, p1, p2) {
         const e1 = sub(p1, p0), e2 = sub(p2, p0), ep = sub(p, p0);
         const d11 = dot(e1, e1), d12 = dot(e1, e2), d22 = dot(e2, e2), dp1 = dot(ep, e1), dp2 = dot(ep, e2);
-        const den = d11 * d22 - d12 * d12;
-        const b1 = (d22 * dp1 - d12 * dp2) / den, b2 = (d11 * dp2 - d12 * dp1) / den, b0 = 1 - b1 - b2;
+        const den = d11 * d22 - d12 * d12 || 1;
+        let b1 = (d22 * dp1 - d12 * dp2) / den, b2 = (d11 * dp2 - d12 * dp1) / den;
+        if (b1 < 0 || b2 < 0 || b1 + b2 > 1) {
+          // Outside: the nearest of the three edges' nearest points.
+          const onEdge = (a, b) => Math.min(1, Math.max(0, dot(sub(p, a), sub(b, a)) / (dot(sub(b, a), sub(b, a)) || 1)));
+          const s01 = onEdge(p0, p1), s02 = onEdge(p0, p2), s12 = onEdge(p1, p2);
+          const options = [[s01, 0], [0, s02], [1 - s12, s12]];
+          let best = Infinity;
+          for (const [c1, c2] of options) {
+            const q = [0, 1, 2].map((k) => p0[k] + c1 * e1[k] + c2 * e2[k]);
+            const d = dot(sub(p, q), sub(p, q));
+            if (d < best) [best, b1, b2] = [d, c1, c2];
+          }
+        }
+        const q = [0, 1, 2].map((k) => p0[k] + b1 * e1[k] + b2 * e2[k]);
+        return { b1, b2, distance: dot(sub(p, q), sub(p, q)) };
+      }
+      // The shape's triangle nearest `p`: the cells around the point's, a ring wider until one holds
+      // a triangle.
+      function nearestTriangle(p) {
+        const c = [0, 1, 2].map((k) => cellOf(p[k], k));
+        let best = null;
+        for (let ring = 1; ring <= CELLS && !best; ring++)
+          for (let x = c[0] - ring; x <= c[0] + ring; x++)
+            for (let y = c[1] - ring; y <= c[1] + ring; y++)
+              for (let z = c[2] - ring; z <= c[2] + ring; z++) {
+                if (x < 0 || y < 0 || z < 0 || x >= CELLS || y >= CELLS || z >= CELLS) continue;
+                for (const t of grid.get((x * CELLS + y) * CELLS + z) ?? []) {
+                  const near = nearestOn(p, at(corners[3 * t]), at(corners[3 * t + 1]), at(corners[3 * t + 2]));
+                  if (!best || near.distance < best.distance) best = { t, ...near };
+                }
+              }
+        return best;
+      }
+      // Where the ray from `o` along `dir` meets triangle `p0 p1 p2`: its distance and the
+      // barycentric weights of `p1` and `p2`, or `null` (Möller–Trumbore).
+      function rayTriangle(o, dir, p0, p1, p2) {
+        const e1 = sub(p1, p0), e2 = sub(p2, p0), h = cross(dir, e2), a = dot(e1, h);
+        if (Math.abs(a) < 1e-12) return null;
+        const s = sub(o, p0), b1 = dot(s, h) / a;
+        if (b1 < 0 || b1 > 1) return null;
+        const q = cross(s, e1), b2 = dot(dir, q) / a;
+        if (b2 < 0 || b1 + b2 > 1) return null;
+        const along = dot(e2, q) / a;
+        return along > 0 ? { b1, b2, along } : null;
+      }
+      // The first triangle of the shape the ray from `o` through `p` meets in the cells around `p`.
+      function firstAlong(o, p) {
+        const d = sub(p, o), dir = d.map((x) => x / len(d)), c = [0, 1, 2].map((k) => cellOf(p[k], k));
+        let best = null;
+        for (let x = c[0] - 1; x <= c[0] + 1; x++)
+          for (let y = c[1] - 1; y <= c[1] + 1; y++)
+            for (let z = c[2] - 1; z <= c[2] + 1; z++)
+              for (const t of grid.get((x * CELLS + y) * CELLS + z) ?? []) {
+                const met = rayTriangle(o, dir, at(corners[3 * t]), at(corners[3 * t + 1]), at(corners[3 * t + 2]));
+                if (met && (!best || met.along < best.along)) best = { t, ...met };
+              }
+        return best;
+      }
+      function surfaceAt(hit, toLocal, eye) {
+        const p = hit.point.clone().applyMatrix4(toLocal).toArray();
+        const o = eye.clone().applyMatrix4(toLocal).toArray();
+        const { t, b1, b2 } = firstAlong(o, p) ?? nearestTriangle(p), b0 = 1 - b1 - b2;
+        const [i0, i1, i2] = [corners[3 * t], corners[3 * t + 1], corners[3 * t + 2]];
+        const [p0, p1, p2] = [at(i0), at(i1), at(i2)];
+        const e1 = sub(p1, p0), e2 = sub(p2, p0);
         const uv = (k) => b0 * uvs[2 * i0 + k] + b1 * uvs[2 * i1 + k] + b2 * uvs[2 * i2 + k];
         const du1 = uvs[2 * i1] - uvs[2 * i0], dv1 = uvs[2 * i1 + 1] - uvs[2 * i0 + 1];
         const du2 = uvs[2 * i2] - uvs[2 * i0], dv2 = uvs[2 * i2 + 1] - uvs[2 * i0 + 1];
@@ -125,7 +216,7 @@
         // The surface's tangents along u and v: their lengths are the world size of one unit.
         const alongU = [0, 1, 2].map((k) => (e1[k] * dv2 - e2[k] * dv1) / det);
         const alongV = [0, 1, 2].map((k) => (e2[k] * du1 - e1[k] * du2) / det);
-        return { u: uv(0), v: uv(1), spanU: len(alongU), spanV: len(alongV), point: hit.point.clone() };
+        return { face: t, u: uv(0), v: uv(1), spanU: len(alongU), spanV: len(alongV), point: hit.point.clone() };
       }
 
       // A dab: a soft ellipse of paint, drawn again one turn to the left and right so a stroke
@@ -177,24 +268,24 @@
       // turns meanwhile: the hits come with the vase's frame as it stood when the rays were cast,
       // the pose they are traced on.
       const trace = (at) => {
-        const toLocal = vase.matrixWorld.clone().invert();
-        return Promise.all(at.points.map(([x, y]) => castAt({ x, y }))).then((hits) => ({ hits, toLocal }));
+        const toLocal = vase.matrixWorld.clone().invert(), eye = world.camera.position.clone();
+        return Promise.all(at.points.map(([x, y]) => castAt({ x, y }))).then((hits) => ({ hits, toLocal, eye }));
       };
       // A brush paints at canvas points: a ray, a triangle, a texel each. One batch of its rays in
       // flight, the latest only; the paint is laid in order, so a stroke joins its dabs as it was
       // drawn. The hand's batch that lands after the release lays nothing.
-      const painter = (brush) => latestOnly(trace, ({ hits, toLocal }, { colour, size }) => {
+      const painter = (brush) => latestOnly(trace, ({ hits, toLocal, eye }, { colour, size }) => {
         if (brush === hand && !hand.down) return;
-        for (const hit of hits) paintHit(brush, hit, toLocal, colour, size);
+        for (const hit of hits) paintHit(brush, hit, toLocal, eye, colour, size);
       });
-      function paintHit(brush, hit, toLocal, colour, size) {
+      function paintHit(brush, hit, toLocal, eye, colour, size) {
         if (!hit) {
           brush.last = null;
           return;
         }
-        const s = surfaceAt(hit, toLocal);
+        const s = surfaceAt(hit, toLocal, eye);
         stroke(brush, s, colour, size);
-        triangle(`${hit.face + 1}`);
+        triangle(`${s.face + 1}`);
         where(`${s.u.toFixed(3)}, ${s.v.toFixed(3)}`);
         dirty();
       }
@@ -219,7 +310,7 @@
       hand.paintAt = painter(hand);
       onPress(world.canvas, async (event, stillDown) => {
         if (event.button !== 0) return;
-        const { hits: [hit], toLocal } = await trace({ points: [[event.offsetX, event.offsetY]] });
+        const { hits: [hit], toLocal, eye } = await trace({ points: [[event.offsetX, event.offsetY]] });
         // The ray lands a frame later: a press released meanwhile, or a brush already down, paints nothing.
         if (!hit || hand.down || !stillDown()) return;
         Object.assign(hand, { down: true, x: event.offsetX, y: event.offsetY, last: null, id: event.pointerId });
@@ -227,7 +318,7 @@
         world.controls.enabled = false;
         world.canvas.setPointerCapture(event.pointerId);
         world.canvas.style.cursor = 'crosshair';
-        paintHit(hand, hit, toLocal, ui.colour, ui.brush);
+        paintHit(hand, hit, toLocal, eye, ui.colour, ui.brush);
         dabs(String(++painted));
       });
       // The cursor shows whether a press would paint: one ray in flight, however many pointer

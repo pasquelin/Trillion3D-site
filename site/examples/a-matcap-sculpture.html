@@ -92,7 +92,7 @@
       // They light the gallery; the matcap surfaces ignore them.
       const sun = light.directional({ color: '#ffc58a', intensity: 3.2, position: [-7, 5, 5], castShadow: true });
       const fill = light.hemisphere({ color: '#7f95c8', groundColor: '#3a2a22', intensity: 0.55 });
-      const lamp = light.point({ color: '#ffb070', intensity: 18, intensityUnits: 'candelas', distance: 9, position: [0, 6, -2.5] });
+      const lamp = light.point({ color: '#ffb070', intensity: 18, intensityUnits: 'candelas', distance: 9, position: [0, 6, -2.5], castShadow: false });
       world.scene.add(sun, fill, lamp);
       world.controls.target.set(0, 2.4, 0);
       world.controls.minDistance = 3.5;

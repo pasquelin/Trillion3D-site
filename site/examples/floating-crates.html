@@ -157,6 +157,8 @@
           current: [current, 0, current * 0.3],
           waves: SWELL.map((wave, i) => ({ ...wave, amplitude: wave.amplitude * waves, steepness: wave.steepness * Math.min(1, waves), phase: now?.[i].phase ?? 0 })),
         };
+        // The sea is the water's drawn surface: the GPU moves its points where these waves carry them.
+        sea.waves = world.physics.waterSurface;
       };
       controls(
         {

@@ -108,7 +108,7 @@
         const globe = object.mesh(globeShape, bulb);
         globe.position.set(x, y, z);
         globe.castShadow = false;
-        const lamp = light.point({ position: [x, y, z], color: '#ffc27a', intensity: LAMP, intensityUnits: 'candelas', distance: 7 });
+        const lamp = light.point({ position: [x, y, z], color: '#ffc27a', intensity: LAMP, intensityUnits: 'candelas', distance: 7, castShadow: false });
         world.scene.add(globe, lamp);
         return lamp;
       });

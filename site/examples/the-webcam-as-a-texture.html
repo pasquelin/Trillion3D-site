@@ -87,7 +87,7 @@
       const floor = object.mesh(geometry.cylinder(9, 9, 0.1, 96), material.meshStandard({ color: '#23252d', roughness: 0.25, metalness: 0.2 }));
       floor.position.y = -0.05;
       world.scene.add(floor, light.hemisphere({ color: '#8fa0c8', groundColor: '#1c1a20', intensity: 0.6 }));
-      world.scene.add(light.directional({ color: '#fff0e0', intensity: 1.6, position: [3, 8, 6] }));
+      world.scene.add(light.directional({ color: '#fff0e0', intensity: 1.6, position: [3, 8, 6], castShadow: true }));
 
       world.camera.position.set(0, 2.6, 6.5);
       world.camera.lookAt(0, 2.5, -2);

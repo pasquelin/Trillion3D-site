@@ -60,7 +60,7 @@
       // rectangle light, facing down its −z): the metal mirrors its lights, and this one gives it
       // a broad highlight to show.
       world.scene.add(light.directional({ intensity: 3, color: '#fff2e0', position: [6, 10, 5], castShadow: true }));
-      world.scene.add(light.directional({ intensity: 0.6, color: '#8fb4ff', position: [-6, 4, -5] }));
+      world.scene.add(light.directional({ intensity: 0.6, color: '#8fb4ff', position: [-6, 4, -5], castShadow: false }));
       const softbox = light.rectArea({ intensity: 1.5, intensityUnits: 'nits', color: '#fff4e8', width: 5, height: 2, position: [0, 5, 2.5] });
       softbox.lookAt(0, 0.6, 0);
       world.scene.add(softbox);

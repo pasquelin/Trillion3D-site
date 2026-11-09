@@ -124,7 +124,7 @@
       // The bulb lights the desk: a spot in the head, aimed out of the shade's mouth. Both ride
       // on the head, so the pool of light follows every look and every hop. It casts no shadow:
       // it sits inside the bulb.
-      const beam = light.spot({ color: '#fff1c8', intensity: 40, intensityUnits: 'candelas', distance: 8, outerConeAngle: 0.7, innerConeAngle: 0.28, position: [0.38, 0, 0], target: [2, 0, 0] });
+      const beam = light.spot({ color: '#fff1c8', intensity: 40, intensityUnits: 'candelas', distance: 8, outerConeAngle: 0.7, innerConeAngle: 0.28, position: [0.38, 0, 0], target: [2, 0, 0], castShadow: false });
       hero.getObjectByName('head').add(beam, beam.target);
       const mixer = animation.createMixer(hero);
       const waking = mixer.clipAction(wake), plain = mixer.clipAction(linear), soft = mixer.clipAction(smooth);

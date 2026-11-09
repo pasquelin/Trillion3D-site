@@ -124,50 +124,30 @@
     <canvas id="view"></canvas>
     <aside id="quality" data-example-overlay></aside>
     <script type="module">
-      import { createWorld, effect, geometry, light, material, math, object, side, texture, wrap, LOD_QUALITY } from '../runtime/engine.js';
+      import { createWorld, effect, geometry, light, material, math, object, side, texture, wrap } from '../runtime/engine.js';
       import { leafTexture, seeded, tour } from '../runtime/kit.js';
 
-      // ── The quality table ──────────────────────────────────────────────────────────────────
-      // What each level of each group asks of the engine, through the world's public switches:
-      // the page's stand-in for the engine's own presets, swapped for them once its settings
-      // registry exists. `Max` asks nothing below the engine's defaults. A group whose setting the
-      // engine does not have yet is `coming`: shown disabled, never imitated by changing the scene.
+      // ── The quality: the engine's own presets and groups (`world.quality`) ─────────────────
+      // A preset sets every group to its level; a group's row sets that group alone over it. `Auto`
+      // is the level the engine's benchmark kept for this machine's adapter, at the engine's dynamic
+      // resolution (the frame budget picks the scale between half and full).
       const LEVELS = ['Smooth', 'Balanced', 'Fine', 'Max'];
-      const QUALITY = {
-        shadows: { name: 'Shadows', coming: 'the engine has no shadow quality setting yet' },
-        reflections: { name: 'Reflections', coming: 'the engine has no reflection setting yet' },
-        // Temporal antialiasing: jitter accumulated over frames, which also rebuilds an image
-        // drawn below the display's size.
-        edges: { name: 'Edge smoothing', levels: (level) => ({ temporalAntialiasing: level !== 'Smooth' }) },
-        // The world's effect chain: the glow of the signs, a pass over the whole image.
-        effects: { name: 'Image effects', levels: (level) => ({ glow: level !== 'Smooth' }) },
-        textures: { name: 'Textures', coming: 'the engine has no texture quality setting yet' },
-        // `world.bounce` is off by default: turned on at any level, `Max` would no longer be the
-        // engine's default image.
-        indirect: { name: 'Indirect light', coming: 'bounced light has no levels yet, and it is off by default' },
-        // How many pixels a coarser version of what is far may stray before a finer one is drawn.
-        distance: {
-          name: 'View distance',
-          levels: (level) => ({
-            pixelError: {
-              Smooth: 2 * LOD_QUALITY.balanced.pixelError,
-              Balanced: LOD_QUALITY.balanced.pixelError,
-              Fine: LOD_QUALITY.high.pixelError,
-              Max: LOD_QUALITY.source.pixelError,
-            }[level],
-          }),
-        },
+      const levelOf = (name) => name.toLowerCase();
+      const GROUPS = {
+        shadows: 'Shadows',
+        indirectLight: 'Indirect light & reflections',
+        edgeSmoothing: 'Edge smoothing',
+        imageEffects: 'Image effects',
+        effects: 'Sky & volumes',
+        textures: 'Textures',
+        viewDistance: 'View distance',
       };
       // The share of the display, per axis, the image is drawn at; temporal antialiasing rebuilds
-      // it to the display, so below 100 % `Edge smoothing` at `Smooth` (no temporal antialiasing)
-      // shows the small image as drawn. The engine draws no lower than half: a mode below is coming.
+      // it to the display. The engine draws no lower than half: a mode below is coming.
       const RESOLUTION = { Native: 1, Sharp: 0.67, Mixed: 0.58, Fast: 0.5, Turbo: 0.33 };
       const LOWEST_SCALE = 0.5;
-      // `Auto` is every group at `Max` with the engine's own dynamic resolution (`'auto'`: the
-      // frame budget picks the scale between half and full); picking the preset from the GPU time
-      // is coming.
       const PRESETS = [...LEVELS, 'Auto'];
-      const AUTO_COMING = 'Auto: the engine’s dynamic resolution, 50–100 %. Coming: the preset picked from the GPU time.';
+      const AUTO_TITLE = 'Auto: the levels the engine’s benchmark kept for this machine, at the dynamic resolution, 50–100 %.';
 
       // ── The square ─────────────────────────────────────────────────────────────────────────
       // A paved square, 48 m a side, in a low late-afternoon sun, with one corner for each group:
@@ -399,7 +379,8 @@
       const sun = light.directional({ intensity: 3.2, color: '#ffc78f', castShadow: true });
       sun.position.set(240, 99, 150);
       world.scene.add(sun, light.hemisphere({ color: '#c9d8f0', groundColor: '#8a7458', intensity: 0.8 }));
-      const glow = effect.bloom({ intensity: 0.05 });
+      // The glow of the signs: its quality is the `Image effects` group's.
+      world.effects.add(effect.bloom({ intensity: 0.05 }));
 
       // Motion stands still on `Still`, so the image may hold, and an `Auto` scale climb back.
       // The gust is written ten times a second: each write is a command to the physics worker.
@@ -421,37 +402,39 @@
       });
 
       // ── The settings, the engine's switches, and the panel ─────────────────────────────────
-      const groups = Object.entries(QUALITY);
-      const state = { levels: Object.fromEntries(groups.map(([key]) => [key, 'Max'])), scale: RESOLUTION.Native };
+      const groups = Object.keys(GROUPS);
+      const state = { scale: 'auto' };
+      /** Each group's level, as the engine draws it. */
+      const levelsNow = () => Object.fromEntries(groups.map((group) => [group, world.quality.get(group)]));
+      /** What the world is set to: a preset's name (`auto` included), or each group's level. */
+      const levelsSet = () => (world.quality.preset === 'custom' ? levelsNow() : world.quality.preset);
 
-      /** Writes `next` into the world: each live group's level through the table, then the scale. */
-      function apply(next) {
-        Object.assign(state, next, { levels: { ...next.levels } });
-        const asked = Object.assign({}, ...groups.map(([key, group]) => group.levels?.(state.levels[key])));
-        world.temporalAntialiasing = asked.temporalAntialiasing;
-        world.pixelError = asked.pixelError;
-        if (asked.glow !== world.effects.passes.includes(glow))
-          asked.glow ? world.effects.add(glow) : world.effects.remove(glow);
-        world.renderScale = state.scale;
+      /** Writes `levels` — a preset's name, every group following it, or a level a group — and
+       *  `scale` into the world. */
+      function apply({ levels, scale }) {
+        if (typeof levels === 'string') {
+          for (const group of groups) world.quality.set(group, 'preset');
+          world.quality.preset = levels;
+        } else for (const group of groups) world.quality.set(group, levels[group]);
+        state.scale = scale;
+        world.renderScale = scale;
         world.invalidate();
         show();
       }
-      /** The preset the levels and the scale make, or `null` for a mix of levels. */
-      function presetOf(levels, scale) {
-        const live = groups.filter(([, group]) => group.levels).map(([key]) => levels[key]);
-        if (live.some((level) => level !== live[0])) return null;
-        if (scale === 'auto') return live[0] === 'Max' ? 'Auto' : null;
-        return live[0];
+      /** The preset button the world's levels and scale make, or `null` for a mix of levels. */
+      function presetOf() {
+        if (world.quality.preset === 'auto') return state.scale === 'auto' ? 'Auto' : null;
+        const now = Object.values(levelsNow());
+        return now.every((level) => level === now[0]) ? (LEVELS.find((name) => levelOf(name) === now[0]) ?? null) : null;
       }
       const choose = (levels, scale) => {
         shown = null;
         apply({ levels, scale });
       };
-      const usePreset = (name) => {
-        const level = name === 'Auto' ? 'Max' : name;
-        const scale = name === 'Auto' ? 'auto' : state.scale === 'auto' ? RESOLUTION.Native : state.scale;
-        choose(Object.fromEntries(groups.map(([key]) => [key, level])), scale);
-      };
+      const usePreset = (name) =>
+        name === 'Auto'
+          ? choose('auto', 'auto')
+          : choose(levelOf(name), state.scale === 'auto' ? RESOLUTION.Native : state.scale);
 
       // The panel, drawn from the tables: a row of buttons per setting.
       const panel = document.getElementById('quality');
@@ -479,18 +462,18 @@
       };
       const rule = () => panel.append(document.createElement('hr'));
 
-      const presets = PRESETS.map((name) => button(name, () => usePreset(name), () => presetOf(state.levels, state.scale) === name));
-      presets.at(-1).title = AUTO_COMING;
+      const presets = PRESETS.map((name) => button(name, () => usePreset(name), () => presetOf() === name));
+      presets.at(-1).title = AUTO_TITLE;
       row(panel, 'Quality', ...presets);
       row(panel, 'Resolution', ...Object.entries(RESOLUTION).map(([name, scale]) =>
-        button(`${name} ${Math.round(scale * 100)} %`, () => choose(state.levels, scale), () => state.scale === scale,
+        button(`${name} ${Math.round(scale * 100)} %`, () => choose(levelsSet(), scale), () => state.scale === scale,
           scale < LOWEST_SCALE && 'the engine draws no lower than 50 % yet'),
       ));
       const slider = Object.assign(document.createElement('input'), { type: 'range', min: LOWEST_SCALE * 100, max: 100, step: 1 });
       const percent = document.createElement('output');
       // A drag shows the scale; its release asks it of the engine, which makes its images again.
       slider.oninput = () => (percent.textContent = `${slider.value} %`);
-      slider.onchange = () => (choose(state.levels, slider.valueAsNumber / 100), slider.blur());
+      slider.onchange = () => (choose(levelsSet(), slider.valueAsNumber / 100), slider.blur());
       row(panel, 'Render scale', slider, percent);
       rule();
       const details = document.createElement('details'), summary = document.createElement('summary');
@@ -498,11 +481,11 @@
       details.append(summary);
       details.open = innerWidth > 640;
       panel.append(details);
-      for (const [key, group] of groups)
-        row(details, group.name, ...LEVELS.map((level) =>
-          button(level, () => choose({ ...state.levels, [key]: level }, state.scale),
-            () => !group.coming && state.levels[key] === level, group.coming),
-        )).title = group.coming ? `Coming: ${group.coming}` : '';
+      for (const [group, name] of Object.entries(GROUPS))
+        row(details, name, ...LEVELS.map((level) =>
+          button(level, () => choose({ ...levelsNow(), [group]: levelOf(level) }, state.scale),
+            () => world.quality.get(group) === levelOf(level)),
+        ));
       rule();
 
       // The prepared viewpoints, one a corner; `Tour` flies them in turn, over and over, until a
@@ -546,7 +529,7 @@
       const kept = { A: null, B: null };
       let shown = null;
       const keep = (name) => {
-        kept[name] = { ...state, levels: { ...state.levels } };
+        kept[name] = { levels: levelsSet(), scale: state.scale };
         shown = name;
         show();
       };
@@ -573,7 +556,8 @@
         percent.textContent = auto ? 'auto' : `${Math.round(state.scale * 100)} %`;
       }
 
-      apply(state);
+      // The page opens at the engine's own choice for this machine.
+      apply({ levels: 'auto', scale: 'auto' });
     </script>
   </body>
 </html>

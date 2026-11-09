@@ -163,7 +163,7 @@
       const cone = object.mesh(geometry.cylinder(0.08, 0.02, 0.21, 24), brass);
       cone.position.y = 0.105;
       const tip = object.mesh(geometry.sphere(0.022, 16, 8), material.meshStandard({ color: '#000000', emissive: '#ff8a3d', emissiveIntensity: 6 }));
-      const glow = light.point({ color: '#ff9a52', intensity: 1.6, intensityUnits: 'candelas', distance: 2.2 });
+      const glow = light.point({ color: '#ff9a52', intensity: 1.6, intensityUnits: 'candelas', distance: 2.2, castShadow: false });
       for (const part of [nut, cone]) part.castShadow = true;
       head.add(block, rod, ...fins, nut, cone, tip, glow);
       world.scene.add(head);

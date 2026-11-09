@@ -116,15 +116,15 @@
       );
       // Its beam: a spot light in the lantern, sweeping the sea as far out as the ship — over it once a
       // turn. It turns every frame, so it casts no shadow: a moving shadow is redrawn each frame.
-      const beam = light.spot({ position: LAMP, color: '#fff1c4', intensity: 30000, intensityUnits: 'candelas', distance: 240, outerConeAngle: 0.13, innerConeAngle: 0.078 });
+      const beam = light.spot({ position: LAMP, color: '#fff1c4', intensity: 30000, intensityUnits: 'candelas', distance: 240, outerConeAngle: 0.13, innerConeAngle: 0.078, castShadow: false });
 
       // What little light the clouds let through, and lightning: a flash from above that also
       // lights the sky, now and then — more often the stronger the wind.
-      const flash = light.directional({ intensity: 0, color: '#d6e2ff', position: [20, 60, -30] });
+      const flash = light.directional({ intensity: 0, color: '#d6e2ff', position: [20, 60, -30], castShadow: false });
       world.scene.add(
         beam,
         flash,
-        light.directional({ intensity: 2.4, color: '#b4c4d8', position: [-40, 30, 10] }),
+        light.directional({ intensity: 2.4, color: '#b4c4d8', position: [-40, 30, 10], castShadow: false }),
         light.hemisphere({ intensity: 1.2, color: '#6a7a88', groundColor: '#0b1116' }),
       );
       // A faint glow around what shines: the lantern, the running lights, the flashes.
@@ -149,6 +149,8 @@
             phase: now?.[i].phase ?? 0,
           })),
         };
+        // The sea is the water's drawn surface: the GPU moves its points where these waves carry them.
+        sea.waves = world.physics.waterSurface;
       });
 
       const next = seeded(5);

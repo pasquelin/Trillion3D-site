@@ -55,7 +55,7 @@
       // Three glowing beads threaded on the curve, a little wider than the tube, each with its own
       // small lamp — no shadow: a moving lamp that casts one redraws its shadow map every frame.
       const beads = ['#5ad1ff', '#ffd05a', '#ff5ab4'].map((colour, index) => {
-        const lamp = light.point({ color: colour, intensity: 8, intensityUnits: 'candelas', distance: 3.5 });
+        const lamp = light.point({ color: colour, intensity: 8, intensityUnits: 'candelas', distance: 3.5, castShadow: false });
         const bead = object.mesh(geometry.sphere(1, 24, 16), material.meshStandard({ color: '#000000', emissive: colour, emissiveIntensity: 5 }));
         world.scene.add(lamp, bead);
         return { lamp, bead, offset: index / 3 };

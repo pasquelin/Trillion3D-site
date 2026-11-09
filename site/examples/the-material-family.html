@@ -127,7 +127,7 @@
       // Three hours of the day. The sun is placed only when the hour changes.
       const sun = light.directional({ castShadow: true });
       const sky = light.hemisphere({});
-      const cool = light.point({ color: '#6f8cff', intensity: 30, intensityUnits: 'candelas', distance: 34, position: [11, 6, -6] });
+      const cool = light.point({ color: '#6f8cff', intensity: 30, intensityUnits: 'candelas', distance: 34, position: [11, 6, -6], castShadow: false });
       world.scene.add(sun, sky, cool);
       const HOURS = {
         'golden hour': { at: [-17, 5.5, 10], colour: '#ffb46a', power: 3.4, sky: '#7f97dc', ground: '#4e3727', fill: 0.75 },

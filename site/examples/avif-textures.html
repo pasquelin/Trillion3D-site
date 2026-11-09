@@ -111,7 +111,7 @@
       world.scene.add(light.directional({ color: '#ffb27a', intensity: 3.2, position: [3, 5, -8], castShadow: true }));
       world.scene.add(light.hemisphere({ color: '#8f86c4', groundColor: '#3a2620', intensity: 0.7 }));
       // A lamp lit inside, near the viewer, for the branch's leaves.
-      const lamp = light.point({ color: '#ffcf96', intensity: 30, intensityUnits: 'candelas', distance: 8, position: [1.8, 2.4, 2.6] });
+      const lamp = light.point({ color: '#ffcf96', intensity: 30, intensityUnits: 'candelas', distance: 8, position: [1.8, 2.4, 2.6], castShadow: false });
       world.scene.add(lamp);
       world.effects.add(effect.bloom({ intensity: 0.05 }));
 

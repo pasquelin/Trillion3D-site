@@ -46,7 +46,7 @@
       world.controls.target.set(0, 0.2, 0);
 
       // Each bar emits the picked colour scaled by its level; the lamp shows the floor they stand on.
-      const lamp = light.point({ intensity: 60, intensityUnits: 'candelas', distance: 12, position: [0, 3, 3] });
+      const lamp = light.point({ intensity: 60, intensityUnits: 'candelas', distance: 12, position: [0, 3, 3], castShadow: false });
       world.scene.add(lamp);
       controls({ colour: '#ff9a3c', glow: [0.5, 6, 2], exposure: [0.3, 3, 1] }, (values) => {
         for (const { glow, level } of bars) {

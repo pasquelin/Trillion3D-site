@@ -93,7 +93,7 @@
       world.scene.add(wall, floor);
       // A lamp close to the wall, sliding along it: its light grazes the bricks. Its bulb is drawn
       // too, glowing, and a light bloom lets it shine.
-      const lamp = light.point({ intensity: 14, intensityUnits: 'candelas', color: '#ffc27a', distance: 8, radius: 0.05 });
+      const lamp = light.point({ intensity: 14, intensityUnits: 'candelas', color: '#ffc27a', distance: 8, radius: 0.05, castShadow: false });
       const filament = material.meshStandard({ color: '#000000', emissive: '#ffc27a', emissiveIntensity: 6 });
       const bulb = object.mesh(geometry.sphere(0.05, 24, 16), filament);
       lamp.add(bulb);

@@ -81,7 +81,7 @@
       };
       for (const [name, source] of Object.entries(SOURCES)) {
         source.name = name;
-        source.lamp = light.point({ color: source.color, intensity: 20, intensityUnits: 'candelas', distance: 10 });
+        source.lamp = light.point({ color: source.color, intensity: 20, intensityUnits: 'candelas', distance: 10, castShadow: false });
         source.node = object.group();
         source.node.add(source.lamp);
         source.level = 0;

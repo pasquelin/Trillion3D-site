@@ -119,10 +119,16 @@ export const COOKED_SCENES: Record<string, CookedScene> = {
     file: 'emerald-day.glb',
     sha256: '06866a47db0a96ae53024fbfb0ebfb8309165083f69243e5131d3ba1734bddb5',
   }),
-  bistro: orca('bistro', {
-    file: 'bistro-exterior-uv.glb',
-    sha256: '296f71e62f9de576d2ba1b93cdb2b4efea589cbc773e9084e2f4253829edaf8d',
-  }),
+  // The Bistro takes the district's HLOD: without it the `HLOD` view of its walk shows no cell. Emerald
+  // Square has none yet: a merged cell of its gives a ray tracing tree deeper than the walk's stack
+  // (`RAY_TRACING_TREE_TOO_DEEP`), a compiler fault to mend before it gets one.
+  bistro: {
+    ...orca('bistro', {
+      file: 'bistro-exterior-uv.glb',
+      sha256: '296f71e62f9de576d2ba1b93cdb2b4efea589cbc773e9084e2f4253829edaf8d',
+    }),
+    hlod: DISTRICT_HLOD,
+  },
   observatory: {
     directory: 'site/assets/gallery/signature-architecture',
     source: 'source/geometry.gltf',
@@ -226,7 +232,8 @@ function compilerIdentity(): string | null {
   try {
     const compiler = nativeCompiler()
     const run = spawnSync(compiler, ['--version'], { encoding: 'utf8', timeout: 30_000 })
-    if (run.status === 0) hash = (JSON.parse(run.stdout) as { implementationHash?: string }).implementationHash ?? null
+    if (run.status === 0)
+      hash = (JSON.parse(run.stdout) as { implementationHash?: string }).implementationHash ?? null
   } catch {
     hash = null
   }

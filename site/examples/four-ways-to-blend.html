@@ -65,7 +65,7 @@
       });
       const floor = object.mesh(geometry.box(16, 0.1, 6), material.meshStandard({ color: '#2c2e36', roughness: 0.7 }));
       floor.position.set(0, -1.75, 1.5);
-      world.scene.add(floor, light.directional({ color: '#fff2e0', intensity: 2.4, position: [2, 6, 8] }), light.hemisphere({ color: '#b8c4e0', groundColor: '#2a2420', intensity: 0.6 }));
+      world.scene.add(floor, light.directional({ color: '#fff2e0', intensity: 2.4, position: [2, 6, 8], castShadow: true }), light.hemisphere({ color: '#b8c4e0', groundColor: '#2a2420', intensity: 0.6 }));
 
       world.camera.position.set(0, 0.6, 11);
       world.camera.lookAt(0, 0, 0);

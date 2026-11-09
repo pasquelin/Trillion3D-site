@@ -150,8 +150,8 @@
       grid.position.y = 0.006;
       world.scene.add(floor, ground, grid);
       world.scene.add(light.directional({ intensity: 2.6, color: '#fff2e0', position: [5, 10, 4], castShadow: true }));
-      world.scene.add(light.point({ intensity: 30, intensityUnits: 'candelas', color: '#ff9d6b', position: [-5, 4, -4], distance: 14 }));
-      world.scene.add(light.point({ intensity: 30, intensityUnits: 'candelas', color: '#6bc4ff', position: [5, 3, -5], distance: 14 }));
+      world.scene.add(light.point({ intensity: 30, intensityUnits: 'candelas', color: '#ff9d6b', position: [-5, 4, -4], distance: 14, castShadow: false }));
+      world.scene.add(light.point({ intensity: 30, intensityUnits: 'candelas', color: '#6bc4ff', position: [5, 3, -5], distance: 14, castShadow: false }));
       world.scene.add(light.hemisphere({ color: '#a8b8e0', groundColor: '#2a221c', intensity: 0.6 }));
       world.effects.add(effect.bloom({ intensity: 0.05 }));
 

@@ -69,7 +69,7 @@
       // Three lights that flash with the bursts and fade, in the colour of each, so the water
       // and the towers take the fireworks' light.
       const flashes = Array.from({ length: 3 }, () => {
-        const lamp = light.point({ color: '#ffffff', intensity: 0, intensityUnits: 'candelas', distance: 260, position: [0, 60, 0] });
+        const lamp = light.point({ color: '#ffffff', intensity: 0, intensityUnits: 'candelas', distance: 260, position: [0, 60, 0], castShadow: false });
         world.scene.add(lamp);
         return { lamp, power: 0 };
       });
